@@ -1,0 +1,4 @@
+.arrows { white-space: nowrap }
+.arrows img { display: inline-block }
+.left { transform: rotate(-90deg) }
+.right { transform: rotate(90deg) }
