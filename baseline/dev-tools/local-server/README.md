@@ -1,5 +1,5 @@
-# Peri-Vascular Space Project Tasks
-Tasks for the PVS project, in web app form!
+# local-server
+A local mock-up server to view `baseline\client`.
 
 ## Usage
 To view all tasks, first, start the server:
