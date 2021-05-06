@@ -4,6 +4,7 @@ const path = require("path");
 const app = express();
 
 app.use(logger('dev'));
+app.use(express.static(path.join(__dirname, "../../client")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
     if (req.path == "/js/jspsych.js") {
