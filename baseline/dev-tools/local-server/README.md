@@ -1,10 +1,14 @@
 # local-server
-A local mock-up server to view `baseline\client`.
+A local mock-up server to view `baseline/client`.
 
 ## Usage
-To view all tasks, first, start the server:
+To view all tasks, first, build `dist`:
 ```
 npm install
-npm start
+npx webpack
 ```
-Then, go to localhost:3000.
+Then, start the webpack DevServer.
+```
+npx webpack serve
+```
+Finally, go to localhost:9000!
