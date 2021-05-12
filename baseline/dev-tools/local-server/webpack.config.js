@@ -9,12 +9,21 @@ module.exports = {
             import: path.join(client, "flanker/flanker.js"),
             filename: "flanker/flanker.bundle.js",
         },
+        "verbal-fluency": {
+            import: path.join(client, "verbal-fluency/verbal-fluency.js"),
+            filename: "verbal-fluency/verbal-fluency.bundle.js",
+        }
     },
     plugins: [
         new HtmlWebpackPlugin({
             title: "Flanker Task",
             filename: "flanker/index.html",
             chunks: ["flanker"],
+        }),
+        new HtmlWebpackPlugin({
+            title: "Verbal Fluency Task",
+            filename: "verbal-fluency/index.html",
+            chunks: ["verbal-fluency"],
         }),
         new HtmlWebpackPlugin({
             filename: "index.html",
@@ -39,7 +48,10 @@ module.exports = {
         ],
     },
     resolve: {
-        modules: [path.join(__dirname, "node_modules")],
+        modules: [
+            client,
+            path.join(__dirname, "node_modules"),
+        ],
     },
     output: {
         path: path.join(__dirname, "dist"),
