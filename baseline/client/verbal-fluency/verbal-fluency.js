@@ -24,7 +24,7 @@ function trial(letter) {
     return {
         type: "timed-writing",
         duration: 60000,
-        stimulus: stimulus_template_html.replace("{letter}", letter),
+        stimulus: stimulus_template_html.replaceAll("{letter}", letter),
         textarea_rows: 6,
         textarea_cols: 60,
         data: { letter: letter },
