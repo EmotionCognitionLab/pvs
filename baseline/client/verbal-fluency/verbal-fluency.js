@@ -7,8 +7,8 @@ const test = {
     type: "timed-writing",
     duration: 60000,
     stimulus: "uwu",
-    textarea_rows: 5,
-    textarea_cols: 40,
+    textarea_rows: 6,
+    textarea_cols: 60,
 };
 
 jsPsych.init({
