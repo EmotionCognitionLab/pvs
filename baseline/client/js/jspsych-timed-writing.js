@@ -31,10 +31,10 @@ jsPsych.plugins["timed-writing"] = (() => {
         // build and show display HTML
         {
             let html = "";
-            html += `<div id="jspsych-timed-writing-timer"></div>`;
             html += `<div id="jspsych-timed-writing-stimulus">${trial.stimulus}</div>`;
             const [r, c] = [trial.textarea_rows, trial.textarea_cols];
             html += `<textarea id="jspsych-timed-writing-textarea" rows="${r}" cols="${c}"></textarea>`;
+            html += `<div id="jspsych-timed-writing-timer"></div>`;
             display_element.innerHTML = html;
             document.querySelector("#jspsych-timed-writing-timer").hidden = !trial.show_timer;
             document.querySelector("#jspsych-timed-writing-textarea").focus();
