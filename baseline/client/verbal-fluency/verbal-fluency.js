@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-timed-writing.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/jspsych-timed-writing.css";
 
 const test = {
     type: "timed-writing",
