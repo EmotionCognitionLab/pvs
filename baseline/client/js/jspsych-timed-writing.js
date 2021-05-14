@@ -37,6 +37,7 @@ jsPsych.plugins["timed-writing"] = (() => {
             html += `<textarea id="jspsych-timed-writing-textarea" rows="${r}" cols="${c}"></textarea>`;
             display_element.innerHTML = html;
             document.querySelector("#jspsych-timed-writing-timer").hidden = !trial.show_timer;
+            document.querySelector("#jspsych-timed-writing-textarea").focus();
         }
         // start display timer to show remaining time
         {
