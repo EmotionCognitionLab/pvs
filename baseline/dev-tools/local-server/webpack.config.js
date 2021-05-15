@@ -9,12 +9,21 @@ module.exports = {
             import: path.join(client, "flanker/flanker.js"),
             filename: "flanker/flanker.bundle.js",
         },
+        panas: {
+            import: path.join(client, "panas/panas.js"),
+            filename: "panas/panas.bundle.js",
+        },
     },
     plugins: [
         new HtmlWebpackPlugin({
             title: "Flanker Task",
             filename: "flanker/index.html",
             chunks: ["flanker"],
+        }),
+        new HtmlWebpackPlugin({
+            title: "PANAS Questionnaire",
+            filename: "panas/index.html",
+            chunks: ["panas"],
         }),
         new HtmlWebpackPlugin({
             filename: "index.html",
