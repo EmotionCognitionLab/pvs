@@ -48,7 +48,10 @@ module.exports = {
         ],
     },
     resolve: {
-        modules: [path.join(__dirname, "node_modules")],
+        modules: [
+            client,
+            path.join(__dirname, "node_modules")
+        ],
     },
     output: {
         path: path.join(__dirname, "dist"),
