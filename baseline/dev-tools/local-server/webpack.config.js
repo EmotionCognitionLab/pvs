@@ -9,12 +9,21 @@ module.exports = {
             import: path.join(client, "flanker/flanker.js"),
             filename: "flanker/flanker.bundle.js",
         },
+        "daily-stressors": {
+            import: path.join(client, "daily-stressors/daily-stressors.js"),
+            filename: "daily-stressors/daily-stressors.bundle.js"
+        },
     },
     plugins: [
         new HtmlWebpackPlugin({
             title: "Flanker Task",
             filename: "flanker/index.html",
             chunks: ["flanker"],
+        }),
+        new HtmlWebpackPlugin({
+            title: "Daily Stressor Questionnaire",
+            filename: "daily-stressors/index.html",
+            chunks: ["daily-stressors"],
         }),
         new HtmlWebpackPlugin({
             filename: "index.html",
