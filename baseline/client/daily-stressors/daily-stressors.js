@@ -2,6 +2,7 @@ import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-survey-multi-choice.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/jspsych-survey-multi-choice-patch.css";
 import "./style.css";
 import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
@@ -26,7 +27,7 @@ const questionnaire = {
     type: "survey-multi-choice",
     preamble: instruction_html,
     questions: prompts.map(
-        p => ({ prompt: p, options: ["Yes", "No"], requried: true, horizontal: true })
+        p => ({ prompt: p, options: ["Yes", "No"], required: true, horizontal: false })
     ),
 };
 
