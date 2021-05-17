@@ -24,7 +24,7 @@ const prompts = [
 const questionnaire = {
     type: "survey-multi-choice",
     questions: prompts.map(
-        p => { prompt: p, options: ["Yes", "No"], requried: true, horizontal: true }
+        p => ({ prompt: p, options: ["Yes", "No"], requried: true, horizontal: true })
     ),
 };
 
