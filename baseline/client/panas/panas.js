@@ -59,7 +59,7 @@ const questionnaire = {
 const completion = {
     type: "html-button-response",
     stimulus: completion_html,
-    choices: ["Continue"],
+    choices: ["Finish"],
 };
 
 jsPsych.init({
