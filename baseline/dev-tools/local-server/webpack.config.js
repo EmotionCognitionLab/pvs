@@ -4,27 +4,8 @@ const path = require("path");
 const client = path.join(__dirname, "../../client");
 
 module.exports = {
-    entry: {
-        flanker: {
-            import: path.join(client, "flanker/flanker.js"),
-            filename: "flanker/flanker.bundle.js",
-        },
-        "verbal-fluency": {
-            import: path.join(client, "verbal-fluency/verbal-fluency.js"),
-            filename: "verbal-fluency/verbal-fluency.bundle.js",
-        }
-    },
+    entry: {},
     plugins: [
-        new HtmlWebpackPlugin({
-            title: "Flanker Task",
-            filename: "flanker/index.html",
-            chunks: ["flanker"],
-        }),
-        new HtmlWebpackPlugin({
-            title: "Verbal Fluency Task",
-            filename: "verbal-fluency/index.html",
-            chunks: ["verbal-fluency"],
-        }),
         new HtmlWebpackPlugin({
             filename: "index.html",
             template: path.join(__dirname, "public/index.html"),
@@ -68,3 +49,19 @@ module.exports = {
     },
     mode: "development",
 };
+
+function add_page(name, impo, title) {
+    // add entry point
+    module.exports.entry[name] = {
+        import: impo,
+        filename: `${name}/${name}.bundle.js`,
+    };
+    // add HTML file
+    module.exports.plugins.push(new HtmlWebpackPlugin({
+        filename: `${name}/index.html`,
+        chunks: [name],
+        title: title,
+    }));
+}
+add_page("flanker", "flanker/flanker.js", "Flanker Task");
+add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
