@@ -31,6 +31,11 @@ module.exports = {
             chunks: [],
         }),
     ],
+    optimization: {
+        splitChunks: {
+            chunks: "all",
+        },
+    },
     module: {
         rules: [
             {
