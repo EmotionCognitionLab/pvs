@@ -1,0 +1,14 @@
+#jspsych-timed-writing-textarea {
+    font-family: "Open Sans", "Arial", sans-serif;
+    font-size: 18px;
+    padding: 20px;
+    margin: 20px;
+    color: MidnightBlue;
+    border-color: LightSteelBlue;
+    background-color: AliceBlue;
+    outline-color: CornflowerBlue;
+}
+
+#jspsych-timed-writing-timer {
+    color: Gray;
+}
