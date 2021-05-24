@@ -10,10 +10,6 @@ module.exports = {
         splitChunks: {
             chunks: "all",
         },
-        panas: {
-            import: path.join(client, "panas/panas.js"),
-            filename: "panas/panas.bundle.js",
-        },
     },
     module: {
         rules: [
