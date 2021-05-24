@@ -1,0 +1,8 @@
+.jspsych-survey-likert-statement { display:block; font-size: 18px; padding-top: 40px; margin-bottom:10px; }
+.jspsych-survey-likert-options { list-style:none; margin:auto; padding:0 0 35px; display:inline-block; font-size: 16px; line-height:1.1em; text-align:left; }
+.jspsych-survey-likert-opt-label { line-height: 1.1em; color: #444; }
+.jspsych-survey-likert-options:before { content: ''; position:relative; top:-11px; /*left:9.5%;*/ display:block; background-color:#efefef; height:4px; width:100%; }
+.jspsych-survey-likert-options li { display:inline-block; /*width:19%;*/ text-align:center; vertical-align: top; }
+.jspsych-survey-likert-options li input[type=radio] { display:block; position:relative; top:0; left:50%; margin-left:-6px; }
+.jspsych-survey-likert-option { margin-top: 2.5%; }
+#jspsych-survey-likert-next { display:block; margin: 5% auto 5%; }
