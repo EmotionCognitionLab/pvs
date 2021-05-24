@@ -60,3 +60,5 @@ function add_page(name, impo, title) {
 add_page("flanker", "flanker/flanker.js", "Flanker Task");
 add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
 add_page("daily-stressors", "daily-stressors/daily-stressors.js", "Daily Stressors Questionnaire");
+add_page("panas", "panas/panas.js", "PANAS Questionnaire");
+
