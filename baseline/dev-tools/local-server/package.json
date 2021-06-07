@@ -1,12 +1,21 @@
 {
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
     "css-loader": "^5.2.4",
     "html-loader": "^2.1.2",
     "html-webpack-plugin": "^5.3.1",
+    "jest": "^27.0.4",
     "style-loader": "^2.0.0",
     "webpack": "^5.36.2",
     "webpack-cli": "^4.7.0",
     "webpack-dev-server": "^3.11.2"
+  },
+  "jest": {
+    "rootDir": "../../client",
+    "moduleDirectories": ["<rootDir>/../dev-tools/local-server/node_modules"],
+    "testEnvironment": "jsdom"
   }
 }

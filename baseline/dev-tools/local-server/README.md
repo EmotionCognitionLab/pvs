@@ -12,3 +12,8 @@ Then, start the webpack DevServer.
 npx webpack serve
 ```
 Finally, go to localhost:9000!
+
+## Testing
+```
+npm run test
+```
