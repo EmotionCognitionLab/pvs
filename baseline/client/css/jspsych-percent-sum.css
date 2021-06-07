@@ -1,0 +1,26 @@
+#jspsych-percent-sum-preamble {
+    margin: 5% auto 5%;
+}
+
+#jspsych-percent-sum-form label {
+    display: block;
+    margin: .5rem 0;
+}
+.jspsych-percent-sum-field {
+    margin: .5rem;
+}
+
+#jspsych-percent-sum-button {
+    display:block;
+    margin: 5% auto 5%;
+}
+
+#jspsych-percent-sum-counter-wrapper {
+    margin: 5% auto 5%;
+}
+#jspsych-percent-sum-counter {
+    color: Red;
+}
+#jspsych-percent-sum-counter.jspsych-percent-sum-counter-good {
+    color: Green;
+}
