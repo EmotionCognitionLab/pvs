@@ -2,6 +2,7 @@ provider "aws" {
     region = var.region
 }
 
+# cognito setup
 resource "aws_cognito_user_pool" "pool" {
     name = "pvs-${var.env}-users"
     auto_verified_attributes = [ "email" ]
@@ -51,4 +52,67 @@ output "cognito_pool_client_id" {
 resource "aws_cognito_user_pool_domain" "main" {
     domain = "pvs-${var.env}"
     user_pool_id = aws_cognito_user_pool.pool.id
+}
+
+# SES setup, including relevant S3 buckets and IAM settings
+# bucket for receiving automated report emails from Lumosity
+resource "aws_s3_bucket" "ses-bucket" {
+  bucket = "${var.ses-emailed-reports-bucket}"
+  acl    = "private"
+}
+
+# iam policy to allow SES to save email to s3 bucket
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "receive" {
+  bucket = aws_s3_bucket.ses-bucket.id
+  policy = jsonencode(
+  {
+    Version = "2012-10-17",
+    Id = "ses-to-s3-policy",
+    Statement = [
+    {
+        Sid = "AllowSESPuts",
+        Effect = "Allow",
+        Principal = {
+          Service = "ses.amazonaws.com"
+        },
+        Action = "s3:PutObject",
+        Resource = [
+          aws_s3_bucket.ses-bucket.arn,
+          "${aws_s3_bucket.ses-bucket.arn}/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:Referer" = "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+    }
+    ]
+  }
+  )
+}
+
+# SES rules to write email to bucket
+resource "aws_ses_receipt_rule_set" "main" {
+  rule_set_name = "ses-rules"
+}
+
+resource "aws_ses_active_receipt_rule_set" "main" {
+  rule_set_name = "ses-rules"
+}
+
+resource "aws_ses_receipt_rule" "save-to-s3" {
+  name          = "save-to-s3"
+  rule_set_name = "ses-rules"
+  recipients    = ["lumosityreports@heartbeamstudy.org"]
+  enabled       = true
+  scan_enabled  = true
+
+  s3_action {
+    bucket_name = "${var.ses-emailed-reports-bucket}"
+    position    = 1
+  }
+
+  depends_on = [aws_s3_bucket_policy.receive]
 }

@@ -17,3 +17,7 @@ variable "cognito-logout-url" {
 variable "cognito-redirect-uri" {
   description = "The URL to which cognito redirects the browser after authorization. Must be absolute and must be https unless it is localhost."
 }
+
+variable "ses-emailed-reports-bucket" {
+    description = "Name for S3 bucket that will hold reports emailed to us from Lumosity"
+}
