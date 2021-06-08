@@ -111,6 +111,7 @@ resource "aws_ses_receipt_rule" "save-to-s3" {
 
   s3_action {
     bucket_name = "${var.ses-emailed-reports-bucket}"
+    object_key_prefix = "emails"
     position    = 1
   }
 
