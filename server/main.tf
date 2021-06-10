@@ -61,6 +61,18 @@ resource "aws_s3_bucket" "ses-bucket" {
   acl    = "private"
 }
 
+# pre-create the "folders" in the bucket so we can 
+# lock down access to only those paths
+resource "aws_s3_bucket_object" "ses-emails" {
+  bucket = aws_s3_bucket.ses-bucket.bucket
+  key = "emails/"
+}
+
+resource "aws_s3_bucket_object" "ses-reports" {
+  bucket = aws_s3_bucket.ses-bucket.bucket
+  key = "reports/"
+}
+
 # iam policy to allow SES to save email to s3 bucket
 data "aws_caller_identity" "current" {}
 
