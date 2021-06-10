@@ -26,4 +26,5 @@ functions:
     environment:
       DEST_BUCKET: ${ssm:/info/lambda/ses/bucket}
       DEST_PREFIX: reports
+      S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
     role: ${ssm:/role/lambda/ses/process}
