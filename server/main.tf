@@ -61,11 +61,27 @@ resource "aws_s3_bucket" "ses-bucket" {
   acl    = "private"
 }
 
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-bucket" {
+  name = "/info/lambda/ses/bucket"
+  description = "Bucket from which lambda should process emails received from SES"
+  type = "SecureString"
+  value = "${aws_s3_bucket.ses-bucket.bucket}"
+}
+
 # pre-create the "folders" in the bucket so we can 
 # lock down access to only those paths
 resource "aws_s3_bucket_object" "ses-emails" {
   bucket = aws_s3_bucket.ses-bucket.bucket
   key = "emails/"
+}
+
+# save above prefix to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-prefix" {
+  name = "/info/lambda/ses/prefix"
+  description = "Bucket from which lambda should process emails received from SES"
+  type = "SecureString"
+  value = "${aws_s3_bucket_object.ses-emails.key}"
 }
 
 resource "aws_s3_bucket_object" "ses-reports" {
@@ -128,4 +144,85 @@ resource "aws_ses_receipt_rule" "save-to-s3" {
   }
 
   depends_on = [aws_s3_bucket_policy.receive]
+}
+
+# IAM policies
+resource "aws_iam_policy" "cloudwatch-write" {
+  name = "pvs-${var.env}-cloudwatch-write"
+  path = "/policy/cloudwatch/"
+  description = "Allows writing to CloudWatch logs"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+# IAM roles
+resource "aws_iam_role" "lambda-ses-process" {
+  name = "pvs-${var.env}-lambda-ses-process"
+  path = "/role/lambda/ses/process/"
+  description = "Role for lambda function(s) handling receipt of emails in SES bucket"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "pvs-${var.env}-ses-bucket-write"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:PutObject",
+            "s3:PutObjectAcl"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ses-bucket.arn}/reports/*"
+          ]
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ses-bucket.arn}/emails/*"
+          ]
+        }
+      ]
+    })
+  }
+
+  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-role" {
+  name = "/role/lambda/ses/process"
+  description = "ARN for lambda role to process emails received from SES"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-ses-process.arn}"
 }
