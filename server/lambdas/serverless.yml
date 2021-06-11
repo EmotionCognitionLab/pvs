@@ -3,8 +3,9 @@ frameworkVersion: '2.45.2'
 configValidationMode: error
 variablesResolutionMode: 20210326
 package:
+  individually: true
   patterns:
-    - '!README.md'
+    - '!./**'
 
 provider:
   name: aws
@@ -28,3 +29,9 @@ functions:
       DEST_PREFIX: reports
       S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
     role: ${ssm:/role/lambda/ses/process}
+    package:
+      patterns:
+        - 'process-lumosity-emails/package*.json'
+        - 'process-lumosity-emails/node_modules/**'
+        - 'process-lumosity-emails/*.js'
+
