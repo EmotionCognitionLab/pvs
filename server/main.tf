@@ -189,6 +189,38 @@ resource "aws_iam_policy" "cloudwatch-write" {
   })
 }
 
+# Policy to allow authenticated cognito users to write
+# to the experiment data table, but only rows where
+# the hash key is their cognito sub id.
+resource "aws_iam_policy" "dynamodb-write-experiment-data" {
+  name = "pvs-${var.env}-dynamodb-write-experiment-data"
+  path = "/policy/dynamodb/experimentData/"
+  description = "Allows writing to Dynamodb experiment data table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 # IAM roles
 resource "aws_iam_role" "lambda-ses-process" {
   name = "pvs-${var.env}-lambda-ses-process"
