@@ -54,6 +54,18 @@ resource "aws_cognito_user_pool_domain" "main" {
     user_pool_id = aws_cognito_user_pool.pool.id
 }
 
+resource "aws_cognito_identity_pool" "main" {
+  allow_classic_flow               = false
+  allow_unauthenticated_identities = false
+  identity_pool_name               = "pvs-${var.env}-id-pool"
+
+  cognito_identity_providers {
+      client_id               = "${aws_cognito_user_pool_client.client.id}"
+      provider_name           = "${aws_cognito_user_pool.pool.endpoint}"
+      server_side_token_check = false
+  }
+}
+
 # DynamoDB setup
 resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
