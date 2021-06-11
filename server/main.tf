@@ -54,6 +54,27 @@ resource "aws_cognito_user_pool_domain" "main" {
     user_pool_id = aws_cognito_user_pool.pool.id
 }
 
+# DynamoDB setup
+resource "aws_dynamodb_table" "experiment-data-table" {
+  name           = "pvs-${var.env}-experiment-data"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+  range_key      = "experimentDateTime"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "experimentDateTime"
+    type = "S"
+  }
+}
+
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
