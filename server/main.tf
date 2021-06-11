@@ -291,3 +291,31 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
   type = "SecureString"
   value = "${aws_iam_role.lambda-ses-process.arn}"
 }
+
+resource "aws_iam_role" "dynamodb-experiment-writer" {
+  name = "pvs-${var.env}-dynamo-writer"
+  path = "/role/user/dynamodb/write/"
+  description = "Allows cognito-auth'd users to write to experiment data table."
+  assume_role_policy    = jsonencode(
+      {
+          Statement = [
+              {
+                  Action    = "sts:AssumeRoleWithWebIdentity"
+                  Condition = {
+                      StringEquals = {
+                          "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+                      }
+                  }
+                  Effect    = "Allow"
+                  Principal = {
+                      Federated = "cognito-identity.amazonaws.com"
+                  }
+              },
+          ]
+          Version   = "2012-10-17"
+      }
+  )
+  managed_policy_arns   = [
+      aws_iam_policy.dynamodb-write-experiment-data.arn
+  ]
+}
