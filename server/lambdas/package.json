@@ -4,7 +4,7 @@
   "description": "Home for modules (e.g. aws-sdk) shared across multiple lambda functions",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "devDependencies": {
-    "aws-sdk": "^2.924.0"
+    "aws-sdk": "^2.924.0",
+    "jest": "^27.0.4",
+    "lambda-local": "^1.7.4"
   }
 }
