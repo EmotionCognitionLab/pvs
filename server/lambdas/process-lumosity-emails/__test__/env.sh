@@ -1,0 +1,2 @@
+DEST_BUCKET=emailbucket
+DEST_PREFIX=reports

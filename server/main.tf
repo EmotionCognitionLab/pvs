@@ -54,11 +54,72 @@ resource "aws_cognito_user_pool_domain" "main" {
     user_pool_id = aws_cognito_user_pool.pool.id
 }
 
+resource "aws_cognito_identity_pool" "main" {
+  allow_classic_flow               = false
+  allow_unauthenticated_identities = false
+  identity_pool_name               = "pvs-${var.env}-id-pool"
+
+  cognito_identity_providers {
+      client_id               = "${aws_cognito_user_pool_client.client.id}"
+      provider_name           = "${aws_cognito_user_pool.pool.endpoint}"
+      server_side_token_check = false
+  }
+}
+
+# DynamoDB setup
+resource "aws_dynamodb_table" "experiment-data-table" {
+  name           = "pvs-${var.env}-experiment-data"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+  range_key      = "experimentDateTime"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "experimentDateTime"
+    type = "S"
+  }
+}
+
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
   bucket = "${var.ses-emailed-reports-bucket}"
   acl    = "private"
+}
+
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-bucket" {
+  name = "/info/lambda/ses/bucket"
+  description = "Bucket from which lambda should process emails received from SES"
+  type = "SecureString"
+  value = "${aws_s3_bucket.ses-bucket.bucket}"
+}
+
+# pre-create the "folders" in the bucket so we can 
+# lock down access to only those paths
+resource "aws_s3_bucket_object" "ses-emails" {
+  bucket = aws_s3_bucket.ses-bucket.bucket
+  key = "emails/"
+}
+
+# save above prefix to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-prefix" {
+  name = "/info/lambda/ses/prefix"
+  description = "Bucket from which lambda should process emails received from SES"
+  type = "SecureString"
+  value = "${aws_s3_bucket_object.ses-emails.key}"
+}
+
+resource "aws_s3_bucket_object" "ses-reports" {
+  bucket = aws_s3_bucket.ses-bucket.bucket
+  key = "reports/"
 }
 
 # iam policy to allow SES to save email to s3 bucket
@@ -111,8 +172,150 @@ resource "aws_ses_receipt_rule" "save-to-s3" {
 
   s3_action {
     bucket_name = "${var.ses-emailed-reports-bucket}"
+    object_key_prefix = "emails"
     position    = 1
   }
 
   depends_on = [aws_s3_bucket_policy.receive]
+}
+
+# IAM policies
+resource "aws_iam_policy" "cloudwatch-write" {
+  name = "pvs-${var.env}-cloudwatch-write"
+  path = "/policy/cloudwatch/"
+  description = "Allows writing to CloudWatch logs"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+# Policy to allow authenticated cognito users to write
+# to the experiment data table, but only rows where
+# the hash key is their cognito sub id.
+resource "aws_iam_policy" "dynamodb-write-experiment-data" {
+  name = "pvs-${var.env}-dynamodb-write-experiment-data"
+  path = "/policy/dynamodb/experimentData/"
+  description = "Allows writing to Dynamodb experiment data table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+# IAM roles
+resource "aws_iam_role" "lambda-ses-process" {
+  name = "pvs-${var.env}-lambda-ses-process"
+  path = "/role/lambda/ses/process/"
+  description = "Role for lambda function(s) handling receipt of emails in SES bucket"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "pvs-${var.env}-ses-bucket-write"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:PutObject",
+            "s3:PutObjectAcl"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ses-bucket.arn}/reports/*"
+          ]
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ses-bucket.arn}/emails/*"
+          ]
+        }
+      ]
+    })
+  }
+
+  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-ses-role" {
+  name = "/role/lambda/ses/process"
+  description = "ARN for lambda role to process emails received from SES"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-ses-process.arn}"
+}
+
+resource "aws_iam_role" "dynamodb-experiment-writer" {
+  name = "pvs-${var.env}-dynamo-writer"
+  path = "/role/user/dynamodb/write/"
+  description = "Allows cognito-auth'd users to write to experiment data table."
+  assume_role_policy    = jsonencode(
+      {
+          Statement = [
+              {
+                  Action    = "sts:AssumeRoleWithWebIdentity"
+                  Condition = {
+                      StringEquals = {
+                          "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+                      }
+                  }
+                  Effect    = "Allow"
+                  Principal = {
+                      Federated = "cognito-identity.amazonaws.com"
+                  }
+              },
+          ]
+          Version   = "2012-10-17"
+      }
+  )
+  managed_policy_arns   = [
+      aws_iam_policy.dynamodb-write-experiment-data.arn
+  ]
 }

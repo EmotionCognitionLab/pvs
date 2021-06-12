@@ -1,0 +1,24 @@
+{
+  "name": "pvs",
+  "version": "1.0.0",
+  "description": "Home for modules (e.g. aws-sdk) shared across multiple lambda functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.924.0",
+    "jest": "^27.0.4",
+    "lambda-local": "^1.7.4"
+  }
+}

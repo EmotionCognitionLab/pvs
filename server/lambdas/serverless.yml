@@ -1,0 +1,37 @@
+service: pvs
+frameworkVersion: '2.45.2'
+configValidationMode: error
+variablesResolutionMode: 20210326
+package:
+  individually: true
+  patterns:
+    - '!./**'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-west-2'}
+  lambdaHashingVersion: 20201221
+
+functions:
+  process-lumosity-emails:
+    handler: process-lumosity-emails.saveattachments
+    events:
+      - s3:
+          bucket: ${ssm:/info/lambda/ses/bucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: ${ssm:/info/lambda/ses/prefix}
+          existing: true
+    environment:
+      DEST_BUCKET: ${ssm:/info/lambda/ses/bucket}
+      DEST_PREFIX: reports
+      S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
+    role: ${ssm:/role/lambda/ses/process}
+    package:
+      patterns:
+        - 'process-lumosity-emails/package*.json'
+        - 'process-lumosity-emails/node_modules/**'
+        - 'process-lumosity-emails/*.js'
+

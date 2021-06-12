@@ -1,0 +1,79 @@
+Return-Path: <noah_ten@yahoo.com>
+Received: from sonic305-20.consmr.mail.gq1.yahoo.com (sonic305-20.consmr.mail.gq1.yahoo.com [98.137.64.83])
+ by inbound-smtp.us-west-2.amazonaws.com with SMTP id j4nimvj2eq8os0r422a8vfugjpvjkieq92n3q0o1
+ for lumosityreports@heartbeamstudy.org;
+ Fri, 11 Jun 2021 18:32:09 +0000 (UTC)
+X-SES-Spam-Verdict: PASS
+X-SES-Virus-Verdict: PASS
+Received-SPF: pass (spfCheck: domain of _spf.mail.yahoo.com designates 98.137.64.83 as permitted sender) client-ip=98.137.64.83; envelope-from=noah_ten@yahoo.com; helo=sonic305-20.consmr.mail.gq1.yahoo.com;
+Authentication-Results: amazonses.com;
+ spf=pass (spfCheck: domain of _spf.mail.yahoo.com designates 98.137.64.83 as permitted sender) client-ip=98.137.64.83; envelope-from=noah_ten@yahoo.com; helo=sonic305-20.consmr.mail.gq1.yahoo.com;
+ dkim=pass header.i=@yahoo.com;
+ dmarc=pass header.from=yahoo.com;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFFRmJvWUJKRmNIMWtXaityNFJPZkNqVnMvb09Rais0RkRhc2QvaEhDTndqRzM2TXJjSzloQ3lwZjJsZlNybWJUajRtcUpUTTdDUTBERThmd0RhdjVQamtjck1tTWd6dTJKMzE1WDlZell5QklZbzhvOEtCSGdxNll0Si91dkZtMmtxV1VXeVR3UmRHaVBJaTJJdWs2QVpqTkJQS1M4SEtYWkpJZms1OG1ZVUtJbWRxVittcHNTSzlyMjYvcXI5QlBseEMvS2FqbEdiS2Q5Y09wWmxScUxvL0lveWNSWExEdDR4andMbk9DbG1hVXlzcnpmOXRtSFdlRDdUU3BwVFhMTUtjQ3JkU0F0NFR4c3lXQ2M5V2VyTWhWVEpzTWhBYTQ2ZEJHMDR2bUUxUVE9PQ==
+X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=YhH9Ak+nWzMeMnwF4HsN4Tt135PmoRN9RKnHoS8fu8NwG+uQDkyN/z5lXN5h52zxyp2juZvsw74/WIMGpC3njPTO3exM1FAdECyBfZKCrC1zOz3KmNuqARunBpvJZ84wqBIEAceEPfMlqtJR/zY2b4bxZGQiEBQO0NTJwN9T4i8=; c=relaxed/simple; s=7v7vs6w47njt4pimodk5mmttbegzsi6n; d=amazonses.com; t=1623436329; v=1; bh=0Yu4/uf3vSVCBUniwqWW1zFOcbSO3SPjjIB91kKYYHg=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1623436329; bh=0Yu4/uf3vSVCBUniwqWW1zFOcbSO3SPjjIB91kKYYHg=; h=Date:From:To:Subject:References:From:Subject:Reply-To; b=Uu3vVsLxlmjsTnqMVixsAM82N/7GVtiTsTYIKKB/Mirk0jUfFlmYmwWrDeN7NyGhswJU03RTBMxlCPtxqnaE8JQSEkKXdMIduaMzwypT2sfHStGHLlTUUz7gpdmQPh/u58msFcgJaJDSBHdQ1R4XwvIs14ZWXkXBzmbpMGHafi6/FQhvKaFPUUIWfSjtPJP+xv+k7BhPMHFjpRZXhoTFlss0C/keJsru9PXw2ZBd2f9jAy5NkyCR1cc9A1/sYTBhnzfuAsEQ+tr03CwIW9tv/68ZXqJ93qim/K1784hN1oM/xSKiLtqsB1fyRT2IdcASNavyHdAG2ZB5Xasz0PtWIw==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1623436329; bh=+8novWUjFRvHcwHwYv0NETn7L6xY0Z+O2ApQ7YdQO9J=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=MMJKmnP2T676pn2MA0M4gFSpMaLJw4QFgP7RSVe7CKWEthzkbGHXSSWz8d6Ju5R+y/2pidrBN6ZTsLv34tuQNsZO3I+rlxKKwmN9qHxtD+DgNWTU7AucSqUe6xpAub2peasWP8vBois6LEvTMXgi7uINBH4MA8gU5nrTQhHZv4bFjkylVWpCacoSJILiTiEeANsvZ64uL2T6cMl6CTFJGUJTCPUrOh2bo4gpuaVLJ6LKygMGp7VGc2IZWIXaX4DDDMsBT2CRXOkUdyVOiNqw9CXg1T6VK49Y9pau/lqPesFuKDmzzah5T+6jTzBg+ML7t4vW2DvFLFI8zbOgcOlWtA==
+X-YMail-OSG: NIe72s0VM1kG8wFi9hAsXDlzoFDr.AOvVL7dDWku0jQbmwx3UkumLfzz5ce1d7b
+ M51AHORQbH9jt.hW4X47qFfApZhvtS8xnhkA56sXa7QNA0oOVSySunMxwNA_wxUdHWPA3K2a3e3Z
+ hwwCZb88d7swnSFluAMm5G1We9rBxqWoguTGqcF3pkGp.2cFU2jwCyh1zMKY3rlp9Pe9hR6nbV9J
+ dYtRU5A71tITCQTaiSjTzUIzqVw6MaigwVbNegUqjIloYdsP8Sg0kYK4lXmj7du.oI7SRAVAQh1a
+ kaMKHdw2sNfMvW38rSQth596h5s3dygPc3htA42x7.Hf0ScLt0zAtlmgMLJfhU26X3jYTMcsbtUb
+ Y5XHCDTE5cEZEV_N5Z7mlobC5Bb_S247ntuq5IfuUzLtQfYAutG1UJ2InMURo3LqOO9BcgxslqW9
+ yMUVOutRxeml9secinjZPS79TQsOlBt.2asVTsox38mrBRk7rbksNAVft.McTsdM1dibCRE.ddkG
+ 362cO8Bce5EHXnZfttHQkRyAokJ0CN3i5ItWZOlkNPB89OAnKx7Iw1j0nifK9yLAQ7HA1AQ0n3TN
+ Pi3y2Mwgo_26DSLW4buRABPIqiNxdIhWoD4YIB1KwuolbcdeEXetzQG0fWrGJ5XAGAFLhkxbV0Id
+ QEcP_3r7RXN4TPx91gBVUUBURMQJBsL612M4EOn8Orefbvy.PyX8n7XpyYDVTo341ix1xpnFOJnI
+ gljwr03n66oqGYyuQKSyR5nMPtZSw9zWMMzKoK0hLNbVYyAuEagPhhO7fZcnDQp.uSM4PR0hdkd3
+ 5CgaHO2lAKIoh0FswP6LOJdJJpmylan9yqSQj_GHSNyTyx.hNUkZWzRaqtoGKOqp0xT.PbhNyBRQ
+ Ufc.jwznjxxgyH8gp20_7ZgbM7mecycy3TiCpLiRUcaJAafk1KTeV71_88OjG6Rk7ugjjjscvDAO
+ CAqo2qheIBrUTEggS9ErIU6q706WH6CNibWPtUiaLYOHG7HBqhgp3hJTve7So0AEh7eKstjFtIet
+ 3P1c2N7Z81GrOkzI0vKqUPfSBSbHfsPO8ziA4G3CaA5YVUmUCn7eSJAIDNFkXF68R9alrpgHAFLC
+ vRCQn46FKtstP0iT6mXtI74XmviACGV.sd5ro0pcrzMdkv2Rr37soACsIBlWgyL0mugw6Se2gK0x
+ 09wmRFpIaQ7k8y3TuC4M2BDdOA_vB_z5f0S4Zo_Yyz4UFgTECHF0WReiiZeX0NhnMLu1SGC7bfos
+ u_q4zMpMd.n0SY.r1OMIWYRzrqd0SJvDMfCd4fuZkkKc6DqzL6IvvdQ3N.lpUdZD7HsTQGdnOZGj
+ TGxPQ5jRy5Y8k2AAb7V_EqmtPC8Uu7AYR6i7CYBbaYRL6U45Wx28HzbuZ42l6h0W9yaOzOEuilS3
+ 6Uffjsn79uUsLiwCkj__P8xpJnYjCcnd9ZUKkWJGryZHj.5AcofR8F_sbp81nPtXnTdyIW0jiwLN
+ 0KGl5Q78YOH9t5QFKDzJIhTmc45VrWiBgs0_b.iiWRKOLrMV.1sTM585galC01hXo9XVyYCLGWF_
+ ep8E89wesjRoEH.q_1vpzYd.TJLv1RB4V_HDtC.BEzLTCbuVxhoPhx42uBM3W5RDRzDDn8uD7rQS
+ tAmAC2iQWHzjjMY0GwWlcg0CCkEKfJsiYd4iIj_OnI7WmxM7Hk0LEV9YD7bWInOkfBXKgf_w_TW6
+ 8T.FtogLg6b8GUoGY1hmg.YRMeJjvmlQWMc2lIdFBr.pcbAwOvBx8FJkGQVv1sSanoKcaFuWjiI_
+ LGAe42kNus6d24mQgWtLx26OPHNx38Amt9Kp4RVZU6z22Ypo.adEWJ8ZcK_qN21tnQAyncZWHbZh
+ a_MtcKSMbE6vXtnn14usRjuSkMQbXxk9gwKButkBmkvRQBttByYYFDQxjqzTcfd3E4TvqFAGmo1a
+ m4rzfQU420M687BHuCVfBQ5Vp7rxTe5ClR46gR3yK6kUyBvNFZRz72sRRWvBQb_7Y1tBe1jcfmD9
+ cN75g1B.hhRZqi8LiJwMthVGxaD2NV2gr65PqOrQUYgVBDmd6K.A2s.B_tD7hACcjsQkIeJiIXOz
+ ICvCJ_9KKk9dXecXnGkKch1cPtlfLOME-
+X-Sonic-MF: <noah_ten@yahoo.com>
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic305.consmr.mail.gq1.yahoo.com with HTTP; Fri, 11 Jun 2021 18:32:09 +0000
+Received: by kubenode570.mail-prod1.omega.bf1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID ec2242bfaf9a14dce092f29c76c39910;
+          Fri, 11 Jun 2021 18:32:05 +0000 (UTC)
+Date: Fri, 11 Jun 2021 11:31:58 -0700
+From: Noah Mercer <noah_ten@yahoo.com>
+To: lumosityreports@heartbeamstudy.org
+Message-ID: <etPan.60c3ac23.59501499.155a8@yahoo.com>
+Subject: test 24: no attachment
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="60c3ac23_3bf0ade4_155a8"
+References: <etPan.60c3ac23.59501499.155a8.ref@yahoo.com>
+X-Mailer: WebService/1.1.18368 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Content-Length: 535
+
+--60c3ac23_3bf0ade4_155a8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+
+
+--60c3ac23_3bf0ade4_155a8
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+<html><head><style>body=7Bfont-family:Helvetica,Arial;font-size:13px=7D</=
+style></head><body><div style=3D=22font-family:Helvetica,Arial;font-size:=
+13px; =22><br></div><br><div class=3D=22gmail=5Fsignature=22></div></body=
+></html>
+--60c3ac23_3bf0ade4_155a8--
+

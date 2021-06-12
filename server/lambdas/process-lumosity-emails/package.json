@@ -1,0 +1,22 @@
+{
+  "name": "process-lumosity-emails",
+  "version": "1.0.0",
+  "description": "Function to extract attachments from emails received via SES. Triggered by email being written to S3 bucket.",
+  "main": "process-lumosity-emails.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "mailparser": "^3.2.0"
+  }
+}
