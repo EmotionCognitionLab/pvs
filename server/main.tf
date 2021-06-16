@@ -57,7 +57,7 @@ resource "aws_cognito_user_pool_domain" "main" {
 resource "aws_cognito_identity_pool" "main" {
   allow_classic_flow               = false
   allow_unauthenticated_identities = false
-  identity_pool_name               = "pvs-${var.env}-id-pool"
+  identity_pool_name               = "pvs_${var.env}_id_pool"
 
   cognito_identity_providers {
       client_id               = "${aws_cognito_user_pool_client.client.id}"
