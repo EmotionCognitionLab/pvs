@@ -5,7 +5,7 @@ const client = path.join(__dirname, "../../client");
 
 module.exports = {
     entry: {},
-    plugins: [new HtmlWebpackPlugin({template: '../../client/index.ejs'})],
+    plugins: [],
     optimization: {
         splitChunks: {
             chunks: "all",
