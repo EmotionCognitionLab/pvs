@@ -20,7 +20,7 @@
     <h2>DB saving example</h2>
     <textarea rows="5" cols="30" id="results">{"responseTimeMs": 320, "percentCorrect": 97}</textarea>
     <br/>
-    <button onclick="saveRandomResults()">Save these results to DynamoDB</button>
+    <button onclick="saveResults()">Save these results to DynamoDB</button>
 
     <script>
       function success(session) {
@@ -41,7 +41,7 @@
         alert("Error! " + error);
       }
 
-      function saveRandomResults() {
+      function saveResults() {
         const results = JSON.parse(document.getElementById('results').value);
         const cognitoAuth = auth.getAuth((session) => {
           db.saveResults(session, 'test-experiment', results);
