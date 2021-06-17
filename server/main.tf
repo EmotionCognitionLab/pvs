@@ -319,3 +319,58 @@ resource "aws_iam_role" "dynamodb-experiment-writer" {
       aws_iam_policy.dynamodb-write-experiment-data.arn
   ]
 }
+
+resource "aws_iam_role" "unauthenticated" {
+  name = "pvs-${var.env}-cognito-unauthenticated"
+  path = "/role/user/unauthenticated/"
+  description = "Minimal role for unauthenticated cognito uesrs"
+  assume_role_policy    = jsonencode(
+      {
+          Statement = [
+              {
+                  Action    = "sts:AssumeRoleWithWebIdentity"
+                  Condition = {
+                      StringEquals = {
+                          "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+                      },
+                      "ForAnyValue:StringLike" = {
+                        "cognito-identity.amazonaws.com:amr" = "unauthenticated"
+                      }
+                  }
+                  Effect    = "Allow"
+                  Principal = {
+                      Federated = "cognito-identity.amazonaws.com"
+                  }
+              },
+          ]
+          Version   = "2012-10-17"
+      }
+  )
+
+  inline_policy {
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*"
+          ]
+          Resource = [
+            "*"
+          ]
+        }
+      ]
+    })
+  }
+}
+
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
+  identity_pool_id = aws_cognito_identity_pool.main.id
+
+  roles = {
+    "authenticated" = aws_iam_role.dynamodb-experiment-writer.arn
+    "unauthenticated" = aws_iam_role.unauthenticated.arn
+  }
+}
