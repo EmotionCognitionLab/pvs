@@ -72,16 +72,16 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
-  hash_key       = "userId"
-  range_key      = "experimentDateTime"
+  hash_key       = "identityId"
+  range_key      = "userExperimentDateTime"
 
   attribute {
-    name = "userId"
+    name = "identityId"
     type = "S"
   }
 
   attribute {
-    name = "experimentDateTime"
+    name = "userExperimentDateTime"
     type = "S"
   }
 }
