@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Auth Sample</title>
+    <script src="http://heartbeamstudy.org.s3-website-us-west-2.amazonaws.com/amazon-cognito-auth.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.928.0.min.js"></script>
+
+    <script src="auth/dist/auth.js"></script>
+    <script src="db/dist/db.js"></script>
+  </head>
+  <body onload="onLoad()">
+    <h1>Example</h1>
+    <div>This page provides a quick example of how to use the libraries here in common. Just run ./rundemo.sh and go to http://localhost:9000 to view it.</div>
+    <h1>Hi. This web page should ask you to authenticate. If it doesn't, something went wrong.</h1>
+    <h2>Auth info</h2>
+    <div id="message">
+      
+    </div>
+    <br/>
+    <h2>DB saving example</h2>
+    <textarea rows="5" cols="30" id="results">{"responseTimeMs": 320, "percentCorrect": 97}</textarea>
+    <br/>
+    <button onclick="saveRandomResults()">Save these results to DynamoDB</button>
+
+    <script>
+      function success(session) {
+        var msgText = "You have logged in.";
+        if (session) {
+          var idToken = session.getIdToken().getJwtToken();
+          if (idToken) {
+            var payload = idToken.split('.')[1];
+            var tokenobj = JSON.parse(atob(payload));
+            var formatted = JSON.stringify(tokenobj, undefined, 2);
+            msgText += "Your id token is " + formatted
+          }
+        }
+        document.getElementById("message").innerHTML = msgText;;
+      }
+
+      function failure(error) {
+        alert("Error! " + error);
+      }
+
+      function saveRandomResults() {
+        const results = JSON.parse(document.getElementById('results').value);
+        const cognitoAuth = auth.getAuth((session) => {
+          db.saveResults(session, 'test-experiment', results);
+        }, failure);   
+        cognitoAuth.getSession(); // weirdly, you have to call this to trigger the success function passed to getAuth
+        alert('Saved!');
+      }
+
+      function onLoad() {
+        const cognitoAuth = auth.getAuth(success, failure);
+        cognitoAuth.getSession(); // weirdly, you have to call this to trigger the success function passed to getAuth
+        const curUrl = window.location.href;
+        cognitoAuth.parseCognitoWebResponse(curUrl);
+      }
+    </script>
+  </body>
+</html>
