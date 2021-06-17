@@ -1,0 +1,27 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "API for PVS db access",
+  "main": "db.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "aws-sdk": "^2.929.0",
+    "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "webpack": "^5.39.0",
+    "webpack-cli": "^4.7.2"
+  }
+}
