@@ -1,9 +1,0 @@
-{
-    "ClientId" : "",
-    "AppWebDomain" : "something.auth.us-west-2.amazoncognito.com",
-    "TokenScopesArray" : ["openid"], 
-    "RedirectUriSignIn" : "http://localhost:9000",
-    "RedirectUriSignOut" : "http://localhost:9000", 
-    "UserPoolId" : "", 
-    "AdvancedSecurityDataCollectionFlag" : false
-}

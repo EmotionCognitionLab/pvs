@@ -1,0 +1,11 @@
+{
+    "ClientId" : "1bpv8367q6hut3mv2iunt5r08j",
+    "AppWebDomain" : "pvs-dev.auth.us-west-2.amazoncognito.com",
+    "TokenScopesArray" : ["openid"], 
+    "RedirectUriSignIn" : "http://localhost:9000",
+    "RedirectUriSignOut" : "http://localhost:9000", 
+    "UserPoolId" : "us-west-2_aGVfFp5Ts", 
+    "IdentityPoolId": "us-west-2:16385a7b-a8a9-46cc-831f-44e11a3ebf13",
+    "AdvancedSecurityDataCollectionFlag" : false,
+    "AWSRegion": "us-west-2"
+}

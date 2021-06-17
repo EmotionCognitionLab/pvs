@@ -5,7 +5,7 @@
  * with cognito.
  * 
  */
-import cognitoSettings from './cognito-settings.json';
+import cognitoSettings from '../../cognito-settings.json';
 import 'amazon-cognito-auth-js';
 
 'use strict';
