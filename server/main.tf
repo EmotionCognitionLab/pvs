@@ -86,6 +86,32 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 }
 
+resource "aws_dynamodb_table" "user-table" {
+  name           = "pvs-${var.env}-users"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+  range_key      = "createdAt"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "createdAt"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-user-table" {
+  name = "/info/dynamo/table/users"
+  description = "Dynamo table holding user information"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.user-table.name}"
+}
 
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
