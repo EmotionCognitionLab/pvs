@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config({path: path.join(__dirname, './env.sh')});
 const AWS = require('aws-sdk');
 const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01'});
+const dynamoClient = new AWS.DynamoDB({endpoint: process.env.DYNAMO_ENDPOINT, apiVersion: '2012-08-10', region: process.env.REGION})
 
 module.exports = {
     s3: {
@@ -52,6 +53,45 @@ module.exports = {
                     throw new Error(err);
                 }
             }
+        }
+    },
+    
+    dynamo: {
+        createTable: async(tableName, keySchema, attributeDefinitions) => {
+            await dynamoClient.createTable({
+                TableName: tableName,
+                KeySchema: keySchema,
+                AttributeDefinitions: attributeDefinitions,
+                ProvisionedThroughput: {
+                    ReadCapacityUnits: 1,
+                    WriteCapacityUnits: 1
+                }
+            }).promise();
+            const waitMs = 1000;
+            var retries = 3;
+            var isActive = false;
+            while (retries-- > 0 && !isActive) {
+                try {
+                    const tableStatus = await dynamoClient.describeTable({TableName: tableName}).promise();
+                    isActive = tableStatus.Table.TableStatus === 'ACTIVE';
+                } catch (err) {
+                    if (err.code !== 'ResourceNotFoundException') {
+                        // ignore ResourceNotFound, but nothing else
+                        throw(err);
+                    }
+                } finally {
+                    if (!isActive) {
+                        await new Promise(r => setTimeout(r, waitMs));
+                    }
+                }
+            }
+            if (!isActive) {
+                throw new Error(`Timed out trying to create table ${tableName}. Unable to confirm it is active.`);
+            }
+        },
+
+        deleteTable: async(tableName) => {
+            await dynamoClient.deleteTable({TableName: tableName}).promise();
         }
     }
 };

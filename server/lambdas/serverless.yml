@@ -35,3 +35,22 @@ functions:
         - 'process-lumosity-emails/node_modules/**'
         - 'process-lumosity-emails/*.js'
 
+  write-user-on-verify:
+    handler: on-user-verify/verified.handler
+    environment:
+      USERS_TABLE: ${ssm:/info/dynamo/table/users}
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/role/lambda/dynamodb}
+    package:
+      patterns:
+        - 'on-user-verify/*.js'
+
+resources:
+  Resources:
+    PostConfirmationTriggerInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: ${ssm:/info/cognito/user-pool/arn}
+        FunctionName: ${self:service}-${self:provider.stage}-write-user-on-verify
