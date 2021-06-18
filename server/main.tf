@@ -95,7 +95,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 }
 
-resource "aws_dynamodb_table" "user-table" {
+resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
@@ -115,11 +115,11 @@ resource "aws_dynamodb_table" "user-table" {
 }
 
 # save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-user-table" {
+resource "aws_ssm_parameter" "dynamo-users-table" {
   name = "/info/dynamo/table/users"
   description = "Dynamo table holding user information"
   type = "SecureString"
-  value = "${aws_dynamodb_table.user-table.name}"
+  value = "${aws_dynamodb_table.users-table.name}"
 }
 
 # SES setup, including relevant S3 buckets and IAM settings
