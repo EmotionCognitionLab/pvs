@@ -42,6 +42,14 @@ output "cognito_pool_id" {
     value = aws_cognito_user_pool.pool.id
 }
 
+# save user pool arn to SSM so serverless can reference it
+resource "aws_ssm_parameter" "cognito-user-pool-arn" {
+  name = "/info/cognito/user-pool/arn"
+  description = "Cognito user pool ARN"
+  type = "SecureString"
+  value = "${aws_cognito_user_pool.pool.arn}"
+}
+
 resource "aws_cognito_user_pool_client" "client" {
     name = "client"
     user_pool_id = aws_cognito_user_pool.pool.id
