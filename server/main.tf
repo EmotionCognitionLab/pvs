@@ -74,6 +74,9 @@ resource "aws_cognito_identity_pool" "main" {
       server_side_token_check = false
   }
 }
+output "cognito_identity_pool_id" {
+  value = aws_cognito_identity_pool.main.id
+}
 
 # DynamoDB setup
 resource "aws_dynamodb_table" "experiment-data-table" {
