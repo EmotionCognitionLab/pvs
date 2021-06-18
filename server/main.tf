@@ -268,6 +268,36 @@ resource "aws_iam_policy" "dynamodb-write-experiment-data" {
 POLICY
 }
 
+# policy to allow reading/writing to dynamo
+resource "aws_iam_policy" "dynamodb-read-write" {
+  name = "pvs-${var.env}-dynamodb-read-write"
+  path = "/policy/dynamodb/all/"
+  description = "Allows reading from/writing to dynamodb tables"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/*"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # IAM roles
 resource "aws_iam_role" "lambda-ses-process" {
   name = "pvs-${var.env}-lambda-ses-process"
@@ -399,6 +429,38 @@ resource "aws_iam_role" "unauthenticated" {
       ]
     })
   }
+}
+
+resource "aws_iam_role" "lambda-dynamodb" {
+  name = "pvs-${var.env}-lambda-dynamodb"
+  path = "/role/lambda/dynamodb/"
+  description = "Role for lambda functions needing read/write dynamodb access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-read-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-dynamodb-role" {
+  name = "/role/lambda/dynamodb"
+  description = "ARN for lambda role with dynamodb access"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
