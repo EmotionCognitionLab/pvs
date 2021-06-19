@@ -19,6 +19,7 @@
   "devDependencies": {
     "aws-sdk": "^2.924.0",
     "jest": "^27.0.4",
-    "lambda-local": "^1.7.4"
+    "lambda-local": "^1.7.4",
+    "serverless-ssm-publish": "^1.4.1"
   }
 }

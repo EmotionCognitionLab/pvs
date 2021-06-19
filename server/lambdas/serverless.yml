@@ -14,6 +14,9 @@ provider:
   region: ${opt:region, 'us-west-2'}
   lambdaHashingVersion: 20201221
 
+plugins:
+  - serverless-ssm-publish
+
 functions:
   process-lumosity-emails:
     handler: process-lumosity-emails.saveattachments
@@ -54,3 +57,18 @@ resources:
         Principal: cognito-idp.amazonaws.com
         SourceArn: ${ssm:/info/cognito/user-pool/arn}
         FunctionName: ${self:service}-${self:provider.stage}-write-user-on-verify
+  Outputs:
+    PostConfirmationLambdaArn:
+      Value: !GetAtt WriteDashuserDashonDashverifyLambdaFunction.Arn
+      Export:
+        Name: 'post-confirmation-lambda-arn'
+      Description: Arn for the post-cognito-verification lambda trigger
+
+custom:
+  ssmPublish:
+    enabled: true
+    params:
+      - path: /info/lambdas/write-user-on-verify/arn
+        source: PostConfirmationLambdaArn
+        description: Arn for the post-cognito-verification lambda trigger
+

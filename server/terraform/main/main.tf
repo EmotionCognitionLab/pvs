@@ -3,6 +3,8 @@ provider "aws" {
 }
 
 # cognito setup
+# do not change this without also changing it
+# in ../post-lambdas/cognito.tf
 resource "aws_cognito_user_pool" "pool" {
     name = "pvs-${var.env}-users"
     auto_verified_attributes = [ "email" ]
