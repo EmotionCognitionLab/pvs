@@ -39,6 +39,10 @@ resource "aws_cognito_user_pool" "pool" {
     username_configuration {
       case_sensitive = false
     }
+    sms_configuration {
+      external_id = "pvs-${var.env}-cognito-snscaller"
+      sns_caller_arn = aws_iam_role.cognito-sns.arn
+    }
 }
 output "cognito_pool_id" {
     value = aws_cognito_user_pool.pool.id
@@ -468,6 +472,45 @@ resource "aws_ssm_parameter" "lambda-dynamodb-role" {
   description = "ARN for lambda role with dynamodb access"
   type = "SecureString"
   value = "${aws_iam_role.lambda-dynamodb.arn}"
+}
+
+resource "aws_iam_role" "cognito-sns" {
+  name = "pvs-${var.env}-cognito-sns"
+  path = "/role/cognito/sns/"
+  description = "Role to allow cognito to send messages via SNS"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+        Condition = {
+          StringEquals = {
+              "sts:ExternalId" = "pvs-${var.env}-cognito-snscaller"
+          }
+        }
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "pvs-${var.env}-sns-publish"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [ "sns:publish" ]
+          Resource = [ "*" ]
+        }
+      ]
+    })
+  }
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
