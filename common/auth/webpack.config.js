@@ -10,13 +10,5 @@ module.exports = {
 			type: 'umd',
 		},
     },
-    externals: {
-		'amazon-cognito-auth-js': {
-			commonjs: 'amazon-cognito-auth-js',
-			commonjs2: 'amazon-cognito-auth-js',
-			amd: 'amazon-cognito-auth-js',
-			root: 'AmazonCognitoAuth',
-		}
-    },
     mode: "development"
 };
