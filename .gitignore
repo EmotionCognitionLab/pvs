@@ -6,3 +6,5 @@ dist
 **/.terraform/*
 *.tfstate
 *.tfstate.*
+
+vetur.config.js
