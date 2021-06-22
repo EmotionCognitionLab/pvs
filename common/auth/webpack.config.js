@@ -9,6 +9,7 @@ module.exports = {
 			name: 'auth',
 			type: 'umd',
 		},
+		globalObject: 'this'
     },
     mode: "development"
 };
