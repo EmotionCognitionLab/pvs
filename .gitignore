@@ -8,3 +8,5 @@ dist
 *.tfstate.*
 
 vetur.config.js
+
+common/cognito-settings.json

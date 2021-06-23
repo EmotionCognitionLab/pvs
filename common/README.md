@@ -2,6 +2,9 @@
 
 These libraries may be used by both the baseline code and the desktop client application.
 
+### Setup
+Copy cognito-settings.json.tmpl to cognito-settings.json and fill in the appropriate values. (You can find these through the Cognito user console.) 
+
 ### Building
 In each subdirectory (shown here only for 'auth'), do the following:
 
