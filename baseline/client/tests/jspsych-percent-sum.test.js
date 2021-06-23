@@ -34,17 +34,17 @@ describe("jspsych-percent-sum.js plugin", () => {
             jsPsych.init({timeline: [trial]});
             const inputs = jsPsych.getDisplayElement().querySelectorAll("input");
             // the number of inputs should match the number of fields
-            expect(inputs.length === fields.length);
+            expect(inputs.length).toBe(fields.length);
             const labels = jsPsych.getDisplayElement().querySelectorAll("label");
             // the number of labels should match the number of fields
-            expect(labels.length === fields.length);
+            expect(labels.length).toBe(fields.length);
             // for each label there should exist a field that is a substring of the label
             labels.forEach(label => {
-                expect(fields.some(field => label.textContent.includes(field)));
+                expect(fields.some(field => label.textContent.includes(field))).toBe(true);
             });
         });
     });
-    
+
     it("throws on empty fields", () => {
         const trial = {
             type: "percent-sum",
@@ -57,7 +57,7 @@ describe("jspsych-percent-sum.js plugin", () => {
             });
         }).toThrow();
     });
-    
+
     it("throws on duplicate fields", () => {
         const trial = {
             type: "percent-sum",
