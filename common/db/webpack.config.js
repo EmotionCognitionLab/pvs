@@ -1,15 +1,14 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/auth.js',
+    entry: ['./src/db.js'],
     output: {
-		filename: 'auth.js',
+		filename: 'db.js',
 		path: path.resolve(__dirname, 'dist'),
 		library: {
-			name: 'auth',
+			name: 'db',
 			type: 'umd',
 		},
-		globalObject: 'this'
     },
     mode: "development"
 };

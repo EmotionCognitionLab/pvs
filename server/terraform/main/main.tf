@@ -3,6 +3,8 @@ provider "aws" {
 }
 
 # cognito setup
+# do not change this without also changing it
+# in ../post-lambdas/cognito.tf
 resource "aws_cognito_user_pool" "pool" {
     name = "pvs-${var.env}-users"
     auto_verified_attributes = [ "email" ]
@@ -24,13 +26,34 @@ resource "aws_cognito_user_pool" "pool" {
           max_length = 12
       }
     }
+    schema {
+      attribute_data_type = "String"
+      name = "name"
+      required = true
+      string_attribute_constraints {
+          min_length = 1
+          max_length = 50
+      }
+    }
     username_attributes = [ "email" ]
     username_configuration {
       case_sensitive = false
     }
+    sms_configuration {
+      external_id = "pvs-${var.env}-cognito-snscaller"
+      sns_caller_arn = aws_iam_role.cognito-sns.arn
+    }
 }
 output "cognito_pool_id" {
     value = aws_cognito_user_pool.pool.id
+}
+
+# save user pool arn to SSM so serverless can reference it
+resource "aws_ssm_parameter" "cognito-user-pool-arn" {
+  name = "/info/cognito/user-pool/arn"
+  description = "Cognito user pool ARN"
+  type = "SecureString"
+  value = "${aws_cognito_user_pool.pool.arn}"
 }
 
 resource "aws_cognito_user_pool_client" "client" {
@@ -39,7 +62,7 @@ resource "aws_cognito_user_pool_client" "client" {
     generate_secret = false
     allowed_oauth_flows = [ "code", "implicit" ]
     allowed_oauth_flows_user_pool_client = true
-    allowed_oauth_scopes = [ "openid" ]
+    allowed_oauth_scopes = [ "openid", "aws.cognito.signin.user.admin" ]
     callback_urls = [ "${var.cognito-callback-url}" ]
     default_redirect_uri = "${var.cognito-redirect-uri}"
     logout_urls = [ "${var.cognito-logout-url}" ]
@@ -57,13 +80,16 @@ resource "aws_cognito_user_pool_domain" "main" {
 resource "aws_cognito_identity_pool" "main" {
   allow_classic_flow               = false
   allow_unauthenticated_identities = false
-  identity_pool_name               = "pvs-${var.env}-id-pool"
+  identity_pool_name               = "pvs_${var.env}_id_pool"
 
   cognito_identity_providers {
       client_id               = "${aws_cognito_user_pool_client.client.id}"
       provider_name           = "${aws_cognito_user_pool.pool.endpoint}"
       server_side_token_check = false
   }
+}
+output "cognito_identity_pool_id" {
+  value = aws_cognito_identity_pool.main.id
 }
 
 # DynamoDB setup
@@ -72,20 +98,40 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
+  hash_key       = "identityId"
+  range_key      = "userExperimentDateTime"
+
+  attribute {
+    name = "identityId"
+    type = "S"
+  }
+
+  attribute {
+    name = "userExperimentDateTime"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "users-table" {
+  name           = "pvs-${var.env}-users"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "userId"
-  range_key      = "experimentDateTime"
 
   attribute {
     name = "userId"
     type = "S"
   }
-
-  attribute {
-    name = "experimentDateTime"
-    type = "S"
-  }
 }
 
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-users-table" {
+  name = "/info/dynamo/table/users"
+  description = "Dynamo table holding user information"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.users-table.name}"
+}
 
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
@@ -233,6 +279,36 @@ resource "aws_iam_policy" "dynamodb-write-experiment-data" {
 POLICY
 }
 
+# policy to allow reading/writing to dynamo
+resource "aws_iam_policy" "dynamodb-read-write" {
+  name = "pvs-${var.env}-dynamodb-read-write"
+  path = "/policy/dynamodb/all/"
+  description = "Allows reading from/writing to dynamodb tables"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/*"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # IAM roles
 resource "aws_iam_role" "lambda-ses-process" {
   name = "pvs-${var.env}-lambda-ses-process"
@@ -318,4 +394,130 @@ resource "aws_iam_role" "dynamodb-experiment-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn
   ]
+}
+
+resource "aws_iam_role" "unauthenticated" {
+  name = "pvs-${var.env}-cognito-unauthenticated"
+  path = "/role/user/unauthenticated/"
+  description = "Minimal role for unauthenticated cognito uesrs"
+  assume_role_policy    = jsonencode(
+      {
+          Statement = [
+              {
+                  Action    = "sts:AssumeRoleWithWebIdentity"
+                  Condition = {
+                      StringEquals = {
+                          "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+                      },
+                      "ForAnyValue:StringLike" = {
+                        "cognito-identity.amazonaws.com:amr" = "unauthenticated"
+                      }
+                  }
+                  Effect    = "Allow"
+                  Principal = {
+                      Federated = "cognito-identity.amazonaws.com"
+                  }
+              },
+          ]
+          Version   = "2012-10-17"
+      }
+  )
+
+  inline_policy {
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "mobileanalytics:PutEvents",
+            "cognito-sync:*"
+          ]
+          Resource = [
+            "*"
+          ]
+        }
+      ]
+    })
+  }
+}
+
+resource "aws_iam_role" "lambda-dynamodb" {
+  name = "pvs-${var.env}-lambda-dynamodb"
+  path = "/role/lambda/dynamodb/"
+  description = "Role for lambda functions needing read/write dynamodb access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-dynamodb-role" {
+  name = "/role/lambda/dynamodb"
+  description = "ARN for lambda role with dynamodb access"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-dynamodb.arn}"
+}
+
+resource "aws_iam_role" "cognito-sns" {
+  name = "pvs-${var.env}-cognito-sns"
+  path = "/role/cognito/sns/"
+  description = "Role to allow cognito to send messages via SNS"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cognito-idp.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+        Condition = {
+          StringEquals = {
+              "sts:ExternalId" = "pvs-${var.env}-cognito-snscaller"
+          }
+        }
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "pvs-${var.env}-sns-publish"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [ "sns:publish" ]
+          Resource = [ "*" ]
+        }
+      ]
+    })
+  }
+}
+
+resource "aws_cognito_identity_pool_roles_attachment" "main" {
+  identity_pool_id = aws_cognito_identity_pool.main.id
+
+  roles = {
+    "authenticated" = aws_iam_role.dynamodb-experiment-writer.arn
+    "unauthenticated" = aws_iam_role.unauthenticated.arn
+  }
 }

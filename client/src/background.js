@@ -6,11 +6,15 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import path from 'path'
+const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
+import cognitoSettings from '../../common/cognito-settings.json'
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
+
+let mainWin = null
 
 async function createWindow() {
   // Create the browser window.
@@ -67,8 +71,8 @@ app.on('ready', async () => {
     }
   }
   emwave.startEmWave()
-  const win = await createWindow()
-  emwave.createClient(win)
+  mainWin = await createWindow()
+  emwave.createClient(mainWin)
 })
 
 app.on('before-quit', () => {
@@ -81,6 +85,50 @@ ipcMain.on('pulse-start', () => {
 
 ipcMain.on('pulse-stop', () => {
   emwave.stopPulseSensor()
+})
+
+// btoa and atob are defined in global browser contexts,
+// but not node. Define them here b/c amazon-cognito-auth-js
+// expects them to exist
+if (typeof btoa === 'undefined') {
+  global.btoa = function (str) {
+    return Buffer.from(str, 'binary').toString('base64');
+  };
+}
+
+if (typeof atob === 'undefined') {
+  global.atob = function (b64Encoded) {
+    return Buffer.from(b64Encoded, 'base64').toString('binary');
+  };
+}
+
+ipcMain.on('show-login-window', () => {
+  let authWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    'node-integration': false
+  })
+  try {
+    const auth = new AmazonCognitoIdentity.CognitoAuth(cognitoSettings)
+    auth.userhandler = {
+      onSuccess: () => { 
+        console.log('successful login ') 
+        authWindow.close()
+        mainWin.webContents.send('login-succeeded')
+      },
+      onFailure: (err) => { console.log(err) }
+    }
+    const url = auth.getFQDNSignIn();
+    authWindow.loadURL(url)
+    authWindow.show()
+    authWindow.webContents.on('will-redirect', (event, newUrl) => {
+      auth.parseCognitoWebResponse(newUrl)
+    })
+    authWindow.on('closed', () => { authWindow = null })
+  } catch (err) {
+    console.log(err)
+  } 
 })
 
 // Exit cleanly on request from parent process in development mode.

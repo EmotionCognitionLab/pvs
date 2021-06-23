@@ -5,5 +5,7 @@
     "RedirectUriSignIn" : "http://localhost:9000",
     "RedirectUriSignOut" : "http://localhost:9000", 
     "UserPoolId" : "", 
-    "AdvancedSecurityDataCollectionFlag" : false
+    "IdentityPoolId": "",
+    "AdvancedSecurityDataCollectionFlag" : false,
+    "AWSRegion": "us-west-2"
 }
