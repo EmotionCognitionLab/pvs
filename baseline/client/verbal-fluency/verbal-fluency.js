@@ -37,12 +37,20 @@ const completion = {
     choices: [" "],
 };
 
-jsPsych.init({
-    timeline: [
-        introduction,
-        instruction,
-        trial("u"),
-        completion,
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); },
-});
+const timeline = [
+    introduction,
+    instruction,
+    trial("u"),
+    completion,
+];
+const name = "verbal-fluency";
+
+if (window.location.href.includes("verbal-fluency")) {
+    jsPsych.init({
+        timeline: timeline,
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}
+
+
+export { timeline, name };

@@ -26,11 +26,19 @@ const completion = {
     choices: ["Finish"],
 };
 
-jsPsych.init({
-    timeline: [
-        introduction,
-        questionnaire,
-        completion,
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); },
-});
+const timeline = [
+    introduction,
+    questionnaire,
+    completion,
+];
+
+const name = "mood_prediction";
+
+if (window.location.href.includes("mood-prediction")) {
+    jsPsych.init({
+        timeline: timeline,
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}
+
+export { timeline, name };
