@@ -23,9 +23,9 @@ jsPsych.plugins["percent-sum"] = (() => {
     plugin.trial = (display_element, trial) => {
         // throw if fields are malformed
         if (trial.fields.length < 1) {
-            throw "fields must not be empty!";
+            throw new Error("fields must not be empty!");
         } else if ((new Set(trial.fields)).size !== trial.fields.length) {
-            throw "fields must not contain duplicates!";
+            throw new Error("fields must not contain duplicates!");
         }
         // build and show display HTML
         {
