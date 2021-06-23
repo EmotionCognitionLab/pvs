@@ -32,7 +32,7 @@ describe("jspsych-percent-sum.js plugin", () => {
                 fields: fields,
             };
             jsPsych.init({timeline: [trial]});
-            const inputs = jsPsych.getDisplayElement().querySelectorAll("input");
+            const inputs = jsPsych.getDisplayElement().querySelectorAll("input[type=number]");
             // the number of inputs should match the number of fields
             expect(inputs.length).toBe(fields.length);
             const labels = jsPsych.getDisplayElement().querySelectorAll("label");
