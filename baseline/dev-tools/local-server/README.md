@@ -23,3 +23,8 @@ cd ../../baseline/dev-tools/local-server/
 npx webpack serve
 ```
 Finally, go to localhost:9000!
+
+## Testing
+```
+npm run test
+```
