@@ -45,6 +45,26 @@ describe("jspsych-percent-sum.js plugin", () => {
         });
     });
 
+    it("only enables continue button when sum is 100", () => {
+        const trial = {
+            type: "percent-sum",
+            preamble: "",
+            fields: ["a", "b", "c"],
+        };
+        jsPsych.init({timeline: [trial]});
+        const [a, b, c] = jsPsych.getDisplayElement().querySelectorAll("input[type=number]");
+        const button = jsPsych.getDisplayElement().querySelector("input[type=submit]");
+        expect(button).not.toBeNull();
+        expect(button.hasAttribute("disabled")).toBe(true);  // sum should be 0
+        a.value = "20"; a.dispatchEvent(new Event("input"));
+        b.value = "30"; b.dispatchEvent(new Event("input"));
+        expect(button.hasAttribute("disabled")).toBe(true);  // sum should be 50
+        c.value = "50"; c.dispatchEvent(new Event("input"));
+        expect(button.hasAttribute("disabled")).toBe(false);  // sum should be 100
+        a.value = "40"; a.dispatchEvent(new Event("input"));
+        expect(button.hasAttribute("disabled")).toBe(true);  // sum should be 120
+    });
+
     it("throws on empty fields", () => {
         const trial = {
             type: "percent-sum",
