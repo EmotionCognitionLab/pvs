@@ -249,10 +249,10 @@ resource "aws_iam_policy" "cloudwatch-write" {
 
 # Policy to allow authenticated cognito users to write
 # to the experiment data table, but only rows where
-# the hash key is their cognito sub id.
+# the hash key is their cognito identity id.
 resource "aws_iam_policy" "dynamodb-write-experiment-data" {
   name = "pvs-${var.env}-dynamodb-write-experiment-data"
-  path = "/policy/dynamodb/experimentData/"
+  path = "/policy/dynamodb/experimentData/write/"
   description = "Allows writing to Dynamodb experiment data table"
   policy = <<POLICY
 {
@@ -262,6 +262,42 @@ resource "aws_iam_policy" "dynamodb-write-experiment-data" {
       "Effect": "Allow",
       "Action": [
         "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+# Policy to allow authenticated cognito users to read
+# from the experiment data table, but only rows where
+# the hash key is their cognito identity id.
+resource "aws_iam_policy" "dynamodb-read-experiment-data" {
+  name = "pvs-${var.env}-dynamodb-read-experiment-data"
+  path = "/policy/dynamodb/experimentData/read/"
+  description = "Allows authenticated users to read their own data from Dynamodb experiment data table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
@@ -368,10 +404,10 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
   value = "${aws_iam_role.lambda-ses-process.arn}"
 }
 
-resource "aws_iam_role" "dynamodb-experiment-writer" {
-  name = "pvs-${var.env}-dynamo-writer"
-  path = "/role/user/dynamodb/write/"
-  description = "Allows cognito-auth'd users to write to experiment data table."
+resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
+  name = "pvs-${var.env}-dynamo-reader-writer"
+  path = "/role/user/dynamodb/readwrite/"
+  description = "Allows cognito-auth'd users to read and write their own data from/to experiment data table."
   assume_role_policy    = jsonencode(
       {
           Statement = [
@@ -392,7 +428,7 @@ resource "aws_iam_role" "dynamodb-experiment-writer" {
       }
   )
   managed_policy_arns   = [
-      aws_iam_policy.dynamodb-write-experiment-data.arn
+      aws_iam_policy.dynamodb-write-experiment-data.arn, aws_iam_policy.dynamodb-read-experiment-data.arn
   ]
 }
 
@@ -517,7 +553,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
   roles = {
-    "authenticated" = aws_iam_role.dynamodb-experiment-writer.arn
+    "authenticated" = aws_iam_role.dynamodb-experiment-reader-writer.arn
     "unauthenticated" = aws_iam_role.unauthenticated.arn
   }
 }
