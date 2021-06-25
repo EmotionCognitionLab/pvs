@@ -25,6 +25,12 @@
     <textarea rows="5" cols="30" id="results">{"responseTimeMs": 320, "percentCorrect": 97}</textarea>
     <br/>
     <button onclick="saveResults()">Save these results to DynamoDB</button>
+    <br/>
+    <br/>
+    <button onclick="getAllResults()">Get all results for logged-in user</button>
+    <div id="resultsFOrUser">
+
+    </div>
 
     <script>
       var cachedSession = null;
@@ -54,7 +60,7 @@
             }
           }
         }
-        document.getElementById("message").innerHTML = msgText;;
+        document.getElementById("message").innerHTML = msgText;
       }
 
       function verifyPhone() {
@@ -67,6 +73,18 @@
 
       function failure(error) {
         alert("Error! " + error);
+      }
+
+      function getAllResults() {
+        const cognitoAuth = auth.getAuth(async (session) => {
+          try {
+            const results = await db.getAllResultsForCurrentUser(session);
+            document.getElementById("resultsFOrUser").innerHTML = `Results for logged-in user: ${JSON.stringify(results)}`;
+          } catch (err) {
+            failure(err);
+          }
+        }, failure);   
+        cognitoAuth.getSession();
       }
 
       function saveResults() {
