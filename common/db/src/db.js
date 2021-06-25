@@ -2,7 +2,7 @@
  * API for reading from and writing to the PVS DynamoDB database.
  */
 
- import cognitoSettings from '../../cognito-settings.json';
+ import awsSettings from '../../aws-settings.json';
  import AWS from 'aws-sdk/global';
  import DynamoDB from 'aws-sdk/clients/dynamodb';
  
@@ -15,17 +15,17 @@ function saveResults(session, experiment, results) {
     const subId = tokenobj['sub'];
 
     const credentials = new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: cognitoSettings.IdentityPoolId,
+        IdentityPoolId: awsSettings.IdentityPoolId,
         Logins: {
-            [`cognito-idp.${cognitoSettings.AWSRegion}.amazonaws.com/${cognitoSettings.UserPoolId}`]: idToken
+            [`cognito-idp.${awsSettings.AWSRegion}.amazonaws.com/${awsSettings.UserPoolId}`]: idToken
         }
-    }, {region: cognitoSettings.AWSRegion});
+    }, {region: awsSettings.AWSRegion});
 
     credentials.refresh(async err => {
         if (err) {
             throw new Error('Error refreshing credentials while saving exeperiment results', err);
         }
-        const docClient = new DynamoDB.DocumentClient({region: cognitoSettings.AWSRegion, credentials: credentials});
+        const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
         const params = {
             TableName: 'pvs-dev-experiment-data', // TODO exeternalize this
             Item: {

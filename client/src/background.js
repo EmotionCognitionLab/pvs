@@ -7,7 +7,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
-import cognitoSettings from '../../common/cognito-settings.json'
+import awsSettings from '../../common/aws-settings.json'
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -110,7 +110,7 @@ ipcMain.on('show-login-window', () => {
     'node-integration': false
   })
   try {
-    const auth = new AmazonCognitoIdentity.CognitoAuth(cognitoSettings)
+    const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.userhandler = {
       onSuccess: () => { 
         console.log('successful login ') 

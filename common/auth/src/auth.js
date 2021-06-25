@@ -5,10 +5,10 @@
  * with cognito.
  * 
  */
-import cognitoSettings from '../../cognito-settings.json';
+import awsSettings from '../../aws-settings.json';
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js');
 import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
-const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({region: cognitoSettings.AWSRegion, apiVersion: '2016-04-18'});
+const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({region: awsSettings.AWSRegion, apiVersion: '2016-04-18'});
 
 'use strict';
 
@@ -22,9 +22,9 @@ const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({regio
  */
 function getAuth(onSuccess, onFailure, state, scopes) {
     if (scopes.length > 0) {
-        cognitoSettings.TokenScopesArray = scopes;
+        awsSettings.TokenScopesArray = scopes;
     }
-    var auth = new AmazonCognitoIdentity.CognitoAuth(cognitoSettings);
+    var auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings);
     if (state !== undefined) {
         auth.setState(state);
     }

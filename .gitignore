@@ -9,4 +9,4 @@ dist
 
 vetur.config.js
 
-common/cognito-settings.json
+common/aws-settings.json

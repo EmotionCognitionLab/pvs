@@ -7,7 +7,7 @@ To view all tasks, first, build `dist`:
 npm install
 npx webpack
 ```
-Then, edit ../../../common/auth/src/cognito-settings.json to use the correct values for your environment and build the auth library:
+Then, edit ../../../common/auth/src/aws-settings.json to use the correct values for your environment and build the auth library:
 ```
 cd ../../../common/auth/
 npm install
