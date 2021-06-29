@@ -1,8 +1,6 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
 
-const client = path.join(__dirname, "../../client");
-
 module.exports = {
     entry: {},
     plugins: [],
@@ -29,7 +27,7 @@ module.exports = {
     },
     resolve: {
         modules: [
-            client,
+            __dirname,
             path.join(__dirname, "node_modules"),
         ],
     },
