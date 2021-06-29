@@ -1,0 +1,8 @@
+#jspsych-memory-field-field {
+    border-width: 5px;
+    border-color: transparent;
+}
+
+#jspsych-memory-field-field .jspsych-memory-field-flash {
+    border-color: LightGreen;
+}
