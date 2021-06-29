@@ -22,7 +22,7 @@ module.exports = {
                 use: ["style-loader", "css-loader"],
             },
             {
-                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                test: /\.(png|svg|jpg|jpeg|gif|wav|ogg)$/i,
                 type: 'asset/resource',
             },
         ],
@@ -57,6 +57,8 @@ function add_page(name, impo, title) {
         title: title,
     }));
 }
+
+add_page("verbal-learning", "verbal-learning/verbal-learning.js", "Verbal Learning Task");
 add_page("flanker", "flanker/flanker.js", "Flanker Task");
 add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
 add_page("panas", "panas/panas.js", "PANAS Questionnaire");
