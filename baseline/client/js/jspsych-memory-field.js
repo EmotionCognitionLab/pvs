@@ -22,7 +22,6 @@ jsPsych.plugins["memory-field"] = (() => {
             html += `<div id="jspsych-memory-field-stimulus">${trial.stimulus}</div>`;
             html += `<input type="text" id="jspsych-memory-field-field">`;
             html += `<input type="button" id="jspsych-memory-field-button" class="jspsych-btn" value="${trial.button_label}">`;
-            html += `<form/>`;
             display_element.innerHTML = html;
         }
         // find important elements
