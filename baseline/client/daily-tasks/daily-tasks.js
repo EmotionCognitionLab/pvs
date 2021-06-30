@@ -1,5 +1,7 @@
 'use strict';
 
+import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js"
+
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
  * to the user in the correct order.
@@ -42,7 +44,33 @@ function getSetAndTasks(allResults) {
     }
     return { set: allSets.length, remainingTasks: [] }
 }
- exports.getSetAndTasks = getSetAndTasks;
- exports.allSets = allSets;
+
+function taskForName(name, options) {
+    switch(name) {
+        case "verbal-fluency":
+            const allResults = options.allResults;
+            const availableLetters = new Set(VerbalFluency.possibleLetters);
+            // iterate over allResults, find out which letters have been used,
+            // pick letter 
+            allResults.forEach(r => {
+                if (r.letter) {
+                    availableLetters.delete(r.letter);
+                }
+            });
+            const availableLettersArr = Array.from(availableLetters);
+            if (availableLettersArr.length === 0) {
+                throw new Error("All of the verbal fluency tasks have been completed.");
+            }
+            const rand = Math.floor(Math.random() * availableLettersArr.length);
+            const letter = availableLettersArr[rand];
+            return new VerbalFluency(letter);
+            break;
+        default:
+            throw new Error(`Unknown task type: ${name}`);
+    }
+}
+
+export { getSetAndTasks, allSets, taskForName }
+
 
 

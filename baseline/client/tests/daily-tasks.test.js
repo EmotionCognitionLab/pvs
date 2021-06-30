@@ -1,6 +1,7 @@
 'use strict';
 
-const dailyTasks = require("../daily-tasks/daily-tasks.js");
+import * as dailyTasks from "../daily-tasks/daily-tasks.js";
+import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 
 describe("getSetAndTasks", () => {
     it("returns the set and remaining tasks in the set", () => {
@@ -36,5 +37,37 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(dailyTasks.allSets.length);
         expect(result.remainingTasks).toStrictEqual([]);
+    });
+});
+
+describe("taskForName for verbal-fluency", () => {
+    it("returns a VerbalFluency object", () => {
+        const result = dailyTasks.taskForName("verbal-fluency", { allResults: [{letter: "a"}] } );
+        expect(result instanceof VerbalFluency).toBe(true);
+    });
+
+    it("throws an error if all possible letters have already been used", () => {
+        const input = VerbalFluency.possibleLetters.map(l => { return { letter: l } });
+        function callWithAllLetters() {
+            dailyTasks.taskForName("verbal-fluency", { allResults: input });
+        }
+        expect(callWithAllLetters).toThrowError("All of the verbal fluency tasks have been completed.");
+    });
+
+    it("returns a VerbalFluency object with a letter that has not been used", () => {
+        const input = VerbalFluency.possibleLetters.slice(1).map(l => { return { letter: l } });
+        const result = dailyTasks.taskForName("verbal-fluency", { allResults: input });
+        expect(result.letter).toBe(VerbalFluency.possibleLetters[0]);
+    });
+
+});
+
+describe("taskForName", () => {
+    it("throws an error if given the name of an unknown task", () => {
+        const badTaskName = "jkafkjefij";
+        function callWithBadTaskName() {
+            dailyTasks.taskForName(badTaskName);
+        }
+        expect(callWithBadTaskName).toThrowError(`Unknown task type: ${badTaskName}`)
     });
 });
