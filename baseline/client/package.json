@@ -6,9 +6,9 @@
     "@adp-psych/jspsych": "^6.3.1"
   },
   "jest": {
-    "rootDir": "../../client",
+    "rootDir": ".",
     "moduleDirectories": [
-      "<rootDir>/../dev-tools/local-server/node_modules"
+      "node_modules"
     ],
     "testEnvironment": "jsdom"
   },
