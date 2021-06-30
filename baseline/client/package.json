@@ -10,12 +10,22 @@
     "moduleDirectories": [
       "node_modules"
     ],
-    "testEnvironment": "jsdom"
+    "moduleNameMapper": {
+      "\\.css$": "identity-obj-proxy",
+      "\\.html": "../../client/__mocks__/fileMock.js"
+    },
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    }
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.14.7",
+    "babel-jest": "^27.0.6",
     "css-loader": "^5.2.6",
     "html-loader": "^2.1.2",
     "html-webpack-plugin": "^5.3.2",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^27.0.5",
     "style-loader": "^2.0.0",
     "webpack": "^5.40.0",
