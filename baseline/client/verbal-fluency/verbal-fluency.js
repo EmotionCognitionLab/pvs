@@ -55,10 +55,9 @@ VerbalFluency.completion = {
 };
 
 
-if (window.location.href.includes("verbal-fluency")) {
-    const vf = new VerbalFluency("f");
+if (window.location.href.includes(VerbalFluency.taskName)) {
     jsPsych.init({
-        timeline: vf.getTimeline(),
+        timeline: (new VerbalFluency("f")).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
