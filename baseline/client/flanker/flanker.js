@@ -8,53 +8,63 @@ import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
 import completion_html from "./frag/completion.html";
 
-const preload = {
+export class Flanker {
+    getTimeline() {
+        return [
+            this.constructor.preload,
+            this.constructor.introduction,
+            this.constructor.instruction,
+            this.constructor.trial([1, 1, 1, 1, 1]),
+            this.constructor.trial([0, 0, 0, 0, 0]),
+            this.constructor.trial([1, 1, 0, 1, 1]),
+            this.constructor.completion,
+        ];
+    }
+}
+
+Flanker.taskName = "flanker";
+
+Flanker.preload = {
     type: "preload",
     images: [arrow_img]
 }
 
-const introduction = {
+Flanker.introduction = {
     type: "html-keyboard-response",
     stimulus: introduction_html
 };
 
-const instruction = {
+Flanker.instruction = {
     type: "html-keyboard-response",
     stimulus: instruction_html
 };
 
-function flanker_stimulus(arrows) {
+Flanker.stimulus = arrows => {
     const head = "<div class=\"arrows\">";
     const body = arrows.map(
         is_right => `<img class=${is_right ? "right" : "left"} src=${arrow_img}>`
     ).join("");
     const tail = "</div><div><em>Press <b>f</b> or <b>j</b>.</em></div>";
     return head + body + tail;
-}
-
-function flanker_trial(arrows) {
+};
+Flanker.trial = arrows => {
     return {
         type: "html-keyboard-response",
-        stimulus: () => flanker_stimulus(arrows),
+        stimulus: Flanker.stimulus(arrows),
         choices: ["f", "j"],
         data: { arrows: arrows }
     };
-}
+};
 
-const completion = {
+Flanker.completion = {
     type: "html-keyboard-response",
     stimulus: completion_html
 }
 
-jsPsych.init({
-    timeline: [
-        preload,
-        introduction,
-        instruction,
-        flanker_trial([1, 1, 1, 1, 1]),
-        flanker_trial([0, 0, 0, 0, 0]),
-        flanker_trial([1, 1, 0, 1, 1]),
-        completion
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); }
-});
+
+if (window.location.href.includes(Flanker.taskName)) {
+    jsPsych.init({
+        timeline: (new Flanker()).getTimeline(),
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}
