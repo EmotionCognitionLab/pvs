@@ -8,28 +8,38 @@ import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
 import completion_html from "./frag/completion.html";
 
-const introduction = {
+export class Panas {
+    getTimeline() {
+        return [
+            this.constructor.introduction,
+            this.constructor.questionnaire,
+            this.constructor.completion,
+        ];
+    }
+}
+
+Panas.taskName = "panas";
+
+Panas.introduction = {
     type: "html-button-response",
     stimulus: introduction_html,
     choices: ["Continue"],
 };
 
-const labels = [
+Panas.labels = [
     "Very slightly or not at all",
     "A little",
     "Moderately",
     "Quite a bit",
     "Extremely",
 ];
-function question(item) {
-    return {
-        prompt: item,
-        name: item.toLowerCase(),
-        labels: labels,
-        required: true,
-    };
-}
-const questionnaire = {
+Panas.question = item => ({
+    prompt: item,
+    name: item.toLowerCase(),
+    labels: Panas.labels,
+    required: true,
+});
+Panas.questionnaire = {
     type: "survey-likert",
     preamble: instruction_html,
     questions: [
@@ -53,20 +63,19 @@ const questionnaire = {
         "Jittery",
         "Active",
         "Afraid",
-    ].map(question),
+    ].map(Panas.question),
 };
 
-const completion = {
+Panas.completion = {
     type: "html-button-response",
     stimulus: completion_html,
     choices: ["Finish"],
 };
 
-jsPsych.init({
-    timeline: [
-        introduction,
-        questionnaire,
-        completion,
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); },
-});
+
+if (window.location.href.includes(Panas.taskName)) {
+    jsPsych.init({
+        timeline: (new Panas()).getTimeline(),
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}
