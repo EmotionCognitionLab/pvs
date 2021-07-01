@@ -20,7 +20,7 @@ export class VerbalFluency {
             stimulus: stimulus_template_html.replaceAll("{letter}", this.letter),
             textarea_rows: 6,
             textarea_cols: 60,
-            data: { letter: this.letter },
+            data: { letter: this.letter, isRelevant: true },
         };
     }
     

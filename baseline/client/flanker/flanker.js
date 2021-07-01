@@ -52,7 +52,7 @@ Flanker.trial = arrows => {
         type: "html-keyboard-response",
         stimulus: Flanker.stimulus(arrows),
         choices: ["f", "j"],
-        data: { arrows: arrows }
+        data: { arrows: arrows, isRelevant: true }
     };
 };
 

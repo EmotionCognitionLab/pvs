@@ -102,6 +102,7 @@ VerbalLearning.remember = {
     type: "memory-field",
     stimulus: "",
     button_label: "Stop",
+    data: { isRelevant: true },
 };
 
 VerbalLearning.completion = {

@@ -30,6 +30,7 @@ MoodMemory.questionnaire = {
     type: "percent-sum",
     preamble: instruction_html,
     fields: ["Good Mood", "Bad Mood", "Neutral Mood"],
+    data: { isRelevant: true },
 };
 
 MoodMemory.completion = {

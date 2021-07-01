@@ -44,6 +44,7 @@ DailyStressors.questionnaire = {
         required: true,
         horizontal: false,
     })),
+    data: { isRelevant: true },
 };
 
 DailyStressors.completion = {

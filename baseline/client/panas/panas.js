@@ -64,6 +64,7 @@ Panas.questionnaire = {
         "Active",
         "Afraid",
     ].map(Panas.question),
+    data: { isRelevant: true },
 };
 
 Panas.completion = {
