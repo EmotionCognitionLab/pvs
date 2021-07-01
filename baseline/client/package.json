@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "cd ../../common/auth/ && npx webpack && cd ../db && npx webpack && cd ../../baseline/client && npx webpack",
+    "deploy": "npm run build && npm run test && node deploy.js"
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1"
@@ -21,12 +23,14 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.14.7",
+    "aws-sdk": "^2.937.0",
     "babel-jest": "^27.0.6",
     "css-loader": "^5.2.6",
     "html-loader": "^2.1.2",
     "html-webpack-plugin": "^5.3.2",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.0.5",
+    "mime-types": "^2.1.31",
     "style-loader": "^2.0.0",
     "webpack": "^5.40.0",
     "webpack-cli": "^4.7.2",
