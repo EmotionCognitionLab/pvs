@@ -8,29 +8,40 @@ import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
 import completion_html from "./frag/completion.html";
 
-const introduction = {
+export class MoodPrediction {
+    getTimeline() {
+        return [
+            this.constructor.introduction,
+            this.constructor.questionnaire,
+            this.constructor.completion,
+        ];
+    }
+}
+
+MoodPrediction.taskName = "mood-prediction";
+
+MoodPrediction.introduction = {
     type: "html-button-response",
     stimulus: introduction_html,
     choices: ["Continue"],
 };
 
-const questionnaire = {
+MoodPrediction.questionnaire = {
     type: "percent-sum",
     preamble: instruction_html,
     fields: ["Good Mood", "Bad Mood", "Neutral Mood"],
 };
 
-const completion = {
+MoodPrediction.completion = {
     type: "html-button-response",
     stimulus: completion_html,
     choices: ["Finish"],
 };
 
-jsPsych.init({
-    timeline: [
-        introduction,
-        questionnaire,
-        completion,
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); },
-});
+
+if (window.location.href.includes(MoodPrediction.taskName)) {
+    jsPsych.init({
+        timeline: (new MoodPrediction()).getTimeline(),
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}

@@ -23,24 +23,74 @@ import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html"
 import instruction_a_long_html from "./frag/instruction_a_long.html";
 import completion_html from "./frag/completion.html";
 
-const preload = {
+export class VerbalLearning {
+    getTimeline() {
+        return [
+            this.constructor.preload,
+            this.constructor.introduction,
+            this.constructor.instruction(instruction_a_immediate_html),  // 1
+            this.constructor.presentation(a_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
+            this.constructor.presentation(a_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
+            this.constructor.presentation(a_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
+            this.constructor.presentation(a_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
+            this.constructor.presentation(a_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_b_immediate_html),
+            this.constructor.presentation(b_audio),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_short_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_furniture_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_vegetable_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_traveling_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_animal_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_long_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_furniture_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_vegetable_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_traveling_html),
+            this.constructor.remember,
+            this.constructor.instruction(instruction_a_cue_animal_html),
+            this.constructor.remember,
+            this.constructor.completion,
+        ];
+    }
+}
+
+VerbalLearning.taskName = "verbal-learning";
+
+VerbalLearning.preload = {
     type: "preload",
     audio: [a_audio, b_audio],
 };
 
-const introduction = {
+VerbalLearning.introduction = {
     type: "html-button-response",
     stimulus: introduction_html,
     choices: ["Continue"],
 };
 
-const instruction = stimulus => ({
+VerbalLearning.instruction = stimulus => ({
     type: "html-button-response",
     stimulus: stimulus,
     choices: ["Start"],
 });
 
-const presentation = audio_stimulus => ({
+VerbalLearning.presentation = audio_stimulus => ({
     type: "audio-keyboard-response",
     stimulus: audio_stimulus,
     prompt: "...",
@@ -48,61 +98,22 @@ const presentation = audio_stimulus => ({
     trial_ends_after_audio: true,
 });
 
-const remember = {
+VerbalLearning.remember = {
     type: "memory-field",
     stimulus: "",
     button_label: "Stop",
 };
 
-const completion = {
+VerbalLearning.completion = {
     type: "html-button-response",
     stimulus: completion_html,
     choices: ["Finish"],
 };
 
-jsPsych.init({
-    timeline: [
-        preload,
-        introduction,
-        instruction(instruction_a_immediate_html),  // 1
-        presentation(a_audio),
-        remember,
-        instruction(instruction_a_immediate_rep_html),  // 2
-        presentation(a_audio),
-        remember,
-        instruction(instruction_a_immediate_rep_html),  // 3
-        presentation(a_audio),
-        remember,
-        instruction(instruction_a_immediate_rep_html),  // 4
-        presentation(a_audio),
-        remember,
-        instruction(instruction_a_immediate_rep_html),  // 5
-        presentation(a_audio),
-        remember,
-        instruction(instruction_b_immediate_html),
-        presentation(b_audio),
-        remember,
-        instruction(instruction_a_short_html),
-        remember,
-        instruction(instruction_a_cue_furniture_html),
-        remember,
-        instruction(instruction_a_cue_vegetable_html),
-        remember,
-        instruction(instruction_a_cue_traveling_html),
-        remember,
-        instruction(instruction_a_cue_animal_html),
-        remember,
-        instruction(instruction_a_long_html),
-        remember,
-        instruction(instruction_a_cue_furniture_html),
-        remember,
-        instruction(instruction_a_cue_vegetable_html),
-        remember,
-        instruction(instruction_a_cue_traveling_html),
-        remember,
-        instruction(instruction_a_cue_animal_html),
-        remember,
-        completion,
-    ],
-    on_finish: () => { jsPsych.data.displayData("json"); },
-});
+
+if (window.location.href.includes(VerbalLearning.taskName)) {
+    jsPsych.init({
+        timeline: (new VerbalLearning()).getTimeline(),
+        on_finish: () => { jsPsych.data.displayData("json"); },
+    });
+}

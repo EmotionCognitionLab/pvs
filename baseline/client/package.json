@@ -10,11 +10,14 @@
   "jest": {
     "rootDir": ".",
     "moduleDirectories": [
+      "<rootDir>",
       "node_modules"
     ],
     "moduleNameMapper": {
       "\\.css$": "identity-obj-proxy",
-      "\\.html": "../../client/__mocks__/fileMock.js"
+      "\\.html": "../../client/__mocks__/fileMock.js",
+      "\\.png": "../../client/__mocks__/fileMock.js",
+      "\\.wav": "../../client/__mocks__/fileMock.js"
     },
     "testEnvironment": "jsdom",
     "transform": {
