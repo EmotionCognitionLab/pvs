@@ -56,7 +56,8 @@ async function getAllResultsForCurrentUser(session) {
         });
         return results;
     } catch (err) {
-        throw new Error('Error refreshing credentials while fetching exeperiment results', err);
+        console.error(err); // TODO implement remote error logging
+        throw err;
     }
 }
 
