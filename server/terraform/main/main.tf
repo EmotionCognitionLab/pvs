@@ -99,7 +99,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "identityId"
-  range_key      = "userExperimentDateTime"
+  range_key      = "userDateTimeExperiment"
 
   attribute {
     name = "identityId"
@@ -107,7 +107,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 
   attribute {
-    name = "userExperimentDateTime"
+    name = "userDateTimeExperiment"
     type = "S"
   }
 }

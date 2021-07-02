@@ -20,7 +20,7 @@ function saveResults(session, experiment, results) {
         const params = {
             TableName: awsSettings.ExperimentTable,
             Item: {
-                userExperimentDateTime: `${subId}|${experiment}|${new Date().toISOString()}`,
+                userDateTimeExperiment: `${subId}|${new Date().toISOString()}|${experiment}`,
                 identityId: credentials.identityId,
                 results: results
             }
@@ -42,12 +42,12 @@ async function getAllResultsForCurrentUser(session) {
         };
         const dynResults = await docClient.query(params).promise();
         const results = dynResults.Items.map(i => {
-            const parts = i.userExperimentDateTime.split('|');
+            const parts = i.userDateTimeExperiment.split('|');
             if (parts.length != 3) {
-                throw new Error(`Unexpected userExperimentDateTime value: ${i.userExperimentDateTime}. Expected three parts, but found ${parts.length}.`)
+                throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected three parts, but found ${parts.length}.`)
             }
-            const experiment = parts[1];
-            const dateTime = parts[2];
+            const dateTime = parts[1];
+            const experiment = parts[2];
             return {
                 experiment: experiment,
                 dateTime: dateTime,
