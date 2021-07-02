@@ -2,18 +2,21 @@ require("@adp-psych/jspsych/jspsych.js");
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { pressKey } from "./utils.js"
 
-jest.useFakeTimers();
+jest.useFakeTimers('legacy'); // why legacy: https://github.com/facebook/jest/issues/11500
+
+beforeEach(() => {
+    let timeline = (new VerbalFluency()).getTimeline();
+    expect(timeline.length).toBe(4);
+    jsPsych.init({timeline: timeline});
+
+    // welcome screen -> instruction
+    pressKey(" ");
+    // instruction screen -> trial
+    pressKey(" ");
+});
 
 describe("verbal-fluency", () => {
     it("results should have at least one result marked isRelevant", () => {
-        let timeline = (new VerbalFluency()).getTimeline();
-        expect(timeline.length).toBe(4);
-        jsPsych.init({timeline: timeline});
-
-        // welcome screen -> instruction
-        pressKey(" ");
-        // instruction screen -> trial
-        pressKey(" ");
         // first trial
         const inputField = document.querySelector("#jspsych-timed-writing-textarea");
         inputField.value = "fee fi fo fum";
@@ -26,5 +29,10 @@ describe("verbal-fluency", () => {
         // check the data
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBe(1);
+    });
+
+    it("should give the user 60 seconds to generate words", () => {
+        //expect(setTimeout).toHaveBeenCalledTimes(1);
+        expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 60000);
     });
 });
