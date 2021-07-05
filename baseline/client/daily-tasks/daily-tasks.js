@@ -1,6 +1,12 @@
 'use strict';
 
-import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js"
+import { DailyStressors } from "../daily-stressors/daily-stressors.js";
+import { Flanker } from "../flanker/flanker.js";
+import { MoodMemory } from "../mood-memory/mood-memory.js";
+import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
+import { Panas } from "../panas/panas.js";
+import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
+import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -47,6 +53,17 @@ function getSetAndTasks(allResults) {
 
 function taskForName(name, options) {
     switch(name) {
+        case "daily-stressors":
+            return new DailyStressors();
+        case "flanker":
+            const setNum = options.setNum || 1;
+            return new Flanker(setNum);
+        case "mood-memory":
+            return new MoodMemory();
+        case "mood-prediction":
+            return new MoodPrediction();
+        case "panas":
+            return new Panas(); 
         case "verbal-fluency":
             const allResults = options.allResults;
             const availableLetters = new Set(VerbalFluency.possibleLetters);
@@ -65,6 +82,8 @@ function taskForName(name, options) {
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
             break;
+        case "verbal-learning":
+            return new VerbalLearning();
         default:
             throw new Error(`Unknown task type: ${name}`);
     }
