@@ -56,6 +56,7 @@ function add_page(name, impo, title) {
     }));
 }
 
+add_page("n-back", "n-back/n-back.js", "n-Back Task");
 add_page("verbal-learning", "verbal-learning/verbal-learning.js", "Verbal Learning Task");
 add_page("flanker", "flanker/flanker.js", "Flanker Task");
 add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
