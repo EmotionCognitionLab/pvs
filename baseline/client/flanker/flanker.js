@@ -9,16 +9,37 @@ import instruction_html from "./frag/instruction.html";
 import completion_html from "./frag/completion.html";
 
 export class Flanker {
+    constructor(setNum) {
+        this.setNum = setNum;
+    }
+
     getTimeline() {
-        return [
-            this.constructor.preload,
-            this.constructor.introduction,
-            this.constructor.instruction,
-            this.constructor.trial([1, 1, 1, 1, 1]),
-            this.constructor.trial([0, 0, 0, 0, 0]),
-            this.constructor.trial([1, 1, 0, 1, 1]),
-            this.constructor.completion,
-        ];
+        if (this.setNum === 1) {
+            return [
+                this.constructor.preload,
+                this.constructor.introduction,
+                this.constructor.instruction,
+                this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.trial([1, 1, 0, 1, 1]),
+                this.constructor.trial([0, 0, 1, 0, 0]),
+                this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.trial([1, 1, 0, 1, 1]),
+                this.constructor.completion,
+            ];
+        } else {
+            return [
+                this.constructor.preload,
+                this.constructor.introduction,
+                this.constructor.instruction,
+                this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.trial([1, 1, 0, 1, 1]),
+                this.constructor.completion,
+            ];
+        }
+        
     }
 }
 
@@ -64,7 +85,7 @@ Flanker.completion = {
 
 if (window.location.href.includes(Flanker.taskName)) {
     jsPsych.init({
-        timeline: (new Flanker()).getTimeline(),
+        timeline: (new Flanker(1)).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
