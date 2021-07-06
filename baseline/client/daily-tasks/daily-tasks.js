@@ -21,6 +21,7 @@ const set4 = ["panas", "daily-stressors", "pattern-separation", "spatial-orienta
 const set5 = ["panas", "daily-stressors", "mindfulness", "verbal-learning", "face-name", "n-back", "mind-in-eyes", "face-name", "spatial-orientation", "verbal-fluency", "flanker"];
 const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
 const allSets = [set1, set2, set3, set4, set5, set6];
+const setFinished = 'set-finished';
 
 /**
  * 
@@ -29,7 +30,7 @@ const allSets = [set1, set2, set3, set4, set5, set6];
  * @returns {Object} Object with fields 'set' (current set number) and 'remainingTasks' (array of remaining tasks in current set)
  */
 function getSetAndTasks(allResults, saveResultsCallback) {
-    const completedTasks = allResults.map(r => r.experiment );
+    const completedTasks = dedupeExperimentResults(allResults.map(r => r.experiment));
     for (var i = 0; i < allSets.length; i++) {
         const set = allSets[i];
         for (var j = 0; j < set.length; j++) {
@@ -72,13 +73,35 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
             on_timeline_finish: () => {
                 saveResultsCallback(task.taskName, jsPsych.data.getLastTimelineData().json());
                 if (i === remainingTaskNames.length - 1) {
-                    saveResultsCallback("set-finished", { "setNum": setNum });
+                    saveResultsCallback(setFinished, { "setNum": setNum });
                 }
             }
         }
         allTimelines.push(node);
     }
     return allTimelines;
+}
+
+/**
+ * Given a list of experimental names in which each name may appear multiple times in a row,
+ * reduces it to a list of experiment names where no name appears more than once in a row. (Unless
+ * "set-finished", a special experiment name that marks the end of a set of experiments, originally
+ * appeared in between two occurences of the same experiment name).
+ * @param {string[]} completedExperiments Array of completed experiment names
+ * @returns {string[]} Array of experiment names where no name appears more than once in a row.
+ */
+function dedupeExperimentResults(completedExperiments) {
+    let curExp = "";
+    const result = [];
+    for (const e of completedExperiments) {
+        if (e !== curExp) {
+            curExp = e;
+            if (curExp !== setFinished) {
+                result.push(curExp);
+            }
+        }
+    }
+    return result;
 }
 
 function taskForName(name, options) {

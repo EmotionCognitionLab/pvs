@@ -49,6 +49,18 @@ describe("getSetAndTasks", () => {
         expect(result.set).toBe(dailyTasks.allSets.length);
         expect(result.remainingTasks).toStrictEqual([]);
     });
+
+    it("should handle cases where an experiment has multiple results in a row", () => {
+        const inputTasks = dailyTasks.allSets[0].slice(0, 5);
+        const input = [];
+        inputTasks.forEach(t => { input.push({experiment: t}); input.push({experiment: t}) });
+        expect(input.length).toBe(2 * inputTasks.length);
+        const result = dailyTasks.getSetAndTasks(input);
+        expect(result.set).toBe(1);
+        const expectedTaskNames = dailyTasks.allSets[result.set - 1].slice(5);
+        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
 });
 
 describe("taskForName for verbal-fluency", () => {
