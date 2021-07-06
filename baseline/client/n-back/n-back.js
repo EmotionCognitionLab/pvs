@@ -9,6 +9,7 @@ import instruction_html from "./frag/instruction.html";
 import instruction_0_html from "./frag/instruction_0.html";
 import instruction_1_html from "./frag/instruction_1.html";
 import instruction_2_html from "./frag/instruction_2.html";
+import rest_html from "./frag/rest.html";
 import completion_html from "./frag/completion.html";
 
 export class NBack {
@@ -19,9 +20,11 @@ export class NBack {
             this.constructor.instruction(instruction_0_html),
             this.constructor.cue,
             this.constructor.trial(0, ["5", "6", "3", "6", "1", "7", "7"]),
+            this.constructor.rest,
             this.constructor.instruction(instruction_1_html),
             this.constructor.cue,
             this.constructor.trial(1, ["5", "6", "3", "6", "1", "7", "7"]),
+            this.constructor.rest,
             this.constructor.instruction(instruction_2_html),
             this.constructor.cue,
             this.constructor.trial(2, ["5", "6", "3", "6", "1", "7", "7"]),
@@ -52,18 +55,27 @@ NBack.completion = {
 
 NBack.cue = {
     type: "html-keyboard-response",
-    stimulus: `<strong>+</strong>`,
+    stimulus: `<div class="jspsych-n-back-item jspsych-n-back-item-focused">+</div>`,
     choices: jsPsych.NO_KEYS,
-    trial_duration: 1000,
+    trial_duration: 2000,
 };
 
 NBack.trial = (n, sequence, cue) => ({
     type: "n-back",
     n: n,
     sequence: sequence,
+    show_duration: 400,
+    hide_duration: 1400,
+    finish_duration: 1000,
     data: { isRelevant: true },
 });
 
+NBack.rest = {
+    type: "html-keyboard-response",
+    stimulus: rest_html,
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 10000,
+};
 
 if (window.location.href.includes(NBack.taskName)) {
     jsPsych.init({
