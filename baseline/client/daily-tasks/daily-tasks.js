@@ -1,5 +1,6 @@
 'use strict';
 
+import "@adp-psych/jspsych/jspsych.js";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -23,10 +24,11 @@ const allSets = [set1, set2, set3, set4, set5, set6];
 
 /**
  * 
- * @param {array[Object]} allResults All results for the current user as returned by db.getAllResultsForCurrentUser. These must be sorted by date from earliest to latest.
- * @returns {Object} set: currentSetNumber, remainingTasks: list of remaining tasks in current set
+ * @param {Object[]} allResults All results for the current user as returned by db.getAllResultsForCurrentUser. These must be sorted by date from earliest to latest.
+ * @param {Function} saveResultsCallback Callback function used to save results of each task. Should accept experimentName (string) and results (array) parameters.
+ * @returns {Object} Object with fields 'set' (current set number) and 'remainingTasks' (array of remaining tasks in current set)
  */
-function getSetAndTasks(allResults) {
+function getSetAndTasks(allResults, saveResultsCallback) {
     const completedTasks = allResults.map(r => r.experiment );
     for (var i = 0; i < allSets.length; i++) {
         const set = allSets[i];
@@ -44,11 +46,39 @@ function getSetAndTasks(allResults) {
                     // they didn't finish this set - return the remaining tasks
                     remainingTasks = set.slice(j)
                 }
-                return { set: i + 1, remainingTasks: remainingTasks }
+                const setNum = i + 1;
+                return { set: setNum, remainingTasks: tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback) }
             }
         }
     }
     return { set: allSets.length, remainingTasks: [] }
+}
+
+/**
+ * Builds jsPsych nodes for the given remaining task names. 
+ * @param {string[]} remainingTaskNames List of experimental tasks to be completed
+ * @param {number} setNum The number of the current set of tasks the participant is doing
+ * @param {Object[]} allResults Results of all previous experiments the participant has done
+ * @param {Function} saveResultsCallback Callback function to save results of each experiment.
+ * @returns {Object[]}
+ */
+function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback) {
+    const allTimelines = [];
+    for  (let i = 0; i < remainingTaskNames.length; i++) {
+        const task = taskForName(remainingTaskNames[i], {setNum: setNum, allResults: allResults});
+        const node = {
+            timeline: task.getTimeline(),
+            taskName: task.taskName,
+            on_timeline_finish: () => {
+                saveResultsCallback(task.taskName, jsPsych.data.getLastTimelineData().json());
+                if (i === remainingTaskNames.length - 1) {
+                    saveResultsCallback("set-finished", { "setNum": setNum });
+                }
+            }
+        }
+        allTimelines.push(node);
+    }
+    return allTimelines;
 }
 
 function taskForName(name, options) {
@@ -85,7 +115,8 @@ function taskForName(name, options) {
         case "verbal-learning":
             return new VerbalLearning();
         default:
-            throw new Error(`Unknown task type: ${name}`);
+           // throw new Error(`Unknown task type: ${name}`);
+           return {getTimeline: () => [], taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
     }
 }
 
