@@ -16,6 +16,10 @@ export class MoodPrediction {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 MoodPrediction.taskName = "mood-prediction";

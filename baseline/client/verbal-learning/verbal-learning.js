@@ -69,6 +69,10 @@ export class VerbalLearning {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 VerbalLearning.taskName = "verbal-learning";

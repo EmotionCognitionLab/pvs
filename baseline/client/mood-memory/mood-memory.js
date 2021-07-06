@@ -16,6 +16,10 @@ export class MoodMemory {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 MoodMemory.taskName = "mood-memory";

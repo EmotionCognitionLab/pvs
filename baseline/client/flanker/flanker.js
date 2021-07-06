@@ -41,6 +41,10 @@ export class Flanker {
         }
         
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 Flanker.taskName = "flanker";

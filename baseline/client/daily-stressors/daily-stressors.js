@@ -16,6 +16,10 @@ export class DailyStressors {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 DailyStressors.taskName = "daily-stressors";
