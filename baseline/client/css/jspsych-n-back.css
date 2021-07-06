@@ -1,4 +1,4 @@
-jspsych-n-back-sequence {
+#jspsych-n-back-sequence {
     display: table;
     table-layout: fixed;
     border-spacing: 0;
@@ -6,14 +6,22 @@ jspsych-n-back-sequence {
 
 .jspsych-n-back-item {
     display: table-cell;
-    border: 2px solid Black;
+    visibility: hidden;
     width: 2em;
     height: 2em;
-    font-size: 1em;
+    font-size: 40px;
     text-align: center;
     vertical-align: middle;
     font-weight: bold;
 }
-.jspsych-n-back-item-selected {
-    border-color: Blue;
+
+.jspsych-n-back-item-focused {
+    display: table-cell;
+    visibility: visible;
+}
+
+.jspsych-back-item-selected {
+    display: table-cell;
+    visibility: visible;
+    border: 3px solid Blue;
 }
