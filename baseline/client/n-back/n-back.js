@@ -60,7 +60,7 @@ NBack.cue = {
     trial_duration: 2000,
 };
 
-NBack.trial = (n, sequence, cue) => ({
+NBack.trial = (n, sequence) => ({
     type: "n-back",
     n: n,
     sequence: sequence,
@@ -76,6 +76,7 @@ NBack.rest = {
     choices: jsPsych.NO_KEYS,
     trial_duration: 10000,
 };
+
 
 if (window.location.href.includes(NBack.taskName)) {
     jsPsych.init({
