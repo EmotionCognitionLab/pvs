@@ -8,10 +8,11 @@
 }
 .jspsych-percent-sum-field {
     margin: .5rem;
+    font-size: 1em;
 }
 
 #jspsych-percent-sum-button {
-    display:block;
+    display: block;
     margin: 5% auto 5%;
 }
 
