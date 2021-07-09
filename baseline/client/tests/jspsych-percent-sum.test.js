@@ -113,7 +113,13 @@ describe("parseField helper", () => {
 
     it("returns NaN on !(non-negative integers)", () => {
         expect(parseField("-1")).toBeNaN();
+        expect(parseField(".")).toBeNaN();
+        expect(parseField(".1").toBeNaN();
+        expect(parseField("1.")).toBeNaN();
         expect(parseField("1.1")).toBeNaN();
+        expect(parseField("e")).toBeNaN();
+        expect(parseField("e1")).toBeNaN
+        expect(parseField("1e")).toBeNaN();
         expect(parseField("1e1")).toBeNaN();
         expect(parseField("1234567890e")).toBeNaN();
         expect(parseField("1,000")).toBeNaN();
