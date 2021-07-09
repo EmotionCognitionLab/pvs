@@ -43,7 +43,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
             } else {
                 // we've reached the end of the completed tasks; return our results
                 let remainingTasks = [];
-                if (j < task.length - 1) {
+                if (j < set.length) {
                     // they didn't finish this set - return the remaining tasks
                     remainingTasks = set.slice(j)
                 }

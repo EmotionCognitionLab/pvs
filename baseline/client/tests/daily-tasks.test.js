@@ -61,6 +61,16 @@ describe("getSetAndTasks", () => {
         const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
+
+    it("should return remaining tasks when the number of characters in the first uncompleted task name is less than or equal to the number of completed tasks", () => {
+        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 1));
+        const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 1);
+        expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
+        const input = inputTasks.map(t => ({ experiment: t }));
+        const result = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
 });
 
 describe("taskForName for verbal-fluency", () => {
