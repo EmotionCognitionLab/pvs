@@ -21,7 +21,13 @@ jsPsych.plugins["percent-sum"] = (() => {
     };
 
     plugin.parseField = text => {
-        return parseInt(text, 10);
+        if (text === "") {
+            return 0;
+        } else if (Array.from(text).every(c => "0" <= c && c <= "9")) {
+            return parseInt(text, 10);
+        } else {
+            return NaN;
+        }
     };
 
     plugin.trial = (display_element, trial) => {
