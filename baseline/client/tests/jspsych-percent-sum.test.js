@@ -1,9 +1,9 @@
-require("@adp-psych/jspsych/jspsych.js");
-require("../js/jspsych-percent-sum.js");
+import "@adp-psych/jspsych/jspsych.js";
+import "js/jspsych-percent-sum.js";
 
 describe("jspsych-percent-sum.js plugin", () => {
     it("loads correctly", () => {
-        expect(typeof jsPsych.plugins["percent-sum"]).not.toBe("undefined");
+        expect(typeof jsPsych.plugins["percent-sum"]).toBeDefined;
     });
 
     it("shows preamble", () => {
@@ -87,5 +87,31 @@ describe("jspsych-percent-sum.js plugin", () => {
         expect(() => {
             jsPsych.init({timeline: [trial]});
         }).toThrow();
+    });
+});
+
+describe("parseField helper", () => {
+    const parseField = jsPsych.plugins["percent-sum"].parseField;
+
+    it("is defined", () => {
+        expect(typeof parseField).toBeDefined;
+    });
+
+    it("parses non-negative integers", () => {
+        expect(parseField("0")).toBe(0);
+        expect(parseField("1")).toBe(1);
+        expect(parseField("10")).toBe(10);
+        expect(parseField("1234567890")).toBe(1234567890);
+        expect(parseField("08")).toBe(8);
+        expect(parseField(Number.MAX_SAFE_INTEGER.toString())).toBe(Number.MAX_SAFE_INTEGER);
+    });
+
+    it("returns NaN on !(non-negative integers)", () => {
+        expect(parseField("")).toBeNaN();
+        expect(parseField("-1")).toBeNaN();
+        expect(parseField("1.1")).toBeNaN();
+        expect(parseField("1e1")).toBeNaN();
+        expect(parseField("1234567890e")).toBeNaN();
+        expect(parseField("uwu")).toBeNaN();
     });
 });
