@@ -22,7 +22,7 @@ jsPsych.plugins["percent-sum"] = (() => {
 
     plugin.parseField = text => {
         if (text === "") {
-            return 0;
+            return NaN;
         } else if (Array.from(text).every(c => "0" <= c && c <= "9")) {
             return parseInt(text, 10);
         } else {

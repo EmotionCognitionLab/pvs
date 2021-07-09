@@ -97,8 +97,8 @@ describe("parseField helper", () => {
         expect(typeof parseField).toBeDefined;
     });
 
-    it("parses empty string as 0", () => {
-        expect(parseField("")).toBe(0);
+    it("returns NaN on empty string", () => {
+        expect(parseField("")).toBe(NaN);
     });
 
     it("parses non-negative integers", () => {
@@ -114,7 +114,7 @@ describe("parseField helper", () => {
     it("returns NaN on !(non-negative integers)", () => {
         expect(parseField("-1")).toBeNaN();
         expect(parseField(".")).toBeNaN();
-        expect(parseField(".1").toBeNaN();
+        expect(parseField(".1")).toBeNaN();
         expect(parseField("1.")).toBeNaN();
         expect(parseField("1.1")).toBeNaN();
         expect(parseField("e")).toBeNaN();
