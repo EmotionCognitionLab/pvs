@@ -105,6 +105,7 @@ describe("parseField helper", () => {
         expect(parseField("0")).toBe(0);
         expect(parseField("1")).toBe(1);
         expect(parseField("10")).toBe(10);
+        expect(parseField("1000")).toBe(1000);
         expect(parseField("1234567890")).toBe(1234567890);
         expect(parseField("08")).toBe(8);
         expect(parseField(Number.MAX_SAFE_INTEGER.toString())).toBe(Number.MAX_SAFE_INTEGER);
@@ -115,6 +116,9 @@ describe("parseField helper", () => {
         expect(parseField("1.1")).toBeNaN();
         expect(parseField("1e1")).toBeNaN();
         expect(parseField("1234567890e")).toBeNaN();
+        expect(parseField("1,000")).toBeNaN();
+        expect(parseField("1 000")).toBeNaN();
+        expect(parseField(" ")).toBeNaN();
         expect(parseField("uwu")).toBeNaN();
     });
 });
