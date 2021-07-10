@@ -63,3 +63,4 @@ add_page("panas", "panas/panas.js", "PANAS Questionnaire");
 add_page("daily-stressors", "daily-stressors/daily-stressors.js", "Daily Stressors Questionnaire");
 add_page("mood-prediction", "mood-prediction/mood-prediction.js", "Mood Prediction Questionnaire");
 add_page("mood-memory", "mood-memory/mood-memory.js", "Mood Memory Questionnaire");
+add_page("daily-tasks", "daily-tasks/daily-tasks.js", "Daily Tasks")

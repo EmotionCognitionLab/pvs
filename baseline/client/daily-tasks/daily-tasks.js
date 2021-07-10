@@ -8,6 +8,8 @@ import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
+import { getAuth } from "../../../common/auth/dist/auth.js";
+import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -21,7 +23,9 @@ const set4 = ["panas", "daily-stressors", "pattern-separation", "spatial-orienta
 const set5 = ["panas", "daily-stressors", "mindfulness", "verbal-learning", "face-name", "n-back", "mind-in-eyes", "face-name", "spatial-orientation", "verbal-fluency", "flanker"];
 const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
 const allSets = [set1, set2, set3, set4, set5, set6];
-const setFinished = 'set-finished';
+const setFinished = "set-finished";
+const doneForToday = "done-for-today";
+const allDone = "all-done";
 
 /**
  * 
@@ -52,7 +56,8 @@ function getSetAndTasks(allResults, saveResultsCallback) {
             }
         }
     }
-    return { set: allSets.length, remainingTasks: [] }
+    // the participant has completed all tasks in all sets - let them know
+    return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] }
 }
 
 /**
@@ -71,13 +76,18 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
             timeline: task.getTimeline(),
             taskName: task.taskName,
             on_timeline_finish: () => {
-                saveResultsCallback(task.taskName, jsPsych.data.getLastTimelineData().json());
+                saveResultsCallback(task.taskName, jsPsych.data.getLastTimelineData().values());
                 if (i === remainingTaskNames.length - 1) {
-                    saveResultsCallback(setFinished, { "setNum": setNum });
+                    saveResultsCallback(setFinished, [{ "setNum": setNum }]);
                 }
             }
         }
         allTimelines.push(node);
+    }
+    if (setNum === allSets.length) {
+        allTimelines.push({timeline: [allDoneMessage], taskName: allDone});
+    } else {
+        allTimelines.push({timeline: [doneForTodayMessage], taskName: doneForToday});
     }
     return allTimelines;
 }
@@ -86,7 +96,7 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
  * Given a list of experimental names in which each name may appear multiple times in a row,
  * reduces it to a list of experiment names where no name appears more than once in a row. (Unless
  * "set-finished", a special experiment name that marks the end of a set of experiments, originally
- * appeared in between two occurences of the same experiment name).
+ * appeared in between two occurences of the same experiment name.)
  * @param {string[]} completedExperiments Array of completed experiment names
  * @returns {string[]} Array of experiment names where no name appears more than once in a row.
  */
@@ -134,16 +144,65 @@ function taskForName(name, options) {
             const rand = Math.floor(Math.random() * availableLettersArr.length);
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
-            break;
         case "verbal-learning":
             return new VerbalLearning();
         default:
            // throw new Error(`Unknown task type: ${name}`);
-           return {getTimeline: () => [], taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
+           return {getTimeline: () => taskNotAvailable(name), taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
     }
 }
 
-export { getSetAndTasks, allSets, taskForName }
+function startTasks() {
+    const cognitoAuth = getAuth(fetchResults, handleError);
+    cognitoAuth.getSession();
+}
+
+async function fetchResults(session) {
+    const allResults = await getAllResultsForCurrentUser(session);
+    const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
+    jsPsych.init({
+        timeline: setAndTasks.remainingTasks
+    });
+}
+
+function saveResultsCallback(experimentName, results) {
+    const cognitoAuth = getAuth(session => {
+        saveResults(session, experimentName, results);
+    }, handleError);
+    cognitoAuth.getSession();
+}
+
+function handleError(err) {
+    // TODO set up remote error logging
+    console.log(err);
+}
+
+function taskNotAvailable(taskName) {
+    return [{
+        type: "html-button-response",
+        stimulus: `The code for ${taskName} has not been written yet. Please continue to the next task.`,
+        choices: ["Continue"]
+    }];
+}
+
+const allDoneMessage = {
+    type: "html-button-response",
+    stimulus: "Congratulations! You have done all of the daily measurements required for this part of the experiment. You may close this window.",
+    choices: [],
+};
+
+const doneForTodayMessage = {
+    type: "html-button-response",
+    stimulus: "Congratulations! You have done all of the daily measurements for today. Please come back tomorrow to continue.",
+    choices: [],
+};
+
+
+if (window.location.href.includes("daily-tasks")) {
+    startTasks();
+}
+
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished }
 
 
 

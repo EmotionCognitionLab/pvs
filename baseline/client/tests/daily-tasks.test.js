@@ -8,6 +8,8 @@ import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
+import { clickContinue } from "./utils.js";
+require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
     it("returns the set and remaining tasks in the set", () => {
@@ -15,8 +17,9 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[0].slice(input.length);
-        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
-        expect(result.remainingTasks.length).toBe(expectedTaskNames.length);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
@@ -25,7 +28,9 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(2);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1];
-        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
@@ -38,16 +43,11 @@ describe("getSetAndTasks", () => {
         expect(callWithBadOrder).toThrowError(expectedErrPatt);
     });
 
-    it("should return no tasks if all sets and all tasks have been completed", () => {
-        const input = [];
-        dailyTasks.allSets.forEach(s => {
-            s.forEach(task => {
-                input.push({experiment: task});
-            });
-        });
+    it("should include an 'all-done' message (and only that message) if the user has completed all tasks in all sets", () => {
+        const input = dailyTasks.allSets.flatMap(s => s.map(task => ({experiment: task})));
         const result = dailyTasks.getSetAndTasks(input);
-        expect(result.set).toBe(dailyTasks.allSets.length);
-        expect(result.remainingTasks).toStrictEqual([]);
+        expect(result.remainingTasks.length).toBe(1);
+        expect(result.remainingTasks[0].taskName).toBe(dailyTasks.allDone);
     });
 
     it("should handle cases where an experiment has multiple results in a row", () => {
@@ -58,7 +58,9 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1].slice(5);
-        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
@@ -68,8 +70,23 @@ describe("getSetAndTasks", () => {
         expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
         const input = inputTasks.map(t => ({ experiment: t }));
         const result = dailyTasks.getSetAndTasks(input);
-        const remainingTaskNames = result.remainingTasks.map(t => t.taskName);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
+
+    it("should include a 'done-for-today' message after the user finishes the last task for the day", () => {
+        const input = [{experiment: dailyTasks.allSets[0][0]}, {experiment: dailyTasks.allSets[0][1]}];
+        const result = dailyTasks.getSetAndTasks(input);
+        expect(result.remainingTasks[result.remainingTasks.length -1].taskName).toBe(dailyTasks.doneForToday);
+    });
+
+    it("should include an 'all-done' message when the user finishes the last task of the last set", () => {
+        let input = dailyTasks.allSets.flatMap(s => s.map(task => ({ experiment: task })));
+        input = input.slice(0, input.length - 2);
+        const result = dailyTasks.getSetAndTasks(input);
+        expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
     });
 });
 
@@ -140,5 +157,55 @@ describe("taskForName for flanker", () => {
         const set1Result = dailyTasks.taskForName("flanker", {setNum: 1});
         const noSetResult = dailyTasks.taskForName("flanker", {});
         expect(noSetResult.getTimeline()).toStrictEqual(set1Result.getTimeline());
+    });
+});
+
+describe("doing the tasks", () => {
+    it("should save the data at the end of each task", () => {
+        const saveResultsMock = jest.fn((experimentName, results) => null);
+        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        jsPsych.init({timeline: allTimelines.remainingTasks});
+        // welcome screen
+        clickContinue();
+
+        // questionnaire
+        const dispElem = jsPsych.getDisplayElement();
+        const questions = dispElem.querySelectorAll(".jspsych-survey-likert-options");
+        expect(questions.length).toBeGreaterThan(0);
+        // each question should have radio buttons; click the first one for each question
+        for (let i = 0; i < questions.length; i++) {
+            const buttons = questions[i].getElementsByTagName('input');
+            expect(buttons.length).toBeGreaterThan(0);
+            buttons[0].click();
+        }
+        clickContinue("input[type=submit]");
+
+        // finished screen
+        clickContinue();
+
+        expect(saveResultsMock.mock.calls.length).toBe(1);
+        // the experiment name saved to the results should be the name of the first task in allTimelines
+        expect(saveResultsMock.mock.calls[0][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        // we only care about the relevant result
+        let relevantResult = saveResultsMock.mock.calls[0][1].filter(r => r.isRelevant)
+        expect(relevantResult.length).toBe(1);
+        relevantResult = relevantResult[0];
+        expect(relevantResult.response).toBeDefined();
+        // the panas task result has a "response" key that's a map of questions -> answers
+        expect(Object.keys(relevantResult.response).length).toBe(questions.length);
+
+    });
+    it("should save a 'set-finished' result at the end of a set", () => {
+        const saveResultsMock = jest.fn((experimentName, results) => null);
+        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2)
+        jsPsych.init({timeline: tasksToRun});
+
+        // not-implemented screen TODO replace with correct task completion once task is written
+        clickContinue();
+        expect(saveResultsMock.mock.calls.length).toBe(2);
+        // check experiment name
+        expect(saveResultsMock.mock.calls[1][0]).toBe(dailyTasks.setFinished);
+        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{setNum: 1}]);
     });
 });
