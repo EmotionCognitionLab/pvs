@@ -33,8 +33,8 @@ DailyStressors.introduction = {
 DailyStressors.prompts = [
     "Did you have an argument or disagreement with anyone since this time yesterday?",
     "Since this time yesterday, did anything happen that you could have argued about but you decided to let pass in order to avoid a disagreement?",
-    "Since this time yesterday, did anything happen in your non-home-life-related outside world activities (e.g., work, school, volunteer, social, etc. other than what you have already mentioned) that most people would consider stressful?",
-    "Since this time yesterday, did anything happen at home (other than what you have already mentioned) that most people would consider stressful?",
+    "Since this time yesterday, did anything else happen in your non-home-related life (e.g., work, school, volunteer, social, etc.) that most people would consider stressful?",
+    "Since this time yesterday, did anything else happen in your home life that most people would consider stressful?",
     "Many people experience discrimination on the basis of such things as race, sex, or age. Did anything like this happen to you since this time yesterday?",
     "Since (this time yesterday, did anything happen to a close friend or relative (other than what you have already mentioned) that turned out to be stressful for you?",
     "Did anything else happen to you since (this time/we spoke) yesterday that most people would consider stressful?",
