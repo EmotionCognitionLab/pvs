@@ -183,11 +183,11 @@ describe("doing the tasks", () => {
         // finished screen
         clickContinue();
 
-        expect(saveResultsMock.mock.calls.length).toBe(1);
+        expect(saveResultsMock.mock.calls.length).toBe(2);
         // the experiment name saved to the results should be the name of the first task in allTimelines
-        expect(saveResultsMock.mock.calls[0][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
         // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[0][1].filter(r => r.isRelevant)
+        let relevantResult = saveResultsMock.mock.calls[1][1].filter(r => r.isRelevant)
         expect(relevantResult.length).toBe(1);
         relevantResult = relevantResult[0];
         expect(relevantResult.response).toBeDefined();
@@ -207,5 +207,13 @@ describe("doing the tasks", () => {
         // check experiment name
         expect(saveResultsMock.mock.calls[1][0]).toBe(dailyTasks.setFinished);
         expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{setNum: 1}]);
+    });
+    it("should save a 'set-started' result at the start of a set", () => {
+        const saveResultsMock = jest.fn((experimentName, results) => null);
+        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        jsPsych.init({timeline: allTimelines.remainingTasks});
+        expect(saveResultsMock.mock.calls.length).toBe(1);
+        expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
+        expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
     });
 });

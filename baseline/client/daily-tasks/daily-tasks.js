@@ -24,6 +24,7 @@ const set5 = ["panas", "daily-stressors", "mindfulness", "verbal-learning", "fac
 const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
 const allSets = [set1, set2, set3, set4, set5, set6];
 const setFinished = "set-finished";
+const setStarted = "set-started";
 const doneForToday = "done-for-today";
 const allDone = "all-done";
 
@@ -70,6 +71,9 @@ function getSetAndTasks(allResults, saveResultsCallback) {
  */
 function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback) {
     const allTimelines = [];
+    const atSetStart = remainingTaskNames.length === allSets[setNum - 1].length &&
+        remainingTaskNames.every((item, idx) => item === allSets[setNum - 1][idx]);
+
     for  (let i = 0; i < remainingTaskNames.length; i++) {
         const task = taskForName(remainingTaskNames[i], {setNum: setNum, allResults: allResults});
         const node = {
@@ -80,6 +84,11 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
                 if (i === remainingTaskNames.length - 1) {
                     saveResultsCallback(setFinished, [{ "setNum": setNum }]);
                 }
+            }
+        }
+        if (i === 0 && atSetStart) {
+            node.on_timeline_start = () => {
+                saveResultsCallback(setStarted, [{"setNum": setNum }]);
             }
         }
         allTimelines.push(node);
@@ -202,7 +211,7 @@ if (window.location.href.includes("daily-tasks")) {
     startTasks();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished }
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted }
 
 
 
