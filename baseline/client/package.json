@@ -17,7 +17,8 @@
       "\\.css$": "identity-obj-proxy",
       "\\.html": "../../client/__mocks__/fileMock.js",
       "\\.png": "../../client/__mocks__/fileMock.js",
-      "\\.wav": "../../client/__mocks__/fileMock.js"
+      "\\.wav": "../../client/__mocks__/fileMock.js",
+      "\\.ogg": "../../client/__mocks__/fileMock.js"
     },
     "testEnvironment": "jsdom",
     "transform": {
