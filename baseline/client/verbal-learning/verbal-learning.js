@@ -8,8 +8,8 @@ import "css/jspsych-memory-field.css";
 import "css/common.css";
 import "./style.css";
 // audio
-import a_audio from "./a.wav";
-import b_audio from "./b.wav";
+import a_audio from "./a.ogg";
+import b_audio from "./b.ogg";
 // fragments
 import introduction_html from "./frag/introduction.html";
 import instruction_a_immediate_html from "./frag/instruction_a_immediate.html";
