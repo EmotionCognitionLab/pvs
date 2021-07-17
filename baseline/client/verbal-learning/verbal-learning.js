@@ -24,6 +24,9 @@ import instruction_a_cue_vegetable_html from "./frag/instruction_a_cue_vegetable
 import instruction_a_cue_traveling_html from "./frag/instruction_a_cue_traveling.html";
 import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html";
 import instruction_a_long_html from "./frag/instruction_a_long.html";
+// presentation fragments
+import presentation_cue_html from "./frag/presentation_cue.html";
+import presentation_prompt_html from "./frag/presentation_prompt.html";
 // remember fragments
 import remember_a_immediate_html from "./frag/remember_a_immediate.html";
 import remember_a_immediate_rep_html from "./frag/remember_a_immediate_rep.html";
@@ -34,14 +37,6 @@ import remember_a_cue_vegetable_html from "./frag/remember_a_cue_vegetable.html"
 import remember_a_cue_traveling_html from "./frag/remember_a_cue_traveling.html";
 import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
 import remember_a_long_html from "./frag/remember_a_long.html";
-// presentation fragments
-import presentation_cue_html from "./frag/presentation_cue.html";
-import presentation_prompt_html from "./frag/presentation_prompt.html";
-// completion fragment
-
-
-// IMPORTANT DEBUG THING DON'T PUSH IMPORTANT
-jsPsych.NO_KEYS = ["Escape"];
 
 export class VerbalLearning {
     getTimeline() {
