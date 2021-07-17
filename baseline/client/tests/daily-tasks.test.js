@@ -13,18 +13,18 @@ require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
     it("returns the set and remaining tasks in the set", () => {
-        const input = [{experiment: dailyTasks.allSets[0][0]}, {experiment: dailyTasks.allSets[0][1]}];
+        const input = buildInput(dailyTasks.allSets[0].slice(0, 2));
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(1);
-        const expectedTaskNames = dailyTasks.allSets[0].slice(input.length);
+        const expectedTaskNames = dailyTasks.allSets[0].slice(input.length - 1); // -1 because the input includes a set-started record
         const remainingTaskNames = result.remainingTasks
             .filter(t => t.taskName !== dailyTasks.doneForToday)
             .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
-    it("returns the next set and all tasks in it if all tasks in the previous set have been ccompleted", () => {
-        const input = dailyTasks.allSets[0].map(name => { return { experiment: name } });
+    it("returns the next set and all tasks in it if all tasks in the previous set have been ccompleted and the previous set was started yesterday or earlier", () => {
+        const input = buildInput(dailyTasks.allSets[0], '2021-01-01T12:34:56.789Z');
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(2);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1];
@@ -35,7 +35,7 @@ describe("getSetAndTasks", () => {
     });
 
     it("throws an error if completed tasks are not in the expected order", () => {
-        const input = [{experiment: dailyTasks.allSets[0][0]}, {experiment: dailyTasks.allSets[0][2]}];
+        const input = buildInput([dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]]);
         function callWithBadOrder() {
             dailyTasks.getSetAndTasks(input);
         }
@@ -44,7 +44,7 @@ describe("getSetAndTasks", () => {
     });
 
     it("should include an 'all-done' message (and only that message) if the user has completed all tasks in all sets", () => {
-        const input = dailyTasks.allSets.flatMap(s => s.map(task => ({experiment: task})));
+        const input = buildInput(dailyTasks.allSets.flatMap(s => s));
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.remainingTasks.length).toBe(1);
         expect(result.remainingTasks[0].taskName).toBe(dailyTasks.allDone);
@@ -53,9 +53,9 @@ describe("getSetAndTasks", () => {
     it("should handle cases where an experiment has multiple results in a row", () => {
         const inputTasks = dailyTasks.allSets[0].slice(0, 5);
         const input = [];
-        inputTasks.forEach(t => { input.push({experiment: t}); input.push({experiment: t}) });
+        inputTasks.forEach(t => { input.push(t); input.push(t) } );
         expect(input.length).toBe(2 * inputTasks.length);
-        const result = dailyTasks.getSetAndTasks(input);
+        const result = dailyTasks.getSetAndTasks(buildInput(input));
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1].slice(5);
         const remainingTaskNames = result.remainingTasks
@@ -68,7 +68,7 @@ describe("getSetAndTasks", () => {
         let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 1));
         const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 1);
         expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
-        const input = inputTasks.map(t => ({ experiment: t }));
+        const input = buildInput(inputTasks);
         const result = dailyTasks.getSetAndTasks(input);
         const remainingTaskNames = result.remainingTasks
             .filter(t => t.taskName !== dailyTasks.doneForToday)
@@ -77,15 +77,15 @@ describe("getSetAndTasks", () => {
     });
 
     it("should include a 'done-for-today' message after the user finishes the last task for the day", () => {
-        const input = [{experiment: dailyTasks.allSets[0][0]}, {experiment: dailyTasks.allSets[0][1]}];
+        const input = buildInput(dailyTasks.allSets[0].slice(0, 2));
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.remainingTasks[result.remainingTasks.length -1].taskName).toBe(dailyTasks.doneForToday);
     });
 
     it("should include an 'all-done' message when the user finishes the last task of the last set", () => {
-        let input = dailyTasks.allSets.flatMap(s => s.map(task => ({ experiment: task })));
+        let input = dailyTasks.allSets.flatMap(s => s);
         input = input.slice(0, input.length - 2);
-        const result = dailyTasks.getSetAndTasks(input);
+        const result = dailyTasks.getSetAndTasks(buildInput(input));
         expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
     });
 });
@@ -217,3 +217,9 @@ describe("doing the tasks", () => {
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
     });
 });
+
+function buildInput(taskList, dateTime = new Date().toISOString()) {
+    const input = taskList.map(task => ( {experiment: task} ));
+    input.unshift({experiment: dailyTasks.setStarted, dateTime: dateTime});
+    return input;
+}

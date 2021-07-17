@@ -34,8 +34,10 @@ const allDone = "all-done";
  * @param {Function} saveResultsCallback Callback function used to save results of each task. Should accept experimentName (string) and results (array) parameters.
  * @returns {Object} Object with fields 'set' (current set number) and 'remainingTasks' (array of remaining tasks in current set)
  */
+// TODO no need to return set
 function getSetAndTasks(allResults, saveResultsCallback) {
     const completedTasks = dedupeExperimentResults(allResults.map(r => r.experiment));
+    const nextSetOk = canStartNextSet(allResults);
     for (var i = 0; i < allSets.length; i++) {
         const set = allSets[i];
         for (var j = 0; j < set.length; j++) {
@@ -48,12 +50,21 @@ function getSetAndTasks(allResults, saveResultsCallback) {
             } else {
                 // we've reached the end of the completed tasks; return our results
                 let remainingTasks = [];
-                if (j < set.length) {
-                    // they didn't finish this set - return the remaining tasks
-                    remainingTasks = set.slice(j)
+                const setNum = i + 1; // add 1 b/c setNum starts from 1
+                if (j === 0 && !nextSetOk) {
+                    // we're at the start of a new set and the participant
+                    // started their most recent set today
+                    // participants can only start one set per day
+                    return { set: setNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
                 }
-                const setNum = i + 1;
-                return { set: setNum, remainingTasks: tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback) }
+                // they didn't finish this set - return the remaining tasks
+                remainingTasks = set.slice(j)
+                const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback);
+                if (j > 0 && nextSetOk) {
+                    timeline.push(startNewSetQueryTask); // give them the choice to start the next set
+                    timeline.push(tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback));
+                }
+                return { set: setNum, remainingTasks: timeline }
             }
         }
     }
@@ -161,6 +172,25 @@ function taskForName(name, options) {
     }
 }
 
+
+/**
+ * Users may only start the next set if (a) they started the previous one yesterday or earlier and (b) at least one hour ago.
+ * Example: If it is Tuesday at 12:17AM and the user started the previous set Monday at 11:43PM they can't start the next set.
+ * @param {Object[]} allResults All results for the user, as returned by ../common/db/db.js:getAllResultsForCurrentUser()
+ * @returns true if the user can start the next set, false otherwise
+ */
+function canStartNextSet(allResults) {
+    const mostRecentStart = allResults.filter(r => r.experiment === setStarted).reverse()[0];
+    if (!mostRecentStart) {
+        return true;
+    }
+    const lastSetStart = new Date(mostRecentStart.dateTime);
+    const now = new Date();
+    const yesterday = new Date(now.valueOf() - (1000 * 60 * 60 * 24));
+    return lastSetStart < yesterday || 
+        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf <= now.valueOf - (1000 * 60 * 60));
+}
+
 function startTasks() {
     const cognitoAuth = getAuth(fetchResults, handleError);
     cognitoAuth.getSession();
@@ -192,6 +222,17 @@ function taskNotAvailable(taskName) {
         stimulus: `The code for ${taskName} has not been written yet. Please continue to the next task.`,
         choices: ["Continue"]
     }];
+}
+
+const startNewSetQueryTask = {
+    type: "html-button-response",
+    stimulus: "You have finished one set of experiments. Would you like to start the next set? It will take about 40 minutes.",
+    choices: ["I'll do it later", "Start"],
+    on_finish: function(data) {
+        if(data.response === 0){
+            jsPsych.endExperiment("Thanks! You're all done for today.");
+        }
+    }
 }
 
 const allDoneMessage = {
