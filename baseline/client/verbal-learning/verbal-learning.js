@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-audio-keyboard-response.js";
 import "js/jspsych-memory-field.js";
 import "@adp-psych/jspsych/css/jspsych.css";
@@ -21,6 +22,8 @@ import instruction_a_cue_vegetable_html from "./frag/instruction_a_cue_vegetable
 import instruction_a_cue_traveling_html from "./frag/instruction_a_cue_traveling.html";
 import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html";
 import instruction_a_long_html from "./frag/instruction_a_long.html";
+import presentation_cue_html from "./frag/presentation_cue.html";
+import presentation_prompt_html from "./frag/presentation_prompt.html";
 import completion_html from "./frag/completion.html";
 
 export class VerbalLearning {
@@ -29,22 +32,22 @@ export class VerbalLearning {
             this.constructor.preload,
             this.constructor.introduction,
             this.constructor.instruction(instruction_a_immediate_html),  // 1
-            this.constructor.presentation(a_audio),
+            ...this.constructor.cue_and_presentation(a_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
-            this.constructor.presentation(a_audio),
+            ...this.constructor.cue_and_presentation(a_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
-            this.constructor.presentation(a_audio),
+            ...this.constructor.cue_and_presentation(a_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
-            this.constructor.presentation(a_audio),
+            ...this.constructor.cue_and_presentation(a_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
-            this.constructor.presentation(a_audio),
+            ...this.constructor.cue_and_presentation(a_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_b_immediate_html),
-            this.constructor.presentation(b_audio),
+            ...this.constructor.cue_and_presentation(b_audio),
             this.constructor.remember,
             this.constructor.instruction(instruction_a_short_html),
             this.constructor.remember,
@@ -94,13 +97,25 @@ VerbalLearning.instruction = stimulus => ({
     choices: ["Start"],
 });
 
+VerbalLearning.cue = {
+    type: "html-keyboard-response",
+    stimulus: presentation_cue_html,
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 2000,
+};
+
 VerbalLearning.presentation = audio_stimulus => ({
     type: "audio-keyboard-response",
     stimulus: audio_stimulus,
-    prompt: "...",
+    prompt: presentation_prompt_html,
     choices: jsPsych.NO_KEYS,
     trial_ends_after_audio: true,
 });
+
+VerbalLearning.cue_and_presentation = audio_stimulus => [
+    VerbalLearning.cue,
+    VerbalLearning.presentation(audio_stimulus),
+];
 
 VerbalLearning.remember = {
     type: "memory-field",
