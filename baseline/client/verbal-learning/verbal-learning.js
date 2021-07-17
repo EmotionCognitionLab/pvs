@@ -24,6 +24,7 @@ import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html"
 import instruction_a_long_html from "./frag/instruction_a_long.html";
 import presentation_cue_html from "./frag/presentation_cue.html";
 import presentation_prompt_html from "./frag/presentation_prompt.html";
+import AHHHHH from "./frag/remember_generic.html";
 import completion_html from "./frag/completion.html";
 
 export class VerbalLearning {
@@ -33,42 +34,42 @@ export class VerbalLearning {
             this.constructor.introduction,
             this.constructor.instruction(instruction_a_immediate_html),  // 1
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_b_immediate_html),
             ...this.constructor.cue_and_presentation(b_audio),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_short_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_long_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember,
+            this.constructor.remember(AHHHHH),
             this.constructor.completion,
         ];
     }
@@ -103,7 +104,6 @@ VerbalLearning.cue = {
     choices: jsPsych.NO_KEYS,
     trial_duration: 2000,
 };
-
 VerbalLearning.presentation = audio_stimulus => ({
     type: "audio-keyboard-response",
     stimulus: audio_stimulus,
@@ -111,18 +111,17 @@ VerbalLearning.presentation = audio_stimulus => ({
     choices: jsPsych.NO_KEYS,
     trial_ends_after_audio: true,
 });
-
 VerbalLearning.cue_and_presentation = audio_stimulus => [
     VerbalLearning.cue,
     VerbalLearning.presentation(audio_stimulus),
 ];
 
-VerbalLearning.remember = {
+VerbalLearning.remember = stimulus => ({
     type: "memory-field",
-    stimulus: "",
+    stimulus: stimulus,
     button_label: "Stop",
     data: { isRelevant: true },
-};
+});
 
 VerbalLearning.completion = {
     type: "html-button-response",
