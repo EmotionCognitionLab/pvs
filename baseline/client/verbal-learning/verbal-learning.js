@@ -8,11 +8,13 @@ import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-memory-field.css";
 import "css/common.css";
 import "./style.css";
-// audio
+// audio stimuli
 import a_audio from "./a.ogg";
 import b_audio from "./b.ogg";
-// fragments
+// introduction and completion fragments
 import introduction_html from "./frag/introduction.html";
+import completion_html from "./frag/completion.html";
+// instruction fragments
 import instruction_a_immediate_html from "./frag/instruction_a_immediate.html";
 import instruction_a_immediate_rep_html from "./frag/instruction_a_immediate_rep.html";
 import instruction_b_immediate_html from "./frag/instruction_b_immediate.html";
@@ -22,10 +24,24 @@ import instruction_a_cue_vegetable_html from "./frag/instruction_a_cue_vegetable
 import instruction_a_cue_traveling_html from "./frag/instruction_a_cue_traveling.html";
 import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html";
 import instruction_a_long_html from "./frag/instruction_a_long.html";
+// remember fragments
+import remember_a_immediate_html from "./frag/remember_a_immediate.html";
+import remember_a_immediate_rep_html from "./frag/remember_a_immediate_rep.html";
+import remember_b_immediate_html from "./frag/remember_b_immediate.html";
+import remember_a_short_html from "./frag/remember_a_short.html";
+import remember_a_cue_furniture_html from "./frag/remember_a_cue_furniture.html";
+import remember_a_cue_vegetable_html from "./frag/remember_a_cue_vegetable.html";
+import remember_a_cue_traveling_html from "./frag/remember_a_cue_traveling.html";
+import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
+import remember_a_long_html from "./frag/remember_a_long.html";
+// presentation fragments
 import presentation_cue_html from "./frag/presentation_cue.html";
 import presentation_prompt_html from "./frag/presentation_prompt.html";
-import AHHHHH from "./frag/remember_generic.html";
-import completion_html from "./frag/completion.html";
+// completion fragment
+
+
+// IMPORTANT DEBUG THING DON'T PUSH IMPORTANT
+jsPsych.NO_KEYS = ["Escape"];
 
 export class VerbalLearning {
     getTimeline() {
@@ -34,42 +50,42 @@ export class VerbalLearning {
             this.constructor.introduction,
             this.constructor.instruction(instruction_a_immediate_html),  // 1
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_immediate_html),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_immediate_rep_html),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_immediate_rep_html),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_immediate_rep_html),
             this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
             ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_immediate_rep_html),
             this.constructor.instruction(instruction_b_immediate_html),
             ...this.constructor.cue_and_presentation(b_audio),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_b_immediate_html),
             this.constructor.instruction(instruction_a_short_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_short_html),
             this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_furniture_html),
             this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_vegetable_html),
             this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_traveling_html),
             this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_animal_html),
             this.constructor.instruction(instruction_a_long_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_long_html),
             this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_furniture_html),
             this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_vegetable_html),
             this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_traveling_html),
             this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(AHHHHH),
+            this.constructor.remember(remember_a_cue_animal_html),
             this.constructor.completion,
         ];
     }
