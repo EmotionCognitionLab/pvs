@@ -1,3 +1,22 @@
+#jspsych-memory-field-stimulus {
+    margin: 1em;
+}
+
+#jspsych-memory-field-field {
+    margin: 2em;
+    font-size: 1em;
+    text-align: center;
+}
+
 #jspsych-memory-field-field.jspsych-memory-field-flash {
     background-color: PaleGreen;
+}
+
+#jspsych-memory-field-button-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+#jspsych-memory-field-button {
+    margin: 1em;
 }
