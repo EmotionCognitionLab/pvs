@@ -115,7 +115,7 @@ function dedupeExperimentResults(completedExperiments) {
     for (const e of completedExperiments) {
         if (e !== curExp) {
             curExp = e;
-            if (curExp !== setFinished) {
+            if (curExp !== setFinished && curExp != setStarted) {
                 result.push(curExp);
             }
         }
