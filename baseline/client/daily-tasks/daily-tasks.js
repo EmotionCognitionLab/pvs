@@ -188,7 +188,7 @@ function canStartNextSet(allResults) {
     const now = new Date();
     const yesterday = new Date(now.valueOf() - (1000 * 60 * 60 * 24));
     return lastSetStart < yesterday || 
-        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf <= now.valueOf - (1000 * 60 * 60));
+        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now.valueOf() - (1000 * 60 * 60));
 }
 
 function startTasks() {
