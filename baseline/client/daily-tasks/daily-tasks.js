@@ -60,10 +60,10 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                 }
                 // they didn't finish this set - return the remaining tasks
                 remainingTasks = set.slice(j)
-                const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback);
+                const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
                 if (j > 0 && nextSetOk) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
-                    timeline.push(tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback));
+                    timeline.push(tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
                 return { set: setNum, remainingTasks: timeline }
             }
@@ -81,7 +81,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
  * @param {Function} saveResultsCallback Callback function to save results of each experiment.
  * @returns {Object[]}
  */
-function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback) {
+function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback, nextSetOk) {
     const allTimelines = [];
     const atSetStart = remainingTaskNames.length === allSets[setNum - 1].length &&
         remainingTaskNames.every((item, idx) => item === allSets[setNum - 1][idx]);
@@ -107,7 +107,7 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
     }
     if (setNum === allSets.length) {
         allTimelines.push({timeline: [allDoneMessage], taskName: allDone});
-    } else {
+    } else if (!nextSetOk || atSetStart) {
         allTimelines.push({timeline: [doneForTodayMessage], taskName: doneForToday});
     }
     return allTimelines;
