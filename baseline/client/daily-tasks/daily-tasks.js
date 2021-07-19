@@ -63,7 +63,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
                 if (j > 0 && nextSetOk) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
-                    timeline.push(tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
+                    Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
                 return { set: setNum, remainingTasks: timeline }
             }
