@@ -27,6 +27,7 @@ const setFinished = "set-finished";
 const setStarted = "set-started";
 const doneForToday = "done-for-today";
 const allDone = "all-done";
+const startNewSetQuery = "start-new-set-query";
 
 /**
  * 
@@ -61,7 +62,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                 remainingTasks = set.slice(j)
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback);
                 if (j > 0 && nextSetOk) {
-                    timeline.push(startNewSetQueryTask); // give them the choice to start the next set
+                    timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
                     timeline.push(tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback));
                 }
                 return { set: setNum, remainingTasks: timeline }
@@ -252,7 +253,7 @@ if (window.location.href.includes("daily-tasks")) {
     startTasks();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted }
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted, startNewSetQuery }
 
 
 
