@@ -34,6 +34,37 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
+    it("returns an 'all done for today' message if all tasks in the previous set were completed today", () => {
+        const input = buildInput(dailyTasks.allSets[0], new Date().toISOString());
+        const results = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual([dailyTasks.doneForToday]);
+    });
+
+    it("gives you the option to start a new set if you're finishing a set that you started yesterday", () => {
+        const yesterdayMs = Date.now() - (1000 * 60 * 60 * 24);
+        const yesterday = new Date(yesterdayMs);
+        const doneTasksIdx = 3;
+        const input = buildInput(dailyTasks.allSets[0].slice(0, doneTasksIdx), yesterday.toISOString());
+        const results = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toContain(dailyTasks.startNewSetQuery);
+        const remainingFirstSetTasks = dailyTasks.allSets[0].slice(doneTasksIdx);
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingFirstSetTasks));
+        const secondSetTasks = dailyTasks.allSets[1];
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(secondSetTasks));
+    });
+
+    it("does not give you the option to start a new set if you finished the last one yesterday but less than an hour ago", () => {
+        const lastSetFinishedDate = '2021-01-02T23:32:00.000Z';
+        const nowDateMs = Date.parse(lastSetFinishedDate).valueOf() + (1000 * 60 * 40);
+        const input = buildInput(dailyTasks.allSets[0], lastSetFinishedDate);
+        jest.spyOn(global.Date, 'now').mockImplementationOnce(() => nowDateMs);
+        const results = dailyTasks.getSetAndTasks(input);
+        expect(results.remainingTasks.length).toEqual(1);
+        expect(results.remainingTasks.map(t => t.taskName)[0]).toEqual(dailyTasks.doneForToday);
+    });
+
     it("throws an error if completed tasks are not in the expected order", () => {
         const input = buildInput([dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]]);
         function callWithBadOrder() {
