@@ -186,10 +186,10 @@ function canStartNextSet(allResults) {
         return true;
     }
     const lastSetStart = new Date(mostRecentStart.dateTime);
-    const now = new Date();
-    const yesterday = new Date(now.valueOf() - (1000 * 60 * 60 * 24));
+    const now = Date.now();
+    const yesterday = new Date(now - (1000 * 60 * 60 * 24));
     return lastSetStart < yesterday || 
-        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now.valueOf() - (1000 * 60 * 60));
+        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now - (1000 * 60 * 60));
 }
 
 function startTasks() {
