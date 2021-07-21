@@ -145,14 +145,22 @@ Flanker.test = {
     },
     on_finish: function(data){
         data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-    }
+    },
+    trial_duration: 1050
 }
 
 Flanker.feedback = {
     type: "html-keyboard-response",
     stimulus: function() {
         const data = jsPsych.data.getLastTimelineData();
-        return data.last(1).values()[0].correct ? "Correct": "Incorrect"
+        const values = data.last(1).values()[0];
+        if (values.response === null) {
+            return "Answer faster next time";
+        }
+        if (values.correct) {
+            return "Correct";
+        }
+        return "Incorrect";
     },
     choices: jsPsych.NO_KEYS,
     trial_duration: 800
