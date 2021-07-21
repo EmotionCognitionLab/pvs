@@ -178,12 +178,6 @@ describe("taskForName for flanker", () => {
         const result = dailyTasks.taskForName("flanker", {setNum: 2});
         expect(result instanceof Flanker).toBe(true);
     });
-    it("returns a Flanker with four practice trials for the first set but not for other sets", () => {
-        const set1Result = dailyTasks.taskForName("flanker", {setNum: 1});
-        const set2Result = dailyTasks.taskForName("flanker", {setNum: 2});
-        const timelineDiff = set1Result.getTimeline().length - set2Result.getTimeline().length;
-        expect(timelineDiff).toBe(4);
-    });
     it("defaults to set 1 if no set number is provided", () => {
         const set1Result = dailyTasks.taskForName("flanker", {setNum: 1});
         const noSetResult = dailyTasks.taskForName("flanker", {});

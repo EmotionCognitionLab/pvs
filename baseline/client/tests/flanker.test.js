@@ -25,11 +25,4 @@ describe("flanker", () => {
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBe(3);
     });
-
-    it("should include four practice trials in the first set but not other sets", () => {
-        const timeline1 = (new Flanker(1)).getTimeline();
-        const timeline5 = (new Flanker(5)).getTimeline();
-        const timelineDiff = timeline1.length - timeline5.length;
-        expect(timelineDiff).toBe(4);
-    });
 });
