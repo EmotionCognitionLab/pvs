@@ -27,12 +27,19 @@ export class Flanker {
                 this.constructor.instruction3,
                 this.constructor.instruction4,
                 this.constructor.instruction5,
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 0, 1, 1]),
+                this.constructor.fixation,
                 this.constructor.trial([0, 0, 1, 0, 0]),
+                this.constructor.fixation,
                 this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.fixation,
                 this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 0, 1, 1]),
                 this.constructor.completion,
             ];
@@ -40,9 +47,12 @@ export class Flanker {
             return [
                 this.constructor.preload,
                 this.constructor.introduction,
-                this.constructor.instruction,
+                this.constructor.instruction1,
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 1, 1, 1]),
+                this.constructor.fixation,
                 this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.fixation,
                 this.constructor.trial([1, 1, 0, 1, 1]),
                 this.constructor.completion,
             ];
@@ -96,6 +106,15 @@ Flanker.instruction5 = {
     stimulus: instruction5_html,
     choices: [" "]
 };
+
+Flanker.fixation = {
+    type: "html-keyboard-response",
+    stimulus: '<div style="font-size: 60px;">+</div>',
+    trial_duration: function() {
+        return Math.floor((Math.random() * 300) + 400);
+    },
+    choices: jsPsych.NO_KEYS
+}
 
 Flanker.stimulus = arrows => {
     const head = "<div class=\"arrows\">";
