@@ -5,7 +5,11 @@ import "@adp-psych/jspsych/css/jspsych.css";
 import "./style.css";
 import arrow_img from "./arrow.png";
 import introduction_html from "./frag/introduction.html";
-import instruction_html from "./frag/instruction.html";
+import instruction1_html from "./frag/instruction-1.html";
+import instruction2_html from "./frag/instruction-2.html";
+import instruction3_html from "./frag/instruction-3.html";
+import instruction4_html from "./frag/instruction-4.html";
+import instruction5_html from "./frag/instruction-5.html";
 import completion_html from "./frag/completion.html";
 
 export class Flanker {
@@ -18,7 +22,11 @@ export class Flanker {
             return [
                 this.constructor.preload,
                 this.constructor.introduction,
-                this.constructor.instruction,
+                this.constructor.instruction1,
+                this.constructor.instruction2,
+                this.constructor.instruction3,
+                this.constructor.instruction4,
+                this.constructor.instruction5,
                 this.constructor.trial([1, 1, 1, 1, 1]),
                 this.constructor.trial([1, 1, 0, 1, 1]),
                 this.constructor.trial([0, 0, 1, 0, 0]),
@@ -59,9 +67,34 @@ Flanker.introduction = {
     stimulus: introduction_html
 };
 
-Flanker.instruction = {
+Flanker.instruction1 = {
     type: "html-keyboard-response",
-    stimulus: instruction_html
+    stimulus: instruction1_html,
+    choices: [" "]
+};
+
+Flanker.instruction2 = {
+    type: "html-keyboard-response",
+    stimulus: instruction2_html,
+    choices: ["ArrowLeft"]
+};
+
+Flanker.instruction3 = {
+    type: "html-keyboard-response",
+    stimulus: instruction3_html,
+    choices: ["ArrowRight"]
+};
+
+Flanker.instruction4 = {
+    type: "html-keyboard-response",
+    stimulus: instruction4_html,
+    choices: ["ArrowRight"]
+};
+
+Flanker.instruction5 = {
+    type: "html-keyboard-response",
+    stimulus: instruction5_html,
+    choices: [" "]
 };
 
 Flanker.stimulus = arrows => {
