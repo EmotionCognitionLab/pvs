@@ -102,14 +102,14 @@ Flanker.stimulus = arrows => {
     const body = arrows.map(
         is_right => `<img class=${is_right ? "right" : "left"} src=${arrow_img}>`
     ).join("");
-    const tail = "</div><div><em>Press <b>f</b> or <b>j</b>.</em></div>";
+    const tail = "</div><div>Press the left arrow key or the right arrow key.</em></div>";
     return head + body + tail;
 };
 Flanker.trial = arrows => {
     return {
         type: "html-keyboard-response",
         stimulus: Flanker.stimulus(arrows),
-        choices: ["f", "j"],
+        choices: ["ArrowLeft", "ArrowRight"],
         data: { arrows: arrows, isRelevant: true }
     };
 };
