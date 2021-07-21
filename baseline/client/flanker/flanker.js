@@ -27,14 +27,7 @@ export class Flanker {
                 this.constructor.instruction3,
                 this.constructor.instruction4,
                 this.constructor.instruction5,
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 1, 1, 1]),
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 0, 1, 1]),
-                this.constructor.fixation,
-                this.constructor.trial([0, 0, 1, 0, 0]),
-                this.constructor.fixation,
-                this.constructor.trial([0, 0, 0, 0, 0]),
+                this.constructor.training_procedure,
                 this.constructor.fixation,
                 this.constructor.trial([1, 1, 1, 1, 1]),
                 this.constructor.fixation,
@@ -132,6 +125,44 @@ Flanker.trial = arrows => {
         data: { arrows: arrows, isRelevant: true }
     };
 };
+
+Flanker.traiing_stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
+    .map(arrows => ( { 
+        stimulus: Flanker.stimulus(arrows), 
+        arrows: arrows, 
+        correct_response: arrows[2] === 1 ? "arrowright": "arrowleft" 
+        } )
+    );
+
+Flanker.test = {
+    type: "html-keyboard-response",
+    stimulus: jsPsych.timelineVariable("stimulus"),
+    choices: ["ArrowLeft", "ArrowRight"],
+    data: { 
+        isTrial: true,
+        correct_response: jsPsych.timelineVariable("correct_response"),
+        arrows: jsPsych.timelineVariable("arrows")
+    },
+    on_finish: function(data){
+        data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+    }
+}
+
+Flanker.feedback = {
+    type: "html-keyboard-response",
+    stimulus: function() {
+        const data = jsPsych.data.getLastTimelineData();
+        return data.last(1).values()[0].correct ? "Correct": "Incorrect"
+    },
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 800
+}
+
+Flanker.training_procedure = {
+    timeline: [Flanker.fixation, Flanker.test, Flanker.feedback],
+    timeline_variables: Flanker.traiing_stimuli,
+    randomize_order: true
+}
 
 Flanker.completion = {
     type: "html-keyboard-response",
