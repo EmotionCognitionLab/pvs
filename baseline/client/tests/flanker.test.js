@@ -46,7 +46,7 @@ describe("flanker", () => {
         jest.advanceTimersByTime(800);
         const data = jsPsych.data.get().values();
         expect(data.length).toBe(3);
-        expect(data[2].stimulus).toMatch(/.*\+.*/);
+        expect(data[2].stimulus).toMatch(/.*\+.*/); // the fixation cross is a plus sign
     });
 
 });
@@ -61,11 +61,11 @@ describe("flanker training", () => {
     });
 
     it("has six steps before training trials", () => {
-        doInstructions();
+        doTrainingInstructions();
         // check the data
         let relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(0);
-        doTrial();
+        doTrainingTrial();
         // check the data
         relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(1);
@@ -73,7 +73,7 @@ describe("flanker training", () => {
     });
 
     it("shows a fixation cross for 400-700ms before the stimulus", () => {
-        doInstructions();
+        doTrainingInstructions();
         const fixationDelay = setTimeout.mock.calls[0][1];
         expect(fixationDelay).toBeGreaterThanOrEqual(400);
         expect(fixationDelay).toBeLessThanOrEqual(700);
@@ -84,14 +84,14 @@ describe("flanker training", () => {
     });
 
     it("shows feedback after the participant does a trial", () => {
-        doInstructions();
-        doTrial();
+        doTrainingInstructions();
+        doTrainingTrial();
         const feedbackData = jsPsych.data.get().filter([{stimulus: "Correct"}, {stimulus: "Incorrect"}]).values();
         expect(feedbackData.length).toBe(1);
     });
 
     it("gives the participant 1050 ms to respond to a trial", () => {
-        doInstructions();
+        doTrainingInstructions();
         jest.advanceTimersByTime(800);
         expect(setTimeout).toHaveBeenCalledTimes(2);
         const availableResponseTime = setTimeout.mock.calls[1][1];
@@ -99,7 +99,7 @@ describe("flanker training", () => {
     });
 
     it("tells the participant to answer faster if they don't respond in 1050 ms", () => {
-        doInstructions();
+        doTrainingInstructions();
         // fixation 1 -> trial 1
         jest.advanceTimersByTime(800);
         // trial 1 -> feedback 1 without responding to trial
@@ -112,18 +112,18 @@ describe("flanker training", () => {
     });
 
     it("presents four training trials", () => {
-        doInstructions();
+        doTrainingInstructions();
         for (let i=0; i<4; i++) {
-            doTrial();
+            doTrainingTrial();
         }
         const relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(4);
     });
 
     it("shows three comprehension screens if you get feweer than three of the training trials right", () => {
-        doInstructions();
+        doTrainingInstructions();
         for (let i=0; i<4; i++) {
-            doTrial();
+            doTrainingTrial();
         }
         doComprehension();
         const relevantData = jsPsych.data.get().filter({isComprehension: true}).values();
@@ -131,10 +131,10 @@ describe("flanker training", () => {
     });
 
     it("loops the training and comprehension until you get three or more training trials right", () => {
-        doInstructions();
+        doTrainingInstructions();
         for (let i=0; i<2; i++) {
             for (let j=0; j<4; j++) {
-                doTrial();
+                doTrainingTrial();
             }
             doComprehension();
         }
@@ -168,26 +168,26 @@ describe("flanker training with controlled randomization", () => {
     it("does not show the comprehension screens if you get three or more of the training trials right", () => {
         // this test depends on the order of Flanker.training_stimuli to be right, left, right, left
         
-        doInstructions();
-        doTrial("ArrowRight");
-        doTrial("ArrowLeft");
-        doTrial("ArrowRight");
-        doTrial("ArrowLeft");
+        doTrainingInstructions();
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
         // at this point we should have been kicked into a real trial block, skipping comprehension
         // do one trial to be sure
-        doTrial();
+        doTrainingTrial();
         const comprehensionData = jsPsych.data.get().filter({isComprehension: true}).values();
         expect(comprehensionData.length).toBe(0);
     });
 
     it("randomizes the order of the trial stimuli", () => {
-        doInstructions();
-        doTrial("ArrowRight");
+        doTrainingInstructions();
+        doTrainingTrial("ArrowRight");
         expect(randomizationSpy).toHaveBeenCalled();
     });
 });
 
-function doInstructions() {
+function doTrainingInstructions() {
     // welcome screen -> instruction 1
     pressKey(" ");
     // instruction 1 -> instruction 2
@@ -202,7 +202,7 @@ function doInstructions() {
     pressKey(" ");
 }
 
-function doTrial(arrowKey="ArrowLeft") {
+function doTrainingTrial(arrowKey="ArrowLeft") {
     // fixation 1 -> trial 1
     jest.advanceTimersByTime(800);
     // trial 1 -> feedback 1
