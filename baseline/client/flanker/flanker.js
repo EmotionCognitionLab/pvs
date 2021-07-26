@@ -31,13 +31,8 @@ export class Flanker {
                 this.constructor.instruction3,
                 this.constructor.instruction4,
                 this.constructor.instruction5,
-                this.constructor.trainingLoop,
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 1, 1, 1]),
-                this.constructor.fixation,
-                this.constructor.trial([0, 0, 0, 0, 0]),
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 0, 1, 1]),
+                this.trainingLoop(),
+                this.mainTrials(),
                 this.constructor.completion,
             ];
         } else {
@@ -45,12 +40,7 @@ export class Flanker {
                 this.constructor.preload,
                 this.constructor.introduction,
                 this.constructor.instruction1,
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 1, 1, 1]),
-                this.constructor.fixation,
-                this.constructor.trial([0, 0, 0, 0, 0]),
-                this.constructor.fixation,
-                this.constructor.trial([1, 1, 0, 1, 1]),
+                this.mainTrials(),
                 this.constructor.completion,
             ];
         }
@@ -59,6 +49,60 @@ export class Flanker {
 
     get taskName() {
         return this.constructor.taskName;
+    }
+
+    trial(isTraining, durationMs) {
+        const result = {
+            type: "html-keyboard-response",
+            stimulus: jsPsych.timelineVariable("stimulus"),
+            choices: ["ArrowLeft", "ArrowRight"],
+            data: { 
+                correct_response: jsPsych.timelineVariable("correct_response"),
+                arrows: jsPsych.timelineVariable("arrows"),
+                set: this.setNum
+            },
+            on_finish: function(data){
+                data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+            },
+            trial_duration: durationMs
+        }
+
+        if (isTraining) {
+            result.data.isTraining = true;
+        } else {
+            result.data.isRelevant = true;
+        }
+
+        return result;
+    }
+
+    trainingTrials() {
+        return {
+            timeline: [this.constructor.fixation, this.trial(true, 1050), this.constructor.feedback],
+            timeline_variables: this.constructor.stimuli,
+            randomize_order: true
+        }
+    }
+
+    mainTrials() {
+        return {
+            timeline: [this.constructor.fixation, this.trial(false, 1050)],
+            timeline_variables: this.constructor.stimuli,
+            sample: {
+                type: "fixed-repetitions",
+                size: 4
+            },
+            randomize_order: true
+        }
+    }
+    
+    trainingLoop() {
+        return {
+            timeline: [this.trainingTrials(), this.constructor.comprehensionNode],
+            loop_function: function(data) {
+                return data.filter({isTraining: true, correct: true}).values().length < 3;
+            }
+        }
     }
 }
 
@@ -121,39 +165,16 @@ Flanker.stimulus = arrows => {
     const tail = "</div><div>Press the left arrow key or the right arrow key.</em></div>";
     return head + body + tail;
 };
-Flanker.trial = arrows => {
-    return {
-        type: "html-keyboard-response",
-        stimulus: Flanker.stimulus(arrows),
-        choices: ["ArrowLeft", "ArrowRight"],
-        data: { arrows: arrows, isRelevant: true }
-    };
-};
 
 // changing the order of these stimuli will break the 
 // "it does not show the comprehension screens if you get three or more of the training trials right" test
-Flanker.training_stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
+Flanker.stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
     .map(arrows => ( { 
         stimulus: Flanker.stimulus(arrows), 
         arrows: arrows, 
         correct_response: arrows[2] === 1 ? "arrowright": "arrowleft" 
         } )
     );
-
-Flanker.test = {
-    type: "html-keyboard-response",
-    stimulus: jsPsych.timelineVariable("stimulus"),
-    choices: ["ArrowLeft", "ArrowRight"],
-    data: { 
-        isTraining: true,
-        correct_response: jsPsych.timelineVariable("correct_response"),
-        arrows: jsPsych.timelineVariable("arrows")
-    },
-    on_finish: function(data){
-        data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-    },
-    trial_duration: 1050
-}
 
 Flanker.feedback = {
     type: "html-keyboard-response",
@@ -197,19 +218,6 @@ Flanker.comprehensionNode = {
     timeline: [Flanker.comprehension1, Flanker.comprehension2, Flanker.comprehension3],
     conditional_function: function() {
         return jsPsych.data.getLastTimelineData().filter({isTraining: true, correct: true}).values().length < 3;
-    }
-}
-
-Flanker.trainingTrials = {
-    timeline: [Flanker.fixation, Flanker.test, Flanker.feedback],
-    timeline_variables: Flanker.training_stimuli,
-    randomize_order: true,
-}
-
-Flanker.trainingLoop = {
-    timeline: [Flanker.trainingTrials, Flanker.comprehensionNode],
-    loop_function: function(data) {
-        return data.filter({isTraining: true, correct: true}).values().length < 3;
     }
 }
 

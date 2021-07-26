@@ -181,7 +181,7 @@ describe("taskForName for flanker", () => {
     it("defaults to set 1 if no set number is provided", () => {
         const set1Result = dailyTasks.taskForName("flanker", {setNum: 1});
         const noSetResult = dailyTasks.taskForName("flanker", {});
-        expect(noSetResult.getTimeline()).toStrictEqual(set1Result.getTimeline());
+        expect(JSON.stringify(noSetResult.getTimeline())).toBe(JSON.stringify(set1Result.getTimeline()));
     });
 });
 
