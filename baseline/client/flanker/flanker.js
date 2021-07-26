@@ -11,6 +11,10 @@ import instruction3_html from "./frag/instruction-3.html";
 import instruction4_html from "./frag/instruction-4.html";
 import instruction5_html from "./frag/instruction-5.html";
 import completion_html from "./frag/completion.html";
+import comprehension1_html from "./frag/comprehension-1.html";
+import comprehension2_html from "./frag/comprehension-2.html";
+import comprehension3_html from "./frag/comprehension-3.html";
+
 
 export class Flanker {
     constructor(setNum) {
@@ -27,7 +31,7 @@ export class Flanker {
                 this.constructor.instruction3,
                 this.constructor.instruction4,
                 this.constructor.instruction5,
-                this.constructor.training_procedure,
+                this.constructor.trainingLoop,
                 this.constructor.fixation,
                 this.constructor.trial([1, 1, 1, 1, 1]),
                 this.constructor.fixation,
@@ -126,6 +130,8 @@ Flanker.trial = arrows => {
     };
 };
 
+// changing the order of these stimuli will break the 
+// "it does not show the comprehension screens if you get three or more of the training trials right" test
 Flanker.traiing_stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
     .map(arrows => ( { 
         stimulus: Flanker.stimulus(arrows), 
@@ -166,10 +172,45 @@ Flanker.feedback = {
     trial_duration: 800
 }
 
-Flanker.training_procedure = {
+Flanker.comprehension1 = {
+    type: "html-keyboard-response",
+    stimulus: comprehension1_html,
+    choices: ["ArrowRight", "ArrowLeft"],
+    data: { isComprehension: true }
+}
+
+Flanker.comprehension2 = {
+    type: "html-keyboard-response",
+    stimulus: comprehension2_html,
+    choices: ["ArrowRight", "ArrowLeft"],
+    data: { isComprehension: true }
+}
+
+Flanker.comprehension3 = {
+    type: "html-keyboard-response",
+    stimulus: comprehension3_html,
+    choices: [" "],
+    data: { isComprehension: true }
+}
+
+Flanker.comprehensionNode = {
+    timeline: [Flanker.comprehension1, Flanker.comprehension2, Flanker.comprehension3],
+    conditional_function: function() {
+        return jsPsych.data.getLastTimelineData().filter({isTrial: true, correct: true}).values().length < 3;
+    }
+}
+
+Flanker.trainingTrials = {
     timeline: [Flanker.fixation, Flanker.test, Flanker.feedback],
     timeline_variables: Flanker.traiing_stimuli,
-    randomize_order: true
+    randomize_order: true,
+}
+
+Flanker.trainingLoop = {
+    timeline: [Flanker.trainingTrials, Flanker.comprehensionNode],
+    loop_function: function(data) {
+        return data.filter({isTrial: true, correct: true}).values().length < 3;
+    }
 }
 
 Flanker.completion = {
