@@ -60,7 +60,8 @@ export class Flanker {
                 correct_response: jsPsych.timelineVariable("correct_response"),
                 arrows: jsPsych.timelineVariable("arrows"),
                 set: this.setNum,
-                congruent: jsPsych.timelineVariable("congruent")
+                congruent: jsPsych.timelineVariable("congruent"),
+                response_time_limit: durationMs
             },
             on_finish: function(data){
                 data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);

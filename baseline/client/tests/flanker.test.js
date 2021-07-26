@@ -51,6 +51,17 @@ describe("flanker", () => {
         expect(result.congruent).toBe(result.arrows[2] === result.arrows[1]);
     });
 
+    it("results include the response time limit, which should be between 240 and 3480 ms", () => {
+        doMainInstructions();
+        doMainTrial();
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        expect(relevantData.length).toBeGreaterThanOrEqual(1);
+        const result = relevantData[0];
+        expect(result).toHaveProperty("response_time_limit");
+        expect(result.response_time_limit).toBeGreaterThanOrEqual(240);
+        expect(result.response_time_limit).toBeLessThanOrEqual(3480);
+    });
+
     it("shows a fixation cross for 400-700ms before the stimulus", () => {
         // welcome screen -> instruction
         pressKey(" ");
