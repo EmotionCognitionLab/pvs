@@ -145,7 +145,7 @@ Flanker.test = {
     stimulus: jsPsych.timelineVariable("stimulus"),
     choices: ["ArrowLeft", "ArrowRight"],
     data: { 
-        isTrial: true,
+        isTraining: true,
         correct_response: jsPsych.timelineVariable("correct_response"),
         arrows: jsPsych.timelineVariable("arrows")
     },
@@ -196,7 +196,7 @@ Flanker.comprehension3 = {
 Flanker.comprehensionNode = {
     timeline: [Flanker.comprehension1, Flanker.comprehension2, Flanker.comprehension3],
     conditional_function: function() {
-        return jsPsych.data.getLastTimelineData().filter({isTrial: true, correct: true}).values().length < 3;
+        return jsPsych.data.getLastTimelineData().filter({isTraining: true, correct: true}).values().length < 3;
     }
 }
 
@@ -209,7 +209,7 @@ Flanker.trainingTrials = {
 Flanker.trainingLoop = {
     timeline: [Flanker.trainingTrials, Flanker.comprehensionNode],
     loop_function: function(data) {
-        return data.filter({isTrial: true, correct: true}).values().length < 3;
+        return data.filter({isTraining: true, correct: true}).values().length < 3;
     }
 }
 

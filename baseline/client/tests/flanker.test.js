@@ -63,11 +63,11 @@ describe("flanker training", () => {
     it("has six steps before training trials", () => {
         doInstructions();
         // check the data
-        let relevantData = jsPsych.data.get().filter({isTrial: true}).values();
+        let relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(0);
         doTrial();
         // check the data
-        relevantData = jsPsych.data.get().filter({isTrial: true}).values();
+        relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(1);
 
     });
@@ -116,7 +116,7 @@ describe("flanker training", () => {
         for (let i=0; i<4; i++) {
             doTrial();
         }
-        const relevantData = jsPsych.data.get().filter({isTrial: true}).values();
+        const relevantData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(relevantData.length).toBe(4);
     });
 
@@ -142,7 +142,7 @@ describe("flanker training", () => {
         const comprehensionData = jsPsych.data.get().filter({isComprehension: true}).values();
         expect(comprehensionData.length).toBe(6);
 
-        const trialData = jsPsych.data.get().filter({isTrial: true}).values();
+        const trialData = jsPsych.data.get().filter({isTraining: true}).values();
         expect(trialData.length).toBe(8);
     });
 });
