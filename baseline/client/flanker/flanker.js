@@ -80,7 +80,7 @@ export class Flanker {
 
     trainingTrials() {
         return {
-            timeline: [this.constructor.fixation, this.trial(true, 1050), this.constructor.feedback],
+            timeline: [this.constructor.fixation, this.trial(true, 1050), this.constructor.trainingFeedback],
             timeline_variables: this.constructor.stimuli,
             randomize_order: true
         }
@@ -88,7 +88,7 @@ export class Flanker {
 
     mainTrials() {
         return {
-            timeline: [this.constructor.fixation, this.trial(false, 1050)],
+            timeline: [this.constructor.fixation, this.trial(false, 1050), this.constructor.mainFeedbackNode],
             timeline_variables: this.constructor.stimuli,
             sample: {
                 type: "fixed-repetitions",
@@ -179,7 +179,7 @@ Flanker.stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0,
         } )
     );
 
-Flanker.feedback = {
+Flanker.trainingFeedback = {
     type: "html-keyboard-response",
     stimulus: function() {
         const data = jsPsych.data.getLastTimelineData();
@@ -194,6 +194,22 @@ Flanker.feedback = {
     },
     choices: jsPsych.NO_KEYS,
     trial_duration: 800
+}
+
+Flanker.mainFeedback = {
+    type: "html-keyboard-response",
+    stimulus: "Answer faster next time",
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 800
+}
+
+Flanker.mainFeedbackNode = {
+    timeline: [Flanker.mainFeedback],
+    conditional_function: function() {
+        const data = jsPsych.data.getLastTimelineData();
+        const values = data.last(1).values()[0];
+        return values.response === null;
+    }
 }
 
 Flanker.comprehension1 = {

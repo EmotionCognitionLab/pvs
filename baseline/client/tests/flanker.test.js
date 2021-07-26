@@ -76,6 +76,19 @@ describe("flanker", () => {
         expect(data[2].stimulus).toMatch(/.*\+.*/); // the fixation cross is a plus sign
     });
 
+    it("tells the participant to answer faster if they don't respond in time", () => {
+        doMainInstructions();
+        // fixation 1 -> trial 1
+        jest.advanceTimersByTime(800);
+        // trial 1 -> feedback 1 without responding to trial
+        jest.advanceTimersByTime(1100);
+        // feedback 1 -> fixation 2
+        jest.advanceTimersByTime(800);
+        const dataValues = jsPsych.data.get().values();
+        const finalValue = dataValues[dataValues.length - 1];
+        expect(finalValue.stimulus).toBe("Answer faster next time");
+    });
+
 });
 
 describe("flanker training", () => {
