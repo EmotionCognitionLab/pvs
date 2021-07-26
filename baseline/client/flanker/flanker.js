@@ -132,7 +132,7 @@ Flanker.trial = arrows => {
 
 // changing the order of these stimuli will break the 
 // "it does not show the comprehension screens if you get three or more of the training trials right" test
-Flanker.traiing_stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
+Flanker.training_stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
     .map(arrows => ( { 
         stimulus: Flanker.stimulus(arrows), 
         arrows: arrows, 
@@ -202,7 +202,7 @@ Flanker.comprehensionNode = {
 
 Flanker.trainingTrials = {
     timeline: [Flanker.fixation, Flanker.test, Flanker.feedback],
-    timeline_variables: Flanker.traiing_stimuli,
+    timeline_variables: Flanker.training_stimuli,
     randomize_order: true,
 }
 
