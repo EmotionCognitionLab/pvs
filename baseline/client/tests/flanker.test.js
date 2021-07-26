@@ -39,7 +39,17 @@ describe("flanker", () => {
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBeGreaterThanOrEqual(1);
         expect(relevantData[0].set).toEqual(setNum);
-    })
+    });
+
+    it("results include whether or not the trial is congruent", () => {
+        doMainInstructions();
+        doMainTrial();
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        expect(relevantData.length).toBeGreaterThanOrEqual(1);
+        const result = relevantData[0];
+        expect(result).toHaveProperty("congruent");
+        expect(result.congruent).toBe(result.arrows[2] === result.arrows[1]);
+    });
 
     it("shows a fixation cross for 400-700ms before the stimulus", () => {
         // welcome screen -> instruction

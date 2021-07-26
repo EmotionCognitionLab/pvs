@@ -59,7 +59,8 @@ export class Flanker {
             data: { 
                 correct_response: jsPsych.timelineVariable("correct_response"),
                 arrows: jsPsych.timelineVariable("arrows"),
-                set: this.setNum
+                set: this.setNum,
+                congruent: jsPsych.timelineVariable("congruent")
             },
             on_finish: function(data){
                 data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
@@ -172,7 +173,8 @@ Flanker.stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0,
     .map(arrows => ( { 
         stimulus: Flanker.stimulus(arrows), 
         arrows: arrows, 
-        correct_response: arrows[2] === 1 ? "arrowright": "arrowleft" 
+        correct_response: arrows[2] === 1 ? "arrowright": "arrowleft",
+        congruent: arrows[2] === arrows[1]
         } )
     );
 
