@@ -81,7 +81,7 @@ export class Flanker {
     trainingTrials() {
         return {
             timeline: [this.constructor.fixation, this.trial(true, 1050), this.constructor.trainingFeedback],
-            timeline_variables: this.constructor.stimuli,
+            timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.trainingStimuli),
             randomize_order: true
         }
     }
@@ -89,10 +89,10 @@ export class Flanker {
     mainTrials() {
         return {
             timeline: [this.constructor.fixation, this.trial(false, 1050), this.constructor.mainFeedbackNode],
-            timeline_variables: this.constructor.stimuli,
+            timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.mainStimuli),
             sample: {
                 type: "fixed-repetitions",
-                size: 4
+                size: this.constructor.numMainBlocks
             },
             randomize_order: true
         }
@@ -170,14 +170,21 @@ Flanker.stimulus = arrows => {
 
 // changing the order of these stimuli will break the 
 // "it does not show the comprehension screens if you get three or more of the training trials right" test
-Flanker.stimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ]
-    .map(arrows => ( { 
+Flanker.trainingStimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ];
+
+Flanker.mainStimuli = [ [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 1], [1, 1, 0, 1, 1], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0] ];
+
+Flanker.timelineVarsForStimuli = (stimuli) => {
+    return stimuli.map(arrows => ( { 
         stimulus: Flanker.stimulus(arrows), 
         arrows: arrows, 
         correct_response: arrows[2] === 1 ? "arrowright": "arrowleft",
         congruent: arrows[2] === arrows[1]
-        } )
-    );
+    }));
+}
 
 Flanker.trainingFeedback = {
     type: "html-keyboard-response",
@@ -245,6 +252,7 @@ Flanker.completion = {
     stimulus: completion_html
 }
 
+Flanker.numMainBlocks = 18;
 
 if (window.location.href.includes(Flanker.taskName)) {
     jsPsych.init({
