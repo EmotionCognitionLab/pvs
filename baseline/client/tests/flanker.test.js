@@ -51,15 +51,15 @@ describe("flanker", () => {
         expect(result.congruent).toBe(result.arrows[2] === result.arrows[1]);
     });
 
-    it("results include the response time limit, which should be between 240 and 3480 ms", () => {
+    it("results include the trial duration, which should be between 240 and 3480 ms", () => {
         doMainInstructions();
         doMainTrial();
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBeGreaterThanOrEqual(1);
         const result = relevantData[0];
-        expect(result).toHaveProperty("response_time_limit");
-        expect(result.response_time_limit).toBeGreaterThanOrEqual(240);
-        expect(result.response_time_limit).toBeLessThanOrEqual(3480);
+        expect(result).toHaveProperty("trial_duration");
+        expect(result.trial_duration).toBeGreaterThanOrEqual(240);
+        expect(result.trial_duration).toBeLessThanOrEqual(3480);
     });
 
     it("shows a fixation cross for 400-700ms before the stimulus", () => {
@@ -89,6 +89,108 @@ describe("flanker", () => {
         expect(finalValue.stimulus).toBe("Answer faster next time");
     });
 
+    it("increases the response time limit by 270 ms in the first six blocks if they get < 13 out of 16 trials correct", () => {
+        let blockNum;
+        doMainInstructions();
+        for(blockNum = 0; blockNum < 6; blockNum++) {
+            for(let trialNum = 0; trialNum < 16; trialNum++) {
+                doMainTrial();
+            }
+        }
+        // now check what the response time limit was 
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        const result = relevantData[relevantData.length - 1];
+        expect(result).toHaveProperty("trial_duration");
+        expect(result.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs + ((blockNum - 1) * 270));
+    });
+
+    it("increases the response time limit by 90 ms in the seventh and following blocks if they get < 13 out of 16 trials correct", () => {
+        let blockNum;
+        doMainInstructions();
+        for(blockNum = 0; blockNum < 8; blockNum++) {
+            for(let trialNum = 0; trialNum < 16; trialNum++) {
+                doMainTrial();
+            }
+        }
+        // now check what the response time limit was 
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        const result = relevantData[relevantData.length - 1];
+        expect(result).toHaveProperty("trial_duration");
+        expect(result.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs + (6 * 270) + ((blockNum - 7) * 90));
+    });
+
+    it("randomizes the order of the trials in each block", () => {
+        doMainInstructions();
+        for (let blockNum = 0; blockNum < 2; blockNum++) {
+            for (let trialNum = 0; trialNum < 16; trialNum++) {
+                doMainTrial();
+            }
+        }
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        const block1Stimuli = relevantData.slice(0, 16).map(r => r.arrows);
+        const block2Stimuli = relevantData.slice(16).map(r => r.arrows);
+        expect(block1Stimuli.length).toEqual(block2Stimuli.length);
+        let stimuliMatch = true;
+        let i = 0;
+        while (stimuliMatch && i < block1Stimuli.length) {
+            stimuliMatch = block1Stimuli[i] == block2Stimuli[i];
+            i++;
+        }
+        expect(stimuliMatch).toBe(false);
+    });
+});
+
+describe("flanker with controlled randomization", () => {
+    let randomizationSpy;
+
+    beforeEach(() => {
+        let timeline = (new Flanker(3)).getTimeline();
+        // drop the preload; the test env doesn't get past it
+        timeline = timeline.slice(1);
+        // make sure that jsPsych's randomize_order feature doesn't randomze the order
+        randomizationSpy = jest.spyOn(jsPsych.randomization, "shuffle").mockImplementation((order) => order);
+        jsPsych.init({timeline: timeline});
+    });
+
+    afterEach(() => {
+        randomizationSpy.mockRestore();
+    });
+
+    it("decreases the response time by 90ms in the first six blocks if they get >=13 out of 16 trials correct", () => {
+        // this test depends on the order of Flanker.main_stimuli to be right, left, right, left * 4
+        doMainInstructions();
+        let blockNum;
+        for (blockNum = 0; blockNum < 6; blockNum++) {
+            for (let trialGroup = 0; trialGroup < 4; trialGroup++) {
+                doMainTrial("ArrowRight");
+                doMainTrial("ArrowLeft");
+                doMainTrial("ArrowRight");
+                doMainTrial("ArrowLeft");
+            }
+        }
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        const result = relevantData[relevantData.length - 1];
+        expect(result).toHaveProperty("trial_duration");
+        expect(result.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs - ((blockNum - 1) * 90));
+    });
+
+    it("decreases the response time by 30ms in the seventh and following blocks if they get >=13 out of 16 trials correct", () => {
+        // this test depends on the order of Flanker.main_stimuli to be right, left, right, left * 4
+        doMainInstructions();
+        let blockNum;
+        for (blockNum = 0; blockNum < 8; blockNum++) {
+            for (let trialGroup = 0; trialGroup < 4; trialGroup++) {
+                doMainTrial("ArrowRight");
+                doMainTrial("ArrowLeft");
+                doMainTrial("ArrowRight");
+                doMainTrial("ArrowLeft");
+            }
+        }
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        const result = relevantData[relevantData.length - 1];
+        expect(result).toHaveProperty("trial_duration");
+        expect(result.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs - (6 * 90) - ((blockNum - 7) * 30));
+    });
 });
 
 it("displays 18 blocks of 16 trials each", () => {
@@ -179,7 +281,7 @@ describe("flanker training", () => {
         expect(relevantData.length).toBe(4);
     });
 
-    it("shows three comprehension screens if you get feweer than three of the training trials right", () => {
+    it("shows three comprehension screens if you get fewer than three of the training trials right", () => {
         doTrainingInstructions();
         for (let i=0; i<4; i++) {
             doTrainingTrial();

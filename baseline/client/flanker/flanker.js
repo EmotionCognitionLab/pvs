@@ -19,6 +19,7 @@ import comprehension3_html from "./frag/comprehension-3.html";
 export class Flanker {
     constructor(setNum) {
         this.setNum = setNum;
+        this.currentResponseTimeLimitMs = this.constructor.defaultResponseTimeLimitMs;
     }
 
     getTimeline() {
@@ -47,11 +48,42 @@ export class Flanker {
         
     }
 
+    responseTimeLimitMs() {
+        const trialsPerBlock = this.constructor.mainStimuli.length;
+        const allResults = jsPsych.data.get().filter({isRelevant: true}).values();
+        if (allResults.length === 0 || allResults.length % trialsPerBlock !== 0) {
+            // we're in the middle of a block (or at the start of the experiment)
+            // changes to the response time limit are only made at the end of a block
+            return this.currentResponseTimeLimitMs;
+        }
+
+        // ok, now see how we need to change the response time based on performance in the block
+        let reductionMs;
+        let increaseMs;
+        const blockNum = allResults.length / trialsPerBlock;
+        if (blockNum <= 6) {
+            reductionMs = 90;
+            increaseMs = 270;
+        } else {
+            reductionMs = 30;
+            increaseMs = 90;
+        }
+
+        const blockResults = allResults.slice(allResults.length - trialsPerBlock);
+        const correctResultsCount = blockResults.filter(r => r.correct).length;
+        if (correctResultsCount >= 13) {
+            this.currentResponseTimeLimitMs -= reductionMs;
+        } else {
+            this.currentResponseTimeLimitMs += increaseMs;
+        }
+        return this.currentResponseTimeLimitMs;
+    }
+
     get taskName() {
         return this.constructor.taskName;
     }
 
-    trial(isTraining, durationMs) {
+    trial(isTraining) {
         const result = {
             type: "html-keyboard-response",
             stimulus: jsPsych.timelineVariable("stimulus"),
@@ -61,12 +93,12 @@ export class Flanker {
                 arrows: jsPsych.timelineVariable("arrows"),
                 set: this.setNum,
                 congruent: jsPsych.timelineVariable("congruent"),
-                response_time_limit: durationMs
             },
             on_finish: function(data){
                 data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
             },
-            trial_duration: durationMs
+            save_trial_parameters: {trial_duration: true},
+            trial_duration: this.responseTimeLimitMs.bind(this),
         }
 
         if (isTraining) {
@@ -80,7 +112,7 @@ export class Flanker {
 
     trainingTrials() {
         return {
-            timeline: [this.constructor.fixation, this.trial(true, 1050), this.constructor.trainingFeedback],
+            timeline: [this.constructor.fixation, this.trial(true), this.constructor.trainingFeedback],
             timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.trainingStimuli),
             randomize_order: true
         }
@@ -88,12 +120,9 @@ export class Flanker {
 
     mainTrials() {
         return {
-            timeline: [this.constructor.fixation, this.trial(false, 1050), this.constructor.mainFeedbackNode],
+            timeline: [this.constructor.fixation, this.trial(false), this.constructor.mainFeedbackNode],
             timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.mainStimuli),
-            sample: {
-                type: "fixed-repetitions",
-                size: this.constructor.numMainBlocks
-            },
+            repetitions: this.constructor.numMainBlocks,
             randomize_order: true
         }
     }
@@ -253,6 +282,7 @@ Flanker.completion = {
 }
 
 Flanker.numMainBlocks = 18;
+Flanker.defaultResponseTimeLimitMs = 1050;
 
 if (window.location.href.includes(Flanker.taskName)) {
     jsPsych.init({
