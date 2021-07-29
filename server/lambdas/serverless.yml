@@ -13,6 +13,14 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-west-2'}
   lambdaHashingVersion: 20201221
+  httpApi:
+    cors: true
+    authorizers:
+      serviceAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl: 'https://cognito-idp.${self:provider.region}.amazonaws.com/${ssm:/info/cognito/user-pool/id}'
+        audience:
+          - ${ssm:/info/cognito/user-pool/client/id}
 
 plugins:
   - serverless-ssm-publish
@@ -47,6 +55,21 @@ functions:
     package:
       patterns:
         - 'on-user-verify/*.js'
+
+  api:
+    handler: api/api.getUser
+    events:
+      - httpApi:
+          method: GET
+          path: /user
+          authorizer: serviceAuthorizer
+    environment:
+      USERS_TABLE: ${ssm:/info/dynamo/table/users}
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/role/lambda/dynamodb}
+    package:
+      patterns:
+        - 'api/*.js'
 
 resources:
   Resources:
