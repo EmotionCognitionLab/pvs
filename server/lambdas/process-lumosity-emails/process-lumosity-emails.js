@@ -42,8 +42,8 @@ module.exports.saveattachments = async (event) => {
         return { status: 'success' };
       }
     } catch (err) {
-      console.log(`Error trying to process email '${email.subject}' (s3 key: ${record.s3.object.key}).`)
-      console.log(err, err.stack);
+      console.error(`Error trying to process email (s3 key: ${record.s3.object.key}).`)
+      console.error(err, err.stack);
       throw(err);
     }
   };
