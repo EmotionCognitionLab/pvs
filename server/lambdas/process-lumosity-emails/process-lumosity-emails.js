@@ -5,7 +5,8 @@ const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
   apiVersion: '2006-03-01',
   region: process.env.AWSREGION,
-  endpoint: process.env.S3_ENDPOINT
+  endpoint: process.env.S3_ENDPOINT,
+  s3ForcePathStyle: true
 });
 const simpleParser = require('mailparser').simpleParser;
 
