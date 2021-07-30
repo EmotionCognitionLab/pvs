@@ -23,7 +23,7 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
-    it("returns the next set and all tasks in it if all tasks in the previous set have been ccompleted and the previous set was started yesterday or earlier", () => {
+    it("returns the next set and all tasks in it if all tasks in the previous set have been completed and the previous set was started yesterday or earlier", () => {
         const input = buildInput(dailyTasks.allSets[0], '2021-01-01T12:34:56.789Z');
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(2);
