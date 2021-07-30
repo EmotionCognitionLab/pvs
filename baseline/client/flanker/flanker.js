@@ -10,6 +10,7 @@ import instruction2_html from "./frag/instruction-2.html";
 import instruction3_html from "./frag/instruction-3.html";
 import instruction4_html from "./frag/instruction-4.html";
 import instruction5_html from "./frag/instruction-5.html";
+import instruction6_html from "./frag/instruction-6.html";
 import completion_html from "./frag/completion.html";
 import comprehension1_html from "./frag/comprehension-1.html";
 import comprehension2_html from "./frag/comprehension-2.html";
@@ -33,6 +34,7 @@ export class Flanker {
                 this.constructor.instruction4,
                 this.constructor.instruction5,
                 this.trainingLoop(),
+                this.constructor.instruction6,
                 this.mainTrials(),
                 this.constructor.completion,
             ];
@@ -176,6 +178,12 @@ Flanker.instruction4 = {
 Flanker.instruction5 = {
     type: "html-keyboard-response",
     stimulus: instruction5_html,
+    choices: [" "]
+};
+
+Flanker.instruction6 = {
+    type: "html-keyboard-response",
+    stimulus: instruction6_html,
     choices: [" "]
 };
 

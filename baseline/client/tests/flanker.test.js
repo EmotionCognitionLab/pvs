@@ -334,11 +334,28 @@ describe("flanker training with controlled randomization", () => {
         doTrainingTrial("ArrowLeft");
         doTrainingTrial("ArrowRight");
         doTrainingTrial("ArrowLeft");
+        // final instruction screen -> fixation 1
+        pressKey(" ");
         // at this point we should have been kicked into a real trial block, skipping comprehension
         // do one trial to be sure
         doTrainingTrial();
         const comprehensionData = jsPsych.data.get().filter({isComprehension: true}).values();
         expect(comprehensionData.length).toBe(0);
+        const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
+        expect(relevantData.length).toBe(1);
+    });
+
+    it("shows a final instructional message between the training and the main trials", () => {
+        // this test depends on the order of Flanker.training_stimuli to be right, left, right, left
+        doTrainingInstructions();
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
+        // final instruction screen -> fixation 1
+        pressKey(" ");
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.stimulus).toBe('test-file-stub');
     });
 
     it("randomizes the order of the trial stimuli", () => {
