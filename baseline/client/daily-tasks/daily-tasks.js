@@ -10,6 +10,7 @@ import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
 import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { browserCheck } from "../browser-check/browser-check.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -192,13 +193,20 @@ function canStartNextSet(allResults) {
         (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now - (1000 * 60 * 60));
 }
 
-function startTasks() {
-    const cognitoAuth = getAuth(fetchResults, handleError);
+function init() {
+    const cognitoAuth = getAuth(doAll, handleError);
     cognitoAuth.getSession();
 }
 
-async function fetchResults(session) {
+async function doAll(session) {
+    // pre-fetch all results before doing browser check to avoid
+    // lag after btowser check sends them to start experiments
     const allResults = await getAllResultsForCurrentUser(session);
+    const idToken = session.getIdToken().getJwtToken();
+    browserCheck.run(idToken, startTasks.bind(null, allResults));
+}
+
+function startTasks(allResults) {
     const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
     jsPsych.init({
         timeline: setAndTasks.remainingTasks
@@ -250,7 +258,7 @@ const doneForTodayMessage = {
 
 
 if (window.location.href.includes("daily-tasks")) {
-    startTasks();
+    init();
 }
 
 export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted, startNewSetQuery }
