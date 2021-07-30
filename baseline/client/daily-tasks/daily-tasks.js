@@ -93,7 +93,9 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
             timeline: task.getTimeline(),
             taskName: task.taskName,
             on_timeline_finish: () => {
-                saveResultsCallback(task.taskName, jsPsych.data.getLastTimelineData().values());
+                const results = jsPsych.data.getLastTimelineData().values();
+                results.push({ua: window.navigator.userAgent});
+                saveResultsCallback(task.taskName, results);
                 if (i === remainingTaskNames.length - 1) {
                     saveResultsCallback(setFinished, [{ "setNum": setNum }]);
                 }

@@ -211,6 +211,10 @@ describe("doing the tasks", () => {
         expect(saveResultsMock.mock.calls.length).toBe(2);
         // the experiment name saved to the results should be the name of the first task in allTimelines
         expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        // it should save the browser user agent as part of the results
+        const ua = saveResultsMock.mock.calls[1][1].filter(r => r.ua);
+        expect(ua.length).toBe(1);
+        expect(ua[0].ua).toBe(window.navigator.userAgent);
         // we only care about the relevant result
         let relevantResult = saveResultsMock.mock.calls[1][1].filter(r => r.isRelevant)
         expect(relevantResult.length).toBe(1);
