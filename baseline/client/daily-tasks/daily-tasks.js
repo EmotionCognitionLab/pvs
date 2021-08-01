@@ -204,8 +204,7 @@ async function doAll(session) {
     // pre-fetch all results before doing browser check to avoid
     // lag after btowser check sends them to start experiments
     const allResults = await getAllResultsForCurrentUser(session);
-    const idToken = session.getIdToken().getJwtToken();
-    browserCheck.run(idToken, startTasks.bind(null, allResults));
+    browserCheck.run(startTasks.bind(null, allResults));
 }
 
 function startTasks(allResults) {

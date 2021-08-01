@@ -5,20 +5,30 @@ import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import introduction_html from "./frag/introduction.html";
 import "./style.css"
 const uaParser = require("ua-parser-js");
-const awsSettings = require("../../../common/aws-settings.json");
 
-function run(idToken, callback) {
-    const userInfo = fetchUser(idToken);
+const uaKey = 'ua';
+const browserNameKey = 'browser.name';
+const osNameKey = 'os.name';
+const screenSizeKey = 'screen.size';
+const platformKey = 'platform';
+const profileKeys = [uaKey, browserNameKey, osNameKey, screenSizeKey, platformKey];
+const appName = 'heartBeam';
+
+function run(callback) {
+    const profile = fetchStoredProfile();
     // check for saved browser/monitor details
-    const firstTimeUser = !userInfo.raw_ua || !userInfo.parsed_ua || !userInfo.screen_size;
+    const firstTimeUser = profile[uaKey] === null;
     if (firstTimeUser) {
-        gatherComputerProfile(idToken, callback);
+        gatherComputerProfile(callback);
     } else {
-        checkComputerProfile(userInfo, callback);
+        if (computerProfileMatchesStoredProfile(profile)) {
+            callback();
+        } else {
+            // if found and different, ask them to swtich to their original browser
+            // give them the option to say they can't
+            // call callback to kick off the experiments
+        }
     }
-    // if found and different, ask them to swtich to their original browser
-    // give them the option to say they can't
-    // call callback to kick off the experiments
 }
 
 const introduction = {
@@ -27,13 +37,11 @@ const introduction = {
     choices: ["No", "Yes"],
 };
 
-function completion(idToken) {
-    return {
-        type: "html-button-response",
-        stimulus: "Great - we're all set! Click the continue button when you're ready to start the experiments.",
-        on_start: () => saveComputerProfile(idToken),
-        choices: ["Continue"]
-    }
+const completion = {
+    type: "html-button-response",
+    stimulus: "Great - we're all set! Click the continue button when you're ready to start the experiments.",
+    on_start: saveComputerProfile,
+    choices: ["Continue"]
 }
 
 const switchSetup = {
@@ -53,42 +61,51 @@ const switchNode = {
 // Welcomes user to experiment, 
 // emphasizes need to use consistent hw & sw,
 // saves details about hw & sw
-function gatherComputerProfile(idToken, callback) {
-    const timeline = [introduction, switchNode, completion(idToken)];
+function gatherComputerProfile(callback) {
+    const timeline = [introduction, switchNode, completion];
     jsPsych.init({
         timeline: timeline,
         on_finish: callback
     });
 }
 
-function checkComputerProfile(userInfo) {
+function computerProfileMatchesStoredProfile(storedProfile) {
     // checks to see that current hw & sw details match the ones the user registered
-}
-
-function saveComputerProfile(idToken) {
-    const uaInfo = uaParser(window.navigator.userAgent);
-    console.log('These data will be saved:')
-    console.log(`parser results: ${JSON.stringify(uaInfo)}`);
-    console.log(`screen dimensions (w X h): ${screen.width} X ${screen.height}`);
-    console.log(`platform: ${window.navigator.platform}`);
-}
-
-async function fetchUser(idToken) {
-    try {
-        const response = await fetch(awsSettings.UserApiUrl,
-        {
-            method: 'GET',
-            headers: {
-                Authorization: idToken
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch user data: Got response ${response.status}`);
-        }
-        return response.json();
-    } catch (err) {
-        console.error(err); // TODO remote logging
+    const curProfile = fetchCurrentProfile();
+    if (Object.keys(curProfile).length !== Object.keys(storedProfile).length) return false;
+    for (const prop in storedProfile) {
+        if (prop === uaKey) continue; // the whole UA string is too likely to change
+        if (storedProfile[prop] !== curProfile[prop]) return false;
     }
+    return true;
+}
+
+function fetchCurrentProfile() {
+    const uaInfo = uaParser(window.navigator.userAgent);
+    const result = {};
+    result[uaKey] = uaInfo.ua;
+    result[browserNameKey] = uaInfo.browser.name;
+    result[osNameKey] = uaInfo.os.name;
+    result[screenSizeKey] = `${screen.width}x${screen.height}`;
+    result[platformKey] = window.navigator.platform;
+    return result;
+}
+
+function saveComputerProfile() {
+    const curProfile = fetchCurrentProfile();
+    const lStor = window.localStorage;
+    for (const item in curProfile) {
+        lStor.setItem(`${appName}.${item}`, curProfile[item]);
+    }
+}
+
+function fetchStoredProfile() {
+    const result = {};
+    const lStor = window.localStorage;
+    profileKeys.forEach(k => {
+        result[k] = lStor.getItem(`${appName}.${k}`);
+    });
+    return result;
 }
 
 const browserCheck = {
