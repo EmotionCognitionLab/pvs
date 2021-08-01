@@ -42,6 +42,18 @@ module.exports = {
     mode: "development",
 };
 
+module.exports.entry['login'] = {
+    import: 'login/login.js',
+    filename: 'login/login.bundle.js'
+}
+
+module.exports.plugins.push(new HtmlWebpackPlugin({
+    title: 'HeartBEAM Login',
+    template: 'login/index.ejs',
+    filename: 'login/index.html',
+    chunks: ['login']
+}));
+
 function add_page(name, impo, title) {
     // add entry point
     module.exports.entry[name] = {

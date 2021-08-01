@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>HeartBEAM Login</title>
+    </head>
+    <body>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div id="phoneVerificationSuccess" class="content hidden">
+                    <p>
+                    Your phone number has been verified. Click the continue button when you are ready to start the experiment.
+                    </p>
+                    <div><button id="continueButton">Continue</button></div>
+                </div>
+
+                <div id="phoneCodeSendFailed" class="content hidden">
+                    <p>
+                        There was a problem sending a verification code to your phone. Please <button id="resendPhoneCodeError" class="button-link">try again</a>.
+                    </p>
+                </div>
+
+                <div class="modal-body">
+                    <div id="errorMessage" class="content hidden">
+
+                    </div>
+
+                    <div id="phoneVerification" class="hidden">
+                        <p>We have sent a code to your phone.</p>
+                        Please enter it here:
+                        <input id="phoneVerificationCode" type="text" />
+                        <button id="submitPhoneVerification">Submit</button>
+                        <p class="secondary-action-text">
+                            <span>Didn't receive a code?</span> <button id="resendPhoneCodeNormal" class="button-link">Resend it</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
