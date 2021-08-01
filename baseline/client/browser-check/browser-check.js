@@ -3,6 +3,8 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import introduction_html from "./frag/introduction.html";
+import different_html from "./frag/different.html";
+import permanent_change_html from "./frag/permanent-change.html";
 import "./style.css"
 const uaParser = require("ua-parser-js");
 
@@ -27,6 +29,7 @@ function run(callback) {
             // if found and different, ask them to swtich to their original browser
             // give them the option to say they can't
             // call callback to kick off the experiments
+            queryChangePermanent(callback);
         }
     }
 }
@@ -37,11 +40,13 @@ const introduction = {
     choices: ["No", "Yes"],
 };
 
-const completion = {
-    type: "html-button-response",
-    stimulus: "Great - we're all set! Click the continue button when you're ready to start the experiments.",
-    on_start: saveComputerProfile,
-    choices: ["Continue"]
+function completion(onStartFn) {
+    return {
+        type: "html-button-response",
+        stimulus: "Great - we're all set! Click the continue button when you're ready to start the experiments.",
+        on_start: onStartFn,
+        choices: ["Continue"]
+    }
 }
 
 const switchSetup = {
@@ -62,7 +67,44 @@ const switchNode = {
 // emphasizes need to use consistent hw & sw,
 // saves details about hw & sw
 function gatherComputerProfile(callback) {
-    const timeline = [introduction, switchNode, completion];
+    const timeline = [introduction, switchNode, completion(saveComputerProfile)];
+    jsPsych.init({
+        timeline: timeline,
+        on_finish: callback
+    });
+}
+
+const different = {
+    type: "html-button-response",
+    stimulus: different_html,
+    choices: ["No", "Yes"]
+}
+
+const switchNeededNode = {
+    timeline: [switchSetup],
+    conditional_function: function () {
+        const data = jsPsych.data.get().last(1).values()[0];
+        return data.response === 1; // different.choices[1]
+    }
+}
+
+const permanentChange = {
+    type: "html-button-response",
+    stimulus: permanent_change_html,
+    choices: ["It's permanent", "I can use the original later"],
+    on_finish: function(data) {
+        if (data.response === 0) {
+            // it's a permanent change; save the new profile
+            saveComputerProfile();
+        }
+    }
+}
+
+// If computer profile has changed, this
+// asks if the change is permanent and, if so,
+// saves the new profile.
+function queryChangePermanent(callback) {
+    const timeline = [different, switchNeededNode, permanentChange, completion(null)];
     jsPsych.init({
         timeline: timeline,
         on_finish: callback
