@@ -66,7 +66,6 @@ NBack.trial = (n, sequence) => ({
     sequence: sequence,
     show_duration: 400,
     hide_duration: 1400,
-    finish_duration: 1000,
     data: { isRelevant: true },
 });
 
