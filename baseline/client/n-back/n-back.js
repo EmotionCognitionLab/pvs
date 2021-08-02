@@ -31,6 +31,10 @@ export class NBack {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 NBack.taskName = "n-back";
