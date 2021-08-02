@@ -1,12 +1,5 @@
-#jspsych-n-back-sequence {
-    display: table;
-    table-layout: fixed;
-    border-spacing: 0;
-}
-
-.jspsych-n-back-item {
+#jspsych-n-back-display {
     display: table-cell;
-    visibility: hidden;
     width: 2em;
     height: 2em;
     font-size: 40px;
@@ -15,13 +8,14 @@
     font-weight: bold;
 }
 
-.jspsych-n-back-item-focused {
-    display: table-cell;
-    visibility: visible;
+.jspsych-n-back-flash {
+    border: 3px solid Blue;
+    border-radius: 50%;
+    animation-name: jspsych-n-back-flash-animation;
+    animation-duration: 0.3s;
 }
 
-.jspsych-back-item-selected {
-    display: table-cell;
-    visibility: visible;
-    border: 3px solid Blue;
+@keyframes jspsych-n-back-flash-animation {
+    from { border-color: Blue; }
+    to { border-color: rgba(0, 0, 255, 0); }
 }

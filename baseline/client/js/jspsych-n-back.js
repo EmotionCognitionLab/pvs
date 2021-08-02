@@ -21,38 +21,47 @@ jsPsych.plugins["n-back"] = (() => {
                 type: jsPsych.plugins.parameterType.INT,
                 default: undefined,
             },
-            finish_duration: {
-                type: jsPsych.plugins.parameterType.INT,
-                default: 0,
+            hide_fixation: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: "+",
             },
         },
     };
 
+    plugin.FLASH_DURATION = 250;  // .jspsych-n-back-flash animation duration in milliseconds
+
+    plugin.is_correct = (n, sequence, index) => {
+        if (n === 0) {
+            const item = sequence[index];
+            return item !== undefined && item === "1";
+        } else {
+            const a = sequence[index];
+            const b = sequence[index - n];
+            return a !== undefined && b !== undefined && a === b;
+        }
+    };
+
     plugin.trial = (display_element, trial) => {
         // build and show display HTML
-        {
-            let html = "";
-            html += `<div id="jspsych-n-back-sequence">`;
-            trial.sequence.forEach((c, idx) => {
-                html += `<div id="jspsych-n-back-item-${idx}" class="jspsych-n-back-item">${c}</div>`
-            });
-            html += `</div>`;
-            display_element.innerHTML = html;
-        }
+        display_element.innerHTML = `<div id="jspsych-n-back-display"></div>`;
+        const display = document.getElementById("jspsych-n-back-display");
         // state
-        let index;
-        let trial_start;
-        let focus_start;
-        let interval;
-        // helper to update state
-        const focus_on = idx => {
+        const responses = [];  // list of accrued responses
+        let index = null;  // index of the current item in the sequence
+        let trial_start;  // time since the trial started
+        let focus_start;  // time since the current item was focused on
+        let interval_id;  // identifier returned from setInterval
+        let flash_timeout;  // identifier returned from setTimeout for the flash animation
+        // helper for updating state
+        const focus_next = () => {
             focus_start = performance.now();
-            if (0 <= idx && idx < trial.sequence.length) {
-                index = idx;
-                const item = display_element.querySelector(`#jspsych-n-back-item-${idx}`);
-                item.classList.add("jspsych-n-back-item-focused");
+            index = index === null ? 0 : index + 1;
+            if (0 <= index && index < trial.sequence.length) {
+                display.textContent = trial.sequence[index];
+                display.classList.remove("jspsych-n-back-hidden");
                 setTimeout(() => {
-                    item.classList.remove("jspsych-n-back-item-focused");
+                    display.textContent = trial.hide_fixation;
+                    display.classList.add("jspsych-n-back-hidden");
                 }, trial.show_duration);
                 return true;
             } else {
@@ -60,53 +69,57 @@ jsPsych.plugins["n-back"] = (() => {
                 return false;
             }
         };
-        // helpers to finish trial
-        const is_correct = () => {
-            if (trial.n === 0) {
-                const item = trial.sequence[index];
-                return item !== undefined && item === "1";
-            } else {
-                const a = trial.sequence[index];
-                const b = trial.sequence[index - trial.n];
-                return a !== undefined && b !== undefined && a === b;
+        // helper for recording response
+        const listener_callback = event => {
+            event.preventDefault();
+            if (event.code === "Space") {
+                // add response data
+                const now = performance.now();
+                responses.push({
+                    index: index,
+                    time_from_start: now - trial_start,
+                    time_from_focus: now - focus_start,
+                    correct: plugin.is_correct(trial.n, trial.sequence, index),
+                });
+                // play .jspsych-n-back-flash animation (dark MDN magic)
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations/Tips#run_an_animation_again
+                display.classList.remove("jspsych-n-back-flash");
+                window.requestAnimationFrame(() => {
+                    window.requestAnimationFrame(() => {
+                        display.classList.add("jspsych-n-back-flash");
+                    });
+                });
+                // hide flash manually in case animation doesn't fade
+                clearTimeout(flash_timeout);  // last flash's timeout shouldn't hide this flash
+                setTimeout(() => {
+                    display.classList.remove("jspsych-n-back-flash");
+                }, plugin.FLASH_DURATION);
             }
         };
+        // helper for finishing trial and cleanup
         const finish = () => {
-            const now = performance.now();
+            // clear interval, listener, and display
             clearInterval(interval);
-            const selected = display_element.querySelector(`#jspsych-n-back-item-${index}`);
-            if (selected !== null) {
-                selected.classList.add("jspsych-back-item-selected");
-            }
-            setTimeout(() => {
-                display_element.innerHTML = "";
-                const data = {
-                    n: trial.n,
-                    sequence: trial.sequence,
-                    response_index: index,
-                    response_time_from_start: now - trial_start,
-                    response_time_from_focus: now - focus_start,
-                    correct: is_correct(),
-                };
-                jsPsych.finishTrial(data);
-            }, trial.finish_duration);
+            document.removeEventListener("keydown", listener_callback);
+            display_element.innerHTML = "";
+            // build data
+            const data = {
+                n: trial.n,
+                sequence: trial.sequence,
+                responses: responses,
+            };
+            // finish trial
+            jsPsych.finishTrial(data);
         };
-        // initialize state
+        // initialize
         trial_start = performance.now();
-        focus_on(0);
-        // add interval
+        focus_next();
         interval = setInterval(() => {
-            if (!focus_on(index + 1)) {
+            if (!focus_next()) {
                 finish();
             }
         }, trial.show_duration + trial.hide_duration);
-        // add event listener
-        document.addEventListener("keydown", event => {
-            event.preventDefault();
-            if (event.code === "Space") {
-                finish();
-            }
-        }, {once: true});
+        document.addEventListener("keydown", listener_callback);
     };
 
     return plugin;
