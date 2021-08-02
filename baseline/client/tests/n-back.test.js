@@ -20,7 +20,7 @@ describe("n-back", () => {
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevant.length).toBeGreaterThan(0);
     });
-    
+
     it("trials are preceded by cues", () => {
         const timeline = (new NBack()).getTimeline();
         const trial_indices = Array.from(timeline.entries())
@@ -29,7 +29,7 @@ describe("n-back", () => {
         const cue_indices = trial_indices.map(i => i - 1);
         expect(cue_indices.every(i => timeline[i] === NBack.cue)).toBe(true);
     });
-    
+
     it("non-final trials are succeeded by rests", () => {
         const timeline = (new NBack()).getTimeline();
         const trial_indices = Array.from(timeline.entries())
