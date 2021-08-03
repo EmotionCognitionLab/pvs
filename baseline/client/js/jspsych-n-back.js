@@ -50,7 +50,7 @@ jsPsych.plugins["n-back"] = (() => {
         let index = null;  // index of the current item in the sequence
         let trial_start;  // time since the trial started
         let focus_start;  // time since the current item was focused on
-        let interval_id;  // identifier returned from setInterval
+        let interval;  // identifier returned from setInterval
         let flash_timeout;  // identifier returned from setTimeout for the flash animation
         // helper for updating state
         const focus_next = () => {
