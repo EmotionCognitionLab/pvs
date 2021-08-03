@@ -248,4 +248,11 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         clickContinue();
         expect(callback).toHaveBeenCalled();
     });
+
+    it("should reject any device type other than undefined", () => {
+        uaSpy.mockImplementation(() => "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1");
+        browserCheck.run();
+        const stimulus = jsPsych.getDisplayElement().querySelectorAll("#jspsych-html-button-response-stimulus");
+        expect(stimulus[0].innerHTML).toMatch(/cannot be done on tablets/);
+    });
 });

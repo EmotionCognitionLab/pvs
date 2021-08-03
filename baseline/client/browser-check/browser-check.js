@@ -17,6 +17,13 @@ const profileKeys = [uaKey, browserNameKey, osNameKey, screenSizeKey, platformKe
 const appName = 'heartBeam';
 
 function run(callback) {
+    const uaInfo = uaParser(window.navigator.userAgent);
+    if (uaInfo.device.type) { // uaParser only defines device type for non-computers
+        jsPsych.init({
+            timeline: [badDevice]
+        });
+        return;
+    }
     const profile = fetchStoredProfile();
     // check for saved browser/monitor details
     const firstTimeUser = profile[uaKey] === null;
@@ -32,6 +39,13 @@ function run(callback) {
             queryChangePermanent(callback);
         }
     }
+}
+
+const badDevice = {
+    type: "html-button-response",
+    stimulus: "These experiments cannot be done on tablets, mobile devices, game consoles, etc. - only on computers that do not have a virtual keyboard. " +
+        `When you are at regular computer, please enter this URL in your browser there to continue: ${window.location.href}`,
+    choices: []
 }
 
 const introduction = {
