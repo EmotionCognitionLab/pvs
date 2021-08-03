@@ -151,6 +151,12 @@ function fetchStoredProfile() {
 }
 
 const browserCheck = {
-    run: run
+    run: run,
+    uaKey: uaKey,
+    browserNameKey: browserNameKey,
+    osNameKey: osNameKey,
+    screenSizeKey: screenSizeKey,
+    platformKey: platformKey,
+    appName: appName
 }
 export {browserCheck}
