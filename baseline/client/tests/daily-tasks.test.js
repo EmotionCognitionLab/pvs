@@ -119,6 +119,14 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(buildInput(input));
         expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
     });
+
+    it("should return all of the tasks the first set if you have started the set today but have not yet done any tasks", () => {
+        const result = dailyTasks.getSetAndTasks(buildInput([]));
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(dailyTasks.allSets[0]);
+    });
 });
 
 describe("taskForName for verbal-fluency", () => {

@@ -40,6 +40,10 @@ const startNewSetQuery = "start-new-set-query";
 function getSetAndTasks(allResults, saveResultsCallback) {
     const completedTasks = dedupeExperimentResults(allResults.map(r => r.experiment));
     const nextSetOk = canStartNextSet(allResults);
+    if (completedTasks.length === 0) {
+        const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, nextSetOk);
+        return { set: 1, remainingTasks: timeline }
+    }
     for (var i = 0; i < allSets.length; i++) {
         const set = allSets[i];
         for (var j = 0; j < set.length; j++) {
