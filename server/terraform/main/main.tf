@@ -111,9 +111,7 @@ output "cognito_identity_pool_id" {
 # DynamoDB setup
 resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
+  billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
   range_key      = "userDateTimeExperiment"
 
