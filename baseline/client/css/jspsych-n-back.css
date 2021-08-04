@@ -1,0 +1,21 @@
+#jspsych-n-back-display {
+    display: table-cell;
+    width: 2em;
+    height: 2em;
+    font-size: 40px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+}
+
+.jspsych-n-back-flash {
+    border: 3px solid Blue;
+    border-radius: 50%;
+    animation-name: jspsych-n-back-flash-animation;
+    animation-duration: 0.3s;
+}
+
+@keyframes jspsych-n-back-flash-animation {
+    from { border-color: Blue; }
+    to { border-color: rgba(0, 0, 255, 0); }
+}

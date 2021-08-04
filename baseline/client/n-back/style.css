@@ -1,0 +1,32 @@
+#jspsych-content {
+    max-width: 40em;
+}
+
+h1 {
+    font-size: 1.6em;
+}
+
+.n-back-cue-table {
+    display: table;
+    table-layout: fixed;
+    border-spacing: 0;
+    border: 2px solid Black;
+    margin: 2em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.n-back-cue-table td {
+    display: table-cell;
+    width: 2em;
+    height: 2em;
+    font-size: 30px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+}
+
+.n-back-cue-target {
+    border: 3px solid Blue;
+    border-radius: 50%;
+}

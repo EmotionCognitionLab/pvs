@@ -2,6 +2,7 @@ import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
@@ -12,6 +13,7 @@ describe("task classes", () => {
         Flanker,
         MoodMemory,
         MoodPrediction,
+        NBack,
         Panas,
         VerbalFluency,
         VerbalLearning,
