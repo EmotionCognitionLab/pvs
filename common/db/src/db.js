@@ -11,12 +11,12 @@
 function saveResults(session, experiment, results) {
     const subId = getSubIdFromSession(session);
     const credentials = getCredentialsForSession(session);
+    const now = new Date().toISOString();
 
     const putRequests = [];
     results.forEach((r, idx) => {
         const isRelevant = typeof r.isRelevant !== 'undefined' && r.isRelevant;
         delete(r.isRelevant);
-        const now = new Date().toISOString();
         putRequests.push({
             PutRequest: {
                 Item: {
@@ -29,6 +29,12 @@ function saveResults(session, experiment, results) {
         });
     });
 
+    // slice into arrays of no more than 25 PutRequests due to DynamoDB limits
+    const chunks = [];
+    for (let i = 0; i < putRequests.length; i += 25) {
+        chunks.push(putRequests.slice(i, i + 25));
+    }
+
     credentials.refresh(async err => {
         if (err) {
             // TODO implement remote error logging
@@ -38,9 +44,11 @@ function saveResults(session, experiment, results) {
         }
         try {
             const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-            const params = { RequestItems: {} };
-            params['RequestItems'][awsSettings.ExperimentTable] = putRequests;
-            await docClient.batchWrite(params).promise();
+            for (const chunk of chunks) {
+                const params = { RequestItems: {} };
+                params['RequestItems'][awsSettings.ExperimentTable] = chunk;
+                await docClient.batchWrite(params).promise();
+            }
         } catch (err) {
             console.error(err); // TODO implement remote error logging
             throw err;
