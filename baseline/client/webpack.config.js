@@ -29,7 +29,12 @@ module.exports = {
         modules: [
             __dirname,
             path.join(__dirname, "node_modules"),
+            path.join(__dirname, "node_modules/stream-browserify/node_modules"),  // ???
         ],
+        fallback: {
+            "crypto": require.resolve("crypto-browserify"),
+            "stream": require.resolve("stream-browserify"),
+        },
     },
     output: {
         path: path.join(__dirname, "dist"),
@@ -68,6 +73,7 @@ function add_page(name, impo, title) {
     }));
 }
 
+add_page("n-back", "n-back/n-back.js", "n-Back Task");
 add_page("verbal-learning", "verbal-learning/verbal-learning.js", "Verbal Learning Task");
 add_page("flanker", "flanker/flanker.js", "Flanker Task");
 add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
