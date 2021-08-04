@@ -16,6 +16,10 @@ export class Panas {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 Panas.taskName = "panas";

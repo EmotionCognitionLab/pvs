@@ -24,7 +24,7 @@ function completeMoodQuestionnaire(timeline) {
     //trigger input event to get the jspsych-percent-sum plugin to activate the submit button
     moodStates[0].dispatchEvent(new InputEvent("input"));
     
-    const submitButton = dispElem.querySelector("input[type=submit");
+    const submitButton = dispElem.querySelector("input[type=submit]");
     expect(submitButton).not.toBe(null);
     submitButton.click();
 }

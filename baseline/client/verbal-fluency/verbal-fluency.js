@@ -32,6 +32,10 @@ export class VerbalFluency {
             this.constructor.completion,
         ];
     }
+
+    get taskName() {
+        return this.constructor.taskName;
+    }
 }
 
 VerbalFluency.taskName = "verbal-fluency";

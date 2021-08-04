@@ -22,7 +22,7 @@ describe("daily-stressors", () => {
             expect(buttons.length).toBeGreaterThan(0);
             buttons[0].click();
         }
-        const submitButton = dispElem.querySelector("input[type=submit");
+        const submitButton = dispElem.querySelector("input[type=submit]");
         expect(submitButton).not.toBe(null);
         submitButton.click();
 

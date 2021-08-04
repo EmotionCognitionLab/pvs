@@ -20,6 +20,16 @@ jsPsych.plugins["percent-sum"] = (() => {
         },
     };
 
+    plugin.parseField = text => {
+        if (text === "") {
+            return NaN;
+        } else if (Array.from(text).every(c => "0" <= c && c <= "9")) {
+            return parseInt(text, 10);
+        } else {
+            return NaN;
+        }
+    };
+
     plugin.trial = (display_element, trial) => {
         // throw if fields are malformed
         if (trial.fields.length < 1) {
@@ -51,7 +61,7 @@ jsPsych.plugins["percent-sum"] = (() => {
         const counter = display_element.querySelector("#jspsych-percent-sum-counter");
         // define validation helper for event listeners
         const percent_sum = () => {
-            return Array.from(inputs).reduce((sum, inp) => sum + parseInt(inp.value, 10), 0);
+            return Array.from(inputs).reduce((sum, inp) => sum + plugin.parseField(inp.value), 0);
         };
         // add input listeners
         inputs.forEach(inp => {

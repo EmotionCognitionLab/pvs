@@ -2,3 +2,10 @@
 .arrows img { display: inline-block }
 .left { transform: rotate(-90deg) }
 .right { transform: rotate(90deg) }
+.circle-border { 
+    border: 3px solid red;
+    border-radius: 80%;
+}
+ul {
+    text-align: left;
+}

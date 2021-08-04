@@ -6,7 +6,8 @@ const th = require('../../common-test/test-helper.js');
 const fs = require('fs/promises');
 const lambdaLocal = require("lambda-local");
 const AWS = require('aws-sdk');
-const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01'});
+const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01',
+    s3ForcePathStyle: true});
 
 const originPrefix = 'emails';
 const emailKey = `${originPrefix}/7pweiur83jfjeif`;

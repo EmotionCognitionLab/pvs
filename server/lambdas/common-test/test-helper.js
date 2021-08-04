@@ -3,7 +3,7 @@
 const path = require('path');
 require('dotenv').config({path: path.join(__dirname, './env.sh')});
 const AWS = require('aws-sdk');
-const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01'});
+const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01', s3ForcePathStyle: true});
 const dynamoClient = new AWS.DynamoDB({endpoint: process.env.DYNAMO_ENDPOINT, apiVersion: '2012-08-10', region: process.env.REGION})
 
 module.exports = {

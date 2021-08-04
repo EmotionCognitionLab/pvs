@@ -5,7 +5,8 @@ const AWS = require('aws-sdk');
 const s3 = new AWS.S3({
   apiVersion: '2006-03-01',
   region: process.env.AWSREGION,
-  endpoint: process.env.S3_ENDPOINT
+  endpoint: process.env.S3_ENDPOINT,
+  s3ForcePathStyle: true
 });
 const simpleParser = require('mailparser').simpleParser;
 
@@ -42,8 +43,8 @@ module.exports.saveattachments = async (event) => {
         return { status: 'success' };
       }
     } catch (err) {
-      console.log(`Error trying to process email '${email.subject}' (s3 key: ${record.s3.object.key}).`)
-      console.log(err, err.stack);
+      console.error(`Error trying to process email (s3 key: ${record.s3.object.key}).`)
+      console.error(err, err.stack);
       throw(err);
     }
   };
