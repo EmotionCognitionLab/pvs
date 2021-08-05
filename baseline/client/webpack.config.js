@@ -29,12 +29,7 @@ module.exports = {
         modules: [
             __dirname,
             path.join(__dirname, "node_modules"),
-            path.join(__dirname, "node_modules/stream-browserify/node_modules"),  // ???
         ],
-        fallback: {
-            "crypto": require.resolve("crypto-browserify"),
-            "stream": require.resolve("stream-browserify"),
-        },
     },
     output: {
         path: path.join(__dirname, "dist"),

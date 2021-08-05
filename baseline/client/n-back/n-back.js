@@ -1,7 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "js/jspsych-n-back.js";
-import { Random, MersenneTwister19937 } from "random-js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-n-back.css";
 import "./style.css";
@@ -35,7 +34,7 @@ import refresh_instruction_2_html from "./frag/refresh/instruction_2.html";
 import test_introduction_html from "./frag/test/introduction.html";
 
 export class NBack {
-    constructor(setNum, seed = null) {
+    constructor(setNum) {
         // check for training block
         if (setNum === 1) {
             this.training = true;
@@ -43,15 +42,6 @@ export class NBack {
             this.training = false;
         } else {
             throw new Error("setNum must be a strictly positive integer");
-        }
-        this.setNum = setNum;
-        // seed random number generator
-        if (seed === null) {
-            this.random = new Random(MersenneTwister19937.autoSeed());
-        } else if (Number.isInteger(seed)) {
-            this.random = new Random(MersenneTwister19937.seed(seed));
-        } else {
-            throw new Error("seed must be null or an integer");
         }
     }
 
@@ -150,7 +140,7 @@ export class NBack {
 
     randSequence(choices, length, n, targets) {
         while (true) {
-            const sequence = Array(length).fill().map(_ => this.random.pick(choices));
+            const sequence = jsPsych.randomization.sampleWithReplacement(choices, length);
             if (this.constructor.countTargets(n, sequence) === targets) {
                 return sequence;
             }

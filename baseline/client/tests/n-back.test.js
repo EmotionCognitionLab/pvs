@@ -1,12 +1,10 @@
 import { NBack } from "../n-back/n-back.js";
 import { pressKey } from "./utils.js"
 
-const SEED = 0x533D;  // default seed for testing
-
 describe("n-back", () => {
     it("results should have at least one result marked isRelevant", () => {
         // check timeline nodes
-        const timeline = (new NBack(1, SEED)).getTimeline();
+        const timeline = (new NBack(1)).getTimeline();
         expect(timeline.some(trial => trial.data && trial.data.isRelevant)).toBe(true);
         // check generated data
         jest.useFakeTimers("legacy");
@@ -22,7 +20,7 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are preceded by cues", () => {
-        const timeline = (new NBack(1, SEED)).getTimeline();
+        const timeline = (new NBack(1)).getTimeline();
         expect(
             timeline.every((trial, index) => {
                 if (trial.type === "n-back") {
@@ -41,7 +39,7 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are succeeded by rests", () => {
-        const timeline = (new NBack(1, SEED)).getTimeline();
+        const timeline = (new NBack(1)).getTimeline();
         expect(
             timeline.every((trial, index) => {
                 if (trial.type === "n-back") {
