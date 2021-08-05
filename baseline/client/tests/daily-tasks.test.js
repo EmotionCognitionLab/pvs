@@ -194,10 +194,17 @@ describe("taskForName for flanker", () => {
 });
 
 describe("doing the tasks", () => {
+    afterEach(() => {
+        jest.useRealTimers();
+    });
     it("should save the data at the end of each task", () => {
         const saveResultsMock = jest.fn((experimentName, results) => null);
         const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        jest.useFakeTimers("legacy");
         jsPsych.init({timeline: allTimelines.remainingTasks});
+        // full-screen mode screen
+        clickContinue();
+        jest.runAllTimers();
         // welcome screen
         clickContinue();
 
@@ -236,8 +243,12 @@ describe("doing the tasks", () => {
         const saveResultsMock = jest.fn((experimentName, results) => null);
         const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2)
+        jest.useFakeTimers("legacy");
         jsPsych.init({timeline: tasksToRun});
 
+        // full-screen mode screen
+        clickContinue();
+        jest.runAllTimers();
         // not-implemented screen TODO replace with correct task completion once task is written
         clickContinue();
         expect(saveResultsMock.mock.calls.length).toBe(2);
@@ -252,6 +263,26 @@ describe("doing the tasks", () => {
         expect(saveResultsMock.mock.calls.length).toBe(1);
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
+    });
+    it("should put a full-screen task at the start of each experiment", () => {
+        const saveResultsMock = jest.fn((experimentName, results) => null);
+        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        const firstTaskTypes = allTimelines.remainingTasks.slice(0, allTimelines.remainingTasks.length - 1)
+            .map(rt => rt.timeline[0].timeline[0].type);
+       expect(firstTaskTypes.every(tt => tt === "fullscreen")).toBe(true);
+    });
+    it("should display the full-screen task if the display is not already full screen", () => {
+        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
+        jsPsych.init({timeline: allTimelines.remainingTasks});
+        expect(jsPsych.getDisplayElement().innerHTML).toMatch(/full screen mode/);
+    })
+    it("should not display the full-screen task if the display is already full screen", () => {
+        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
+        const origFsElement = document.fullscreenElement;
+        global.document.fullscreenElement = true; // normally an HTMLElement, but daily-tasks just checks for existence
+        jsPsych.init({timeline: allTimelines.remainingTasks});
+        expect(jsPsych.getDisplayElement().innerHTML).not.toMatch(/full screen mode/);
+        global.document.fullscreenElement = origFsElement;
     });
 });
 

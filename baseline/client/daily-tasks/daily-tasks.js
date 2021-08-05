@@ -1,6 +1,7 @@
 'use strict';
 
 import "@adp-psych/jspsych/jspsych.js";
+import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -93,8 +94,10 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
 
     for  (let i = 0; i < remainingTaskNames.length; i++) {
         const task = taskForName(remainingTaskNames[i], {setNum: setNum, allResults: allResults});
+        const taskTimeline = task.getTimeline();
+        taskTimeline.unshift(fullScreenNode);
         const node = {
-            timeline: task.getTimeline(),
+            timeline: taskTimeline,
             taskName: task.taskName,
             on_timeline_finish: () => {
                 const results = jsPsych.data.getLastTimelineData().values();
@@ -236,6 +239,22 @@ function taskNotAvailable(taskName) {
         stimulus: `The code for ${taskName} has not been written yet. Please continue to the next task.`,
         choices: ["Continue"]
     }];
+}
+
+const fullScreenTrial = {
+    type: "fullscreen",
+    fullscreen_mode: true,
+    message: "<p>These experiments must be run in full screen mode. Please click the button below to set your browser to full screen mode.</p>",
+    button_label: "Go full screen",
+    delay_after: 0
+}
+
+const fullScreenNode = {
+    timeline: [fullScreenTrial],
+    conditional_function: function() {
+        return !(document.fullscreenElement || document.webkitFullscreenElement ||
+        document.mozFullScreenElement || document.msFullscreenElement)
+    }
 }
 
 const startNewSetQueryTask = {
