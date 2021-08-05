@@ -8,3 +8,10 @@ export function clickContinue(querySelector="button") {
     expect(buttons.length).toBe(1);
     buttons[0].click();  // continue button
 }
+
+export function cartesianProduct(...arrays) {
+    const reducer = (acc, array) => (
+        acc.flatMap(sequence => array.map(item => [...sequence, item]))
+    );
+    return arrays.reduce(reducer, [[]]);
+}
