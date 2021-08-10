@@ -23,10 +23,13 @@ h1 {
     font-size: 30px;
     text-align: center;
     vertical-align: middle;
-    font-weight: bold;
 }
 
 .n-back-cue-target {
     border: 3px solid Blue;
     border-radius: 50%;
+}
+
+.n-back-cue-highlight {
+    font-weight: bold;
 }
