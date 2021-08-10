@@ -210,11 +210,6 @@ NBack.indicate = {
     choices: ["0", "1", "2"],
 };
 
-NBack.countTargets = (n, sequence) => {
-    return sequence.filter((item, index) => (
-        n === 0 ? item === "1" : item === sequence[index - n]
-    )).length;
-};
 
 
 if (window.location.href.includes(NBack.taskName)) {
