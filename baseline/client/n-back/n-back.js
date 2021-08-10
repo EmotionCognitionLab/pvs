@@ -139,12 +139,33 @@ export class NBack {
     }
 
     randSequence(choices, length, n, targets) {
-        while (true) {
-            const sequence = jsPsych.randomization.sampleWithReplacement(choices, length);
-            if (this.constructor.countTargets(n, sequence) === targets) {
-                return sequence;
-            }
+        const sampleWithoutReplacement = jsPsych.randomization.sampleWithoutReplacement;
+        // choose where the targets should appear in the sequence
+        const indices = [...Array(length).keys()]
+        const validTargetIndices = indices.filter(index => (
+            n === 0 ? true : index - n >= 0
+        ));
+        const targetIndices = sampleWithoutReplacement(validTargetIndices, targets);
+        if (targetIndices.length < targets) {
+            throw new Error(
+                `${n}-back sequence of length ${length} can't contain ${targets} targets`
+            );
         }
+        // create sequence
+        const sequence = [];
+        indices.forEach(index => {
+            if (targetIndices.includes(index)) {
+                sequence.push(n === 0 ? "1" : sequence[index - n]);
+            } else {
+                const [item, fallback] = sampleWithoutReplacement(choices, 2);
+                if (n === 0) {
+                    sequence.push(item !== "1" ? item : fallback);
+                } else {
+                    sequence.push(item !== sequence[index - n] ? item : fallback);
+                }
+            }
+        });
+        return sequence;
     }
 }
 
@@ -187,12 +208,6 @@ NBack.indicate = {
     type: "html-keyboard-response",
     stimulus: train_instruction_indicate_html,
     choices: ["0", "1", "2"],
-};
-
-NBack.countTargets = (n, sequence) => {
-    return sequence.filter((item, index) => (
-        n === 0 ? item === "1" : item === sequence[index - n]
-    )).length;
 };
 
 

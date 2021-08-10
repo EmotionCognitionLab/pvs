@@ -1,5 +1,5 @@
 import { NBack } from "../n-back/n-back.js";
-import { pressKey } from "./utils.js"
+import { pressKey, cartesianProduct } from "./utils.js"
 
 describe("n-back", () => {
     it("results should have at least one result marked isRelevant", () => {
@@ -49,5 +49,26 @@ describe("n-back", () => {
                 }
             })
         ).toBe(true);
+    });
+
+    it("generates random n-back sequences correctly", () => {
+        const nback = new NBack(1);
+        const choicess = [["1", "2", "3", "4", "5", "6", "7", "8", "9"]];
+        const lengths = [15, 16, 17, 18, 19, 20];
+        const ns = [0, 1, 2];
+        const targetss = [0, 1, 2, 3, 4, 5];
+        for (
+            const [choices, length, n, targets]
+            of cartesianProduct(choicess, lengths, ns, targetss)
+        ) {
+            const sequence = nback.randSequence(choices, length, n, targets);
+            expect(sequence.every(item => choices.includes(item))).toBe(true);
+            expect(sequence.length).toBe(length);
+            expect(
+                sequence
+                    .filter((x, i) => n === 0 ? x === "1" : x === sequence[i - n])
+                    .length
+            ).toBe(targets);
+        }
     });
 });
