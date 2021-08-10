@@ -211,7 +211,6 @@ NBack.indicate = {
 };
 
 
-
 if (window.location.href.includes(NBack.taskName)) {
     jsPsych.init({
         timeline: (new NBack(1)).getTimeline(),
