@@ -12,6 +12,7 @@ import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
 import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
+import { TaskSwitching } from "../task-switching/task-switching.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -157,7 +158,9 @@ function taskForName(name, options) {
         case "mood-prediction":
             return new MoodPrediction();
         case "panas":
-            return new Panas(); 
+            return new Panas();
+        case "task-switching":
+            return new TaskSwitching();
         case "verbal-fluency":
             const allResults = options.allResults;
             const availableLetters = new Set(VerbalFluency.possibleLetters);

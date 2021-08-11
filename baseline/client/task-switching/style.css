@@ -1,0 +1,60 @@
+body {
+    background-color: black;
+    color: white;
+}
+
+.blue {
+    color: rgb(97, 170, 219);
+}
+
+.big {
+    font-size: 7em;
+}
+
+.dot {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 5px;
+    vertical-align: middle;
+}
+
+.dot.blue {
+    background-color: rgb(97, 170, 219);
+}
+
+.dot.white {
+    background-color: white;
+}
+
+.dot.ylw {
+    background-color: rgb(230, 218, 51);
+}
+
+.fix {
+    font-size: 60px;
+    color: white;
+}
+
+.leftVal {
+    margin-right: 20px;
+}
+
+.small {
+    font-size: 3em;
+}
+
+.smalldot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 5px;
+    background-color: white;
+    vertical-align: middle;
+}
+
+.ylw {
+    color: rgb(230, 218, 51);
+}

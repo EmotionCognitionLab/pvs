@@ -9,6 +9,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { clickContinue } from "./utils.js";
+import { TaskSwitching } from "../task-switching/task-switching.js";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -179,6 +180,10 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("verbal-learning", {});
         expect(result instanceof VerbalLearning).toBe(true);
     });
+    it("returns a TaskSwitching object for task-switching", () => {
+        const result = dailyTasks.taskForName("task-switching", {});
+        expect(result instanceof TaskSwitching).toBe(true);
+    })
 });
 
 describe("taskForName for flanker", () => {
