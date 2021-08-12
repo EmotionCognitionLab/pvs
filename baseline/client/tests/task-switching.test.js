@@ -165,42 +165,14 @@ describe("TaskSwitching with mocked Math.random", () => {
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/That is the correct answer/);
     });
     it("should tell users they answered correctly when they respond to a cue correctly", () => {
-        doTraining();
-
-        // fixation -> blue/yellow prompt display
-        jest.advanceTimersByTime(201);
-
-        // blue/yellow prompt display -> stimulus
-        jest.advanceTimersByTime(501);
-
-        // stimulus -> fixation
-        const [size, color] = stimulusSizeAndColor(jsPsych.getDisplayElement().innerHTML);
-        if (color === "blue") {
-            pressKey("ArrowLeft")
-        } else {
-            pressKey("ArrowRight");
-        }
+       doFirstTrial(true);
 
         // fixation -> feedback
         jest.advanceTimersByTime(501);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Correct/);
     });
     it("should tell users they answered incorrectly when they respond to a cue incorrectly", () => {
-        doTraining();
-
-        // fixation -> blue/yellow prompt display
-        jest.advanceTimersByTime(201);
-
-        // blue/yellow prompt display -> stimulus
-        jest.advanceTimersByTime(501);
-        
-        // stimulus -> fixation
-        const [size, color] = stimulusSizeAndColor(jsPsych.getDisplayElement().innerHTML);
-        if (color === "blue") {
-            pressKey("ArrowRight")
-        } else {
-            pressKey("ArrowLeft");
-        }
+        doFirstTrial(false);
 
         // fixation -> feedback
         jest.advanceTimersByTime(501);
@@ -222,23 +194,49 @@ describe("TaskSwitching with mocked Math.random", () => {
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Answer faster next time/);
     });
     it("should have at least one result marked isRelevant", () => {
-        doTraining();
-
-        // fixation -> blue/yellow prompt display
-        jest.advanceTimersByTime(201);
-
-        // blue/yellow prompt display -> stimulus
-        jest.advanceTimersByTime(501);
-        
-        // stimulus -> fixation
-        const [size, color] = stimulusSizeAndColor(jsPsych.getDisplayElement().innerHTML);
-        if (color === "blue") {
-            pressKey("ArrowRight")
-        } else {
-            pressKey("ArrowLeft");
-        }
+        doFirstTrial(false);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.isRelevant).toBe(true);
+    });
+    it("should mark correct responses as correct in the data field", () => {
+        doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.correct).toBe(true);
+    });
+    it("should mark incorrect responses as incorrect in the data field", () => {
+        doFirstTrial(false);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.correct).toBe(false);
+    });
+    it("should include the stimulus size in the data field", () => {
+        const [number, size, color] = doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.size).toBe(size);
+    });
+    it("should include the stimulus color in the data field", () => {
+        const [number, size, color] = doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.color).toBe(color);
+    });
+    it("should include the stimulus number in the data field", () => {
+        const [number, size, color] = doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.number).toBe(number);
+    });
+    it("should include whether big/blue/>5 numbers are assigned to the left arrow in the data field", () => {
+        doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.bLeft).toBe(true); // we mocked Math.random above to force this to be the case
+    });
+    it("should include the task type in the data field", () => {
+        doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.taskType).toBe("color"); // the first trial is always color
+    });
+    it("should include the block type in the data field", () => {
+        doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.blockType).toBe("single"); // the first trial is always single
     });
     describe("trial structure should consist of", () => {
         const dispElem = jsPsych.getDisplayElement
@@ -332,7 +330,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 2 -> training trial 2 feedback
-    let [size, color] = stimulusSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    let [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (color === "blue") {
         pressKey("ArrowLeft");
     } else {
@@ -342,7 +340,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 3 -> training trial 3 feedback
-    [size, color] = stimulusSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (size === "small") {
         pressKey("ArrowRight");
     } else {
@@ -359,12 +357,50 @@ function doTraining() {
     pressKey(" ");
 }
 
-function stimulusSizeAndColor(dispElemHtml) {
+function stimulusNumberSizeAndColor(dispElemHtml) {
     const classPat = /<div class="(big|small) (blue|ylw)">/
     const match = dispElemHtml.match(classPat);
     const size = match[1];
     expect(size === "big" || size === "small").toBe(true);
     const color = match[2];
     expect(color === "blue" || color === "ylw").toBe(true);
-    return [size, color];
+    const numberPat = /<p>([1-4,5-9])<\/p>/;
+    const numMatch = dispElemHtml.match(numberPat);
+    const number = Number.parseInt(numMatch[1]);
+    expect(number).toBeGreaterThanOrEqual(1);
+    expect(number).toBeLessThanOrEqual(9);
+    expect(number).not.toBe(5);
+    return [number, size, color];
+}
+
+// Does all of the training and then the first trial
+// (correctly or not, as per correctly param)
+// Assumes that bLeft is true in our taskSwitching object
+// Ends on post-trial fixation screen for first trial
+function doFirstTrial(correctly) {
+    doTraining();
+
+    // fixation -> blue/yellow prompt display
+    jest.advanceTimersByTime(201);
+
+    // blue/yellow prompt display -> stimulus
+    jest.advanceTimersByTime(501);
+    
+    // stimulus -> fixation
+    const [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    if (correctly) { // answer correctly
+        if (color === "blue") {
+            pressKey("ArrowLeft")
+        } else {
+            pressKey("ArrowRight");
+        }
+    } else {
+        if (color === "blue") {
+            pressKey("ArrowRight")
+        } else {
+            pressKey("ArrowLeft");
+        }
+    }
+
+    return [number, size, color];
 }
