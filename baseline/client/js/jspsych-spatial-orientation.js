@@ -8,6 +8,22 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.HTML_STRING,
                 default: undefined,
             },
+            centerText: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: undefined,
+            },
+            topText: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: undefined,
+            },
+            pointerText: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: undefined,
+            },
+            targetAngle: {
+                type: jsPsych.plugins.parameterType.FLOAT,
+                default: undefined,
+            },
         },
     };
 
@@ -105,10 +121,10 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         const start = performance.now();
         plugin.buildIcirc(icirc, {
             radius: 150,
-            centerText: "bell",
-            topText: "tree",
-            pointerText: "drum",
-            targetAngle: 1,
+            centerText: trial.centerText,
+            topText: trial.topText,
+            pointerText: trial.pointerText,
+            targetAngle: trial.targetAngle,
             onClick: clickData => {
                 // build data
                 const rt = performance.now() - start;
