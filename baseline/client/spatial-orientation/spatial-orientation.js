@@ -11,6 +11,10 @@ export class SpatialOrientation {
             {
                 type: "spatial-orientation",
                 scene: `<img src=${scene_img}>`,
+                centerText: "bell",
+                topText: "tree",
+                pointerText: "drum",
+                targetAngle: 1,
             },
         ];
     }
