@@ -3,7 +3,12 @@ jsPsych.plugins["spatial-orientation"] = (() => {
 
     plugin.info = {
         name: "spatial-orientation",
-        parameters: {},
+        parameters: {
+            scene: {
+                type: jsPsych.plugins.parameterType.HTML_STRING,
+                default: undefined,
+            },
+        },
     };
 
     plugin.buildIcirc = (canvas, options) => {
@@ -88,8 +93,8 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         // build and show display HTML
         {
             let html = "";
-            html += `<div id="jspsych-spatial-orientation-canvasbox">`;
-            html +=     `<canvas id="jspsych-spatial-orientation-scene" width="500" height="500"></canvas>`;
+            html += `<div id="jspsych-spatial-orientation-wrapper">`;
+            html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</canvas>`;
             html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
             html += `</div>`;
             displayElement.innerHTML = html;

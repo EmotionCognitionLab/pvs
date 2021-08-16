@@ -2,11 +2,16 @@ import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-spatial-orientation.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
+import scene_img from "./scene.png";
+
 
 export class SpatialOrientation {
     getTimeline() {
         return [
-            {type: "spatial-orientation"},
+            {
+                type: "spatial-orientation",
+                scene: `<img src=${scene_img}>`,
+            },
         ];
     }
 
