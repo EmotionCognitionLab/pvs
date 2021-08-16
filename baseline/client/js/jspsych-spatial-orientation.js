@@ -110,7 +110,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         {
             let html = "";
             html += `<div id="jspsych-spatial-orientation-wrapper">`;
-            html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</canvas>`;
+            html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</div>`;
             html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
             html += `</div>`;
             displayElement.innerHTML = html;
