@@ -14,7 +14,11 @@ export class SpatialOrientation {
                 centerText: "bell",
                 topText: "tree",
                 pointerText: "drum",
-                targetAngle: 1,
+                targetAngle: this.constructor.angleABC(
+                    SpatialOrientation.scenePositions.tree,
+                    SpatialOrientation.scenePositions.bell,
+                    SpatialOrientation.scenePositions.drum,
+                ),
             },
         ];
     }
@@ -25,6 +29,24 @@ export class SpatialOrientation {
 }
 
 SpatialOrientation.taskName = "spatial-orientation";
+
+SpatialOrientation.scenePositions = {
+    trash: [0, 0],
+    traffic: [105, 85],
+    wheel: [232, 130],
+    drum: [187, -12],
+    bell: [108, -149],
+    barrel: [395, 78],
+    tree: [342, -129],
+}
+
+SpatialOrientation.angleABC = ([aX, aY], [bX, bY], [cX, cY]) => {
+    const [b2aX, b2aY] = [aX - bX, aY - bY];
+    const [b2cX, b2cY] = [cX - bX, cY - bY];
+    const dx = (b2cX*b2aX + b2cY*b2aY) / Math.sqrt(b2aX*b2aX + b2aY*b2aY);
+    const dy = (b2cY*b2aX - b2cX*b2aY) / Math.sqrt(b2aX*b2aX + b2aY*b2aY);
+    return Math.atan2(dy, dx);
+};
 
 
 if (window.location.href.includes(SpatialOrientation.taskName)) {
