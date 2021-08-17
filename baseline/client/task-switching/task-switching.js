@@ -38,10 +38,10 @@ export class TaskSwitching {
         numberIntro += this.singleBlockHtml("number");
         
         return [
-            this.constructor.instruction(this.instr1Html(2)),
-            this.instructionNode(this.instr2(2)),
-            this.instructionNode(this.instr3(2)),
-            this.instructionNode(this.instr4(2)),
+            this.constructor.instruction(this.instr1Html(2, "small")),
+            this.instructionNode(this.instr2(2, "small")),
+            this.instructionNode(this.instr3(2, "small")),
+            this.instructionNode(this.instr4(2, "big")),
             this.constructor.instruction("<p>That’s the basic task! Simple, right? Ready to start the real task?</p><em>Please press the space bar to proceed.</em>"),
             this.constructor.instruction(colorIntro),
             this.node("single", "color", 34),
@@ -55,12 +55,18 @@ export class TaskSwitching {
         .concat(mixedNodes);
     }
 
-    number(num) {
+    number(num, bigOrSmall=null) {
         if (!num) {
             num = jsPsych.randomization.sampleWithReplacement([1,2,3,4,6,7,8,9], 1)[0];
         }
         const color = Math.random() < 0.5 ? "blue" : "ylw";
-        const size = Math.random() < 0.5 ? "small" : "big";
+        let size;
+        if (!bigOrSmall || (bigOrSmall !== "big" && bigOrSmall !== "small")) {
+            size = Math.random() < 0.5 ? "small" : "big";
+        } else {
+            size = bigOrSmall;
+        }
+        
         return {
             number: num,
             color: color,
@@ -192,18 +198,18 @@ export class TaskSwitching {
         }
     }
 
-    instr1Html(number) {
+    instr1Html(number, size) {
         let text = "Ready to do a new task? In this task we will ask you to classify numbers using simple rules. You will see one number at a time, like this one:";
-        const numberObj = this.number(number);
+        const numberObj = this.number(number, size);
         text += `<div class="${numberObj.size} ${numberObj.color}"><p>${numberObj.number}</p></div>`;
         text += '<p>In addition to numbers, at the bottom of the screen, you will see the rule for that trial. Now let’s see what the rules are.</p>'
         text += "<em>Press the space bar to continue</em>"
         return text;
     }
 
-    instr2(number) {
+    instr2(number, size) {
         const correctResponse = this.correctResponse("number", {number: number});
-        const numObj = this.number(number);
+        const numObj = this.number(number, size);
         let stim = `<div class="${numObj.size} ${numObj.color}">`;
         stim += "<p>" + numObj.number + "</p>";
         stim += "</div>";
@@ -222,8 +228,8 @@ export class TaskSwitching {
         }
     }
 
-    instr3(number) {
-        const numObj = this.number(number);
+    instr3(number, size) {
+        const numObj = this.number(number, size);
         const correctResponse = this.correctResponse("color", {color: numObj.color});
         let stim = `<div class="${numObj.size} ${numObj.color}">`;
         stim += "<p>" + numObj.number + "</p>";
@@ -243,8 +249,8 @@ export class TaskSwitching {
         }
     }
 
-    instr4(number) {
-        const numObj = this.number(number);
+    instr4(number, size) {
+        const numObj = this.number(number, size);
         const correctResponse = this.correctResponse("size", {size: numObj.size});
         let stim = `<div class="${numObj.size} ${numObj.color}">`;
         stim += "<p>" + numObj.number + "</p>";

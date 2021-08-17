@@ -4,6 +4,8 @@ import { pressKey } from "./utils.js"
 
 describe("TaskSwitching", () => {
     let tl;
+    const stimPat = /<div class="(big|small) (ylw|blue)"><p>2<\/p><\/div>/;
+
     beforeEach(() => {
         const ts = new TaskSwitching();
         tl = ts.getTimeline();
@@ -37,6 +39,18 @@ describe("TaskSwitching", () => {
             expect(tl[i].timeline.length).toBe(2); // stimulus screen, feedback screen
             expect(tl[i].loop_function).toEqual(expect.any(Function)); // loop function to repeat training if user got it wrong
         }
+    });
+    it("should use a small font for the stimulus in the first three screens", () => {
+        const match = tl[0].stimulus.match(stimPat);
+        expect(match[1]).toBe("small");
+        for (let i = 1; i < 2; i++) {
+            const match = tl[i].timeline[0].stimulus.match(stimPat);
+            expect(match[1]).toBe("small");
+        }
+    });
+    it("should use a large font for the stimulus in the fourth screen", () => {
+        const match = tl[3].timeline[0].stimulus.match(stimPat);
+        expect(match[1]).toBe("big");
     });
     it("should show 34 color trials after the six instructional screens", () => {
         // tl[0-5] are training
