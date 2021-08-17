@@ -24,7 +24,7 @@ export class TaskSwitching {
         const mixedNodes = [];
         for (let i = 0; i < 4; i++) {
             const mixed = jsPsych.randomization.sampleWithReplacement(options, 34);
-            mixed.forEach(m => mixedNodes.push(this.node("mixed", m, 1)));
+            mixed.forEach(m => mixedNodes.push(this.node("mixed", m, 1, i + 1)));
             mixedNodes.push(this.constructor.waitTimeline);
         }
 
@@ -142,10 +142,10 @@ export class TaskSwitching {
         }
     }
 
-    trial(blockType, taskType) {
+    trial(blockType, taskType, round=null) {
         const prompt = this.promptHtml(taskType);
         const corrRespFn = this.correctResponse.bind(this);
-        return {
+        const result = {
             type: "html-keyboard-response",
             stimulus: function() {
                 let stim = `<div class="${jsPsych.timelineVariable("size")} ${jsPsych.timelineVariable("color")}">`;
@@ -174,16 +174,20 @@ export class TaskSwitching {
                 data.correct = data.response === correctResponse;
             }
         }
+        // round is for mixed blocks only and refers to which of the four rounds we're on
+        if (round !== null) {
+            result.data.round = round;
+        }
+        return result;
     }
 
-    node(blockType, taskType, repetitions) {
+    node(blockType, taskType, repetitions, round=null) {
         const timelineVariables = [];
         for (let i = 0; i < repetitions; i++) {
             timelineVariables.push(this.number());
-            
         }
         return {
-            timeline: [this.constructor.fixation(200), this.prompt(taskType), this.trial(blockType, taskType), this.constructor.fixation(500), this.constructor.feedback],
+            timeline: [this.constructor.fixation(200), this.prompt(taskType), this.trial(blockType, taskType, round), this.constructor.fixation(500), this.constructor.feedback],
             timeline_variables: timelineVariables,
         }
     }

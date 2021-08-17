@@ -238,6 +238,31 @@ describe("TaskSwitching with mocked Math.random", () => {
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.blockType).toBe("single"); // the first trial is always single
     });
+    it("should not include the round in the data field for trials where the block type is not 'mixed'", () => {
+        doFirstTrial(true);
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.blockType).not.toEqual("mixed");
+        expect(data.round).not.toBeDefined();
+    });
+    it("should include the round in the data field for trials where the block type is 'mixed'", () => {
+        doTraining();
+        // get through all of the color/size/value intro trials
+        for (let i=0; i<3; i++) {
+            for(let j=0; j<34; j++) {
+                doTrial(false, true);
+            }
+            pressKey(" ");
+        }
+        // do the exercise nodes
+        for (let i=0; i<16; i++) {
+            doTrial(false, true);
+        }
+        pressKey(" ");
+        doTrial(false, false); // first mixed trial
+        const data = jsPsych.data.get().last(1).values()[0];
+        expect(data.blockType).toEqual("mixed");
+        expect(data.round).toEqual(1);
+    });
     describe("trial structure should consist of", () => {
         const dispElem = jsPsych.getDisplayElement
         it("a 200ms fixation point", () => {
@@ -380,10 +405,15 @@ function stimulusNumberSizeAndColor(dispElemHtml) {
 function doFirstTrial(correctly) {
     doTraining();
 
-    // fixation -> blue/yellow prompt display
+    const [number, size, color] = doTrial(correctly);
+    return [number, size, color];
+}
+
+function doTrial(correctly, fully=false) {
+    // fixation -> prompt display
     jest.advanceTimersByTime(201);
 
-    // blue/yellow prompt display -> stimulus
+    // prompt display -> stimulus
     jest.advanceTimersByTime(501);
     
     // stimulus -> fixation
@@ -400,6 +430,14 @@ function doFirstTrial(correctly) {
         } else {
             pressKey("ArrowLeft");
         }
+    }
+
+    if (fully) {
+        // fixation -> feedback
+        jest.advanceTimersByTime(500);
+
+        // feedback -> next prompt
+        jest.advanceTimersByTime(500);
     }
 
     return [number, size, color];
