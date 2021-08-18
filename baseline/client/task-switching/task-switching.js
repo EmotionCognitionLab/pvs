@@ -25,7 +25,12 @@ export class TaskSwitching {
         for (let i = 0; i < 4; i++) {
             const mixed = jsPsych.randomization.sampleWithReplacement(options, 34);
             mixed.forEach(m => mixedNodes.push(this.node("mixed", m, 1, i + 1)));
-            mixedNodes.push(this.constructor.waitTimeline);
+            if (i < 3) {
+                mixedNodes.push(this.constructor.waitTimeline);
+            } else {
+                mixedNodes.push(this.constructor.instruction("Task complete. Great job!<br><em>Press the space bar to finish</em>"));
+            }
+            
         }
 
         const genericIntro = "We are going to start a round of the task. Please respond as quickly as you can but try to avoid mistakes.";
