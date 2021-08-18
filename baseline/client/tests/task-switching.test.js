@@ -129,19 +129,32 @@ describe("TaskSwitching", () => {
         let colors = [];
         for (const item of tl) {
             if (item.timeline_variables) {
-                numbers = numbers.concat(item.timeline_variables.map(tv => tv.number));
-                sizes = sizes.concat(item.timeline_variables.map(tv => tv.size));
-                colors = colors.concat(item.timeline_variables.map(tv => tv.color));
+                numbers = numbers.concat(item.timeline_variables.map(tv => tv.number)).filter(num => typeof(num) != "undefined");
+                sizes = sizes.concat(item.timeline_variables.map(tv => tv.size)).filter(size => typeof(size) != "undefined");
+                colors = colors.concat(item.timeline_variables.map(tv => tv.color)).filter(col => typeof(col) != "undefined");
             }
         }
-        // TODO come up with a better way to test this. 
-        // maybe check rolling runs? or calculate variance?
-        const colorTestSet = new Set(colors.slice(0,7));
-        expect(colorTestSet).toStrictEqual(new Set(["blue", "ylw"])); // 1/64 chance that we could get 7 of the same color in a row
-        const sizeTestSet = new Set(sizes.slice(0, 7));
+        
+        const colorTestSet = new Set(colors);
+        expect(colorTestSet).toStrictEqual(new Set(["blue", "ylw"]));
+        const blueCount = colors.filter(c => c === "blue").length;
+        expect(blueCount).toBeGreaterThanOrEqual(0.371 * colors.length); // 99% confidence interval
+        expect(blueCount).toBeLessThanOrEqual(0.629 * colors.length);
+        const sizeTestSet = new Set(sizes);
         expect(sizeTestSet).toStrictEqual(new Set(["small", "big"]));
-        const numberTestSet = new Set(numbers.slice(0, 3)); // we're only using 8 numbers, so 1/8^3 chance of getting 3 of the same in a row
-        expect(numberTestSet.size).toBeGreaterThanOrEqual(2);
+        const bigCount = sizes.filter(s => s === "big").length;
+        expect(bigCount).toBeGreaterThanOrEqual(0.371 * sizes.length);
+        expect(bigCount).toBeLessThanOrEqual(0.629 * sizes.length);
+        const numberTestSet = new Set(numbers);
+        expect(numberTestSet).toStrictEqual(new Set([1,2,3,4,6,7,8,9]));
+        for (let i=1; i<10; i++) {
+            if (i == 5) continue;
+            const numCount = numbers.filter(num => num == i).length;
+            // each number should be ~ 1/8 of total numbers, so if one
+            // is < 1/16 or > 2/8 we probably have a problem
+            expect(numCount).toBeGreaterThanOrEqual(.0625 * numbers.length);
+            expect(numCount).toBeLessThanOrEqual(.250 * numbers.length);
+        }
     });
 });
 
