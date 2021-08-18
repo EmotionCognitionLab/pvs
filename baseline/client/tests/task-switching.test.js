@@ -28,8 +28,8 @@ describe("TaskSwitching", () => {
                 rightCount++;
             }
         }
-        expect(leftCount).toBeGreaterThanOrEqual(470);
-        expect(leftCount).toBeLessThanOrEqual(530);
+        expect(leftCount).toBeGreaterThanOrEqual(371); // 99% confidence interval
+        expect(leftCount).toBeLessThanOrEqual(629);
         expect(rightCount).toBe(limit-leftCount);
     });
     it("should have six instructional screens", () => {
