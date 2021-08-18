@@ -28,14 +28,18 @@ export class TaskSwitching {
             mixedNodes.push(this.constructor.waitTimeline);
         }
 
-        let colorIntro = "We are going to start our first round of the task. Please respond as quickly as you can but try to avoid mistakes."
-        colorIntro += this.singleBlockHtml("color");
+        const genericIntro = "We are going to start a round of the task. Please respond as quickly as you can but try to avoid mistakes.";
+        const colorIntro = genericIntro + this.singleBlockHtml("color");
 
-        let sizeIntro = "Great job. Let’s try the second round. Remember to respond as quickly as possible."
-        sizeIntro += this.singleBlockHtml("size");
+        const sizeIntro = genericIntro + this.singleBlockHtml("size");
 
-        let numberIntro = "Great job. Let’s try the third round. Remember to respond as quickly as possible."
-        numberIntro += this.singleBlockHtml("number");
+        const numberIntro = genericIntro + this.singleBlockHtml("number");
+
+        const singles = jsPsych.randomization.shuffle([
+            [this.constructor.instruction(colorIntro), this.node("single", "color", 34)], 
+            [this.constructor.instruction(sizeIntro), this.node("single", "size", 34)],
+            [this.constructor.instruction(numberIntro), this.node("single", "number", 34)]    
+        ]).flat();
         
         return [
             this.constructor.instruction(this.instr1Html(2, "small")),
@@ -43,14 +47,9 @@ export class TaskSwitching {
             this.instructionNode(this.instr3(2, "small")),
             this.instructionNode(this.instr4(2, "big")),
             this.constructor.instruction("<p>That’s the basic task! Simple, right? Ready to start the real task?</p><em>Please press the space bar to proceed.</em>"),
-            this.constructor.instruction(colorIntro),
-            this.node("single", "color", 34),
-            this.constructor.instruction(sizeIntro),
-            this.node("single", "size", 34),
-            this.constructor.instruction(numberIntro),
-            this.node("single", "number", 34), 
-            this.constructor.instruction(pre_exer_instr),
-        ].concat(exerciseNodes)
+        ].concat(singles)
+        .concat([this.constructor.instruction(pre_exer_instr)])
+        .concat(exerciseNodes)
         .concat([this.constructor.instruction(pre_mix_instr)])
         .concat(mixedNodes);
     }

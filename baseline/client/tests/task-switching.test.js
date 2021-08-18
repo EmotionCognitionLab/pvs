@@ -52,29 +52,32 @@ describe("TaskSwitching", () => {
         const match = tl[3].timeline[0].stimulus.match(stimPat);
         expect(match[1]).toBe("big");
     });
-    it("should show 34 color trials after the six instructional screens", () => {
+    it("should show 34 color, size or number trials after the six instructional screens", () => {
         // tl[0-5] are training
         expect(tl[6].timeline.length).toBe(5);
         expect(tl[6].timeline_variables.length).toBe(34);
-        expect(tl[6].timeline[1].stimulus).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\"><\/span>/);
+        const stimType = taskType(tl[6].timeline[1].stimulus);
+        expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
     });
-    it("should show a screen introducing the size trials after the 34 color trials", () => {
-        expect(tl[7].stimulus).toMatch(/categorizing numbers on their relative font size/);
+    it("should show a screen introducing the next trials after the first 34 trials", () => {
+        expect(tl[7].stimulus).toMatch(/We are going to start a round of the task./);
     });
-    it("should show 34 size trials after the size trial intro screen", () => {
+    it("should show 34 color, size or number trials after the trial intro screen", () => {
         expect(tl[8].timeline.length).toBe(5);
         expect(tl[8].timeline_variables.length).toBe(34);
-        expect(tl[8].timeline[1].stimulus).toMatch(/<span class=\"(smalldot|dot white)\"><\/span><span class=\"(smalldot|dot white)\"><\/span>/);
+        const stimType = taskType(tl[8].timeline[1].stimulus);
+        expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
     });
-    it("should show a screen introducing the number trials after the 34 size trials", () => {
-        expect(tl[9].stimulus).toMatch(/categorizing numbers on whether they are greater or less than 5/);
+    it("should show a screen introducing the next trials after the second 34 trials", () => {
+        expect(tl[9].stimulus).toMatch(/We are going to start a round of the task./);
     });
-    it("should show 34 number trials after the number trial intro screen", () => {
+    it("should show 34 color, size or number trials after the trial intro screen", () => {
         expect(tl[10].timeline.length).toBe(5);
         expect(tl[10].timeline_variables.length).toBe(34);
-        expect(tl[10].timeline[1].stimulus).toMatch(/(>5|<5)<\/span> <span>(<5|>5)/);
+        const stimType = taskType(tl[10].timeline[1].stimulus);
+        expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
     });
-    it("should show a screen introducing the exercise trials after the number trials", () => {
+    it("should show a screen introducing the exercise trials after the final 34 trials", () => {
         expect(tl[11].stimulus).toBe('test-file-stub'); // blech - using imported html here prevents us from checking screen contents
         expect(tl[11].timeline).toBeUndefined();
     });
@@ -139,6 +142,7 @@ describe("TaskSwitching", () => {
 });
 
 function taskType(stimulus) {
+    stimulus = stimulus.replace("&gt;", ">").replace("&lt;", "<");
     const fontSizePat = /<span class=\"(smalldot|dot white)\"><\/span><span class=\"(smalldot|dot white)\"><\/span>/;
     const numberPat = /(>5|<5)<\/span> <span>(<5|>5)/;
     const colorPat = /<span class=\"dot .*\"><\/span><span class=\"dot .*\"><\/span>/;
@@ -245,7 +249,7 @@ describe("TaskSwitching with mocked Math.random", () => {
     it("should include the task type in the data field", () => {
         doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
-        expect(data.taskType).toBe("color"); // the first trial is always color
+        expect(data.taskType === "color" || data.taskType === "font size" || data.taskType === "number").toBeTruthy();
     });
     it("should include the block type in the data field", () => {
         doFirstTrial(true);
@@ -282,77 +286,43 @@ describe("TaskSwitching with mocked Math.random", () => {
         it("a 200ms fixation point", () => {
             doTraining();
             jest.advanceTimersByTime(199);
+            const fixHtml = dispElem().innerHTML;
             expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
             jest.advanceTimersByTime(2);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
+            expect(dispElem().innerHTML).not.toEqual(fixHtml);
         });
         it("followed by a 500ms picture describing the type of task", () => {
             doTraining();
-            jest.advanceTimersByTime(199);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            jest.advanceTimersByTime(699);
+            const taskDescHtml = dispElem().innerHTML;
+            const stimType = taskType(taskDescHtml);
+            expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
             jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
+            expect(dispElem().innerHTML).not.toEqual(taskDescHtml);
         });
         it("followed by a 2500ms number above the picture", () => {
             doTraining();
-            jest.advanceTimersByTime(199);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            jest.advanceTimersByTime(3199);
+            const numHtml = dispElem().innerHTML;
+            expect(numHtml).toMatch(/<p>[1-9]<\/p>/);
             jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(2499);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            expect(dispElem().innerHTML).not.toEqual(numHtml);
         });
         it("followed by a 500ms fixation point", () => {
             doTraining();
-            jest.advanceTimersByTime(199);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            jest.advanceTimersByTime(3699);
+            const fixHtml = dispElem().innerHTML;
+            expect(fixHtml).toMatch(/<div class=\"fix\">+/);
             jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(2499);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/Answer faster/);
+            expect(dispElem().innerHTML).not.toEqual(fixHtml);
         });
         it("followed by a 500ms feedback screen", () => {
             doTraining();
-            jest.advanceTimersByTime(199);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            jest.advanceTimersByTime(4199);
+            const feedbackHtml = dispElem().innerHTML;
+            expect(feedbackHtml).toMatch(/Answer faster/);
             jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<span class=\"dot .*\"><\/span><span class=\"dot .*\">/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(2499);
-            expect(dispElem().innerHTML).toMatch(/<p>[1-9]<\/p>/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/Answer faster/);
-            jest.advanceTimersByTime(499);
-            expect(dispElem().innerHTML).toMatch(/Answer faster/);
-            jest.advanceTimersByTime(1);
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
+            expect(dispElem().innerHTML).not.toEqual(feedbackHtml);
         });
     });
 });
@@ -369,7 +339,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 2 -> training trial 2 feedback
-    let [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    let [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (color === "blue") {
         pressKey("ArrowLeft");
     } else {
@@ -379,7 +349,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 3 -> training trial 3 feedback
-    [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (size === "small") {
         pressKey("ArrowRight");
     } else {
@@ -409,7 +379,8 @@ function stimulusNumberSizeAndColor(dispElemHtml) {
     expect(number).toBeGreaterThanOrEqual(1);
     expect(number).toBeLessThanOrEqual(9);
     expect(number).not.toBe(5);
-    return [number, size, color];
+    const stimType = taskType(dispElemHtml);
+    return [stimType, number, size, color];
 }
 
 // Does all of the training and then the first trial
@@ -431,19 +402,31 @@ function doTrial(correctly, fully=false) {
     jest.advanceTimersByTime(501);
     
     // stimulus -> fixation
-    const [number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
-    if (correctly) { // answer correctly
-        if (color === "blue") {
-            pressKey("ArrowLeft")
-        } else {
-            pressKey("ArrowRight");
-        }
-    } else {
-        if (color === "blue") {
-            pressKey("ArrowRight")
-        } else {
-            pressKey("ArrowLeft");
-        }
+    const [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    switch(stimulus) {
+        case "color":
+            if ( (correctly && color === "blue") || (!correctly && color !== "blue")) {
+                pressKey("ArrowLeft")
+            } else {
+                pressKey("ArrowRight");
+            }
+            break;
+        case "font size":
+            if ( (correctly && size === "big") || (!correctly && color !== "big")) {
+                pressKey("ArrowLeft")
+            } else {
+                pressKey("ArrowRight");
+            }
+            break;
+        case "number":
+            if ( (correctly && number > 5) || (!correctly && number < 5)) {
+                pressKey("ArrowLeft")
+            } else {
+                pressKey("ArrowRight");
+            }
+            break;
+        default:
+            throw new Error(`Unknown stimulus type '${stimulus}'`);
     }
 
     if (fully) {
