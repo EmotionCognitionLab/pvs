@@ -1,9 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { FaceName } from "../face-name/face-name.js";
 import { pressKey } from "./utils.js"
-import stimuli from "../face-name/stimuli.json";
-
-const firstPracticeStim = stimuli.Practice[0];
 
 describe("FaceName", () => {
     
@@ -58,29 +55,32 @@ describe("FaceName", () => {
     });
 
     it("should include the image category in the data", () => {
-        for (let i=0; i<3; i++)  { // two instruction screens, then first prompt
+        for (let i=0; i<2; i++)  { // two instruction screens
             pressKey(" ");
         }
+        const category = jsPsych.timelineVariable("cat", true);
+        pressKey(" "); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
-        const category = firstPracticeStim.cat;
         expect(data.cat).toBe(category);
     });
 
     it("should include the image id in the data", () => {
-        for (let i=0; i<3; i++)  { // two instruction screens, then first prompt
-            pressKey(" ");
+        for (let i=0; i<2; i++)  { // two instruction screens
         }
+        const picId = jsPsych.timelineVariable("picId", true);
+        pressKey(" "); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
-        const picId = firstPracticeStim.picId;
+        
         expect(data.picId).toBe(picId);
     });
 
     it("should include the correct name in the data on learning trials", () => {
-        for (let i=0; i<3; i++)  { // two instruction screens, then first prompt
+        for (let i=0; i<2; i++)  { // two instruction screens
             pressKey(" ");
         }
+        const name = jsPsych.timelineVariable("name", true);
+        pressKey(" "); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
-        const name = firstPracticeStim.name;
         expect(data.name).toBe(name);
     });
 
@@ -88,10 +88,10 @@ describe("FaceName", () => {
         for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
             pressKey(" ");
         }
+        const name = jsPsych.timelineVariable("name", true);
+        const lure = jsPsych.timelineVariable("lure", true);
         pressKey("1"); // first recall trial
         const data = jsPsych.data.get().last(1).values()[0];
-        const name = firstPracticeStim.name;
-        const lure = firstPracticeStim.lure;
         expect(data.name).toBe(name);
         expect(data.lure).toBe(lure);
     });
@@ -128,14 +128,75 @@ describe("FaceName", () => {
         expect(name1.length).toBe(repeatCount);
         expect(name2.length).toBe(repeatCount);
         const s = new Set(name1);
-        expect(s.size).toBe(2);
+        expect(s.size).toBe(4);
         s.forEach(entry => {
             const name1Count = name1.filter(item => item === entry).length;
-            expect(name1Count).toBeGreaterThanOrEqual(37);
-            expect(name1Count).toBeLessThanOrEqual(62);
+            expect(name1Count).toBeGreaterThanOrEqual(18);
+            expect(name1Count).toBeLessThanOrEqual(31);
             const name2Count = name2.filter(item => item === entry).length;
-            expect(name2Count).toBe(repeatCount - name1Count);
+            expect(name2Count).toBeGreaterThanOrEqual(18);
+            expect(name2Count).toBeLessThanOrEqual(31);
         });
+    });
+
+    it("should show the recall prompts in a different order than the learning prompts", () => {
+        for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
+            pressKey(" ");
+        }
+        for (let i=0; i<4; i++) {
+            pressKey("1"); // four practice recall prompts
+        }
+        pressKey(" "); // instruction screen
+
+        let learnPics = [];
+        for (let i=0; i<16; i++) {
+            pressKey(" ");
+            const data = jsPsych.data.get().last(1).values()[0];
+            learnPics.push(data.picId);
+        }
+        expect(learnPics.slice(0, 8)).toStrictEqual(learnPics.slice(8, 16)); // second repetition of eight faces should be same order as first one
+        learnPics = learnPics.slice(0, 8);
+
+        const recallPics = [];
+        for (let i=0; i<8; i++) {
+            pressKey("1");
+            const data = jsPsych.data.get().last(1).values()[0];
+            recallPics.push(data.picId);
+        }
+        expect(learnPics.length).toEqual(recallPics.length);
+        expect(learnPics).toEqual(expect.arrayContaining(recallPics)); // they should have the same elements...
+        const haveSameOrder = learnPics.reduce((prev, cur, idx) => prev && cur === recallPics[idx], true);
+        expect(haveSameOrder).toBe(false); // ...but not in the same order
+    });
+
+    it("should show the learning prompts in a different order to different participants", () => {
+        pressKey(" ");
+        pressKey(" "); // skip two instruction screens
+
+        const learnPics1 = [];
+        for (let i=0; i<4; i++) {
+            pressKey(" ");
+            const data = jsPsych.data.get().last(1).values()[0];
+            learnPics1.push(data.picId);
+        }
+
+        jsPsych.init({
+            timeline: (new FaceName(1, [])).getTimeline(),
+        });
+        pressKey(" ");
+        pressKey(" ");
+
+        const learnPics2 = [];
+        for (let i=0; i<4; i++) {
+            pressKey(" ");
+            const data = jsPsych.data.get().last(1).values()[0];
+            learnPics2.push(data.picId);
+        }
+        
+        expect(learnPics1.length).toEqual(learnPics2.length);
+        expect(learnPics1).toEqual(expect.arrayContaining(learnPics2));
+        const haveSameOrder = learnPics1.reduce((prev, cur, idx) => prev && cur === learnPics2[idx], true);
+        expect(haveSameOrder).toBe(false);
     });
 });
 
@@ -143,7 +204,7 @@ function doFirstRecall(answerCorrectly) {
     for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
         pressKey(" ");
     }
-    const correctName = firstPracticeStim.name;
+    const correctName = jsPsych.timelineVariable("name", true);
     const match = jsPsych.getDisplayElement().innerHTML.match(/1. ([a-zA-Z]+) 2. ([a-zA-Z]+)/);
     if( (match[1] === correctName && answerCorrectly) || (match[1] !== correctName && !answerCorrectly) ) {
         pressKey("1");

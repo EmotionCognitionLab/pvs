@@ -4,6 +4,7 @@ import "@adp-psych/jspsych/css/jspsych.css";
 import introduction_html from "./frag/introduction.html";
 import instr1_html from "./frag/instr1.html";
 import instr2_html from "./frag/instr2.html";
+import instr3_html from "./frag/instr3.html";
 import stimuli from "./stimuli.json";
 
 
@@ -24,12 +25,23 @@ export class FaceName {
                 timeline: [this.constructor.recallStimulus(true)],
                 timeline_variables: practiceVars
             }
+            const actualVars = this.getTimelineVariables(false);
+            const actualLearning = {
+                timeline: [this.constructor.learningStimulus(false)],
+                timeline_variables: actualVars
+            };
+            const actualRecall = {
+                timeline: [this.constructor.recallStimulus(false)],
+                timeline_variables: jsPsych.randomization.shuffle(actualVars)
+            }
             return [
                 this.constructor.instruction(introduction_html),
                 this.constructor.instruction(instr1_html),
                 practiceLearning, practiceLearning,
                 this.constructor.instruction(instr2_html),
-                practiceRecall
+                practiceRecall,
+                this.constructor.instruction(instr3_html),
+                actualLearning, actualLearning, actualRecall
             ];
         }
 
@@ -44,11 +56,13 @@ export class FaceName {
             setStimuli = stimuli[setKey];
         }
 
-        return setStimuli.map(i => {
-            i.picUrl = FaceName.imageBucket + i.picId;
-            i.names = jsPsych.randomization.shuffle([i.name, i.lure]);
-            return i;
-        });
+        return jsPsych.randomization.shuffle(
+            setStimuli.map(i => {
+                i.picUrl = FaceName.imageBucket + i.picId;
+                i.names = jsPsych.randomization.shuffle([i.name, i.lure]);
+                return i;
+            })
+        );
     }
 }
 
