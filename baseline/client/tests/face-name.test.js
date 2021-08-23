@@ -1,6 +1,7 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { FaceName } from "../face-name/face-name.js";
 import { pressKey } from "./utils.js"
+import stimuli from "../face-name/stimuli.json";
 
 describe("FaceName", () => {
     
@@ -197,6 +198,36 @@ describe("FaceName", () => {
         expect(learnPics1).toEqual(expect.arrayContaining(learnPics2));
         const haveSameOrder = learnPics1.reduce((prev, cur, idx) => prev && cur === learnPics2[idx], true);
         expect(haveSameOrder).toBe(false);
+    });
+});
+
+describe("In sets 2-5 and 8-11, FaceName", () => {
+    let timeline;
+    let setNum;
+    beforeEach(() => {
+        setNum = jsPsych.randomization.sampleWithoutReplacement([2,3,4,5,8,9,10,11], 1);
+        timeline = (new FaceName(setNum, [])).getTimeline();
+        jsPsych.init({
+            timeline: timeline,
+        });
+    });
+    
+    it("should not have any practice", () => {
+        expect(timeline.length).toBe(6);
+        expect(timeline[2].timeline_variables.length).toBe(8); // 0 and 1 are instructions; 2 should be first learning triel
+        expect(timeline[3].timeline_variables.length).toBe(8); // second learning trial
+    });
+
+    it("should show all of the faces from the previous set and the current set during the recall test", () => {
+        expect(timeline[5].timeline_variables.length).toBe(16); // 0 and 1 are instructions, 2 and 3 learning, 4 recall intro, 5 recall trial
+        const names = timeline[5].timeline_variables.map(tlv => tlv.name);
+        const nameSet = new Set(names);
+        const prevSet = setNum - 1;
+        const prevSetKey = "Set" + prevSet;
+        const setKey = "Set" + setNum;
+        const stims = stimuli[setKey].concat(stimuli[prevSetKey]);
+        const stimNames = new Set(stims.map(s => s.name));
+        expect(nameSet).toStrictEqual(stimNames);
     });
 });
 

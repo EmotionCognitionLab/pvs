@@ -1,9 +1,11 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
-import introduction_html from "./frag/introduction.html";
+import practice_introduction_html from "./frag/practice-introduction.html";
+import regular_introduction_html from "./frag/regular-introduction.html";
 import instr1_html from "./frag/instr1.html";
-import instr2_html from "./frag/instr2.html";
+import single_set_recall_html from "./frag/single-set-recall.html";
+import multi_set_recall_html from "./frag/multi-set-recall.html";
 import instr3_html from "./frag/instr3.html";
 import stimuli from "./stimuli.json";
 
@@ -15,8 +17,11 @@ export class FaceName {
     }
 
     getTimeline() {
-        if (this.setNum === 1) {
-            const practiceVars = this.getTimelineVariables(true);
+        const timeline = [];
+        let recallIntro;
+
+        if (this.setNum === 1 || this.setNum === 7) {
+            const practiceVars = this.getTimelineVariables(true, false);
             const practiceLearning = {
                 timeline: [this.constructor.learningStimulus(true)],
                 timeline_variables: practiceVars
@@ -25,35 +30,58 @@ export class FaceName {
                 timeline: [this.constructor.recallStimulus(true)],
                 timeline_variables: practiceVars
             }
-            const actualVars = this.getTimelineVariables(false);
-            const actualLearning = {
-                timeline: [this.constructor.learningStimulus(false)],
-                timeline_variables: actualVars
-            };
-            const actualRecall = {
-                timeline: [this.constructor.recallStimulus(false)],
-                timeline_variables: jsPsych.randomization.shuffle(actualVars)
-            }
-            return [
-                this.constructor.instruction(introduction_html),
-                this.constructor.instruction(instr1_html),
-                practiceLearning, practiceLearning,
-                this.constructor.instruction(instr2_html),
-                practiceRecall,
-                this.constructor.instruction(instr3_html),
-                actualLearning, actualLearning, actualRecall
-            ];
+            timeline.push(this.constructor.instruction(practice_introduction_html));
+            timeline.push(this.constructor.instruction(instr1_html));
+            timeline.push(practiceLearning);
+            timeline.push(practiceLearning);
+            timeline.push(this.constructor.instruction(single_set_recall_html));
+            timeline.push(practiceRecall);
+            recallIntro = single_set_recall_html;
+        } else if (this.setNum !== 6 && this.setNum !== 12) {
+            timeline.push(this.constructor.instruction(regular_introduction_html));
+            recallIntro = multi_set_recall_html;
         }
+
+        const learningVars = this.getTimelineVariables(false, false);
+        const actualLearning = {
+            timeline: [this.constructor.learningStimulus(false)],
+            timeline_variables: learningVars
+        };
+        const recallVars = this.getTimelineVariables(false, true);
+        const actualRecall = {
+            timeline: [this.constructor.recallStimulus(false)],
+            timeline_variables: recallVars
+        }
+
+        return timeline.concat([
+            this.constructor.instruction(instr3_html),
+            actualLearning, actualLearning, this.constructor.instruction(recallIntro), actualRecall
+        ]);
+        
 
     }
 
-    getTimelineVariables(isPractice) {
+    getTimelineVariables(isPractice, isRecall) {
         let setStimuli;
         if (isPractice) {
             setStimuli = stimuli.Practice;
         } else {
             const setKey = "Set" + this.setNum;
             setStimuli = stimuli[setKey];
+            if (isRecall) {
+                switch (this.setNum) {
+                    case 1:
+                    case 7:
+                        break; // no extra recall stimuli for sets 1 and 7
+                    case 6:
+                    case 12:
+                        // to be implemented
+                    default:
+                        const prevSetKey = "Set" + (this.setNum - 1);
+                        setStimuli = setStimuli.concat(stimuli[prevSetKey]);
+                        break;
+                }
+            }
         }
 
         return jsPsych.randomization.shuffle(
