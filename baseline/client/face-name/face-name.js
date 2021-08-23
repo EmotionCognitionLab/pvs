@@ -11,9 +11,8 @@ import stimuli from "./stimuli.json";
 
 
 export class FaceName {
-    constructor(setNum, prevResults) {
+    constructor(setNum) {
         this.setNum = setNum;
-        this.prevResults = prevResults;
     }
 
     getTimeline() {
@@ -154,7 +153,7 @@ FaceName.recallStimulus = (isPractice=false) => {
 
 if (window.location.href.includes(FaceName.taskName)) {
     jsPsych.init({
-        timeline: (new FaceName(1, [])).getTimeline(),
+        timeline: (new FaceName(1)).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }

@@ -7,7 +7,7 @@ describe("FaceName", () => {
     
     beforeEach(() => {
         jsPsych.init({
-            timeline: (new FaceName(1, [])).getTimeline(),
+            timeline: (new FaceName(1)).getTimeline(),
         });
     });
 
@@ -117,7 +117,7 @@ describe("FaceName", () => {
         const repeatCount = 100;
         for (let j=0; j<repeatCount; j++) {
             jsPsych.init({
-                timeline: (new FaceName(1, [])).getTimeline(),
+                timeline: (new FaceName(1)).getTimeline(),
             });
             for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
                 pressKey(" ");
@@ -182,7 +182,7 @@ describe("FaceName", () => {
         }
 
         jsPsych.init({
-            timeline: (new FaceName(1, [])).getTimeline(),
+            timeline: (new FaceName(1)).getTimeline(),
         });
         pressKey(" ");
         pressKey(" ");
@@ -206,12 +206,12 @@ describe("In sets 2-5 and 8-11, FaceName", () => {
     let setNum;
     beforeEach(() => {
         setNum = jsPsych.randomization.sampleWithoutReplacement([2,3,4,5,8,9,10,11], 1);
-        timeline = (new FaceName(setNum, [])).getTimeline();
+        timeline = (new FaceName(setNum)).getTimeline();
         jsPsych.init({
             timeline: timeline,
         });
     });
-    
+
     it("should not have any practice", () => {
         expect(timeline.length).toBe(6);
         expect(timeline[2].timeline_variables.length).toBe(8); // 0 and 1 are instructions; 2 should be first learning triel
