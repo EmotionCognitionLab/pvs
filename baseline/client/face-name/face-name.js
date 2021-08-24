@@ -6,6 +6,7 @@ import regular_introduction_html from "./frag/regular-introduction.html";
 import instr1_html from "./frag/instr1.html";
 import single_set_recall_html from "./frag/single-set-recall.html";
 import multi_set_recall_html from "./frag/multi-set-recall.html";
+import all_set_recall_html from "./frag/all-set-recall.html";
 import instr3_html from "./frag/instr3.html";
 import stimuli from "./stimuli.json";
 
@@ -19,26 +20,35 @@ export class FaceName {
         const timeline = [];
         let recallIntro;
 
-        if (this.setNum === 1 || this.setNum === 7) {
-            const practiceVars = this.getTimelineVariables(true, false);
-            const practiceLearning = {
-                timeline: [this.constructor.learningStimulus(true)],
-                timeline_variables: practiceVars
-            }
-            const practiceRecall = {
-                timeline: [this.constructor.recallStimulus(true)],
-                timeline_variables: practiceVars
-            }
-            timeline.push(this.constructor.instruction(practice_introduction_html));
-            timeline.push(this.constructor.instruction(instr1_html));
-            timeline.push(practiceLearning);
-            timeline.push(practiceLearning);
-            timeline.push(this.constructor.instruction(single_set_recall_html));
-            timeline.push(practiceRecall);
-            recallIntro = single_set_recall_html;
-        } else if (this.setNum !== 6 && this.setNum !== 12) {
-            timeline.push(this.constructor.instruction(regular_introduction_html));
-            recallIntro = multi_set_recall_html;
+        switch(this.setNum) {
+            case 1:
+            case 7:
+                const practiceVars = this.getTimelineVariables(true, false);
+                const practiceLearning = {
+                    timeline: [this.constructor.learningStimulus(true)],
+                    timeline_variables: practiceVars
+                }
+                const practiceRecall = {
+                    timeline: [this.constructor.recallStimulus(true)],
+                    timeline_variables: practiceVars
+                }
+                timeline.push(this.constructor.instruction(practice_introduction_html));
+                timeline.push(this.constructor.instruction(instr1_html));
+                timeline.push(practiceLearning);
+                timeline.push(practiceLearning);
+                timeline.push(this.constructor.instruction(single_set_recall_html));
+                timeline.push(practiceRecall);
+                recallIntro = single_set_recall_html;
+                break;
+            case 6:
+            case 12:
+                timeline.push(this.constructor.instruction(regular_introduction_html));
+                recallIntro = all_set_recall_html;
+                break;
+            default:
+                timeline.push(this.constructor.instruction(regular_introduction_html));
+                recallIntro = multi_set_recall_html;
+                break;
         }
 
         const learningVars = this.getTimelineVariables(false, false);
@@ -74,8 +84,14 @@ export class FaceName {
                         break; // no extra recall stimuli for sets 1 and 7
                     case 6:
                     case 12:
-                        // to be implemented
+                        // sets 6 and 12 show five previous sets + current set in recall
+                        for (let i=this.setNum - 5; i<this.setNum; i++) {
+                            const prevSetKey = "Set" + i;
+                            setStimuli = setStimuli.concat(stimuli[prevSetKey]);
+                        }
+                        break;
                     default:
+                        // other sets show previous set + current set in recall
                         const prevSetKey = "Set" + (this.setNum - 1);
                         setStimuli = setStimuli.concat(stimuli[prevSetKey]);
                         break;

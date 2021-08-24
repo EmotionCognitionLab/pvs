@@ -205,7 +205,7 @@ describe("In sets 2-5 and 8-11, FaceName", () => {
     let timeline;
     let setNum;
     beforeEach(() => {
-        setNum = jsPsych.randomization.sampleWithoutReplacement([2,3,4,5,8,9,10,11], 1);
+        setNum = +jsPsych.randomization.sampleWithoutReplacement([2,3,4,5,8,9,10,11], 1); // use '+' to make setNum a number, not an object
         timeline = (new FaceName(setNum)).getTimeline();
         jsPsych.init({
             timeline: timeline,
@@ -213,9 +213,7 @@ describe("In sets 2-5 and 8-11, FaceName", () => {
     });
 
     it("should not have any practice", () => {
-        expect(timeline.length).toBe(6);
-        expect(timeline[2].timeline_variables.length).toBe(8); // 0 and 1 are instructions; 2 should be first learning triel
-        expect(timeline[3].timeline_variables.length).toBe(8); // second learning trial
+       checkNoPractice(timeline);
     });
 
     it("should show all of the faces from the previous set and the current set during the recall test", () => {
@@ -231,6 +229,35 @@ describe("In sets 2-5 and 8-11, FaceName", () => {
     });
 });
 
+describe("In sets 6 and 12, FaceName", () => {
+    let timeline;
+    let setNum;
+    beforeEach(() => {
+        setNum = +jsPsych.randomization.sampleWithoutReplacement([6, 12], 1); // use '+' to make setNum a number, not an object
+        timeline = (new FaceName(setNum)).getTimeline();
+        jsPsych.init({
+            timeline: timeline,
+        });
+    });
+
+    it("should not have any practice", () => {
+        checkNoPractice(timeline);
+    });
+
+    it("should show all of the faces from the previous 5 sets and the current set during the recall test", () => {
+        expect(timeline[5].timeline_variables.length).toBe(48); // 0 and 1 are instructions, 2 and 3 learning, 4 recall intro, 5 recall trial
+        const names = timeline[5].timeline_variables.map(tlv => tlv.name);
+        const nameSet = new Set(names);
+        let stims = [];
+        for (let i=setNum-5; i<=setNum; i++) {
+            const setKey = "Set" + i;
+            stims = stims.concat(stimuli[setKey].map(s => s.name));
+        }
+        const stimSet = new Set(stims);
+        expect(nameSet).toStrictEqual(stimSet);
+    });
+});
+
 function doFirstRecall(answerCorrectly) {
     for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
         pressKey(" ");
@@ -243,4 +270,10 @@ function doFirstRecall(answerCorrectly) {
         pressKey("2");
     }
     return jsPsych.data.get().last(1).values()[0];
+}
+
+function checkNoPractice(timeline) {
+    expect(timeline.length).toBe(6);
+    expect(timeline[2].timeline_variables.length).toBe(8); // 0 and 1 are instructions; 2 should be first learning triel
+    expect(timeline[3].timeline_variables.length).toBe(8); // second learning trial
 }
