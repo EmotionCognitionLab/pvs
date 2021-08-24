@@ -132,11 +132,11 @@ describe("FaceName", () => {
         expect(s.size).toBe(4);
         s.forEach(entry => {
             const name1Count = name1.filter(item => item === entry).length;
-            expect(name1Count).toBeGreaterThanOrEqual(18);
-            expect(name1Count).toBeLessThanOrEqual(31);
+            expect(name1Count).toBeGreaterThanOrEqual(15);
+            expect(name1Count).toBeLessThanOrEqual(34);
             const name2Count = name2.filter(item => item === entry).length;
-            expect(name2Count).toBeGreaterThanOrEqual(18);
-            expect(name2Count).toBeLessThanOrEqual(31);
+            expect(name2Count).toBeGreaterThanOrEqual(15);
+            expect(name2Count).toBeLessThanOrEqual(34);
         });
     });
 
