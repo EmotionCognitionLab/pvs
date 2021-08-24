@@ -17,6 +17,10 @@ export class FaceName {
         this.setNum = setNum;
     }
 
+    get taskName() {
+        return this.constructor.taskName;
+    }
+
     getTimeline() {
         const timeline = [];
         let recallIntro;
