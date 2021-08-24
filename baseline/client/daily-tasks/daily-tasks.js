@@ -13,6 +13,7 @@ import { getAuth } from "../../../common/auth/dist/auth.js";
 import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
+import { FaceName } from "../face-name/face-name.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -150,6 +151,8 @@ function taskForName(name, options) {
     switch(name) {
         case "daily-stressors":
             return new DailyStressors();
+        case "face-name":
+            return new FaceName(options.setNum || 1);
         case "flanker":
             const setNum = options.setNum || 1;
             return new Flanker(setNum);

@@ -1,6 +1,7 @@
 'use strict';
 
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
+import { FaceName } from "../face-name/face-name.js";
 import { Flanker } from "../flanker/flanker.js";
 import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MoodPrediction  } from "../mood-prediction/mood-prediction.js";
@@ -195,6 +196,26 @@ describe("taskForName for flanker", () => {
         const set1Result = dailyTasks.taskForName("flanker", {setNum: 1});
         const noSetResult = dailyTasks.taskForName("flanker", {});
         expect(JSON.stringify(noSetResult.getTimeline())).toBe(JSON.stringify(set1Result.getTimeline()));
+    });
+});
+
+describe("taskForName for face-name", () => {
+    it("returns a FaceName object for face-name", () => {
+        const result = dailyTasks.taskForName("face-name", {setNum: 3});
+        expect(result instanceof FaceName).toBe(true);
+    });
+
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("face-name", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("face-name", {});
+        const set1Timeline = set1Result.getTimeline();
+        const noSetTimeline = noSetResult.getTimeline();
+        expect(noSetTimeline.length).toBe(set1Timeline.length);
+        for (let i=0; i<set1Timeline.length; i++) {
+            if (set1Timeline[i].timeline_variables) {
+                expect(noSetTimeline[i].timeline_variables.length).toBe(set1Timeline[i].timeline_variables.length);
+            }
+        }
     });
 });
 
