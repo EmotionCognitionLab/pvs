@@ -15,3 +15,9 @@ export function cartesianProduct(...arrays) {
     );
     return arrays.reduce(reducer, [[]]);
 }
+
+export function lastData(key) {
+    const lastData = jsPsych.data.get().last(1).values()[0];
+    if (key && lastData[key]) return lastData[key];
+    return lastData;
+}
