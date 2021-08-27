@@ -47,6 +47,7 @@ export class TaskSwitching {
         ]).flat();
         
         return [
+            this.constructor.blackBg(true),
             this.constructor.instruction(this.instr1Html(2, "small")),
             this.instructionNode(this.instr2(2, "small")),
             this.instructionNode(this.instr3(2, "small")),
@@ -56,7 +57,8 @@ export class TaskSwitching {
         .concat([this.constructor.instruction(pre_exer_instr)])
         .concat(exerciseNodes)
         .concat([this.constructor.instruction(pre_mix_instr)])
-        .concat(mixedNodes);
+        .concat(mixedNodes)
+        .concat([this.constructor.blackBg(false)]);
     }
 
     number(num, bigOrSmall=null) {
@@ -374,6 +376,23 @@ TaskSwitching.instruction = function(text, choices = [" "]) {
         stimulus: text,
         choices: choices
     }
+}
+
+// hack to add a class to the body tag when we start this task
+TaskSwitching.blackBg = function (doAdd) {
+    return {
+        type: "html-keyboard-response",
+        stimulus: "",
+        choices: jsPsych.NO_KEYS,
+        trial_duration: 50,
+        on_load: function() {
+            if (doAdd) {
+                document.body.classList.add("blackbg");
+            } else {
+                document.body.classList.remove("blackbg");
+            }
+        }
+    };
 }
 
 TaskSwitching.wait = {
