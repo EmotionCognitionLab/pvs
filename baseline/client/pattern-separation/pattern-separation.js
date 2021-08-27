@@ -164,8 +164,11 @@ PatternSeparation.answerFasterNode = {
 }
 
 if (window.location.href.includes(PatternSeparation.taskName)) {
+    const queryParams = new URLSearchParams(window.location.search.substring(1));
+    const setNum = parseInt(queryParams.get("setNum")) || 1;
+    const isRecall = queryParams.get("isRecall") && queryParams.get("isRecall").toLowerCase() === "true" ? true : false;
     jsPsych.init({
-        timeline: (new PatternSeparation(1, false)).getTimeline(),
+        timeline: (new PatternSeparation(setNum, isRecall)).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
