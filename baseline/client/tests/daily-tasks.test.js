@@ -11,6 +11,7 @@ import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { clickContinue } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
+import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -216,6 +217,35 @@ describe("taskForName for face-name", () => {
                 expect(noSetTimeline[i].timeline_variables.length).toBe(set1Timeline[i].timeline_variables.length);
             }
         }
+    });
+});
+
+describe("taskForName for pattern-separation", () => {
+    it("returns a PatternSeparation object for pattern-separation-learning", () => {
+        const result = dailyTasks.taskForName("pattern-separation-learning", {});
+        expect(result instanceof PatternSeparation).toBe(true);
+    });
+
+    it("returns a PatternSeparation object for pattern-separation-recall", () => {
+        const result = dailyTasks.taskForName("pattern-separation-recall", {});
+        expect(result instanceof PatternSeparation).toBe(true);
+    });
+
+    it("returns a PatternSeparation object with isRecall=false for pattern-separation-learning", () => {
+        const result = dailyTasks.taskForName("pattern-separation-learning", {});
+        expect(result.isRecall).toBe(false);
+    });
+
+    it("returns a PatternSeparation object with isRecall=true for pattern-separation-recall", () => {
+        const result = dailyTasks.taskForName("pattern-separation-recall", {});
+        expect(result.isRecall).toBe(true);
+    });
+
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Task = dailyTasks.taskForName("pattern-separation-learning", {setNum: 1});
+        const noSetTask = dailyTasks.taskForName("pattern-separation-learning", {});
+        expect(set1Task.setNum).toBe(1);
+        expect(noSetTask.setNum).toBe(1);
     });
 });
 

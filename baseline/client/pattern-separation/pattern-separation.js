@@ -17,7 +17,8 @@ export class PatternSeparation {
     }
 
     get taskName() {
-        return this.constructor.taskName;
+        if (this.isRecall) return this.constructor.taskName + "-recall";
+        return this.constructor.taskName + "-learning";
     }
 
     getLearningTimeline() {

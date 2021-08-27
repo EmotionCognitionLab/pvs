@@ -14,6 +14,7 @@ import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dis
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
+import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -21,11 +22,11 @@ import { FaceName } from "../face-name/face-name.js";
  */
 
 const set1 = ["panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["panas", "daily-stressors", "pattern-separation", "n-back", "verbal-fluency", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
+const set2 = ["panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
-const set4 = ["panas", "daily-stressors", "pattern-separation", "spatial-orientation", "verbal-fluency", "n-back", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
+const set4 = ["panas", "daily-stressors", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
 const set5 = ["panas", "daily-stressors", "mindfulness", "verbal-learning", "face-name", "n-back", "mind-in-eyes", "face-name", "spatial-orientation", "verbal-fluency", "flanker"];
-const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation", "mind-in-eyes", "flanker", "face-name"];
+const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
 const allSets = [set1, set2, set3, set4, set5, set6];
 const setFinished = "set-finished";
 const setStarted = "set-started";
@@ -162,6 +163,10 @@ function taskForName(name, options) {
             return new MoodPrediction();
         case "panas":
             return new Panas();
+        case "pattern-separation-learning":
+            return new PatternSeparation(options.setNum || 1, false);
+        case "pattern-separation-recall":
+            return new PatternSeparation(options.setNum || 1, true);
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
