@@ -30,8 +30,9 @@ export class TaskSwitching {
             } else {
                 mixedNodes.push(this.constructor.instruction("Task complete. Great job!<br><em>Press the space bar to finish</em>"));
             }
-            
         }
+        // hack to remove the black background we use for this task
+        mixedNodes[mixedNodes.length - 1].on_finish = () => { document.body.classList.remove("blackbg"); }
 
         const genericIntro = "We are going to start a round of the task. Please respond as quickly as you can but try to avoid mistakes.";
         const colorIntro = genericIntro + this.singleBlockHtml("color");
@@ -46,9 +47,12 @@ export class TaskSwitching {
             [this.constructor.instruction(numberIntro), this.node("single", "number", 34)]    
         ]).flat();
         
+        const firstInst = this.constructor.instruction(this.instr1Html(2, "small"));
+        // hack to set up the black background this task needs
+        firstInst.on_load = () => { document.body.classList.add("blackbg"); }
+
         return [
-            this.constructor.blackBg(true),
-            this.constructor.instruction(this.instr1Html(2, "small")),
+            firstInst,
             this.instructionNode(this.instr2(2, "small")),
             this.instructionNode(this.instr3(2, "small")),
             this.instructionNode(this.instr4(2, "big")),
@@ -58,7 +62,6 @@ export class TaskSwitching {
         .concat(exerciseNodes)
         .concat([this.constructor.instruction(pre_mix_instr)])
         .concat(mixedNodes)
-        .concat([this.constructor.blackBg(false)]);
     }
 
     number(num, bigOrSmall=null) {
@@ -376,23 +379,6 @@ TaskSwitching.instruction = function(text, choices = [" "]) {
         stimulus: text,
         choices: choices
     }
-}
-
-// hack to add a class to the body tag when we start this task
-TaskSwitching.blackBg = function (doAdd) {
-    return {
-        type: "html-keyboard-response",
-        stimulus: "",
-        choices: jsPsych.NO_KEYS,
-        trial_duration: 50,
-        on_load: function() {
-            if (doAdd) {
-                document.body.classList.add("blackbg");
-            } else {
-                document.body.classList.remove("blackbg");
-            }
-        }
-    };
 }
 
 TaskSwitching.wait = {
