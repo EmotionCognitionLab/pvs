@@ -90,7 +90,7 @@ export class PatternSeparation {
 
 PatternSeparation.taskName = "pattern-separation";
 
-PatternSeparation.imageBucket = "https://dfi38xt52pdd.cloudfront.net/";
+PatternSeparation.imageBucket = "https://d3vowlh1lzbs4j.cloudfront.net/pat/";
 
 PatternSeparation.instruction = (html) => {
     return {
