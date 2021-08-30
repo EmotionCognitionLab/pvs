@@ -20,9 +20,9 @@ describe("angleABC helper", () => {
             });
         }
     });
+
     it("doesn't explode", () => {
-        const notExplosion = angleABC([0, 0], [0, 0], [0, 0]);
-        expect(typeof notExplosion).toBe("number");
-        expect(notExplosion).not.toBeNaN();
+        expect(() => angleABC([0, 0], [0, 0], [0, 0])).not.toThrow();
+        expect(typeof angleABC([0, 0], [0, 0], [0, 0])).toBe("number");
     });
 });
