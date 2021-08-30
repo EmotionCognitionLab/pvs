@@ -27,6 +27,16 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         },
     };
 
+    plugin.angleABC = ([aX, aY], [bX, bY], [cX, cY]) => {
+        // angle from vectors BA to BC
+        const [baX, baY] = [aX - bX, aY - bY];
+        const [bcX, bcY] = [cX - bX, cY - bY];
+        const baNorm = Math.sqrt(baX*baX + baY*baY);
+        const dx = (bcX*baX + bcY*baY) / baNorm;  // scalar projection of BC onto BA
+        const dy = (bcY*baX - bcX*baY) / baNorm;  // scalar rejection of BC onto BA
+        return Math.atan2(dy, dx);
+    };
+
     plugin.buildIcirc = (canvas, options) => {
         const ctx = canvas.getContext("2d");
         const centerX = canvas.width / 2;
