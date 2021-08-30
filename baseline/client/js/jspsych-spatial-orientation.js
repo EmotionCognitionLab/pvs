@@ -43,10 +43,13 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const pointerAngleFromMouseEvent = e => {
-            // get coordinates on canvas
+            // get window coordinates on canvas
             const rect = canvas.getBoundingClientRect();
-            const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
-            return Math.atan2(centerY - y, x - centerX) - Math.PI/2;
+            const [wX, wY] = [e.clientX - rect.left, e.clientY - rect.top];
+            // get vector coordinates relative to origin at center
+            const [x, y] = [wX - centerX, centerY - wY];
+            // get angle from positive vertical
+            return plugin.angleABC([0, options.radius], [0, 0], [x, y]);
         };
         const draw = (pointerAngle) => {
             window.requestAnimationFrame(() => {
