@@ -3,6 +3,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
 
     plugin.info = {
         name: "spatial-orientation",
+        description: "responseAngle is the counterclockwise angle from the positive vertical in the range [-pi, +pi]",
         parameters: {
             scene: {
                 type: jsPsych.plugins.parameterType.HTML_STRING,
