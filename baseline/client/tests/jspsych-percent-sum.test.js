@@ -3,7 +3,7 @@ import "js/jspsych-percent-sum.js";
 
 describe("jspsych-percent-sum.js plugin", () => {
     it("loads correctly", () => {
-        expect(typeof jsPsych.plugins["percent-sum"]).toBeDefined;
+        expect(jsPsych.plugins["percent-sum"]).toBeDefined();
     });
 
     it("shows preamble", () => {
