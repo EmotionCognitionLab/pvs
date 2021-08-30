@@ -1,9 +1,41 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-spatial-orientation.js";
+import "jest-canvas-mock";
 
 describe("jspsych-spatial-orientation.js plugin", () => {
     it("loads correctly", () => {
         expect(jsPsych.plugins["spatial-orientation"]).toBeDefined();
+    });
+
+    it("registers clicks correctly", () => {
+        jest.useFakeTimers("legacy");
+        const dataFromClick = (x, y) => {
+            jsPsych.init({timeline: [{
+                type: "spatial-orientation",
+                scene: "scene",
+                centerText: "center",
+                topText: "top",
+                pointerText: "pointer",
+                targetAngle: 0,
+            }]});
+            const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+            const rect = icirc.getBoundingClientRect();
+            icirc.dispatchEvent(new MouseEvent("click", {
+                clientX: +x + icirc.width/2 + rect.left,
+                clientY: -y + icirc.height/2 + rect.top,
+            }));
+            jest.runAllTimers();
+            const progress = jsPsych.progress();
+            expect(progress.current_trial_global).toBe(progress.total_trials);
+            const data = jsPsych.data.getLastTrialData().values()[0];
+            expect(typeof data.responseAngle).toBe("number");
+            return data;
+        };
+        expect(dataFromClick(0, 1).responseAngle).toBeCloseTo(0);
+        expect(dataFromClick(-123, 0).responseAngle).toBeCloseTo(Math.PI/2);
+        expect(dataFromClick(2, -2).responseAngle).toBeCloseTo(-Math.PI*3/4);
+        // please don't explode
+        expect(dataFromClick(0, 0)).not.toBe(NaN);
     });
 });
 
