@@ -97,7 +97,6 @@ MindEyes.stimulus = function(isPractice) {
 }
 
 if (window.location.href.includes(MindEyes.taskName)) {
-    console.log((new MindEyes(1)).getTimeline());
     jsPsych.init({
         timeline: (new MindEyes(1)).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
