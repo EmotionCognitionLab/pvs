@@ -3,7 +3,7 @@ import "js/jspsych-spatial-orientation.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import scene_img from "./scene.png";
-
+import stimulus from "./stim.json";
 
 export class SpatialOrientation {
     getTimeline() {
@@ -29,6 +29,8 @@ export class SpatialOrientation {
 }
 
 SpatialOrientation.taskName = "spatial-orientation";
+
+SpatialOrientation.stimulus = stimulus;
 
 SpatialOrientation.scenePositions = {
     trash: [0, 0],
