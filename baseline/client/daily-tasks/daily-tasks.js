@@ -15,6 +15,7 @@ import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
+import { MindEyes } from "../mind-eyes/mind-eyes.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -157,6 +158,8 @@ function taskForName(name, options) {
         case "flanker":
             const setNum = options.setNum || 1;
             return new Flanker(setNum);
+        case "mind-eyes":
+            return new MindEyes(options.setNum || 1);
         case "mood-memory":
             return new MoodMemory();
         case "mood-prediction":
