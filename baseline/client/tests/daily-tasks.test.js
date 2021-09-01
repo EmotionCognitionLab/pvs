@@ -1,6 +1,7 @@
 'use strict';
 
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
+import { Dass } from "../dass/dass";
 import { FaceName } from "../face-name/face-name.js";
 import { Flanker } from "../flanker/flanker.js";
 import * as dailyTasks from "../daily-tasks/daily-tasks.js";
@@ -166,6 +167,10 @@ describe("taskForName", () => {
     it("returns a DailyStressors object for daily-stressors", () => {
         const result = dailyTasks.taskForName("daily-stressors", {});
         expect(result instanceof DailyStressors).toBe(true);
+    });
+    it("returns a Dass object for dass", () => {
+        const result = dailyTasks.taskForName("dass", {});
+        expect(result instanceof Dass).toBe(true);
     });
     it("returns a MoodMemory object for mood-memory", () => {
         const result = dailyTasks.taskForName("mood-memory", {});
