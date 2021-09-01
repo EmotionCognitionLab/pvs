@@ -83,3 +83,4 @@ add_page("spatial-orientation", "spatial-orientation/spatial-orientation.js", "S
 add_page("face-name", "face-name/face-name.js", "Face-Name Task");
 add_page("pattern-separation", "pattern-separation/pattern-separation.js", "Pattern Separation Task");
 add_page("mind-eyes", "mind-eyes/mind-eyes.js", "Reading the Mind in the Eyes Task");
+add_page("dass", "dass/dass.js", "Depression Anxiety Stress Scale");
