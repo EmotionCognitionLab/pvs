@@ -25,8 +25,10 @@ describe("jspsych-spatial-orientation.js plugin", () => {
                 clientY: -y + icirc.height/2 + rect.top,
             }));
             jest.runAllTimers();
+            // expect trial and timeline to be completed
             const progress = jsPsych.progress();
             expect(progress.current_trial_global).toBe(progress.total_trials);
+            // expect responseAngle to be a number
             const data = jsPsych.data.getLastTrialData().values()[0];
             expect(typeof data.responseAngle).toBe("number");
             return data;
