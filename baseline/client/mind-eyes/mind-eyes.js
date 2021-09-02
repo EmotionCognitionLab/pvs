@@ -73,13 +73,13 @@ MindEyes.stimulus = function(isPractice) {
                     definition = glossaryInfo.definition;
                     usage = glossaryInfo.usage;
                 }
-                const wordSide = idx % 2 === 0 ? "left" : "right";
+                const wordSide = idx % 2 === 0 ? "mind-eyes-left" : "mind-eyes-right";
                 const tipPos = idx < 2 ? "bottom" : "top";
                 return `<span class="${wordSide} tooltip">${idx+1}. ${w} <span class="tooltiptext ${tipPos}">${definition}<hr/>${usage}</span></span>`;
             })
             
             
-            return `<div class="words">${wordsHtml[0]}${wordsHtml[1]}</div><img src="${jsPsych.timelineVariable("picURL")}"/><div class="words">${wordsHtml[2]}${wordsHtml[3]}</div>`
+            return `<div class="mind-eyes-words">${wordsHtml[0]}${wordsHtml[1]}</div><img src="${jsPsych.timelineVariable("picURL")}"/><div class="words">${wordsHtml[2]}${wordsHtml[3]}</div>`
         },
         choices: ["1", "2", "3", "4"],
         data: {

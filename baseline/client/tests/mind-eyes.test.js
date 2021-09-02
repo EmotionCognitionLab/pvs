@@ -33,8 +33,8 @@ describe("MindEyes", () => {
     it("should include the displayed words in the data", () => {
         doFirstTrial();
         const dispELem = jsPsych.getDisplayElement();
-        const leftWords = dispELem.getElementsByClassName("left");
-        const rightWords = dispELem.getElementsByClassName("right");
+        const leftWords = dispELem.getElementsByClassName("mind-eyes-left");
+        const rightWords = dispELem.getElementsByClassName("mind-eyes-right");
         expect(leftWords.length).toBe(2);
         expect(rightWords.length).toBe(2);
         const allWords = [];
