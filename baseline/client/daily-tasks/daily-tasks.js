@@ -220,7 +220,14 @@ function canStartNextSet(allResults) {
 }
 
 function init() {
-    const cognitoAuth = getAuth(doAll, handleError);
+    const lStor = window.localStorage;
+    const scopes = [];
+    if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
+        // we may have a new user who needs phone # verification
+        scopes.push('openid');
+        scopes.push('aws.cognito.signin.user.admin');
+    }
+    const cognitoAuth = getAuth(doAll, handleError, null, scopes);
     cognitoAuth.getSession();
 }
 
