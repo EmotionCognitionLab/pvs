@@ -117,7 +117,7 @@ export class FaceName {
 
 FaceName.taskName = "face-name";
 
-FaceName.imageBucket = "https://drtmnva0tpafc.cloudfront.net/";
+FaceName.imageBucket = "https://d3vowlh1lzbs4j.cloudfront.net/face/";
 
 FaceName.instruction = (html) => {
     return {
