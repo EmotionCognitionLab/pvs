@@ -3,7 +3,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
 
     plugin.info = {
         name: "spatial-orientation",
-        description: "responseAngle is the counterclockwise angle from the positive vertical. At the top, the angle starts at 0 and increases counterclockwise (on the left side of the circle) until it reaches +pi at the bottom. From the bottom, the angle wraps around to -pi and increases (on the right side of the circle) so that it reaches 0 again at the top.",
+        description: "responseRadians is the counterclockwise angle from the positive vertical. At the top, the angle starts at 0 and increases counterclockwise (on the left side of the circle) until it reaches +pi at the bottom. From the bottom, the angle wraps around to -pi and increases (on the right side of the circle) so that it reaches 0 again at the top.",
         parameters: {
             scene: {
                 type: jsPsych.plugins.parameterType.HTML_STRING,
@@ -97,9 +97,9 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             if (running) {
                 running = false;
                 // build data
-                const responseAngle = pointerAngleFromMouseEvent(e);
+                const responseRadians = pointerAngleFromMouseEvent(e);
                 const clickData = {
-                    responseAngle: responseAngle,
+                    responseRadians: responseRadians,
                     targetAngle: options.targetAngle,
                 };
                 // draw target pointer

@@ -28,14 +28,14 @@ describe("jspsych-spatial-orientation.js plugin", () => {
             // expect trial and timeline to be completed
             const progress = jsPsych.progress();
             expect(progress.current_trial_global).toBe(progress.total_trials);
-            // expect responseAngle to be a number
+            // expect responseRadians to be a number
             const data = jsPsych.data.getLastTrialData().values()[0];
-            expect(typeof data.responseAngle).toBe("number");
+            expect(typeof data.responseRadians).toBe("number");
             return data;
         };
-        expect(dataFromClick(0, 1).responseAngle).toBeCloseTo(0);
-        expect(dataFromClick(-123, 0).responseAngle).toBeCloseTo(Math.PI/2);
-        expect(dataFromClick(2, -2).responseAngle).toBeCloseTo(-Math.PI*3/4);
+        expect(dataFromClick(0, 1).responseRadians).toBeCloseTo(0);
+        expect(dataFromClick(-123, 0).responseRadians).toBeCloseTo(Math.PI/2);
+        expect(dataFromClick(2, -2).responseRadians).toBeCloseTo(-Math.PI*3/4);
         // please don't explode
         expect(dataFromClick(0, 0)).not.toBe(NaN);
     });
