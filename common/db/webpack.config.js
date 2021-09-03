@@ -10,5 +10,5 @@ module.exports = {
 			type: 'umd',
 		},
     },
-    mode: "development"
+    mode: "production"
 };
