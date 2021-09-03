@@ -2,6 +2,7 @@
 
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -117,9 +118,9 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         allTimelines.push(node);
     }
     if (setNum === allSets.length) {
-        allTimelines.push({timeline: [allDoneMessage], taskName: allDone});
+        allTimelines.push({timeline: [turkCode], taskName: 'turk'});
     } else if (!nextSetOk || atSetStart) {
-        allTimelines.push({timeline: [doneForTodayMessage], taskName: doneForToday});
+        allTimelines.push({timeline: [turkCode], taskName: 'turk'});
     }
     return allTimelines;
 }
@@ -299,6 +300,12 @@ const doneForTodayMessage = {
     stimulus: "Congratulations! You have done all of the daily measurements for today. Please come back tomorrow to continue.",
     choices: [],
 };
+
+const turkCode = {
+    type: "html-button-response",
+    stimulus: `Thanks for completing the task! Please enter the following code into Mechanical Turk to show that you have finished: ${jsPsych.randomization.sampleWithoutReplacement(['MARMADUKE', 'BEETLE', 'ZONKER', 'SNOOPY', 'GARFIELD', 'DENNIS', 'LINUS', 'OPUS'], 1)}`,
+    choices: []
+}
 
 
 if (window.location.href.includes("daily-tasks")) {
