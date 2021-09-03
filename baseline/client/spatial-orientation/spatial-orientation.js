@@ -1,6 +1,8 @@
 import "@adp-psych/jspsych/jspsych.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "js/jspsych-spatial-orientation.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/jspsych-spatial-orientation.css";
 import "css/common.css";
 import scene_img from "./scene.png";
 import stimulus from "./stim.json";
@@ -13,20 +15,60 @@ import test_instruction_html from "./frag/test_instruction.html";
 import completion_html from "./frag/completion.html";
 
 export class SpatialOrientation {
+    constructor(setNum) {
+        if (Number.isInteger(setNum) && setNum > 0) {
+            this.setNum = setNum
+        } else {
+            throw new Error("setNum must be a strictly positive integer");
+        }
+        // get test stimulus
+        const setStim = this.constructor.stimulus.pre.main[String(setNum)];
+        this.trialsStim = (
+            setStim.order === "random" ?
+            jsPsych.randomization.repeat(setStim.trials, 1) :
+            setStim.trials
+        );
+    }
+
     getTimeline() {
+        const i = this.constructor.simpleInstruction;
+        const t = this.constructor.trial;
+        const stimulus = this.constructor.stimulus;
+        // example
+        const [exampleTrialStim] = stimulus.example.example["0"].trials;
+        const exampleBlock = [
+            t(exampleTrialStim.center, exampleTrialStim.facing, exampleTrialStim.target, "example", sample_instruction_html),
+        ];
+        // practice
+        const practiceSet = stimulus.practice.practice["0"];
+        const practiceStim = (
+            practiceSet.order === "random" ?
+            jsPsych.randomization.repeat(practiceSet.trials, 1) :
+            practiceSet.trials
+        );
+        const practiceBlock = [
+            i(practice_instruction_html),
+            ...practiceStim.map(s => t(s.center, s.facing, s.target, "practice")),
+        ];
+        // test
+        const testSet = stimulus.pre.main[String(this.setNum)];
+        const testStim = (
+            testSet.order === "random" ?
+            jsPsych.randomization.repeat(testSet.trials, 1) :
+            testSet.trials
+        );
+        const testBlock = [
+            i(test_instruction_html),
+            ...testStim.map(s => t(s.center, s.facing, s.target, "test")),
+        ];
+        // timeline
         return [
-            {
-                type: "spatial-orientation",
-                scene: `<img src=${scene_img}>`,
-                centerText: "bell",
-                topText: "tree",
-                pointerText: "drum",
-                targetRadians: jsPsych.plugins["spatial-orientation"].angleABC(
-                    SpatialOrientation.scenePositions.tree,
-                    SpatialOrientation.scenePositions.bell,
-                    SpatialOrientation.scenePositions.drum,
-                ),
-            },
+            i(introduction_html),
+            i(instruction_html),
+            ...exampleBlock,
+            ...(this.setNum === 1 ? practiceBlock : []),
+            ...testBlock,
+            i(completion_html),
         ];
     }
 
@@ -49,10 +91,35 @@ SpatialOrientation.scenePositions = {
     tree: [342, -129],
 }
 
+SpatialOrientation.simpleInstruction = stimulus => ({
+    type: "html-keyboard-response",
+    stimulus: stimulus,
+    choices: [" "],
+});
+
+SpatialOrientation.trial = (center, facing, target, mode, instruction = null) => ({
+    type: "spatial-orientation",
+    scene: `<img src=${scene_img}>`,
+    mode: mode,
+    instruction: (
+        instruction !== null ?
+        instruction :
+        `Imagine you are standing at the <strong>${center}</strong> and facing the <strong>${facing}</strong>. Point to the <strong>${target}</strong>.`
+    ),
+    centerText: center,
+    topText: facing,
+    pointerText: target,
+    targetRadians: jsPsych.plugins["spatial-orientation"].angleABC(
+        SpatialOrientation.scenePositions[facing],
+        SpatialOrientation.scenePositions[center],
+        SpatialOrientation.scenePositions[target],
+    ),
+});
+
 
 if (window.location.href.includes(SpatialOrientation.taskName)) {
     jsPsych.init({
-        timeline: (new SpatialOrientation()).getTimeline(),
+        timeline: (new SpatialOrientation(1)).getTimeline(),
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
