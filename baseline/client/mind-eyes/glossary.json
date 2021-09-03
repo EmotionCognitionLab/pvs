@@ -55,6 +55,10 @@
         "definition": "utterly confused, puzzled, dazed",
         "usage": "The child was bewildered when visiting the big city for the first time."
     },
+    "BORED": {
+        "definition": "feeling weary because one is unoccupied or lacks interest in one’s current activity",
+        "usage": "I am bored today."
+    },
     "CAUTIOUS": {
         "definition": "careful, wary",
         "usage": "Sarah was always a bit cautious when talking to someone she did not know."
@@ -162,6 +166,10 @@
     "ENTHUSIASTIC": {
         "definition": "very eager, keen",
         "usage": "Susan felt very enthusiastic about her new fitness plan."
+    },
+    "EXCITED": {
+        "definition": "very enthusiastic and eager",
+        "usage": "They were excited about the prospect."
     },
     "FANTASIZING": {
         "definition": "daydreaming",
@@ -330,6 +338,10 @@
     "SERIOUS": {
         "definition": "solemn, grave",
         "usage": "The bank manager looked serious as he refused Nigel an overdraft."
+    },
+    "SHY": {
+        "definition": "being reserved or having or showing nervousness or timidity in the company of other people",
+        "usage": "I was pretty shy at school."
     },
     "STERN": {
         "definition": "severe, strict, firm",
