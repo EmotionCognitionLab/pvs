@@ -12,6 +12,7 @@ function readDir(dirName) {
         if (f.isFile()) {          
             let key =  path.join(dirName, f.name);
             key = key.substring(key.indexOf("/") + 1); // strip off the  'dist' directory
+            key = "pilot/" + key;
             uploadFile(path.join(dirName, f.name), key);
         } else if (f.isDirectory()) {
             readDir(path.join(dirName, f.name));
