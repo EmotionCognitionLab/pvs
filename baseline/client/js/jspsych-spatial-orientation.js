@@ -25,6 +25,10 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.FLOAT,
                 default: undefined,
             },
+            instruction: {
+                type: jsPsych.plugins.parameterType.HTML_STRING,
+                default: "",
+            },
         },
     };
 
@@ -123,6 +127,9 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         // build and show display HTML
         {
             let html = "";
+            html += `<div id="jspsych-spatial-orientation-instruction">`;
+            html +=     trial.instruction;
+            html += `</div>`;
             html += `<div id="jspsych-spatial-orientation-wrapper">`;
             html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</div>`;
             html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
