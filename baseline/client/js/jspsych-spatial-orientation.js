@@ -21,7 +21,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.STRING,
                 default: undefined,
             },
-            targetAngle: {
+            targetRadians: {
                 type: jsPsych.plugins.parameterType.FLOAT,
                 default: undefined,
             },
@@ -100,7 +100,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 const responseRadians = pointerAngleFromMouseEvent(e);
                 const clickData = {
                     responseRadians: responseRadians,
-                    targetAngle: options.targetAngle,
+                    targetRadians: options.targetRadians,
                 };
                 // draw target pointer
                 ctx.setLineDash([]);
@@ -108,8 +108,8 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.lineTo(
-                    centerX + options.radius * Math.cos(options.targetAngle + Math.PI/2),
-                    centerY - options.radius * Math.sin(options.targetAngle + Math.PI/2)
+                    centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
+                    centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
                 );
                 ctx.stroke();
                 // call onClick
@@ -138,7 +138,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             centerText: trial.centerText,
             topText: trial.topText,
             pointerText: trial.pointerText,
-            targetAngle: trial.targetAngle,
+            targetRadians: trial.targetRadians,
             onClick: clickData => {
                 // build data
                 const rt = performance.now() - start;

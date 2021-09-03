@@ -14,7 +14,7 @@ export class SpatialOrientation {
                 centerText: "bell",
                 topText: "tree",
                 pointerText: "drum",
-                targetAngle: jsPsych.plugins["spatial-orientation"].angleABC(
+                targetRadians: jsPsych.plugins["spatial-orientation"].angleABC(
                     SpatialOrientation.scenePositions.tree,
                     SpatialOrientation.scenePositions.bell,
                     SpatialOrientation.scenePositions.drum,
