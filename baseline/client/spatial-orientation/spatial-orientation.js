@@ -114,6 +114,7 @@ SpatialOrientation.trial = (center, facing, target, mode, instruction = null) =>
         SpatialOrientation.scenePositions[center],
         SpatialOrientation.scenePositions[target],
     ),
+    data: { isRelevant: mode === "test" },
 });
 
 
