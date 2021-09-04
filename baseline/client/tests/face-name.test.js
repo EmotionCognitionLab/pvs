@@ -3,6 +3,9 @@ import { FaceName } from "../face-name/face-name.js";
 import { pressKey } from "./utils.js"
 import stimuli from "../face-name/stimuli.json";
 
+
+const prompPat = /1. ([a-zA-Z]+)<\/span> <span style="margin-left: 150px;">2. ([a-zA-Z]+)/ ;
+
 describe("FaceName", () => {
     
     beforeEach(() => {
@@ -122,7 +125,7 @@ describe("FaceName", () => {
             for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
                 pressKey(" ");
             }
-            const match = jsPsych.getDisplayElement().innerHTML.match(/1. ([a-zA-Z]+) 2. ([a-zA-Z]+)/);
+            const match = jsPsych.getDisplayElement().innerHTML.match(prompPat);
             name1.push(match[1]);
             name2.push(match[2]);
         }
@@ -263,7 +266,7 @@ function doFirstRecall(answerCorrectly) {
         pressKey(" ");
     }
     const correctName = jsPsych.timelineVariable("name", true);
-    const match = jsPsych.getDisplayElement().innerHTML.match(/1. ([a-zA-Z]+) 2. ([a-zA-Z]+)/);
+    const match = jsPsych.getDisplayElement().innerHTML.match(prompPat);
     if( (match[1] === correctName && answerCorrectly) || (match[1] !== correctName && !answerCorrectly) ) {
         pressKey("1");
     } else {
