@@ -3,7 +3,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
 
     plugin.info = {
         name: "spatial-orientation",
-        description: "responseAngle is the counterclockwise angle from the positive vertical. At the top, the angle starts at 0 and increases counterclockwise (on the left side of the circle) until it reaches +pi at the bottom. From the bottom, the angle wraps around to -pi and increases (on the right side of the circle) so that it reaches 0 again at the top.",
+        description: "responseRadians is the counterclockwise angle from the positive vertical. At the top, the angle starts at 0 and increases counterclockwise (on the left side of the circle) until it reaches +pi at the bottom. From the bottom, the angle wraps around to -pi and increases (on the right side of the circle) so that it reaches 0 again at the top.",
         parameters: {
             scene: {
                 type: jsPsych.plugins.parameterType.HTML_STRING,
@@ -21,7 +21,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.STRING,
                 default: undefined,
             },
-            targetAngle: {
+            targetRadians: {
                 type: jsPsych.plugins.parameterType.FLOAT,
                 default: undefined,
             },
@@ -97,10 +97,10 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             if (running) {
                 running = false;
                 // build data
-                const responseAngle = pointerAngleFromMouseEvent(e);
+                const responseRadians = pointerAngleFromMouseEvent(e);
                 const clickData = {
-                    responseAngle: responseAngle,
-                    targetAngle: options.targetAngle,
+                    responseRadians: responseRadians,
+                    targetRadians: options.targetRadians,
                 };
                 // draw target pointer
                 ctx.setLineDash([]);
@@ -108,8 +108,8 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.lineTo(
-                    centerX + options.radius * Math.cos(options.targetAngle + Math.PI/2),
-                    centerY - options.radius * Math.sin(options.targetAngle + Math.PI/2)
+                    centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
+                    centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
                 );
                 ctx.stroke();
                 // call onClick
@@ -138,7 +138,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             centerText: trial.centerText,
             topText: trial.topText,
             pointerText: trial.pointerText,
-            targetAngle: trial.targetAngle,
+            targetRadians: trial.targetRadians,
             onClick: clickData => {
                 // build data
                 const rt = performance.now() - start;
