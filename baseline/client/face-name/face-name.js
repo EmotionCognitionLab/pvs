@@ -131,13 +131,14 @@ FaceName.learningStimulus = (isPractice=false) => {
     const result = {
         type: "html-keyboard-response",
         stimulus: function() { return `<img src="${jsPsych.timelineVariable('picUrl')}"/> <br/> ${jsPsych.timelineVariable('name')}` },
-        choices: [" "],
+        choices: jsPsych.NO_KEYS,
         data: {
             cat: jsPsych.timelineVariable('cat'),
             name: jsPsych.timelineVariable('name'),
             picId: jsPsych.timelineVariable('picId'),
             isLearning: true
-        }
+        },
+        trial_duration: 5000
     }
     if (isPractice) {
         result.data.isPractice = true;

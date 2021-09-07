@@ -12,38 +12,31 @@ describe("FaceName", () => {
         jsPsych.init({
             timeline: (new FaceName(1)).getTimeline(),
         });
+        jest.useFakeTimers("legacy");
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     it("should have at least one result marked isRelevant", () => {
-        for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-            pressKey(" ");
-        }
-        pressKey("1"); // respond to recall prompt
-        const data = jsPsych.data.get().last(1).values()[0];
+        const data = doFirstRecall(true);
         expect(data.isRelevant).toBeTruthy();
     });
 
     it("should mark learning trials isLearning", () => {
-        for (let i=0; i<3; i++)  { // two instruction screens, then first prompt
-            pressKey(" ");
-        }
+        doFirstTrainingPrompt();
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.isLearning).toBeTruthy();
     });
 
     it("should mark recall trials isRecall", () => {
-        for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-            pressKey(" ");
-        }
-        pressKey("1"); // respond to recall prompt
-        const data = jsPsych.data.get().last(1).values()[0];
+        const data = doFirstRecall(false);
         expect(data.isRecall).toBeTruthy();
     });
 
     it("should mark practice trials isPractice", () => {
-        for (let i=0; i<3; i++)  { // two instruction screens, then first prompt
-            pressKey(" ");
-        }
+        doFirstTrainingPrompt();
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.isPractice).toBeTruthy();
     });
@@ -63,18 +56,18 @@ describe("FaceName", () => {
             pressKey(" ");
         }
         const category = jsPsych.timelineVariable("cat", true);
-        pressKey(" "); // first prompt
+        jest.advanceTimersByTime(5000); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.cat).toBe(category);
     });
 
     it("should include the image id in the data", () => {
         for (let i=0; i<2; i++)  { // two instruction screens
+            pressKey(" ");
         }
         const picId = jsPsych.timelineVariable("picId", true);
-        pressKey(" "); // first prompt
+        jest.advanceTimersByTime(5000); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
-        
         expect(data.picId).toBe(picId);
     });
 
@@ -83,15 +76,13 @@ describe("FaceName", () => {
             pressKey(" ");
         }
         const name = jsPsych.timelineVariable("name", true);
-        pressKey(" "); // first prompt
+        jest.advanceTimersByTime(5000); // first prompt
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.name).toBe(name);
     });
 
     it("should include the correct name and the lure in the data on recall trials", () => {
-        for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-            pressKey(" ");
-        }
+        skipTraining();
         const name = jsPsych.timelineVariable("name", true);
         const lure = jsPsych.timelineVariable("lure", true);
         pressKey("1"); // first recall trial
@@ -104,11 +95,12 @@ describe("FaceName", () => {
         const pictures = [];
         const names = [];
         pressKey(" "); // first instruction screen
+        pressKey(" "); // second instruction screen
         for (let i=0; i<8; i++)  {
-            pressKey(" ");
             pictures.push(jsPsych.getDisplayElement().getElementsByTagName("img")[0].attributes.getNamedItem("src").value);
             const name = jsPsych.getDisplayElement().innerHTML.match(/<br> ([a-zA-Z]+)<\/div>/)[1];
-            names.push(name);   
+            names.push(name);
+            jest.advanceTimersByTime(5000);
         }
         expect(names.slice(0,4)).toStrictEqual(names.slice(4,8));
         expect(pictures.slice(0, 4)).toStrictEqual(pictures.slice(4,8));
@@ -122,9 +114,7 @@ describe("FaceName", () => {
             jsPsych.init({
                 timeline: (new FaceName(1)).getTimeline(),
             });
-            for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-                pressKey(" ");
-            }
+            skipTraining();
             const match = jsPsych.getDisplayElement().innerHTML.match(prompPat);
             name1.push(match[1]);
             name2.push(match[2]);
@@ -144,9 +134,7 @@ describe("FaceName", () => {
     });
 
     it("should show the recall prompts in a different order than the learning prompts", () => {
-        for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-            pressKey(" ");
-        }
+        skipTraining();
         for (let i=0; i<4; i++) {
             pressKey("1"); // four practice recall prompts
         }
@@ -154,7 +142,7 @@ describe("FaceName", () => {
 
         let learnPics = [];
         for (let i=0; i<16; i++) {
-            pressKey(" ");
+            jest.advanceTimersByTime(5000);
             const data = jsPsych.data.get().last(1).values()[0];
             learnPics.push(data.picId);
         }
@@ -179,7 +167,7 @@ describe("FaceName", () => {
 
         const learnPics1 = [];
         for (let i=0; i<4; i++) {
-            pressKey(" ");
+            jest.advanceTimersByTime(5000);
             const data = jsPsych.data.get().last(1).values()[0];
             learnPics1.push(data.picId);
         }
@@ -192,7 +180,7 @@ describe("FaceName", () => {
 
         const learnPics2 = [];
         for (let i=0; i<4; i++) {
-            pressKey(" ");
+            jest.advanceTimersByTime(5000);
             const data = jsPsych.data.get().last(1).values()[0];
             learnPics2.push(data.picId);
         }
@@ -261,10 +249,23 @@ describe("In sets 6 and 12, FaceName", () => {
     });
 });
 
-function doFirstRecall(answerCorrectly) {
-    for (let i=0; i<11; i++)  { // two instruction screens, eight prompts, one more instruction screen
-        pressKey(" ");
+function doFirstTrainingPrompt() {
+    pressKey(" ");
+    pressKey(" ");
+    jest.advanceTimersByTime(5000);
+}
+
+function skipTraining() {
+    pressKey(" ");
+    pressKey(" "); // two instruction screens
+    for (let i=0; i<8; i++)  { // eight prompts
+        jest.advanceTimersByTime(5000);
     }
+    pressKey(" "); // one more instruction screen
+}
+
+function doFirstRecall(answerCorrectly) {
+    skipTraining();
     const correctName = jsPsych.timelineVariable("name", true);
     const match = jsPsych.getDisplayElement().innerHTML.match(prompPat);
     if( (match[1] === correctName && answerCorrectly) || (match[1] !== correctName && !answerCorrectly) ) {
