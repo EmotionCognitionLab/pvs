@@ -51,7 +51,6 @@ jsPsych.plugins["n-back"] = (() => {
         let trial_start;  // time since the trial started
         let focus_start;  // time since the current item was focused on
         let interval;  // identifier returned from setInterval
-        let flash_timeout;  // identifier returned from setTimeout for the flash animation
         // helper for updating state
         const focus_next = () => {
             focus_start = performance.now();
@@ -81,19 +80,6 @@ jsPsych.plugins["n-back"] = (() => {
                     time_from_focus: now - focus_start,
                     correct: plugin.is_correct(trial.n, trial.sequence, index),
                 });
-                // play .jspsych-n-back-flash animation (dark MDN magic)
-                // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations/Tips#run_an_animation_again
-                display.classList.remove("jspsych-n-back-flash");
-                window.requestAnimationFrame(() => {
-                    window.requestAnimationFrame(() => {
-                        display.classList.add("jspsych-n-back-flash");
-                    });
-                });
-                // hide flash manually in case animation doesn't fade
-                clearTimeout(flash_timeout);  // last flash's timeout shouldn't hide this flash
-                setTimeout(() => {
-                    display.classList.remove("jspsych-n-back-flash");
-                }, plugin.FLASH_DURATION);
             }
         };
         // helper for finishing trial and cleanup
