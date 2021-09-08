@@ -7,12 +7,10 @@ import "css/common.css";
 import scene_img from "./scene.png";
 import stimulus from "./stim.json";
 // fragments
-import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
 import sample_instruction_html from "./frag/sample_instruction.html";
 import practice_instruction_html from "./frag/practice_instruction.html";
 import test_instruction_html from "./frag/test_instruction.html";
-import completion_html from "./frag/completion.html";
 
 export class SpatialOrientation {
     constructor(setNum) {
