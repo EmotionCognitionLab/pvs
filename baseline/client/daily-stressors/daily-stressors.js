@@ -30,7 +30,7 @@ DailyStressors.introduction = {
     choices: ["Continue"],
 };
 
-DailyStressors.prompts = [
+DailyStressors.binaryPrompts = [
     "Did you have an argument or disagreement with anyone since this time yesterday?",
     "Since this time yesterday, did anything happen that you could have argued about but you decided to let pass in order to avoid a disagreement?",
     "Since this time yesterday, did anything else happen in your non-home-related life (e.g., work, school, volunteer, social, etc.) that most people would consider stressful?",
@@ -42,12 +42,20 @@ DailyStressors.prompts = [
 DailyStressors.questionnaire = {
     type: "survey-multi-choice",
     preamble: instruction_html,
-    questions: DailyStressors.prompts.map(p => ({
-        prompt: p,
-        options: ["Yes", "No"],
-        required: true,
-        horizontal: false,
-    })),
+    questions: [
+        {
+            prompt: "What do you feel your stress level is today on a scale from 1 to 9 (1 = very low, 5 = moderate, 9 = very high)?",
+            options: [...Array(9).keys()].map(i => String(i+1)),
+            required: true,
+            horizontal: true,
+        },
+        ...DailyStressors.binaryPrompts.map(p => ({
+            prompt: p,
+            options: ["Yes", "No"],
+            required: true,
+            horizontal: false,
+        })),
+    ],
     data: { isRelevant: true },
 };
 
