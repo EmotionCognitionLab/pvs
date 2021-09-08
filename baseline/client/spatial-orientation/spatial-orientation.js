@@ -19,13 +19,6 @@ export class SpatialOrientation {
         } else {
             throw new Error("setNum must be a strictly positive integer");
         }
-        // get test stimulus
-        const setStim = this.constructor.stimulus.pre.main[String(setNum)];
-        this.trialsStim = (
-            setStim.order === "random" ?
-            jsPsych.randomization.shuffle(setStim.trials) :
-            setStim.trials
-        );
     }
 
     getTimeline() {
