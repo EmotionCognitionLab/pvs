@@ -23,7 +23,7 @@ export class SpatialOrientation {
         const setStim = this.constructor.stimulus.pre.main[String(setNum)];
         this.trialsStim = (
             setStim.order === "random" ?
-            jsPsych.randomization.repeat(setStim.trials, 1) :
+            jsPsych.randomization.shuffle(setStim.trials) :
             setStim.trials
         );
     }
@@ -41,7 +41,7 @@ export class SpatialOrientation {
         const practiceSet = stimulus.practice.practice["0"];
         const practiceStim = (
             practiceSet.order === "random" ?
-            jsPsych.randomization.repeat(practiceSet.trials, 1) :
+            jsPsych.randomization.shuffle(practiceSet.trials) :
             practiceSet.trials
         );
         const practiceBlock = [
@@ -52,7 +52,7 @@ export class SpatialOrientation {
         const testSet = stimulus.pre.main[String(this.setNum)];
         const testStim = (
             testSet.order === "random" ?
-            jsPsych.randomization.repeat(testSet.trials, 1) :
+            jsPsych.randomization.shuffle(testSet.trials) :
             testSet.trials
         );
         const testBlock = [
