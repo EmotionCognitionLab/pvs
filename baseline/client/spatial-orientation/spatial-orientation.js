@@ -54,12 +54,10 @@ export class SpatialOrientation {
         ];
         // timeline
         return [
-            i(introduction_html),
             i(instruction_html),
             ...exampleBlock,
             ...(this.setNum === 1 ? practiceBlock : []),
             ...testBlock,
-            i(completion_html),
         ];
     }
 
