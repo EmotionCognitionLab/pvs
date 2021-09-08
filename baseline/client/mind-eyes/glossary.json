@@ -1,0 +1,386 @@
+{
+    "ACCUSING": {
+        "definition": "blaming",
+        "usage": "The policeman was accusing the man of stealing a wallet."
+    },
+    "AFFECTIONATE": {
+        "definition": "showing fondness toward someone",
+        "usage": "Most mothers are affectionate to their babies by giving them lots of kisses and cuddles."
+    },
+    "AGHAST": {
+        "definition": "horrified, astonished, alarmed",
+        "usage": "Jane was aghast when she discovered her house had been burgled."
+    },
+    "ALARMED": {
+        "definition": "fearful, worried, filled with anxiety",
+        "usage": "Claire was alarmed when she thought she was being followed home."
+    },
+    "AMUSED": {
+        "definition": "finding something funny",
+        "usage": "I was amused by a funny joke someone told me."
+    },
+    "ANNOYED": {
+        "definition": "irritated, displeased",
+        "usage": "Jack was annoyed when he found out he had missed the last bus home."
+    },
+    "ANTICIPATING": {
+        "definition": "expecting",
+        "usage": "At the start of the football match, the fans were anticipating a quick goal."
+    },
+    "ANXIOUS": {
+        "definition": "worried, tense, uneasy",
+        "usage": "The student was feeling anxious before taking her final exams."
+    },
+    "APOLOGETIC": {
+        "definition": "feeling sorry",
+        "usage": "The waiter was very apologetic when he spilt soup all over the customer."
+    },
+    "ARROGANT": {
+        "definition": "conceited, self-important, having a big opinion of oneself",
+        "usage": "The arrogant man thought he knew more about politics than everyone else in the room."
+    },
+    "ASHAMED": {
+        "definition": "overcome with shame or guilt",
+        "usage": "The boy felt ashamed when his mother discovered him stealing money from her purse."
+    },
+    "ASSERTIVE": {
+        "definition": "confident, dominant, sure of oneself",
+        "usage": "The assertive woman demanded that the shop give her a refund."
+    },
+    "BAFFLED": {
+        "definition": "confused, puzzled, dumfounded",
+        "usage": "The detectives were completely baffled by the murder case."
+    },
+    "BEWILDERED": {
+        "definition": "utterly confused, puzzled, dazed",
+        "usage": "The child was bewildered when visiting the big city for the first time."
+    },
+    "BORED": {
+        "definition": "feeling weary because one is unoccupied or lacks interest in one’s current activity",
+        "usage": "I am bored today."
+    },
+    "CAUTIOUS": {
+        "definition": "careful, wary",
+        "usage": "Sarah was always a bit cautious when talking to someone she did not know."
+    },
+    "COMFORTING": {
+        "definition": "consoling, compassionate",
+        "usage": "The nurse was comforting the wounded soldier."
+    },
+    "CONCERNED": {
+        "definition": "worried, troubled",
+        "usage": "The doctor was concerned when his patient took a turn for the worse."
+    },
+    "CONFIDENT": {
+        "definition": "self-assured, believing in oneself",
+        "usage": "The tennis player was feeling very confident about winning his match."
+    },
+    "CONFUSED": {
+        "definition": "puzzled, perplexed",
+        "usage": "Lizzie was so confused by the directions given to her, she got lost."
+    },
+    "CONTEMPLATIVE": {
+        "definition": "reflective, thoughtful, considering",
+        "usage": "John was in a contemplative mood on the eve of his 60th birthday."
+    },
+    "CONTENTED": {
+        "definition": "satisfied",
+        "usage": "After a nice walk and a good meal, David felt very contented."
+    },
+    "CONVINCED": {
+        "definition": "certain, absolutely positive",
+        "usage": "Richard was convinced he had come to the right decision."
+    },
+    "CURIOUS": {
+        "definition": "inquisitive, inquiring, prying",
+        "usage": "Louise was curious about the strange-shaped parcel."
+    },
+    "DECIDING": {
+        "definition": "making your mind up",
+        "usage": "The man was deciding who to vote for in the election."
+    },
+    "DECISIVE": {
+        "definition": "already made your mind up",
+        "usage": "Jane looked very decisive as she walked into the polling station."
+    },
+    "DEFIANT": {
+        "definition": "insolent, bold, don’t care what anyone else thinks",
+        "usage": "The animal protester remained defiant even after being sent to prison."
+    },
+    "DEPRESSED": {
+        "definition": "miserable",
+        "usage": "George was depressed when he didn’t receive any birthday cards."
+    },
+    "DESIRE": {
+        "definition": "passion, lust, longing for",
+        "usage": "Kate had a strong desire for chocolate."
+    },
+    "DESPONDENT": {
+        "definition": "gloomy, despairing, without hope",
+        "usage": "Gary was despondent when he did not get the job he wanted."
+    },
+    "DISAPPOINTED": {
+        "definition": "displeased, disgruntled",
+        "usage": "Manchester United fans were disappointed not to win the Championship."
+    },
+    "DISPIRITED": {
+        "definition": "glum, miserable, low",
+        "usage": "Adam was dispirited when he failed his exams."
+    },
+    "DISTRUSTFUL": {
+        "definition": "suspicious, doubtful, wary",
+        "usage": "The old woman was distrustful of the stranger at her door."
+    },
+    "DOMINANT": {
+        "definition": "commanding, bossy",
+        "usage": "The sergeant major looked dominant as he inspected the new recruits."
+    },
+    "DOUBTFUL": {
+        "definition": "dubious, suspicious, not really believing",
+        "usage": "Mary was doubtful that her son was telling the truth."
+    },
+    "DUBIOUS": {
+        "definition": "doubtful, suspicious",
+        "usage": "Peter was dubious when offered a surprisingly cheap television in a pub."
+    },
+    "EAGER": {
+        "definition": "keen",
+        "usage": "On Christmas morning, the children were eager to open their presents."
+    },
+    "EARNEST": {
+        "definition": "having a serious intention",
+        "usage": "Harry was very earnest about his religious beliefs."
+    },
+    "EMBARRASSED": {
+        "definition": "ashamed",
+        "usage": "After forgetting a colleague’s name, Jenny felt very embarrassed."
+    },
+    "ENCOURAGING": {
+        "definition": "hopeful, heartening, supporting",
+        "usage": "All the parents were encouraging their children in the school sports day."
+    },
+    "ENTERTAINED": {
+        "definition": "absorbed and amused or pleased by something",
+        "usage": "I was very entertained by the magician."
+    },
+    "ENTHUSIASTIC": {
+        "definition": "very eager, keen",
+        "usage": "Susan felt very enthusiastic about her new fitness plan."
+    },
+    "EXCITED": {
+        "definition": "very enthusiastic and eager",
+        "usage": "They were excited about the prospect."
+    },
+    "FANTASIZING": {
+        "definition": "daydreaming",
+        "usage": "Emma was fantasizing about being a film star."
+    },
+    "FASCINATED": {
+        "definition": "captivated, really interested",
+        "usage": "At the seaside, the children were fascinated by the creatures in the rock pools."
+    },
+    "FEARFUL": {
+        "definition": "terrified, worried",
+        "usage": "In the dark streets, the women felt fearful."
+    },
+    "FLIRTATIOUS": {
+        "definition": "brazen, saucy, teasing, playful",
+        "usage": "Connie was accused of being flirtatious when she winked at a stranger at a party."
+    },
+    "FLUSTERED": {
+        "definition": "confused, nervous and upset",
+        "usage": "Sarah felt a bit flustered when she realised how late she was for the meeting and that she had forgotten an important document."
+    },
+    "FRIENDLY": {
+        "definition": "sociable, amiable",
+        "usage": "The friendly girl showed the tourists the way to the town centre."
+    },
+    "GRATEFUL": {
+        "definition": "thankful",
+        "usage": "Kelly was very grateful for the kindness shown by the stranger."
+    },
+    "GUILTY": {
+        "definition": "feeling sorry for doing something wrong",
+        "usage": "Charlie felt guilty about having an affair."
+    },
+    "HATEFUL": {
+        "definition": "showing intense dislike",
+        "usage": "The two sisters were hateful to each other and always fighting."
+    },
+    "HOPEFUL": {
+        "definition": "optimistic",
+        "usage": "Larry was hopeful that the post would bring good news."
+    },
+    "HORRIFIED": {
+        "definition": "terrified, appalled",
+        "usage": "The man was horrified to discover that his new wife was already married."
+    },
+    "HOSTILE": {
+        "definition": "unfriendly",
+        "usage": "The two neighbours were hostile towards each other because of an argument about loud music."
+    },
+    "IMPATIENT": {
+        "definition": "restless, wanting something to happen soon",
+        "usage": "Jane grew increasingly impatient as she waited for her friend who was already 20 minutes late."
+    },
+    "IMPLORING": {
+        "definition": "begging, pleading",
+        "usage": "Nicola looked imploring as she tried to persuade her dad to lend her the car."
+    },
+    "INCREDULOUS": {
+        "definition": "not believing",
+        "usage": "Simon was incredulous when he heard that he had won the lottery."
+    },
+    "INDECISIVE": {
+        "definition": "unsure, hesitant, unable to make your mind up",
+        "usage": "Tammy was so indecisive that she couldn’t even decide what to have for lunch."
+    },
+    "INDIFFERENT": {
+        "definition": "disinterested, unresponsive, don’t care",
+        "usage": "Terry was completely indifferent as to whether they went to the cinema or the pub."
+    },
+    "INSISTING": {
+        "definition": "demanding, persisting, maintaining",
+        "usage": "After a work outing, Frank was insisting he paid the bill for everyone."
+    },
+    "INSULTING": {
+        "definition": "rude, offensive",
+        "usage": "The football crowd was insulting the referee after he gave a penalty."
+    },
+    "INTERESTED": {
+        "definition": "inquiring, curious",
+        "usage": "After seeing Jurassic Park, Huge grew very interested in dinosaurs."
+    },
+    "INTRIGUED": {
+        "definition": "very curious, very interested",
+        "usage": "A mystery phone call intrigued Zoe."
+    },
+    "IRRITATED": {
+        "definition": "exasperated, annoyed",
+        "usage": "Frances was irritated by all the junk mail she received."
+    },
+    "JEALOUS": {
+        "definition": "envious",
+        "usage": "Tony was jealous of all the taller, better-looking boys in his class."
+    },
+    "JOKING": {
+        "definition": "being funny, playful",
+        "usage": "Gary was always joking with his friends."
+    },
+    "NERVOUS": {
+        "definition": "apprehensive, tense, worried",
+        "usage": "Just before her job interview, Alice felt very nervous."
+    },
+    "OFFENDED": {
+        "definition": "insulted, wounded, having hurt feelings",
+        "usage": "When someone made a joke about her weight, Martha felt very offended."
+    },
+    "PANICKED": {
+        "definition": "distraught, feeling of terror or anxiety",
+        "usage": "On waking to find the house on fire, the whole family were panicked."
+    },
+    "PENSIVE": {
+        "definition": "thinking about something slightly worrying",
+        "usage": "Susie looked pensive on the way to meeting her boyfriend’s parents for the first time."
+    },
+    "PERPLEXED": {
+        "definition": "bewildered, puzzled, confused",
+        "usage": "Frank was perplexed by the disappearance of his garden gnomes."
+    },
+    "PLAYFUL": {
+        "definition": "full of high spirits and fun",
+        "usage": "Neil was feeling playful at his birthday party."
+    },
+    "PREOCCUPIED": {
+        "definition": "absorbed, engrossed in one’s own thoughts",
+        "usage": "Worrying about her mother’s illness made Debbie preoccupied at work"
+    },
+    "PUZZLED": {
+        "definition": "perplexed, bewildered, confused",
+        "usage": "After doing the crossword for an hour, June was still puzzled by one clue."
+    },
+    "REASSURING": {
+        "definition": "supporting, encouraging, giving someone confidence",
+        "usage": "Andy tried to look reassuring as he told his wife that her new dress did suit her."
+    },
+    "REFLECTIVE": {
+        "definition": "contemplative, thoughtful",
+        "usage": "George was in a reflective mood as he thought about what he’d done with his life."
+    },
+    "REGRETFUL": {
+        "definition": "sorry",
+        "usage": "Lee was always regretful that he had never travelled when he was younger."
+    },
+    "RELAXED": {
+        "definition": "taking it easy, calm, carefree",
+        "usage": "On holiday, Pam felt happy and relaxed."
+    },
+    "RELIEVED": {
+        "definition": "freed from worry or anxiety",
+        "usage": "At the restaurant, Ray was relieved to find he had not forgotten his wallet."
+    },
+    "RESENTFUL": {
+        "definition": "bitter, hostile",
+        "usage": "The businessman felt very resentful towards his younger colleague who had been promoted above him."
+    },
+    "SARCASTIC": {
+        "definition": "cynical, mocking, scornful",
+        "usage": "The comedian made a sarcastic comment when someone came into the theatre late."
+    },
+    "SATISFIED": {
+        "definition": "content, fulfilled",
+        "usage": "Steve felt very satisfied after he had got his new flat just how he wanted it."
+    },
+    "SCEPTICAL": {
+        "definition": "doubtful, suspicious, mistrusting",
+        "usage": "Patrick looked sceptical as someone read out his horoscope to him."
+    },
+    "SERIOUS": {
+        "definition": "solemn, grave",
+        "usage": "The bank manager looked serious as he refused Nigel an overdraft."
+    },
+    "SHY": {
+        "definition": "being reserved or having or showing nervousness or timidity in the company of other people",
+        "usage": "I was pretty shy at school."
+    },
+    "STERN": {
+        "definition": "severe, strict, firm",
+        "usage": "The teacher looked very stern as he told the class off."
+    },
+    "SUSPICIOUS": {
+        "definition": "disbelieving, suspecting, doubting",
+        "usage": "After Sam had lost his wallet for the second time at work, he grew suspicious of one of his colleagues."
+    },
+    "SYMPATHETIC": {
+        "definition": "kind, compassionate",
+        "usage": "The nurse looked sympathetic as she told the patient the bad news."
+    },
+    "TENTATIVE": {
+        "definition": "hesitant, uncertain, cautious",
+        "usage": "Andrew felt a bit tentative as he went into the room full of strangers."
+    },
+    "TERRIFIED": {
+        "definition": "alarmed, fearful",
+        "usage": "The boy was terrified when he thought he saw a ghost."
+    },
+    "THOUGHTFUL": {
+        "definition": "thinking about something",
+        "usage": "Phil looked thoughtful as he sat waiting for the girlfriend he was about to finish with."
+    },
+    "THREATENING": {
+        "definition": "menacing, intimidating",
+        "usage": "The large, drunk man was acting in a very threatening way."
+    },
+    "UNEASY": {
+        "definition": "unsettled, apprehensive, troubled",
+        "usage": "Karen felt slightly uneasy about accepting a lift from the man she had only met that day."
+    },
+    "UPSET": {
+        "definition": "agitated, worried, uneasy",
+        "usage": "The man was very upset when his mother died."
+    },
+    "WORRIED": {
+        "definition": "anxious, fretful, troubled",
+        "usage": "When her cat went missing, the girl was very worried"
+    }
+}

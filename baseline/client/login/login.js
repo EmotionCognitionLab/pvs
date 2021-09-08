@@ -1,4 +1,5 @@
 import { getAuth, sendPhoneVerificationCode, verifyPhone } from "../../../common/auth/dist/auth.js";
+import { browserCheck } from "../browser-check/browser-check.js";
 import './style.css';
 
 const phoneVerificationFormId = 'phoneVerification';
@@ -86,17 +87,8 @@ function showError(err, msg) {
 }
 
 function handleLogin() {
-    const lStor = window.localStorage;
-    const scopes = [];
-    if (!lStor.getItem('heartBeam.origBrowserUA')) {
-        // we may have a new user who needs phone # verification
-        scopes.push('openid');
-        scopes.push('aws.cognito.signin.user.admin');
-    }
     let cognitoAuth = getAuth(loginSuccess, 
-        (err) => showError(err, 'There was an error logging you in.'), 
-        null, 
-        scopes
+        (err) => showError(err, 'There was an error logging you in.')
     );
     const curUrl = window.location.href;
     if (curUrl.indexOf('?') > -1) {

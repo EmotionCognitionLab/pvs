@@ -15,6 +15,8 @@ import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
+import { MindEyes } from "../mind-eyes/mind-eyes.js";
+import { Dass } from "../dass/dass.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -152,11 +154,15 @@ function taskForName(name, options) {
     switch(name) {
         case "daily-stressors":
             return new DailyStressors();
+        case "dass":
+            return new Dass();
         case "face-name":
             return new FaceName(options.setNum || 1);
         case "flanker":
             const setNum = options.setNum || 1;
             return new Flanker(setNum);
+        case "mind-eyes":
+            return new MindEyes(options.setNum || 1);
         case "mood-memory":
             return new MoodMemory();
         case "mood-prediction":
@@ -214,7 +220,14 @@ function canStartNextSet(allResults) {
 }
 
 function init() {
-    const cognitoAuth = getAuth(doAll, handleError);
+    const lStor = window.localStorage;
+    const scopes = [];
+    if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
+        // we may have a new user who needs phone # verification
+        scopes.push('openid');
+        scopes.push('aws.cognito.signin.user.admin');
+    }
+    const cognitoAuth = getAuth(doAll, handleError, null, scopes);
     cognitoAuth.getSession();
 }
 

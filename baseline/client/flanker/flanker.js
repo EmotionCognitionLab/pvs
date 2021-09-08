@@ -199,7 +199,7 @@ Flanker.fixation = {
 Flanker.stimulus = arrows => {
     const head = "<div class=\"arrows\">";
     const body = arrows.map(
-        is_right => `<img class=${is_right ? "right" : "left"} src=${arrow_img}>`
+        is_right => `<img class=${is_right ? "flanker-right" : "flanker-left"} src=${arrow_img}>`
     ).join("");
     const tail = "</div><div>Press the left arrow key or the right arrow key.</em></div>";
     return head + body + tail;

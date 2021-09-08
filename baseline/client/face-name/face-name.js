@@ -131,13 +131,14 @@ FaceName.learningStimulus = (isPractice=false) => {
     const result = {
         type: "html-keyboard-response",
         stimulus: function() { return `<img src="${jsPsych.timelineVariable('picUrl')}"/> <br/> ${jsPsych.timelineVariable('name')}` },
-        choices: [" "],
+        choices: jsPsych.NO_KEYS,
         data: {
             cat: jsPsych.timelineVariable('cat'),
             name: jsPsych.timelineVariable('name'),
             picId: jsPsych.timelineVariable('picId'),
             isLearning: true
-        }
+        },
+        trial_duration: 5000
     }
     if (isPractice) {
         result.data.isPractice = true;
@@ -148,7 +149,7 @@ FaceName.learningStimulus = (isPractice=false) => {
 FaceName.recallStimulus = (isPractice=false) => {
     const result = {
         type: "html-keyboard-response",
-        stimulus: function() { return `<img src="${jsPsych.timelineVariable('picUrl')}"/> <br/> 1. ${jsPsych.timelineVariable('names')[0]} 2. ${jsPsych.timelineVariable('names')[1]}` },
+        stimulus: function() { return `<img src="${jsPsych.timelineVariable('picUrl')}"/> <br/> <span style="margin-right: 150px;">1. ${jsPsych.timelineVariable('names')[0]}</span> <span style="margin-left: 150px;">2. ${jsPsych.timelineVariable('names')[1]}</span>` },
         choices: ["1", "2"],
         data: {
             cat: jsPsych.timelineVariable('cat'),

@@ -1,8 +1,8 @@
-.arrows { white-space: nowrap }
-.arrows img { display: inline-block }
-.left { transform: rotate(-90deg) }
-.right { transform: rotate(90deg) }
-.circle-border { 
+.flanker-arrows { white-space: nowrap }
+.flanker-arrows img { display: inline-block }
+.flanker-left { transform: rotate(-90deg) }
+.flanker-right { transform: rotate(90deg) }
+.flanker-circle-border { 
     border: 3px solid red;
     border-radius: 80%;
 }
