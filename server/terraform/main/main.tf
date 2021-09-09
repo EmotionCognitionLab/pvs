@@ -50,7 +50,7 @@ output "cognito_pool_id" {
 
 # save user pool arn to SSM so serverless can reference it
 resource "aws_ssm_parameter" "cognito-user-pool-arn" {
-  name = "/info/cognito/user-pool/arn"
+  name = "/pvs/${var.env}/info/cognito/user-pool/arn"
   description = "Cognito user pool ARN"
   type = "SecureString"
   value = "${aws_cognito_user_pool.pool.arn}"
@@ -58,7 +58,7 @@ resource "aws_ssm_parameter" "cognito-user-pool-arn" {
 
 # save user pool id to SSM so serverless can reference it
 resource "aws_ssm_parameter" "cognito-user-pool-id" {
-  name = "/info/cognito/user-pool/id"
+  name = "/pvs/${var.env}/info/cognito/user-pool/id"
   description = "Cognito user pool id"
   type = "SecureString"
   value = "${aws_cognito_user_pool.pool.id}"
@@ -82,7 +82,7 @@ output "cognito_pool_client_id" {
 
 # save user pool client id to SSM so serverless can reference it
 resource "aws_ssm_parameter" "cognito-user-pool-client-id" {
-  name = "/info/cognito/user-pool/client/id"
+  name = "/pvs/${var.env}/info/cognito/user-pool/client/id"
   description = "Cognito user pool client id"
   type = "SecureString"
   value = "${aws_cognito_user_pool_client.client.id}"
@@ -141,7 +141,7 @@ resource "aws_dynamodb_table" "users-table" {
 
 # save above table name to SSM so serverless can reference it
 resource "aws_ssm_parameter" "dynamo-users-table" {
-  name = "/info/dynamo/table/users"
+  name = "/pvs/${var.env}/info/dynamo/table/users"
   description = "Dynamo table holding user information"
   type = "SecureString"
   value = "${aws_dynamodb_table.users-table.name}"
@@ -156,7 +156,7 @@ resource "aws_s3_bucket" "ses-bucket" {
 
 # save above bucket name to SSM so serverless can reference it
 resource "aws_ssm_parameter" "lambda-ses-bucket" {
-  name = "/info/lambda/ses/bucket"
+  name = "/pvs/${var.env}/info/lambda/ses/bucket"
   description = "Bucket from which lambda should process emails received from SES"
   type = "SecureString"
   value = "${aws_s3_bucket.ses-bucket.bucket}"
@@ -171,7 +171,7 @@ resource "aws_s3_bucket_object" "ses-emails" {
 
 # save above prefix to SSM so serverless can reference it
 resource "aws_ssm_parameter" "lambda-ses-prefix" {
-  name = "/info/lambda/ses/prefix"
+  name = "/pvs/${var.env}/info/lambda/ses/prefix"
   description = "Bucket from which lambda should process emails received from SES"
   type = "SecureString"
   value = "${aws_s3_bucket_object.ses-emails.key}"
@@ -413,7 +413,7 @@ resource "aws_iam_role" "lambda-ses-process" {
 
 # save above IAM role to SSM so serverless can reference it
 resource "aws_ssm_parameter" "lambda-ses-role" {
-  name = "/role/lambda/ses/process"
+  name = "/pvs/${var.env}/role/lambda/ses/process"
   description = "ARN for lambda role to process emails received from SES"
   type = "SecureString"
   value = "${aws_iam_role.lambda-ses-process.arn}"
@@ -519,7 +519,7 @@ resource "aws_iam_role" "lambda-dynamodb" {
 
 # save above IAM role to SSM so serverless can reference it
 resource "aws_ssm_parameter" "lambda-dynamodb-role" {
-  name = "/role/lambda/dynamodb"
+  name = "/pvs/${var.env}/role/lambda/dynamodb"
   description = "ARN for lambda role with dynamodb access"
   type = "SecureString"
   value = "${aws_iam_role.lambda-dynamodb.arn}"
