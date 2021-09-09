@@ -4,6 +4,11 @@ import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import scene_img from "./scene.png";
 import stimulus from "./stim.json";
+// fragments
+import instruction_html from "./frag/instruction.html";
+import sample_instruction_html from "./frag/sample_instruction.html";
+import practice_instruction_html from "./frag/practice_instruction.html";
+import test_instruction_html from "./frag/test_instruction.html";
 
 export class SpatialOrientation {
     getTimeline() {
@@ -14,7 +19,7 @@ export class SpatialOrientation {
                 centerText: "bell",
                 topText: "tree",
                 pointerText: "drum",
-                targetAngle: jsPsych.plugins["spatial-orientation"].angleABC(
+                targetRadians: jsPsych.plugins["spatial-orientation"].angleABC(
                     SpatialOrientation.scenePositions.tree,
                     SpatialOrientation.scenePositions.bell,
                     SpatialOrientation.scenePositions.drum,

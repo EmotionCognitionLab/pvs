@@ -1,5 +1,4 @@
 import "@adp-psych/jspsych/jspsych.js";
-import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "./style.css";
