@@ -1,5 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import practice_introduction_html from "./frag/practice-introduction.html";
 import regular_introduction_html from "./frag/regular-introduction.html";
@@ -67,12 +68,19 @@ export class FaceName {
             timeline_variables: recallVars
         }
 
-        return timeline.concat([
+        const fullTl = timeline.concat([
             this.constructor.instruction(instr3_html),
             actualLearning, actualLearning, this.constructor.instruction(recallIntro), actualRecall,
             this.constructor.instruction(completion_html)
         ]);
         
+        const images = fullTl.flatMap(entry => (entry.timeline_variables || []).map(tlv => tlv.picUrl));
+        const preload = {
+            type: "preload",
+            images: images // jspsych will de-dupe the images
+        }
+
+       return [preload, ...fullTl];
 
     }
 

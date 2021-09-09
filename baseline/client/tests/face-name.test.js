@@ -6,11 +6,15 @@ import stimuli from "../face-name/stimuli.json";
 
 const prompPat = /1. ([a-zA-Z]+)<\/span> <span style="margin-left: 150px;">2. ([a-zA-Z]+)/ ;
 
+function getTimeline(setNum=1) {
+    return (new FaceName(setNum)).getTimeline().slice(1); // drop the preload step; doesn't play well in the test env
+}
+
 describe("FaceName", () => {
     
     beforeEach(() => {
         jsPsych.init({
-            timeline: (new FaceName(1)).getTimeline(),
+            timeline: getTimeline()
         });
         jest.useFakeTimers("legacy");
     });
@@ -112,7 +116,7 @@ describe("FaceName", () => {
         const repeatCount = 100;
         for (let j=0; j<repeatCount; j++) {
             jsPsych.init({
-                timeline: (new FaceName(1)).getTimeline(),
+                timeline: getTimeline()
             });
             skipTraining();
             const match = jsPsych.getDisplayElement().innerHTML.match(prompPat);
@@ -173,7 +177,7 @@ describe("FaceName", () => {
         }
 
         jsPsych.init({
-            timeline: (new FaceName(1)).getTimeline(),
+            timeline: getTimeline()
         });
         pressKey(" ");
         pressKey(" ");
@@ -197,7 +201,7 @@ describe("In sets 2-5 and 8-11, FaceName", () => {
     let setNum;
     beforeEach(() => {
         setNum = +jsPsych.randomization.sampleWithoutReplacement([2,3,4,5,8,9,10,11], 1); // use '+' to make setNum a number, not an object
-        timeline = (new FaceName(setNum)).getTimeline();
+        timeline = getTimeline(setNum);
         jsPsych.init({
             timeline: timeline,
         });
@@ -225,7 +229,7 @@ describe("In sets 6 and 12, FaceName", () => {
     let setNum;
     beforeEach(() => {
         setNum = +jsPsych.randomization.sampleWithoutReplacement([6, 12], 1); // use '+' to make setNum a number, not an object
-        timeline = (new FaceName(setNum)).getTimeline();
+        timeline = getTimeline(setNum);
         jsPsych.init({
             timeline: timeline,
         });
