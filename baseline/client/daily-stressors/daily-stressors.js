@@ -36,8 +36,8 @@ DailyStressors.prompts = [
     "Since this time yesterday, did anything else happen in your non-home-related life (e.g., work, school, volunteer, social, etc.) that most people would consider stressful?",
     "Since this time yesterday, did anything else happen in your home life that most people would consider stressful?",
     "Many people experience discrimination on the basis of such things as race, sex, or age. Did anything like this happen to you since this time yesterday?",
-    "Since (this time yesterday, did anything happen to a close friend or relative (other than what you have already mentioned) that turned out to be stressful for you?",
-    "Did anything else happen to you since (this time/we spoke) yesterday that most people would consider stressful?",
+    "Since this time yesterday, did anything happen to a close friend or relative (other than what you have already mentioned) that turned out to be stressful for you?",
+    "Did anything else happen to you since this time yesterday that most people would consider stressful?",
 ];
 DailyStressors.questionnaire = {
     type: "survey-multi-choice",
