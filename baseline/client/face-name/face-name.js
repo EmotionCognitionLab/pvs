@@ -115,7 +115,7 @@ export class FaceName {
 
         return jsPsych.randomization.shuffle(
             setStimuli.map(i => {
-                i.picUrl = FaceName.imageBucket + i.picId;
+                i.picUrl = this.constructor.imageBucket + i.picId;
                 i.names = jsPsych.randomization.shuffle([i.name, i.lure]);
                 return i;
             })
