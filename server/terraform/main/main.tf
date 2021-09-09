@@ -19,15 +19,6 @@ resource "aws_cognito_user_pool" "pool" {
     }
     schema {
       attribute_data_type = "String"
-      name = "phone_number"
-      required = true
-      string_attribute_constraints {
-          min_length = 12
-          max_length = 12
-      }
-    }
-    schema {
-      attribute_data_type = "String"
       name = "name"
       required = true
       string_attribute_constraints {
