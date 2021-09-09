@@ -4,7 +4,7 @@ provider "aws" {
 
 # This is set in ../../lambdas/serverless.yml
 data "aws_ssm_parameter" "post-confirmation-lambda-arn" {
-  name = "/info/lambdas/write-user-on-verify/arn"
+  name = "/pvs/${var.env}/info/lambdas/write-user-on-verify/arn"
 }
 
 # do not change this without also changing it
