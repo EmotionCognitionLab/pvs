@@ -69,7 +69,7 @@ function phoneVerificationFailure(err) {
 }
 
 function goToDailyTasks() {
-    window.location.href = '/daily-tasks/';
+    window.location.href = '/pilot/daily-tasks/';
 }
 
 function showError(err, msg) {
