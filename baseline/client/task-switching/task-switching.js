@@ -201,7 +201,7 @@ export class TaskSwitching {
             timelineVariables.push(this.number());
         }
         return {
-            timeline: [this.constructor.fixation(200), this.prompt(taskType), this.trial(blockType, taskType, round), this.constructor.fixation(500), this.constructor.feedback],
+            timeline: [this.prompt(taskType), this.trial(blockType, taskType, round), this.constructor.fixation(500), this.constructor.feedback(blockType === "exercise")],
             timeline_variables: timelineVariables,
         }
     }
@@ -311,23 +311,30 @@ export class TaskSwitching {
 
 TaskSwitching.taskName = "task-switching";
 
-TaskSwitching.feedback = {
-    type: "html-keyboard-response",
-    stimulus: function() {
+TaskSwitching.feedback = (showRightWrong) => ({
+    timeline: [{
+        type: "html-keyboard-response",
+        stimulus: function() {
+            const data = jsPsych.data.getLastTimelineData();
+            const values = data.last(2).values()[0];
+            if (values.response === null) {
+                return "Answer faster next time";
+            }
+            if (values.correct) {
+                return "Correct";
+            }
+            return "Incorrect";
+        },
+        choices: jsPsych.NO_KEYS,
+        trial_duration: 500,
+        css_classes: ["small"]
+    }],
+    conditional_function: function() {
         const data = jsPsych.data.getLastTimelineData();
         const values = data.last(2).values()[0];
-        if (values.response === null) {
-            return "Answer faster next time";
-        }
-        if (values.correct) {
-            return "Correct";
-        }
-        return "Incorrect";
-    },
-    choices: jsPsych.NO_KEYS,
-    trial_duration: 500,
-    css_classes: ["small"]
-}
+        return showRightWrong || values.response === null;
+    }
+});
 
 TaskSwitching.trainingFeedback = {
     type: "html-keyboard-response",
