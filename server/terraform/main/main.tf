@@ -216,16 +216,17 @@ resource "aws_s3_bucket_policy" "receive" {
 
 # SES rules to write email to bucket
 resource "aws_ses_receipt_rule_set" "main" {
-  rule_set_name = "ses-rules"
+  rule_set_name = "pvs-${var.env}-ses-rules"
 }
 
 resource "aws_ses_active_receipt_rule_set" "main" {
-  rule_set_name = "ses-rules"
+  rule_set_name = "pvs-${var.env}-ses-rules"
+  depends_on = [aws_ses_receipt_rule_set.main]
 }
 
 resource "aws_ses_receipt_rule" "save-to-s3" {
   name          = "save-to-s3"
-  rule_set_name = "ses-rules"
+  rule_set_name = "pvs-${var.env}-ses-rules"
   recipients    = ["lumosityreports@heartbeamstudy.org"]
   enabled       = true
   scan_enabled  = true
