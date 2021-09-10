@@ -84,7 +84,7 @@ resources:
     PostConfirmationLambdaArn:
       Value: !GetAtt WriteDashuserDashonDashverifyLambdaFunction.Arn
       Export:
-        Name: 'post-confirmation-lambda-arn'
+        Name: "${self:service}-${self:provider.stage}-post-confirmation-lambda-arn"
       Description: Arn for the post-cognito-verification lambda trigger
 
 custom:
