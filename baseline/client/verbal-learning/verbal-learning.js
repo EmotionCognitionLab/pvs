@@ -39,6 +39,26 @@ import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
 import remember_a_long_html from "./frag/remember_a_long.html";
 
 export class VerbalLearning {
+    constructor(setNum, segmentNum, lastSegmentEnd) {
+        // validate setNum
+        if (Number.isInteger(setNum) && setNum > 0) {
+            this.setNum = setNum;
+        } else {
+            throw new Error("setNum must be a strictly positive integer");
+        }
+        // validate segmentNum and compute startTime
+        this.segmentNum = segmentNum;
+        if (this.segmentNum === 1) {
+            this.startTime = 0;  // anytime
+        } else if (this.segmentNum === 2) {
+            this.startTime = lastSegmentEnd + 20 * 60 * 1000;  // 20 minutes since last
+        } else if (this.segmentNum === 3) {
+            this.startTime = lastSegmentEnd + 10 * 60 * 1000;  // 10 minutes since last
+        } else {
+            throw new Error("segmentNum must be in 1..3");
+        }
+    }
+
     getTimeline() {
         return [
             this.constructor.preload,
