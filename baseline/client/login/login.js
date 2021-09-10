@@ -16,14 +16,7 @@ function loginSuccess(session) {
     cachedSession = session;
     const idToken = session.getIdToken().getJwtToken();
     if (idToken) {
-        const payload = idToken.split('.')[1];
-        const tokenobj = JSON.parse(atob(payload));
-        const phoneNumberVerified = tokenobj.phone_number_verified;
-        if (!phoneNumberVerified) {
-            sendPhoneCode(session);    
-        } else {
-            goToDailyTasks();
-        }
+        goToDailyTasks();
     } else {
         showError(null, "There was a problem logging you in. Please try again.")
     }
@@ -99,8 +92,5 @@ function handleLogin() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById(phoneVerificationSubmitButtonId).addEventListener('click', 
-        () => { confirmPhoneVerificationCode(phoneVerificationSuccess, phoneVerificationFailure) }
-    );
     handleLogin();
 });
