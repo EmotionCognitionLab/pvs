@@ -1,4 +1,4 @@
-export function countdownTrial(duration) {
+export function countdownTrial(until) {
     // from jodeleeuw's https://github.com/jspsych/jsPsych/discussions/1690
     const timestamp = ms => {
         const minutes = Math.max(Math.floor((ms / 1000) / 60), 0);
@@ -7,7 +7,7 @@ export function countdownTrial(duration) {
     };
     return {
         type: "html-button-response",
-        stimulus: `<p>The next part of the experiment will start in <span id="countdown-trial-clock">${timestamp(duration)}</span>.`,
+        stimulus: `<p>The next part of the experiment will start in <span id="countdown-trial-clock"></span>.`,
         choices: ["Continue"],
         on_load: () => {
             const clock = document.getElementById("countdown-trial-clock");
@@ -15,15 +15,17 @@ export function countdownTrial(duration) {
             const button = document.querySelector(".jspsych-html-button-response-button");
             button.disabled = true;
             // start countdown
-            const start = performance.now();
-            const interval = setInterval(() => {
-                const remaining = start + duration - performance.now();
+            let interval;
+            const updateClock = () => {
+                const remaining = until - Date.now();
                 clock.textContent = timestamp(remaining);
                 if (remaining <= 0) {
                     button.disabled = false;
                     clearInterval(interval);
                 }
-            }, 250);
+            };
+            updateClock();
+            interval = setInterval(updateClock, 100);
         },
     };
 }
