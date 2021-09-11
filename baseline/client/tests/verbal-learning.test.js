@@ -4,15 +4,28 @@ import { clickContinue } from "./utils.js";
 
 describe("verbal-learning", () => {
     it("results should have at least one result marked isRelevant", () => {
-        const timeline = (new VerbalLearning()).getTimeline();
-        let hasRelevantData = false;
-        for (const task of timeline) {
-            if (task.data && task.data.isRelevant) {
-                hasRelevantData = true;
-                break;
+        const timeline = [
+            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
+            {timeline: new VerbalLearning(1, 3, () => Date.now()).getTimeline()},
+        ];
+        const timelineHasRelevantData = timeline => {
+            for (const node of timeline) {
+                if (node.timeline === undefined) {
+                    // node is a trial, hopefully
+                    if (node.data && node.data.isRelevant) {
+                        return true;
+                    }
+                } else {
+                    // node is a timeline, hopefully... recurse!
+                    if (timelineHasRelevantData(node.timeline)) {
+                        return true;
+                    }
+                }
             }
-        }
-        expect(hasRelevantData).toBe(true);
+            return false;
+        };
+        expect(timelineHasRelevantData(timeline)).toBe(true);
 
         // TODO find a way to mock the audio-keyboard-response plugin
         // so that the below doesn't complain about failure to load audio files
