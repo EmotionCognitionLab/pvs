@@ -4,7 +4,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-audio-keyboard-response.js";
 import "js/jspsych-memory-field.js";
-import { countdownTrial } from "js/countdown-trial.js";
+import "js/jspsych-countdown.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-memory-field.css";
 import "css/common.css";
@@ -40,7 +40,7 @@ import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
 import remember_a_long_html from "./frag/remember_a_long.html";
 
 export class VerbalLearning {
-    constructor(setNum, segmentNum, lastSegmentEnd) {
+    constructor(setNum, segmentNum, getLastSegmentEndTime) {
         // validate setNum
         if (Number.isInteger(setNum) && setNum > 0) {
             this.setNum = setNum;
@@ -50,11 +50,27 @@ export class VerbalLearning {
         // validate segmentNum and compute startTime
         this.segmentNum = segmentNum;
         if (this.segmentNum === 1) {
-            this.startTime = 0;  // anytime
+            this.getStartTime = () => 0;
         } else if (this.segmentNum === 2) {
-            this.startTime = lastSegmentEnd + 20 * 60 * 1000;  // 20 minutes since last
+            this.getStartTime = (() => {
+                let memo = null;
+                return () => {
+                    if (memo === null) {
+                        memo = getLastSegmentEndTime() + 20 * 60 * 1000;  // 20 minutes since last
+                    }
+                    return memo;
+                };
+            })();
         } else if (this.segmentNum === 3) {
-            this.startTime = lastSegmentEnd + 10 * 60 * 1000;  // 10 minutes since last
+            this.getStartTime = (() => {
+                let memo = null;
+                return () => {
+                    if (memo === null) {
+                        memo = getLastSegmentEndTime() + 10 * 60 * 1000;  // 10 minutes since last
+                    }
+                    return memo;
+                };
+            })();
         } else {
             throw new Error("segmentNum must be in 1..3");
         }
@@ -62,12 +78,15 @@ export class VerbalLearning {
 
     getTimeline() {
         const segmentCountdownNode = {
-            timeline: [countdownTrial(this.startTime)],
-            conditional_function: () => Date.now() < this.startTime,
+            timeline: [{
+                type: "countdown",
+                duration: () => this.getStartTime() - Date.now(),
+            }],
+            conditional_function: () => Date.now() < this.getStartTime(),
         };
         if (this.segmentNum === 1) {
             return [
-                //segmentCountdownNode,
+                segmentCountdownNode,
                 this.constructor.preload,
                 this.constructor.introduction,
                 this.constructor.instruction(instruction_a_immediate_html),  // 1
@@ -182,9 +201,9 @@ VerbalLearning.completion = {
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
         timeline: [
-            {timeline: new VerbalLearning(1, 1, 0).getTimeline()},
-            {timeline: new VerbalLearning(1, 2, 0).getTimeline()},
-            {timeline: new VerbalLearning(1, 3, 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
+            {timeline: new VerbalLearning(1, 3, () => Date.now()).getTimeline()},
         ],
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
