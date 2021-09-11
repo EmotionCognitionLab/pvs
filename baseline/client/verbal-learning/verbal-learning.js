@@ -4,6 +4,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-audio-keyboard-response.js";
 import "js/jspsych-memory-field.js";
+import { countdownTrial } from "js/countdown-trial.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-memory-field.css";
 import "css/common.css";
@@ -60,49 +61,66 @@ export class VerbalLearning {
     }
 
     getTimeline() {
-        return [
-            this.constructor.preload,
-            this.constructor.introduction,
-            this.constructor.instruction(instruction_a_immediate_html),  // 1
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_b_immediate_html),
-            ...this.constructor.cue_and_presentation(b_audio),
-            this.constructor.remember(remember_b_immediate_html),
-            this.constructor.instruction(instruction_a_short_html),
-            this.constructor.remember(remember_a_short_html),
-            this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(remember_a_cue_furniture_html),
-            this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(remember_a_cue_vegetable_html),
-            this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(remember_a_cue_traveling_html),
-            this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(remember_a_cue_animal_html),
-            this.constructor.instruction(instruction_a_long_html),
-            this.constructor.remember(remember_a_long_html),
-            this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(remember_a_cue_furniture_html),
-            this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(remember_a_cue_vegetable_html),
-            this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(remember_a_cue_traveling_html),
-            this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(remember_a_cue_animal_html),
-            this.constructor.completion,
-        ];
+        const segmentCountdownNode = {
+            timeline: [countdownTrial(this.startTime)],
+            conditional_function: () => Date.now() < this.startTime,
+        };
+        if (this.segmentNum === 1) {
+            return [
+                //segmentCountdownNode,
+                this.constructor.preload,
+                this.constructor.introduction,
+                this.constructor.instruction(instruction_a_immediate_html),  // 1
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_b_immediate_html),
+                ...this.constructor.cue_and_presentation(b_audio),
+                this.constructor.remember(remember_b_immediate_html),
+                this.constructor.instruction(instruction_a_short_html),
+                this.constructor.remember(remember_a_short_html),
+                this.constructor.instruction(instruction_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.instruction(instruction_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.instruction(instruction_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.instruction(instruction_a_cue_animal_html),
+                this.constructor.remember(remember_a_cue_animal_html),
+            ];
+        } else if (this.segmentNum === 2) {
+            return [
+                segmentCountdownNode,
+                this.constructor.instruction(instruction_a_long_html),
+                this.constructor.remember(remember_a_long_html),
+                this.constructor.instruction(instruction_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.instruction(instruction_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.instruction(instruction_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.instruction(instruction_a_cue_animal_html),
+                this.constructor.remember(remember_a_cue_animal_html),
+            ];
+        } else if (this.segmentNum === 3) {
+            return [
+                segmentCountdownNode,
+                this.constructor.completion,
+            ];
+        } else {
+            throw new Error("segmentNum must be in 1..3");
+        }
     }
 
     get taskName() {
@@ -163,7 +181,11 @@ VerbalLearning.completion = {
 
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
-        timeline: (new VerbalLearning()).getTimeline(),
+        timeline: [
+            {timeline: new VerbalLearning(1, 1, 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 2, 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 3, 0).getTimeline()},
+        ],
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
