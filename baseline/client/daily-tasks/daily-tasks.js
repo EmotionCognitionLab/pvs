@@ -193,7 +193,7 @@ function taskForName(name, options) {
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
         case "verbal-learning":
-            return new VerbalLearning();
+            return new VerbalLearning(1, 1, () => 0);  // TODO: fix this!
         default:
            // throw new Error(`Unknown task type: ${name}`);
            return {getTimeline: () => taskNotAvailable(name), taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
