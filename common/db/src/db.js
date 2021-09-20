@@ -63,29 +63,37 @@ async function getAllResultsForCurrentUser(session) {
     try {
         await credentials.refreshPromise();
         const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-        const params = {
-            TableName: awsSettings.ExperimentTable,
-            KeyConditionExpression: `identityId = :idKey`,
-            ExpressionAttributeValues: { ':idKey': credentials.identityId }
-        };
-        const dynResults = await docClient.query(params).promise();
-        const results = dynResults.Items.map(i => {
-            const parts = i.userDateTimeExperiment.split('|');
-            if (parts.length != 4) {
-                throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected four parts, but found ${parts.length}.`)
-            }
-            // cognito sub id is parts[0]
-            const dateTime = parts[1];
-            const experiment = parts[2];
-            // index of result in original results list is parts[3] (exists only for uniqueness)
-            return {
-                experiment: experiment,
-                dateTime: dateTime,
-                isRelevant: i.isRelevant,
-                results: i.results
-            }
-        });
-        return results;
+        let ExclusiveStartKey, dynResults, allResults;
+
+        do {
+            const params = {
+                TableName: awsSettings.ExperimentTable,
+                ExclusiveStartKey,
+                KeyConditionExpression: `identityId = :idKey`,
+                ExpressionAttributeValues: { ':idKey': credentials.identityId }
+            };
+            dynResults = await docClient.query(params).promise();
+            ExclusiveStartKey = dynResults.LastEvaluatedKey;
+            const results = dynResults.Items.map(i => {
+                const parts = i.userDateTimeExperiment.split('|');
+                if (parts.length != 4) {
+                    throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected four parts, but found ${parts.length}.`)
+                }
+                // cognito sub id is parts[0]
+                const dateTime = parts[1];
+                const experiment = parts[2];
+                // index of result in original results list is parts[3] (exists only for uniqueness)
+                return {
+                    experiment: experiment,
+                    dateTime: dateTime,
+                    isRelevant: i.isRelevant,
+                    results: i.results
+                }
+            });
+            allResults = [...allResults, ...results];
+        } while (dynResults.Items.length || dynResults.LastEvaluatedKey)
+        
+        return allResults;
     } catch (err) {
         console.error(err); // TODO implement remote error logging
         throw err;
