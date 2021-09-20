@@ -91,7 +91,7 @@ async function getAllResultsForCurrentUser(session) {
                 }
             });
             allResults = [...allResults, ...results];
-        } while (dynResults.Items.length || dynResults.LastEvaluatedKey)
+        } while (dynResults.LastEvaluatedKey)
         
         return allResults;
     } catch (err) {
