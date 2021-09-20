@@ -52,30 +52,29 @@ describe("TaskSwitching", () => {
         const match = tl[3].timeline[0].stimulus.match(stimPat);
         expect(match[1]).toBe("big");
     });
-    it("should show 34 color, size or number trials after the six instructional screens", () => {
-        // tl[0-5] are training
-        expect(tl[6].timeline.length).toBe(5);
-        expect(tl[6].timeline_variables.length).toBe(34);
-        const stimType = taskType(tl[6].timeline[1].stimulus);
+    // checks the dedicated blocks of color/size/number that happen
+    // after the initial instruction screens
+    function confirmSingleBlock(tlIdx) {
+        expect(tl[tlIdx].timeline.length).toBe(4);
+        expect(tl[tlIdx].timeline_variables.length).toBe(34);
+        const stimType = taskType(tl[tlIdx].timeline[0].stimulus);
         expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
+    }
+
+    it("should show 34 color, size or number trials after the six instructional screens", () => {
+        confirmSingleBlock(6);
     });
     it("should show a screen introducing the next trials after the first 34 trials", () => {
         expect(tl[7].stimulus).toMatch(/We are going to start a round of the task./);
     });
     it("should show 34 color, size or number trials after the trial intro screen", () => {
-        expect(tl[8].timeline.length).toBe(5);
-        expect(tl[8].timeline_variables.length).toBe(34);
-        const stimType = taskType(tl[8].timeline[1].stimulus);
-        expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
+        confirmSingleBlock(8);
     });
     it("should show a screen introducing the next trials after the second 34 trials", () => {
         expect(tl[9].stimulus).toMatch(/We are going to start a round of the task./);
     });
     it("should show 34 color, size or number trials after the trial intro screen", () => {
-        expect(tl[10].timeline.length).toBe(5);
-        expect(tl[10].timeline_variables.length).toBe(34);
-        const stimType = taskType(tl[10].timeline[1].stimulus);
-        expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
+        confirmSingleBlock(10);
     });
     it("should show a screen introducing the exercise trials after the final 34 trials", () => {
         expect(tl[11].stimulus).toBe('test-file-stub'); // blech - using imported html here prevents us from checking screen contents
@@ -84,9 +83,9 @@ describe("TaskSwitching", () => {
     it("should show 16 trials of varying task types after the exercise trial intro screen", () => {
         const taskTypes = [];
         for (let i = 12; i < 28; i++) {
-            expect(tl[i].timeline.length).toBe(5);
+            expect(tl[i].timeline.length).toBe(4);
             expect(tl[i].timeline_variables.length).toBe(1);
-            taskTypes.push(taskType(tl[i].timeline[1].stimulus));
+            taskTypes.push(taskType(tl[i].timeline[0].stimulus));
         }
         expect(taskTypes).toContain("color");
         expect(taskTypes).toContain("font size");
@@ -104,9 +103,9 @@ describe("TaskSwitching", () => {
         for (let i = 1; i < 5; i++) {
             const taskTypes = [];
             for (let j = (29 * i) + (delayScreenCount * 6); j < (29 * i) + (delayScreenCount * 6) + 34; j++) {
-                expect(tl[j].timeline.length).toBe(5);
+                expect(tl[j].timeline.length).toBe(4);
                 expect(tl[j].timeline_variables.length).toBe(1);
-                taskTypes.push(taskType(tl[j].timeline[1].stimulus));
+                taskTypes.push(taskType(tl[j].timeline[0].stimulus));
             }
             expect(taskTypes).toContain("color");
             expect(taskTypes).toContain("font size");
@@ -175,6 +174,31 @@ function taskType(stimulus) {
     return "unknown";
 }
 
+describe("TaskSwitching for exercise block", () => {
+    beforeEach(() => {
+        jest.spyOn(global.Math, 'random').mockReturnValue(0.4); // forces big/blue/>5 to be assigned to left arrow key
+        jest.useFakeTimers("legacy");
+        const tl = (new TaskSwitching(1)).getTimeline();
+        jsPsych.init({timeline: [tl[12]] }); // 12 is the first exercise block
+    });
+    afterEach(() => {
+        jest.spyOn(global.Math, 'random').mockRestore();
+        jest.useRealTimers();
+    });
+    it("should tell users they answered correctly when they respond to an exercise block cue correctly", () => {
+        doTrial(true);
+         // fixation -> feedback
+         jest.advanceTimersByTime(501);
+         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Correct/);
+     });
+     it("should tell users they answered incorrectly when they respond to an exercise block cue incorrectly", () => {
+         doTrial(false);
+         // fixation -> feedback
+         jest.advanceTimersByTime(501);
+         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Incorrect/);
+     });
+});
+
 describe("TaskSwitching with mocked Math.random", () => {
     beforeEach(() => {
         jest.spyOn(global.Math, 'random').mockReturnValue(0.4); // forces big/blue/>5 to be assigned to left arrow key
@@ -199,20 +223,6 @@ describe("TaskSwitching with mocked Math.random", () => {
         pressKey("ArrowRight");
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/That is the correct answer/);
     });
-    it("should tell users they answered correctly when they respond to a cue correctly", () => {
-       doFirstTrial(true);
-
-        // fixation -> feedback
-        jest.advanceTimersByTime(501);
-        expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Correct/);
-    });
-    it("should tell users they answered incorrectly when they respond to a cue incorrectly", () => {
-        doFirstTrial(false);
-
-        // fixation -> feedback
-        jest.advanceTimersByTime(501);
-        expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Incorrect/);
-    });
     it("should tell users to respond faster if they don't respond to a cue within 2500ms", () => {
         doTraining();
 
@@ -227,6 +237,12 @@ describe("TaskSwitching with mocked Math.random", () => {
         // fixation -> feedback
         jest.advanceTimersByTime(501);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Answer faster next time/);
+    });
+    it("should not give users correct/incorrect feedback if the trial is not part of the exercise block", () => {
+        doFirstTrial(true);
+        // fixation -> next trial fixation
+        jest.advanceTimersByTime(501);
+        expect(jsPsych.getDisplayElement().innerHTML).not.toMatch(/Correct/);
     });
     it("should have at least one result marked isRelevant", () => {
         doFirstTrial(false);
@@ -290,7 +306,7 @@ describe("TaskSwitching with mocked Math.random", () => {
         }
         // do the exercise nodes
         for (let i=0; i<16; i++) {
-            doTrial(false, true);
+            doTrial(false, true, true);
         }
         pressKey(" ");
         doTrial(false, false); // first mixed trial
@@ -300,26 +316,17 @@ describe("TaskSwitching with mocked Math.random", () => {
     });
     describe("trial structure should consist of", () => {
         const dispElem = jsPsych.getDisplayElement
-        it("a 200ms fixation point", () => {
+        it("a 500ms picture describing the type of task", () => {
             doTraining();
-            jest.advanceTimersByTime(199);
-            const fixHtml = dispElem().innerHTML;
-            expect(dispElem().innerHTML).toMatch(/<div class=\"fix\">+/);
-            jest.advanceTimersByTime(2);
-            expect(dispElem().innerHTML).not.toEqual(fixHtml);
-        });
-        it("followed by a 500ms picture describing the type of task", () => {
-            doTraining();
-            jest.advanceTimersByTime(699);
             const taskDescHtml = dispElem().innerHTML;
             const stimType = taskType(taskDescHtml);
             expect(stimType === "color" || stimType === "font size" || stimType === "number").toBeTruthy();
-            jest.advanceTimersByTime(1);
+            jest.advanceTimersByTime(500);
             expect(dispElem().innerHTML).not.toEqual(taskDescHtml);
         });
         it("followed by a 2500ms number above the picture", () => {
             doTraining();
-            jest.advanceTimersByTime(3199);
+            jest.advanceTimersByTime(2999);
             const numHtml = dispElem().innerHTML;
             expect(numHtml).toMatch(/<p>[1-9]<\/p>/);
             jest.advanceTimersByTime(1);
@@ -327,7 +334,7 @@ describe("TaskSwitching with mocked Math.random", () => {
         });
         it("followed by a 500ms fixation point", () => {
             doTraining();
-            jest.advanceTimersByTime(3699);
+            jest.advanceTimersByTime(3499);
             const fixHtml = dispElem().innerHTML;
             expect(fixHtml).toMatch(/<div class=\"fix\">+/);
             jest.advanceTimersByTime(1);
@@ -335,7 +342,7 @@ describe("TaskSwitching with mocked Math.random", () => {
         });
         it("followed by a 500ms feedback screen", () => {
             doTraining();
-            jest.advanceTimersByTime(4199);
+            jest.advanceTimersByTime(3999);
             const feedbackHtml = dispElem().innerHTML;
             expect(feedbackHtml).toMatch(/Answer faster/);
             jest.advanceTimersByTime(1);
@@ -379,7 +386,7 @@ function doTraining() {
     // ready screen -> upcoming task description
     pressKey(" ");
 
-    // upcoming task description -> fixation
+    // upcoming task description -> task type promopt
     pressKey(" ");
 }
 
@@ -411,10 +418,7 @@ function doFirstTrial(correctly) {
     return [number, size, color];
 }
 
-function doTrial(correctly, fully=false) {
-    // fixation -> prompt display
-    jest.advanceTimersByTime(201);
-
+function doTrial(correctly, fully=false, isExerciseNode=false) {
     // prompt display -> stimulus
     jest.advanceTimersByTime(501);
     
@@ -447,11 +451,15 @@ function doTrial(correctly, fully=false) {
     }
 
     if (fully) {
-        // fixation -> feedback
+        // fixation -> feedback or next prompt
         jest.advanceTimersByTime(500);
 
-        // feedback -> next prompt
-        jest.advanceTimersByTime(500);
+        if (isExerciseNode) { // only exercise nodes show feedback and post-feedback fixation
+            // feedback -> fixation
+            jest.advanceTimersByTime(500);
+            // fixation -> next prompt
+            jest.advanceTimersByTime(200);
+        }
     }
 
     return [number, size, color];

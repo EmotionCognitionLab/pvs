@@ -18,9 +18,9 @@ provider:
     authorizers:
       serviceAuthorizer:
         identitySource: $request.header.Authorization
-        issuerUrl: 'https://cognito-idp.${self:provider.region}.amazonaws.com/${ssm:/info/cognito/user-pool/id}'
+        issuerUrl: 'https://cognito-idp.${self:provider.region}.amazonaws.com/${ssm:/${self:service}/${self:provider.stage}/info/cognito/user-pool/id}'
         audience:
-          - ${ssm:/info/cognito/user-pool/client/id}
+          - ${ssm:/${self:service}/${self:provider.stage}/info/cognito/user-pool/client/id}
 
 plugins:
   - serverless-ssm-publish
@@ -30,16 +30,16 @@ functions:
     handler: process-lumosity-emails.saveattachments
     events:
       - s3:
-          bucket: ${ssm:/info/lambda/ses/bucket}
+          bucket: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ses/bucket}
           event: s3:ObjectCreated:*
           rules:
-            - prefix: ${ssm:/info/lambda/ses/prefix}
+            - prefix: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ses/prefix}
           existing: true
     environment:
-      DEST_BUCKET: ${ssm:/info/lambda/ses/bucket}
+      DEST_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ses/bucket}
       DEST_PREFIX: reports
       S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
-    role: ${ssm:/role/lambda/ses/process}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/ses/process}
     package:
       patterns:
         - 'process-lumosity-emails/package*.json'
@@ -49,9 +49,9 @@ functions:
   write-user-on-verify:
     handler: on-user-verify/verified.handler
     environment:
-      USERS_TABLE: ${ssm:/info/dynamo/table/users}
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
-    role: ${ssm:/role/lambda/dynamodb}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb}
     package:
       patterns:
         - 'on-user-verify/*.js'
@@ -64,9 +64,9 @@ functions:
           path: /user
           authorizer: serviceAuthorizer
     environment:
-      USERS_TABLE: ${ssm:/info/dynamo/table/users}
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
-    role: ${ssm:/role/lambda/dynamodb}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb}
     package:
       patterns:
         - 'api/*.js'
@@ -78,20 +78,20 @@ resources:
       Properties:
         Action: lambda:InvokeFunction
         Principal: cognito-idp.amazonaws.com
-        SourceArn: ${ssm:/info/cognito/user-pool/arn}
+        SourceArn: ${ssm:/${self:service}/${self:provider.stage}/info/cognito/user-pool/arn}
         FunctionName: ${self:service}-${self:provider.stage}-write-user-on-verify
   Outputs:
     PostConfirmationLambdaArn:
       Value: !GetAtt WriteDashuserDashonDashverifyLambdaFunction.Arn
       Export:
-        Name: 'post-confirmation-lambda-arn'
+        Name: "${self:service}-${self:provider.stage}-post-confirmation-lambda-arn"
       Description: Arn for the post-cognito-verification lambda trigger
 
 custom:
   ssmPublish:
     enabled: true
     params:
-      - path: /info/lambdas/write-user-on-verify/arn
+      - path: /${self:service}/${self:provider.stage}/info/lambdas/write-user-on-verify/arn
         source: PostConfirmationLambdaArn
         description: Arn for the post-cognito-verification lambda trigger
 
