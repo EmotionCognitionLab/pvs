@@ -26,12 +26,12 @@ export class SpatialOrientation {
         const t = this.constructor.trial;
         const stimulus = this.constructor.stimulus;
         // example
-        const [exampleTrialStim] = stimulus.example.example["0"].trials;
+        const [exampleTrialStim] = stimulus.example.trials[0];
         const exampleBlock = [
             t(exampleTrialStim.center, exampleTrialStim.facing, exampleTrialStim.target, "example", sample_instruction_html),
         ];
         // practice
-        const practiceSet = stimulus.practice.practice["0"];
+        const practiceSet = stimulus.practice;
         const practiceStim = (
             practiceSet.order === "random" ?
             jsPsych.randomization.shuffle(practiceSet.trials) :
@@ -42,7 +42,7 @@ export class SpatialOrientation {
             ...practiceStim.map(s => t(s.center, s.facing, s.target, "practice")),
         ];
         // test
-        const testSet = stimulus.pre.main[String(this.setNum)];
+        const testSet = stimulus["test-sets"][String(this.setNum)];
         const testStim = (
             testSet.order === "random" ?
             jsPsych.randomization.shuffle(testSet.trials) :
