@@ -63,7 +63,8 @@ async function getAllResultsForCurrentUser(session) {
     try {
         await credentials.refreshPromise();
         const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-        let ExclusiveStartKey, dynResults, allResults;
+        let ExclusiveStartKey, dynResults
+        let allResults = [];
 
         do {
             const params = {
