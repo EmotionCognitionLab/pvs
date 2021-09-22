@@ -113,7 +113,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
-  range_key      = "userDateTimeExperiment"
+  range_key      = "experimentDateTimeUser"
 
   attribute {
     name = "identityId"
@@ -121,7 +121,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 
   attribute {
-    name = "userDateTimeExperiment"
+    name = "experimentDateTimeUser"
     type = "S"
   }
 }
