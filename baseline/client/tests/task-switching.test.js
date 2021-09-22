@@ -454,9 +454,11 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
         // fixation -> feedback or next prompt
         jest.advanceTimersByTime(500);
 
-        if (isExerciseNode) { // only exercise nodes show feedback
-            // feedback -> next prompt
+        if (isExerciseNode) { // only exercise nodes show feedback and post-feedback fixation
+            // feedback -> fixation
             jest.advanceTimersByTime(500);
+            // fixation -> next prompt
+            jest.advanceTimersByTime(200);
         }
     }
 

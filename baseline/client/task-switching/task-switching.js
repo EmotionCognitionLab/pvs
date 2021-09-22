@@ -328,7 +328,9 @@ TaskSwitching.feedback = (showRightWrong) => ({
         choices: jsPsych.NO_KEYS,
         trial_duration: 500,
         css_classes: ["small"]
-    }],
+    },
+    TaskSwitching.fixation(200)
+    ],
     conditional_function: function() {
         const data = jsPsych.data.getLastTimelineData();
         const values = data.last(2).values()[0];
