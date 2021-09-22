@@ -94,7 +94,7 @@ describe("parseField helper", () => {
     const parseField = jsPsych.plugins["percent-sum"].parseField;
 
     it("is defined", () => {
-        expect(parseField).toBeDefined;
+        expect(parseField).toBeDefined();
     });
 
     it("returns NaN on empty string", () => {
