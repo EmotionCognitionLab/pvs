@@ -208,15 +208,6 @@ async function verbalLearningEndTime() {
     if (vlResults.length === 0) {
         return 0;
     }
-    vlResults.sort((r1, r2) => {
-        if (r1.dateTime < r2.dateTime) {
-            return -1;
-        }
-        if (r1.dateTime > r2.dateTime) {
-            return 1;
-        }
-        return 0;
-    });
     const last = vlResults[vlResults.length - 1];
     const parsedDate = Date.parse(last.dateTime);
     return parsedDate;
