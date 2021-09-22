@@ -17,7 +17,7 @@ jsPsych.plugins["countdown"] = (() => {
 
     plugin.timestamp = ms => {
         const divmod = (a, b) => [Math.floor(a / b), a % b];
-        const [quoMinutes, modSeconds] = divmod(1000 * ms, 60);
+        const [quoMinutes, modSeconds] = divmod(ms / 1000, 60);
         const [quoHours, modMinutes] = divmod(quoMinutes, 60);
         const zfloor = x => Math.max(Math.floor(x), 0);
         const h = String(zfloor(quoHours));
