@@ -101,6 +101,50 @@ async function getAllResultsForCurrentUser(session) {
     }
 }
 
+async function getExperimentResultsForCurrentUser(session, expName) {
+    const credentials = getCredentialsForSession(session);
+
+    try {
+        await credentials.refreshPromise();
+        const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
+        let ExclusiveStartKey, dynResults
+        let allResults = [];
+
+        do {
+            const params = {
+                TableName: awsSettings.ExperimentTable,
+                ExclusiveStartKey,
+                FilterExpression: "identityId = :idKey and  contains (userDateTimeExperiment, :expName)",
+                ExpressionAttributeValues: { ':idKey': credentials.identityId, ':expName': expName }
+            };
+            dynResults = await docClient.scan(params).promise();
+            ExclusiveStartKey = dynResults.LastEvaluatedKey;
+            const results = dynResults.Items.map(i => {
+                const parts = i.userDateTimeExperiment.split('|');
+                if (parts.length != 4) {
+                    throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected four parts, but found ${parts.length}.`)
+                }
+                // cognito sub id is parts[0]
+                const dateTime = parts[1];
+                const experiment = parts[2];
+                // index of result in original results list is parts[3] (exists only for uniqueness)
+                return {
+                    experiment: experiment,
+                    dateTime: dateTime,
+                    isRelevant: i.isRelevant,
+                    results: i.results
+                }
+            });
+            allResults = [...allResults, ...results];
+        } while (dynResults.LastEvaluatedKey)
+        
+        return allResults;
+    } catch (err) {
+        console.error(err); // TODO implement remote error logging
+        throw err;
+    }
+}
+
 function getCredentialsForSession(session) {
     const idToken = session.getIdToken().getJwtToken();
     const credentials = new AWS.CognitoIdentityCredentials({
@@ -120,4 +164,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser }
