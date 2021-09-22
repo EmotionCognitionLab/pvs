@@ -1,4 +1,5 @@
 import "@adp-psych/jspsych/jspsych.js";
+import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
 import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
@@ -48,45 +49,39 @@ export class VerbalLearning {
             throw new Error("setNum must be a strictly positive integer");
         }
         // validate segmentNum and compute startTime
+        if (segmentNum < 1 || segmentNum > 3) throw new Error("segmentNum must be in 1..3");
         this.segmentNum = segmentNum;
-        if (this.segmentNum === 1) {
-            this.getStartTime = () => 0;
-        } else if (this.segmentNum === 2) {
-            this.getStartTime = (() => {
-                let memo = null;
-                return () => {
-                    if (memo === null) {
-                        memo = getLastSegmentEndTime() + 20 * 60 * 1000;  // 20 minutes since last
-                    }
-                    return memo;
-                };
-            })();
-        } else if (this.segmentNum === 3) {
-            this.getStartTime = (() => {
-                let memo = null;
-                return () => {
-                    if (memo === null) {
-                        memo = getLastSegmentEndTime() + 10 * 60 * 1000;  // 10 minutes since last
-                    }
-                    return memo;
-                };
-            })();
-        } else {
-            throw new Error("segmentNum must be in 1..3");
-        }
+        this.getLastSegmentEndTime = getLastSegmentEndTime;
     }
 
     getTimeline() {
+        const glset = this.getLastSegmentEndTime.bind(this);
         const segmentCountdownNode = {
             timeline: [{
-                type: "countdown",
-                duration: () => this.getStartTime() - Date.now(),
-            }],
-            conditional_function: () => Date.now() < this.getStartTime(),
+                type: "call-function",
+                async: true,
+                func: async function(done) {
+                    const lastSegEndTime = await glset();
+                    const dur = lastSegEndTime - Date.now();
+                    done({duration: dur});
+                }
+            },
+            {
+                timeline: [{
+                    type: "countdown",
+                    duration: function() {
+                        const data = jsPsych.data.get().last(1).values()[0];
+                        return data.value.duration;
+                    }
+                }],
+                conditional_function: function() {
+                    const data = jsPsych.data.get().last(1).values()[0];
+                    return data.value.duration > 0;
+                }
+            }]
         };
         if (this.segmentNum === 1) {
             return [
-                segmentCountdownNode,
                 this.constructor.preload,
                 this.constructor.introduction,
                 this.constructor.instruction(instruction_a_immediate_html),  // 1
@@ -143,7 +138,10 @@ export class VerbalLearning {
     }
 
     get taskName() {
-        return this.constructor.taskName;
+        if (this.segmentNum === 1) {
+            return this.constructor.taskName + "-learning";
+        }
+        return this.constructor.taskName + "-recall";
     }
 }
 

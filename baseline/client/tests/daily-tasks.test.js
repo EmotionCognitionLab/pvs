@@ -184,10 +184,6 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("panas", {});
         expect(result instanceof Panas).toBe(true);
     });
-    it("returns a VerbalLearning object for verbal-learning", () => {
-        const result = dailyTasks.taskForName("verbal-learning", {});
-        expect(result instanceof VerbalLearning).toBe(true);
-    });
     it("returns a TaskSwitching object for task-switching", () => {
         const result = dailyTasks.taskForName("task-switching", {});
         expect(result instanceof TaskSwitching).toBe(true);
@@ -271,6 +267,25 @@ describe("taskForName for pattern-separation", () => {
     it("defaults to set 1 if no set number is provided", () => {
         const set1Task = dailyTasks.taskForName("pattern-separation-learning", {setNum: 1});
         const noSetTask = dailyTasks.taskForName("pattern-separation-learning", {});
+        expect(set1Task.setNum).toBe(1);
+        expect(noSetTask.setNum).toBe(1);
+    });
+});
+
+describe("taskForName for verbal-learning", () => {
+    it("returns a VerbalLearning object for verbal-learning-learning", () => {
+        const result = dailyTasks.taskForName("verbal-learning-learning", {});
+        expect(result instanceof VerbalLearning).toBe(true);
+    });
+
+    it("returns a VerbalLearning object for verbal-learning-recall", () => {
+        const result = dailyTasks.taskForName("verbal-learning-recall", {});
+        expect(result instanceof VerbalLearning).toBe(true);
+    });
+
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Task = dailyTasks.taskForName("verbal-learning-learning", {setNum: 1});
+        const noSetTask = dailyTasks.taskForName("verbal-learning-learning", {});
         expect(set1Task.setNum).toBe(1);
         expect(noSetTask.setNum).toBe(1);
     });
