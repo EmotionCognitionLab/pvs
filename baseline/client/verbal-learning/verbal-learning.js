@@ -61,18 +61,8 @@ export class VerbalLearning {
                     return memo;
                 };
             })();
-        } else if (this.segmentNum === 3) {
-            this.getStartTime = (() => {
-                let memo = null;
-                return () => {
-                    if (memo === null) {
-                        memo = getLastSegmentEndTime() + 10 * 60 * 1000;  // 10 minutes since last
-                    }
-                    return memo;
-                };
-            })();
         } else {
-            throw new Error("segmentNum must be in 1..3");
+            throw new Error("segmentNum must be in 1..2");
         }
     }
 
@@ -86,7 +76,6 @@ export class VerbalLearning {
         };
         if (this.segmentNum === 1) {
             return [
-                segmentCountdownNode,
                 this.constructor.preload,
                 this.constructor.introduction,
                 this.constructor.instruction(instruction_a_immediate_html),  // 1
@@ -131,14 +120,10 @@ export class VerbalLearning {
                 this.constructor.remember(remember_a_cue_traveling_html),
                 this.constructor.instruction(instruction_a_cue_animal_html),
                 this.constructor.remember(remember_a_cue_animal_html),
-            ];
-        } else if (this.segmentNum === 3) {
-            return [
-                segmentCountdownNode,
                 this.constructor.completion,
             ];
         } else {
-            throw new Error("segmentNum must be in 1..3");
+            throw new Error("segmentNum must be in 1..2");
         }
     }
 
@@ -201,9 +186,8 @@ VerbalLearning.completion = {
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
         timeline: [
-            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 1).getTimeline()},
             {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
-            {timeline: new VerbalLearning(1, 3, () => Date.now()).getTimeline()},
         ],
         on_finish: () => { jsPsych.data.displayData("json"); },
     });

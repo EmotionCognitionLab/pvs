@@ -5,9 +5,8 @@ import { clickContinue } from "./utils.js";
 describe("verbal-learning", () => {
     it("results should have at least one result marked isRelevant", () => {
         const timeline = [
-            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 1).getTimeline()},
             {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
-            {timeline: new VerbalLearning(1, 3, () => Date.now()).getTimeline()},
         ];
         const timelineHasRelevantData = timeline => {
             for (const node of timeline) {
