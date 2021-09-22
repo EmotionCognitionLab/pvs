@@ -11,7 +11,7 @@ describe("timestamp helper", () => {
     const timestamp = jsPsych.plugins["countdown"].timestamp;
 
     it("is defined", () => {
-        expect(timestamp).toBeDefined;
+        expect(timestamp).toBeDefined();
     });
 
     it("works correctly", () => {
