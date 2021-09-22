@@ -20,7 +20,7 @@ function saveResults(session, experiment, results) {
         putRequests.push({
             PutRequest: {
                 Item: {
-                    userDateTimeExperiment: `${subId}|${now}|${experiment}|${idx}`,
+                    experimentDateTimeUser: `${experiment}|${now}|${subId}|${idx}`,
                     identityId: credentials.identityId,
                     results: r,
                     isRelevant: isRelevant
@@ -76,13 +76,13 @@ async function getAllResultsForCurrentUser(session) {
             dynResults = await docClient.query(params).promise();
             ExclusiveStartKey = dynResults.LastEvaluatedKey;
             const results = dynResults.Items.map(i => {
-                const parts = i.userDateTimeExperiment.split('|');
+                const parts = i.experimentDateTimeUser.split('|');
                 if (parts.length != 4) {
-                    throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected four parts, but found ${parts.length}.`)
+                    throw new Error(`Unexpected experimentDateTimeUser value: ${i.experimentDateTimeUser}. Expected four parts, but found ${parts.length}.`)
                 }
-                // cognito sub id is parts[0]
+                const experiment = parts[0];
                 const dateTime = parts[1];
-                const experiment = parts[2];
+                // cognito sub id is parts[2]
                 // index of result in original results list is parts[3] (exists only for uniqueness)
                 return {
                     experiment: experiment,
@@ -94,7 +94,15 @@ async function getAllResultsForCurrentUser(session) {
             allResults = [...allResults, ...results];
         } while (dynResults.LastEvaluatedKey)
         
-        return allResults;
+        return allResults.sort((r1, r2) => {
+            if (r1.dateTime < r2.dateTime) {
+                return -1
+            }
+            if (r1.dateTime > r2.dateTime) {
+                return 1;
+            }
+            return 0;
+        });
     } catch (err) {
         console.error(err); // TODO implement remote error logging
         throw err;
