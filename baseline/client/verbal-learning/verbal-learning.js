@@ -62,7 +62,7 @@ export class VerbalLearning {
                 async: true,
                 func: async function(done) {
                     const lastSegEndTime = await glset();
-                    const dur = lastSegEndTime - Date.now();
+                    const dur = (lastSegEndTime + (20 * 60 * 1000))  - Date.now();
                     done({duration: dur});
                 }
             },
