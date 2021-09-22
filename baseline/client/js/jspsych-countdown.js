@@ -16,9 +16,14 @@ jsPsych.plugins["countdown"] = (() => {
     };
 
     plugin.timestamp = ms => {
-        const minutes = Math.max(Math.floor((ms / 1000) / 60), 0);
-        const seconds = Math.max(Math.floor((ms / 1000) % 60), 0);
-        return `${minutes}:${String(seconds).padStart(2, "0")}`;
+        const divmod = (a, b) => [Math.floor(a / b), a % b];
+        const [quoMinutes, modSeconds] = divmod(1000 * ms, 60);
+        const [quoHours, modMinutes] = divmod(quoMinutes, 60);
+        const zfloor = x => Math.max(Math.floor(x), 0);
+        const h = String(zfloor(quoHours));
+        const mm = String(zfloor(modMinutes)).padStart(2, "0");
+        const ss = String(zfloor(modSeconds)).padStart(2, "0");
+        return `${h}:${mm}:${ss}`;
     };
 
     plugin.trial = (display_element, trial) => {
