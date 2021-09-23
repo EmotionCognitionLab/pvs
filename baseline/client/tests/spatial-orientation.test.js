@@ -13,10 +13,11 @@ describe("spatial-orientation", () => {
                 expect(SpatialOrientation.scenePositions[name]).toBeDefined();
             });
         };
-        const allTrials = Object.values(SpatialOrientation.stimulus)
-            .flatMap(phase => Object.values(phase))
-            .flatMap(category => Object.values(category))
-            .flatMap(set => set.trials);
+        const allTrials = [
+            ...SpatialOrientation.stimulus.example.trials,
+            ...SpatialOrientation.stimulus.practice.trials,
+            ...Object.values(SpatialOrientation.stimulus["test-sets"]).flatMap(set => set.trials),
+        ]
         allTrials.forEach(validateTrial);
     });
 });
