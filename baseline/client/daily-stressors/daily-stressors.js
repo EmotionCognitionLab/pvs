@@ -4,16 +4,12 @@ import "@adp-psych/jspsych/plugins/jspsych-survey-multi-choice.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-survey-multi-choice-patch.css";
 import "./style.css";
-import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
-import completion_html from "./frag/completion.html";
 
 export class DailyStressors {
     getTimeline() {
         return [
-            this.constructor.introduction,
             this.constructor.questionnaire,
-            this.constructor.completion,
         ];
     }
 
@@ -23,12 +19,6 @@ export class DailyStressors {
 }
 
 DailyStressors.taskName = "daily-stressors";
-
-DailyStressors.introduction = {
-    type: "html-button-response",
-    stimulus: introduction_html,
-    choices: ["Continue"],
-};
 
 DailyStressors.binaryPrompts = [
     "Did you have an argument or disagreement with anyone since this time yesterday?",
@@ -58,13 +48,6 @@ DailyStressors.questionnaire = {
     ],
     data: { isRelevant: true },
 };
-
-DailyStressors.completion = {
-    type: "html-button-response",
-    stimulus: completion_html,
-    choices: ["Finish"],
-};
-
 
 if (window.location.href.includes(DailyStressors.taskName)) {
     jsPsych.init({
