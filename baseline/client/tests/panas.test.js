@@ -4,13 +4,8 @@ import { Panas } from "../panas/panas.js";
 describe("panas", () => {
     it("results should have at least one result marked isRelevant", () => {
         const timeline = (new Panas()).getTimeline();
-        expect(timeline.length).toBe(3);
+        expect(timeline.length).toBe(1);
         jsPsych.init({timeline: timeline});
-
-        // welcome screen
-        const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
-        expect(buttons.length).toBe(1);
-        buttons[0].click();  // continue button
 
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();

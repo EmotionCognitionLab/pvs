@@ -288,9 +288,7 @@ describe("doing the tasks", () => {
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // welcome screen
-        clickContinue();
-
+        
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();
         const questions = dispElem.querySelectorAll(".jspsych-survey-likert-options");
@@ -302,9 +300,6 @@ describe("doing the tasks", () => {
             buttons[0].click();
         }
         clickContinue("input[type=submit]");
-
-        // finished screen
-        clickContinue();
 
         expect(saveResultsMock.mock.calls.length).toBe(2);
         // the experiment name saved to the results should be the name of the first task in allTimelines

@@ -4,16 +4,12 @@ import "@adp-psych/jspsych/plugins/jspsych-survey-likert.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-survey-likert-patch.css";
 import "./style.css";
-import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
-import completion_html from "./frag/completion.html";
 
 export class Panas {
     getTimeline() {
         return [
-            this.constructor.introduction,
             this.constructor.questionnaire,
-            this.constructor.completion,
         ];
     }
 
@@ -23,12 +19,6 @@ export class Panas {
 }
 
 Panas.taskName = "panas";
-
-Panas.introduction = {
-    type: "html-button-response",
-    stimulus: introduction_html,
-    choices: ["Continue"],
-};
 
 Panas.labels = [
     "Very slightly or not at all",
@@ -70,13 +60,6 @@ Panas.questionnaire = {
     ].map(Panas.question),
     data: { isRelevant: true },
 };
-
-Panas.completion = {
-    type: "html-button-response",
-    stimulus: completion_html,
-    choices: ["Finish"],
-};
-
 
 if (window.location.href.includes(Panas.taskName)) {
     jsPsych.init({
