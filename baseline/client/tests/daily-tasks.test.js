@@ -3,6 +3,7 @@
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Dass } from "../dass/dass";
 import { FaceName } from "../face-name/face-name.js";
+import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
@@ -172,6 +173,10 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("dass", {});
         expect(result instanceof Dass).toBe(true);
     });
+    it("returns a Ffmq object for ffmq", () => {
+        const result = dailyTasks.taskForName("ffmq", {});
+        expect(result instanceof Ffmq).toBe(true);
+    })
     it("returns a MoodMemory object for mood-memory", () => {
         const result = dailyTasks.taskForName("mood-memory", {});
         expect(result instanceof MoodMemory).toBe(true);
