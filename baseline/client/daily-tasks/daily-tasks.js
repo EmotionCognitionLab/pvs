@@ -10,7 +10,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
-import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
@@ -27,7 +27,7 @@ const set1 = ["panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "ver
 const set2 = ["panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
 const set4 = ["panas", "daily-stressors", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
-const set5 = ["panas", "daily-stressors", "mindfulness", "verbal-learning", "face-name", "n-back", "mind-in-eyes", "face-name", "spatial-orientation", "verbal-fluency", "flanker"];
+const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning-recall"];
 const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
 const allSets = [set1, set2, set3, set4, set5, set6];
 const setFinished = "set-finished";
@@ -35,6 +35,7 @@ const setStarted = "set-started";
 const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
+let userSession;
 
 /**
  * 
@@ -192,12 +193,24 @@ function taskForName(name, options) {
             const rand = Math.floor(Math.random() * availableLettersArr.length);
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
-        case "verbal-learning":
-            return new VerbalLearning(1, 1, () => 0);  // TODO: fix this!
+        case "verbal-learning-learning":
+            return new VerbalLearning(options.setNum || 1, 1, () => 0);
+        case "verbal-learning-recall":
+            return new VerbalLearning(options.setNum || 1, 2, verbalLearningEndTime.bind(this));
         default:
            // throw new Error(`Unknown task type: ${name}`);
            return {getTimeline: () => taskNotAvailable(name), taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
     }
+}
+
+async function verbalLearningEndTime() {
+    const vlResults = await getExperimentResultsForCurrentUser(userSession, 'verbal-learning-learning');
+    if (vlResults.length === 0) {
+        return 0;
+    }
+    const last = vlResults[vlResults.length - 1];
+    const parsedDate = Date.parse(last.dateTime);
+    return parsedDate;
 }
 
 
@@ -234,6 +247,7 @@ function init() {
 async function doAll(session) {
     // pre-fetch all results before doing browser check to avoid
     // lag after btowser check sends them to start experiments
+    userSession = session;
     const allResults = await getAllResultsForCurrentUser(session);
     browserCheck.run(startTasks.bind(null, allResults));
 }

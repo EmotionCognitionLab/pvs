@@ -20,7 +20,7 @@ function saveResults(session, experiment, results) {
         putRequests.push({
             PutRequest: {
                 Item: {
-                    userDateTimeExperiment: `${subId}|${now}|${experiment}|${idx}`,
+                    experimentDateTimeUser: `${experiment}|${now}|${subId}|${idx}`,
                     identityId: credentials.identityId,
                     results: r,
                     isRelevant: isRelevant
@@ -57,39 +57,68 @@ function saveResults(session, experiment, results) {
     });
 }
 
-async function getAllResultsForCurrentUser(session) {
+async function getResultsForCurrentUser(session, expName=null) {
     const credentials = getCredentialsForSession(session);
 
     try {
         await credentials.refreshPromise();
         const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-        const params = {
-            TableName: awsSettings.ExperimentTable,
-            KeyConditionExpression: `identityId = :idKey`,
-            ExpressionAttributeValues: { ':idKey': credentials.identityId }
-        };
-        const dynResults = await docClient.query(params).promise();
-        const results = dynResults.Items.map(i => {
-            const parts = i.userDateTimeExperiment.split('|');
-            if (parts.length != 4) {
-                throw new Error(`Unexpected userDateTimeExperiment value: ${i.userDateTimeExperiment}. Expected four parts, but found ${parts.length}.`)
+        let ExclusiveStartKey, dynResults
+        let allResults = [];
+
+        do {
+            const params = {
+                TableName: awsSettings.ExperimentTable,
+                ExclusiveStartKey,
+                KeyConditionExpression: `identityId = :idKey`,
+                ExpressionAttributeValues: { ':idKey': credentials.identityId }
+            };
+            if (expName !== null) {
+                params.KeyConditionExpression += " and begins_with(experimentDateTimeUser, :expName)";
+                params.ExpressionAttributeValues[":expName"] = expName;
             }
-            // cognito sub id is parts[0]
-            const dateTime = parts[1];
-            const experiment = parts[2];
-            // index of result in original results list is parts[3] (exists only for uniqueness)
-            return {
-                experiment: experiment,
-                dateTime: dateTime,
-                isRelevant: i.isRelevant,
-                results: i.results
+            dynResults = await docClient.query(params).promise();
+            ExclusiveStartKey = dynResults.LastEvaluatedKey;
+            const results = dynResults.Items.map(i => {
+                const parts = i.experimentDateTimeUser.split('|');
+                if (parts.length != 4) {
+                    throw new Error(`Unexpected experimentDateTimeUser value: ${i.experimentDateTimeUser}. Expected four parts, but found ${parts.length}.`)
+                }
+                const experiment = parts[0];
+                const dateTime = parts[1];
+                // cognito sub id is parts[2]
+                // index of result in original results list is parts[3] (exists only for uniqueness)
+                return {
+                    experiment: experiment,
+                    dateTime: dateTime,
+                    isRelevant: i.isRelevant,
+                    results: i.results
+                }
+            });
+            allResults = [...allResults, ...results];
+        } while (dynResults.LastEvaluatedKey)
+        
+        return allResults.sort((r1, r2) => {
+            if (r1.dateTime < r2.dateTime) {
+                return -1
             }
+            if (r1.dateTime > r2.dateTime) {
+                return 1;
+            }
+            return 0;
         });
-        return results;
     } catch (err) {
         console.error(err); // TODO implement remote error logging
         throw err;
     }
+}
+
+async function getAllResultsForCurrentUser(session) {
+    return getResultsForCurrentUser(session);
+}
+
+async function getExperimentResultsForCurrentUser(session, expName) {
+    return getResultsForCurrentUser(session, expName);
 }
 
 function getCredentialsForSession(session) {
@@ -111,4 +140,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser }
