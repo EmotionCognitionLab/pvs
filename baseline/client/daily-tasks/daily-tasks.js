@@ -194,7 +194,7 @@ function taskForName(name, options) {
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
         case "verbal-learning-learning":
-            return new VerbalLearning(options.setNum || 1, 1, () => 0);
+            return new VerbalLearning(options.setNum || 1, 1);
         case "verbal-learning-recall":
             return new VerbalLearning(options.setNum || 1, 2, verbalLearningEndTime.bind(this));
         default:

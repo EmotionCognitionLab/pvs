@@ -41,7 +41,7 @@ import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
 import remember_a_long_html from "./frag/remember_a_long.html";
 
 export class VerbalLearning {
-    constructor(setNum, segmentNum, getLastSegmentEndTime) {
+    constructor(setNum, segmentNum, getLastSegmentEndTime = null) {
         // validate setNum
         if (Number.isInteger(setNum) && setNum > 0) {
             this.setNum = setNum;
@@ -49,9 +49,15 @@ export class VerbalLearning {
             throw new Error("setNum must be a strictly positive integer");
         }
         // validate segmentNum and compute startTime
-        if (segmentNum < 1 || segmentNum > 2) throw new Error("segmentNum must be in 1..2");
+        if (segmentNum < 1 || segmentNum > 2) {
+            throw new Error("segmentNum must be in 1..2");
+        } else if (segmentNum === 1 && getLastSegmentEndTime !== null) {
+            throw new Error("getLastSegmentEndTime must be null if segmentNum is 1");
+        } else if (segmentNum === 2 && getLastSegmentEndTime === null) {
+            throw new Error("getLastSegmentEndTime must not be null if segmentNum is 2");
+        }
         this.segmentNum = segmentNum;
-        this.getLastSegmentEndTime = getLastSegmentEndTime;
+        this.getLastSegmentEndTime = getLastSegmentEndTime ?? (() => 0);
     }
 
     getTimeline() {
@@ -195,7 +201,7 @@ VerbalLearning.completion = {
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
         timeline: [
-            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
+            {timeline: new VerbalLearning(1, 1).getTimeline()},
             {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
         ],
         on_finish: () => { jsPsych.data.displayData("json"); },
