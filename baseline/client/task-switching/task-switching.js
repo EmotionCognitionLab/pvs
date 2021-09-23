@@ -6,10 +6,7 @@ import pre_exer_instr from "./frag/pre_exercise_instruction.html";
 import pre_mix_instr from "./frag/pre_mixed_instruction.html";
 
 export class TaskSwitching {
-    constructor() {
-        // blueLeft, bigLeft (big as in font and as in numeric value)
-        this.bLeft = Math.random() < 0.5; // TODO find a better name
-    }
+    constructor() {}
 
     getTimeline() {
         const options = ["color", "number", "size"];
@@ -85,13 +82,13 @@ export class TaskSwitching {
     promptHtml(taskType) {
         switch (taskType) {
             case "color":
-                const dotColors = this.bLeft ? ["blue", "ylw"] : ["ylw", "blue"];
+                const dotColors = ["blue", "ylw"] ;
                 return `<span class="dot ${dotColors[0]}"></span><span class="dot ${dotColors[1]}"></span>`;
             case "size":
-                const dotOrder = this.bLeft ? ["dot white", "smalldot"] : ["smalldot", "dot white"];
+                const dotOrder = ["smalldot", "dot white"];
                 return `<span class="${dotOrder[0]}"></span><span class="${dotOrder[1]}"></span>`;
             case "number":
-                const numberOrder = this.bLeft ? [">5", "<5"] : ["<5", ">5"];
+                const numberOrder = ["<5", ">5"];
                 return `<div class="small"><span class="leftVal">${numberOrder[0]}</span> <span>${numberOrder[1]}</span></div>`;
             default:
                 throw new Error(`Can't create a prompt for unknown task type '${taskType}'`);
@@ -101,46 +98,22 @@ export class TaskSwitching {
     correctResponse(taskType, cue) {
         switch(taskType) {
             case "color":
-                if (this.bLeft) {
-                    if (cue.color === "blue") {
-                        return "arrowleft"
-                    } else {
-                        return "arrowright"
-                    }
+                if (cue.color === "blue") {
+                    return "arrowleft"
                 } else {
-                    if (cue.color === "blue") {
-                        return "arrowright"
-                    } else {
-                        return "arrowleft"
-                    }
+                    return "arrowright"
                 }
             case "size":
-                if (this.bLeft) {
-                    if (cue.size === "big") {
-                        return "arrowleft"
-                    } else {
-                        return "arrowright"
-                    }
+                if (cue.size === "big") {
+                    return "arrowright"
                 } else {
-                    if (cue.size === "big") {
-                        return "arrowright"
-                    } else {
-                        return "arrowleft"
-                    }
+                    return "arrowleft"
                 }
             case "number":
-                if (this.bLeft) {
-                    if (cue.number > 5) {
-                        return "arrowleft"
-                    } else {
-                        return "arrowright"
-                    }
+                if (cue.number > 5) {
+                    return "arrowright"
                 } else {
-                    if (cue.number > 5) {
-                        return "arrowright"
-                    } else {
-                        return "arrowleft"
-                    }
+                    return "arrowleft"
                 }
             default:
                 throw new Error(`Can't determine correct response for unknown stimulus type '${taskType}'`);
@@ -175,7 +148,6 @@ export class TaskSwitching {
                 color: jsPsych.timelineVariable("color"),
                 size: jsPsych.timelineVariable("size"),
                 number: jsPsych.timelineVariable("number"),
-                bLeft: this.bLeft,
                 taskType: taskType,
                 blockType: blockType
             },
@@ -222,7 +194,7 @@ export class TaskSwitching {
         stim += "<p>" + numObj.number + "</p>";
         stim += "</div>";
         stim += this.promptHtml("number");
-        stim += `<p>Is the number presented on the screen less than or greater than 5? Please press the ${this.bLeft ? "right": "left"} arrow key if the number is less than 5 and the ${this.bLeft ? "left": "right"} arrow key if the number is greater than 5.</p>`
+        stim += "<p>Is the number presented on the screen less than or greater than 5? Please press the left arrow key if the number is less than 5 and the right arrow key if the number is greater than 5.</p>";
         return {
             type: "html-keyboard-response",
             stimulus: stim,
@@ -243,7 +215,7 @@ export class TaskSwitching {
         stim += "<p>" + numObj.number + "</p>";
         stim += "</div>";
         stim += this.promptHtml("color");
-        stim += `<p>Is the color of the number blue or yellow? Please press the ${this.bLeft ? "left": "right"} arrow key if the color is blue and the ${this.bLeft ? "right": "left"} arrow key if the color is yellow.</p>`
+        stim += "<p>Is the color of the number blue or yellow? Please press the left arrow key if the color is blue and the right arrow key if the color is yellow.</p>";
         return {
             type: "html-keyboard-response",
             stimulus: stim,
@@ -264,7 +236,7 @@ export class TaskSwitching {
         stim += "<p>" + numObj.number + "</p>";
         stim += "</div>";
         stim += this.promptHtml("size");
-        stim += `<p> Is the number displayed in a small or big font? Please press the ${this.bLeft ? "right": "left"} arrow key if the font is small and the ${this.bLeft ? "left": "right"} arrow key if the font is large.</p>`
+        stim += "<p> Is the number displayed in a small or big font? Please press the left arrow key if the font is small and the right arrow key if the font is large.</p>";
         return {
             type: "html-keyboard-response",
             stimulus: stim,
