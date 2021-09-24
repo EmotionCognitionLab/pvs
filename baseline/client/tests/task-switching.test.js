@@ -94,8 +94,6 @@ describe("TaskSwitching timeline", () => {
                 expect(tl[delayScreenIdx].timeline.length).toBe(1);
                 expect(tl[delayScreenIdx].timeline[0].trial_duration).toBe(1000);
                 expect(tl[delayScreenIdx].timeline_variables.length).toBe(15);
-            } else {
-                expect(tl[delayScreenIdx].stimulus).toMatch(/Task complete/);
             }
             delayScreenCount++;
         }

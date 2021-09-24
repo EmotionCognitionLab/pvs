@@ -23,8 +23,6 @@ export class TaskSwitching {
             mixed.forEach(m => mixedNodes.push(this.node("mixed", m, 1, i + 1)));
             if (i < 3) {
                 mixedNodes.push(this.constructor.waitTimeline);
-            } else {
-                mixedNodes.push(this.constructor.instruction("Task complete. Great job!<br><em>Press the space bar to finish</em>"));
             }
         }
         // hack to remove the black background we use for this task
@@ -179,7 +177,7 @@ export class TaskSwitching {
     }
 
     instr1Html(number, size) {
-        let text = "Ready to do a new task? In this task we will ask you to classify numbers using simple rules. You will see one number at a time, like this one:";
+        let text = "You are about to start a new task. In this task we will ask you to classify numbers using simple rules. You will see one number at a time, like this one:";
         const numberObj = this.number(number, size);
         text += `<div class="${numberObj.size} ${numberObj.color}"><p>${numberObj.number}</p></div>`;
         text += '<p>In addition to numbers, at the bottom of the screen, you will see the rule for that trial. Now let’s see what the rules are.</p>'
