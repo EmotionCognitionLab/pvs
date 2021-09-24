@@ -154,7 +154,7 @@ describe("PatternSeparation recall phase", () => {
     });
 
     it("should only show recall stimuli when isRecall is true", () => {
-        expect(recallTl.length).toBe(3);
+        expect(recallTl.length).toBe(2);
         expect(recallTl[1].timeline[0].prompt).toMatch(/1 = definitely old/)
     });
 
