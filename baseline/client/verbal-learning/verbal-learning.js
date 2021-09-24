@@ -49,7 +49,7 @@ export class VerbalLearning {
             throw new Error("setNum must be a strictly positive integer");
         }
         // validate segmentNum and compute startTime
-        if (segmentNum < 1 || segmentNum > 3) throw new Error("segmentNum must be in 1..3");
+        if (segmentNum < 1 || segmentNum > 2) throw new Error("segmentNum must be in 1..2");
         this.segmentNum = segmentNum;
         this.getLastSegmentEndTime = getLastSegmentEndTime;
     }
@@ -62,7 +62,7 @@ export class VerbalLearning {
                 async: true,
                 func: async function(done) {
                     const lastSegEndTime = await glset();
-                    const dur = (lastSegEndTime + (20 * 60 * 1000))  - Date.now();
+                    const dur = (lastSegEndTime + (20 * 60 * 1000))  - Date.now();  // 20 minutes
                     done({duration: dur});
                 }
             },
@@ -195,7 +195,7 @@ VerbalLearning.completion = {
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
         timeline: [
-            {timeline: new VerbalLearning(1, 1).getTimeline()},
+            {timeline: new VerbalLearning(1, 1, () => 0).getTimeline()},
             {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
         ],
         on_finish: () => { jsPsych.data.displayData("json"); },
