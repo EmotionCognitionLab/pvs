@@ -26,7 +26,7 @@ export class SpatialOrientation {
         const t = this.constructor.trial;
         const stimulus = this.constructor.stimulus;
         // example
-        const [exampleTrialStim] = stimulus.example.trials[0];
+        const [exampleTrialStim] = stimulus.example.trials;
         const exampleBlock = [
             t(exampleTrialStim.center, exampleTrialStim.facing, exampleTrialStim.target, "example", sample_instruction_html),
         ];
@@ -89,7 +89,6 @@ SpatialOrientation.simpleInstruction = stimulus => ({
 SpatialOrientation.trial = (center, facing, target, mode, instruction = null) => ({
     type: "spatial-orientation",
     scene: `<img src=${scene_img}>`,
-    mode: mode,
     instruction: (
         instruction !== null ?
         instruction :
@@ -103,6 +102,7 @@ SpatialOrientation.trial = (center, facing, target, mode, instruction = null) =>
         SpatialOrientation.scenePositions[center],
         SpatialOrientation.scenePositions[target],
     ),
+    mode: mode,
     data: { isRelevant: mode === "test" },
 });
 

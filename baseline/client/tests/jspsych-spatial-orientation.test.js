@@ -17,6 +17,7 @@ describe("jspsych-spatial-orientation.js plugin", () => {
                 topText: "top",
                 pointerText: "pointer",
                 targetRadians: 0,
+                mode: "test",
             }]});
             const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
             const rect = icirc.getBoundingClientRect();
