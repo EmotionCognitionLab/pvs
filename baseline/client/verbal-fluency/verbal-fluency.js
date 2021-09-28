@@ -3,10 +3,8 @@ import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "../js/jspsych-timed-writing.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-timed-writing.css";
-import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instruction.html";
 import stimulus_template_html from "./frag/stimulus-template.html";
-import completion_html from "./frag/completion.html";
 
 export class VerbalFluency {
     constructor(letter) {
@@ -26,10 +24,8 @@ export class VerbalFluency {
     
     getTimeline() {
         return [
-            this.constructor.introduction,
             this.constructor.instruction,
             this.trial(),
-            this.constructor.completion,
         ];
     }
 
@@ -40,24 +36,12 @@ export class VerbalFluency {
 
 VerbalFluency.taskName = "verbal-fluency";
 VerbalFluency.possibleLetters = ["s", "c", "f", "a", "d", "p"];
-VerbalFluency.introduction = {
-    type: "html-keyboard-response",
-    stimulus: introduction_html,
-    choices: [" "],
-};
 
 VerbalFluency.instruction = {
     type: "html-keyboard-response",
     stimulus: instruction_html,
     choices: [" "],
 };
-
-VerbalFluency.completion = {
-    type: "html-keyboard-response",
-    stimulus: completion_html,
-    choices: [" "],
-};
-
 
 if (window.location.href.includes(VerbalFluency.taskName)) {
     jsPsych.init({

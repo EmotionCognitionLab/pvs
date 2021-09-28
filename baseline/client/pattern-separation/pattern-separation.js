@@ -6,7 +6,6 @@ import introduction_html from "./frag/introduction.html";
 import practice_instructions_html from "./frag/practice_instructions.html";
 import recall_instructions_html from "./frag/recall_instructions.html";
 import actual_instructions_html from "./frag/actual_instructions.html";
-import completion_html from "./frag/completion.html";
 import stimuli from "./stimuli.json";
 import "./style.css"
 
@@ -63,7 +62,6 @@ export class PatternSeparation {
                 timeline: [this.constructor.recallStimulus(false)],
                 timeline_variables: actualRecallVariables
             },
-            this.constructor.instruction(completion_html)
         ]
     }
 

@@ -3,6 +3,7 @@
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Dass } from "../dass/dass";
 import { FaceName } from "../face-name/face-name.js";
+import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
@@ -172,6 +173,10 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("dass", {});
         expect(result instanceof Dass).toBe(true);
     });
+    it("returns a Ffmq object for ffmq", () => {
+        const result = dailyTasks.taskForName("ffmq", {});
+        expect(result instanceof Ffmq).toBe(true);
+    })
     it("returns a MoodMemory object for mood-memory", () => {
         const result = dailyTasks.taskForName("mood-memory", {});
         expect(result instanceof MoodMemory).toBe(true);
@@ -303,9 +308,7 @@ describe("doing the tasks", () => {
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // welcome screen
-        clickContinue();
-
+        
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();
         const questions = dispElem.querySelectorAll(".jspsych-survey-likert-options");
@@ -317,9 +320,6 @@ describe("doing the tasks", () => {
             buttons[0].click();
         }
         clickContinue("input[type=submit]");
-
-        // finished screen
-        clickContinue();
 
         expect(saveResultsMock.mock.calls.length).toBe(2);
         // the experiment name saved to the results should be the name of the first task in allTimelines

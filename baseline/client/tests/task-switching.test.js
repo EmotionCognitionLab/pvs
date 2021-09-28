@@ -2,35 +2,13 @@ require("@adp-psych/jspsych/jspsych.js");
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { pressKey } from "./utils.js"
 
-describe("TaskSwitching", () => {
+describe("TaskSwitching timeline", () => {
     let tl;
     const stimPat = /<div class="(big|small) (ylw|blue)"><p>2<\/p><\/div>/;
 
     beforeEach(() => {
         const ts = new TaskSwitching();
         tl = ts.getTimeline();
-    });
-    it("should assign half of the participants to indicate that numbers are blue/big font/greater than five using the left arrow key", () => {
-        const arrowKeyPat = /Please press the (left|right) arrow key/;
-        let leftCount = 0;
-        let rightCount = 0;
-        const limit = 1000;
-        for (let i = 0; i < limit; i++) {
-            const taskSwitch = new TaskSwitching();
-            const timeline = taskSwitch.getTimeline();
-            const tl1Stim = timeline[1].timeline[0].stimulus;
-            const match = tl1Stim.match(arrowKeyPat);
-            expect(match[1] === 'left' || match[1] === 'right').toBe(true);
-            if (match[1] === 'left') {
-                leftCount++;
-            } 
-            if (match[1] === 'right') {
-                rightCount++;
-            }
-        }
-        expect(leftCount).toBeGreaterThanOrEqual(371); // 99% confidence interval
-        expect(leftCount).toBeLessThanOrEqual(629);
-        expect(rightCount).toBe(limit-leftCount);
     });
     it("should have six instructional screens", () => {
         // tl[0] is intro screen, tl[1-3] should be training
@@ -116,8 +94,6 @@ describe("TaskSwitching", () => {
                 expect(tl[delayScreenIdx].timeline.length).toBe(1);
                 expect(tl[delayScreenIdx].timeline[0].trial_duration).toBe(1000);
                 expect(tl[delayScreenIdx].timeline_variables.length).toBe(15);
-            } else {
-                expect(tl[delayScreenIdx].stimulus).toMatch(/Task complete/);
             }
             delayScreenCount++;
         }
@@ -176,13 +152,11 @@ function taskType(stimulus) {
 
 describe("TaskSwitching for exercise block", () => {
     beforeEach(() => {
-        jest.spyOn(global.Math, 'random').mockReturnValue(0.4); // forces big/blue/>5 to be assigned to left arrow key
         jest.useFakeTimers("legacy");
         const tl = (new TaskSwitching(1)).getTimeline();
         jsPsych.init({timeline: [tl[12]] }); // 12 is the first exercise block
     });
     afterEach(() => {
-        jest.spyOn(global.Math, 'random').mockRestore();
         jest.useRealTimers();
     });
     it("should tell users they answered correctly when they respond to an exercise block cue correctly", () => {
@@ -199,28 +173,26 @@ describe("TaskSwitching for exercise block", () => {
      });
 });
 
-describe("TaskSwitching with mocked Math.random", () => {
+describe("TaskSwitching", () => {
     beforeEach(() => {
-        jest.spyOn(global.Math, 'random').mockReturnValue(0.4); // forces big/blue/>5 to be assigned to left arrow key
         jest.useFakeTimers("legacy");
         jsPsych.init({
             timeline: (new TaskSwitching(1)).getTimeline()
         });
     });
     afterEach(() => {
-        jest.spyOn(global.Math, 'random').mockRestore();
         jest.useRealTimers();
     });
     it("should loop instructional screens until participants get them right", () => {
         // Intro -> first training trial
         pressKey(" ");
-        // training trials always use 2, 2 < 5, >5 is assigned to left arrow, so left arrow is incorrect
-        pressKey("ArrowLeft");
+        // training trials always use 2, 2 < 5, >5 is assigned to right arrow, so right arrow is incorrect
+        pressKey("ArrowRight");
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Incorrect/);
         // Incorrect -> first training trial
         pressKey(" ");
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Is the number presented on the screen less than or greater than 5/);
-        pressKey("ArrowRight");
+        pressKey("ArrowLeft");
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/That is the correct answer/);
     });
     it("should tell users to respond faster if they don't respond to a cue within 2500ms", () => {
@@ -274,15 +246,10 @@ describe("TaskSwitching with mocked Math.random", () => {
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.number).toBe(number);
     });
-    it("should include whether big/blue/>5 numbers are assigned to the left arrow in the data field", () => {
-        doFirstTrial(true);
-        const data = jsPsych.data.get().last(1).values()[0];
-        expect(data.bLeft).toBe(true); // we mocked Math.random above to force this to be the case
-    });
     it("should include the task type in the data field", () => {
         doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
-        expect(data.taskType === "color" || data.taskType === "font size" || data.taskType === "number").toBeTruthy();
+        expect(data.taskType === "color" || data.taskType === "size" || data.taskType === "number").toBeTruthy();
     });
     it("should include the block type in the data field", () => {
         doFirstTrial(true);
@@ -357,7 +324,7 @@ function doTraining() {
     // Intro -> first training trial
     pressKey(" ");
     // training trial 1 -> training trial 1 feedback
-    pressKey("ArrowRight");
+    pressKey("ArrowLeft");
 
     // training trial 1 feedback -> training trial 2
     pressKey(" ");
@@ -375,9 +342,9 @@ function doTraining() {
     // training trial 3 -> training trial 3 feedback
     [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (size === "small") {
-        pressKey("ArrowRight");
-    } else {
         pressKey("ArrowLeft");
+    } else {
+        pressKey("ArrowRight");
     }
 
     // training trial 3 feedback -> ready screen
@@ -434,16 +401,16 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
             break;
         case "font size":
             if ( (correctly && size === "big") || (!correctly && color !== "big")) {
-                pressKey("ArrowLeft")
+                pressKey("ArrowRight")
             } else {
-                pressKey("ArrowRight");
+                pressKey("ArrowLeft");
             }
             break;
         case "number":
             if ( (correctly && number > 5) || (!correctly && number < 5)) {
-                pressKey("ArrowLeft")
+                pressKey("ArrowRight")
             } else {
-                pressKey("ArrowRight");
+                pressKey("ArrowLeft");
             }
             break;
         default:

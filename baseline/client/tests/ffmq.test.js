@@ -1,9 +1,9 @@
 require("@adp-psych/jspsych/jspsych.js");
-import { Panas } from "../panas/panas.js";
+import { Ffmq } from "../ffmq/ffmq.js";
 
-describe("panas", () => {
+describe("Ffmq", () => {
     it("results should have at least one result marked isRelevant", () => {
-        const timeline = (new Panas()).getTimeline();
+        const timeline = (new Ffmq()).getTimeline();
         expect(timeline.length).toBe(1);
         jsPsych.init({timeline: timeline});
 

@@ -4,9 +4,6 @@ import "js/jspsych-n-back.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-n-back.css";
 import "./style.css";
-// introduction and completion fragments
-import introduction_html from "./frag/introduction.html";
-import completion_html from "./frag/completion.html";
 // cue fragments
 import cue_0_html from "./frag/cue_0.html";
 import cue_1_html from "./frag/cue_1.html";
@@ -25,7 +22,6 @@ import train_instruction_2b_html from "./frag/train/instruction_2b.html";
 import train_instruction_practice_html from "./frag/train/instruction_practice.html";
 import train_instruction_indicate_html from "./frag/train/instruction_indicate.html";
 // refresher fragments
-import refresh_introduction_html from "./frag/refresh/introduction.html";
 import refresh_instruction_start_html from "./frag/refresh/instruction_start.html";
 import refresh_instruction_0_html from "./frag/refresh/instruction_0.html";
 import refresh_instruction_1_html from "./frag/refresh/instruction_1.html";
@@ -81,24 +77,19 @@ export class NBack {
                 ...this.randTrialGroup(2),
             ];
             return [
-                i(introduction_html),
                 ...training_block,
                 ...test_block,
-                i(completion_html),
             ];
         } else {
             const refresher_block = [
-                i(refresh_introduction_html),
-                i(refresh_introduction_start_html),
+                i(refresh_instruction_start_html),
                 i(refresh_instruction_0_html),
                 i(refresh_instruction_1_html),
                 i(refresh_instruction_2_html),
             ];
             return [
-                i(introduction_html),
                 ...refresher_block,
                 ...test_block,
-                i(completion_html),
             ];
         }
     }
@@ -127,7 +118,7 @@ export class NBack {
             type: "n-back",
             n: n,
             sequence: this.randSequence(
-                ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                 15,
                 n,
                 4

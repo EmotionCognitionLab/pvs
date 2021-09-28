@@ -17,7 +17,7 @@ describe("flanker", () => {
         let timeline = (new Flanker(setNum)).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
-        expect(timeline.length).toBeGreaterThanOrEqual(3);
+        expect(timeline.length).toBeGreaterThanOrEqual(2);
 
         jsPsych.init({timeline: timeline});
     });
@@ -72,8 +72,8 @@ describe("flanker", () => {
         expect(fixationDelay).toBeLessThanOrEqual(700);
         jest.advanceTimersByTime(800);
         const data = jsPsych.data.get().values();
-        expect(data.length).toBe(3);
-        expect(data[2].stimulus).toMatch(/.*\+.*/); // the fixation cross is a plus sign
+        expect(data.length).toBe(2);
+        expect(data[1].stimulus).toMatch(/.*\+.*/); // the fixation cross is a plus sign
     });
 
     it("tells the participant to answer faster if they don't respond in time", () => {
@@ -240,10 +240,10 @@ describe("flanker training", () => {
         expect(fixationDelay).toBeLessThanOrEqual(700);
         jest.advanceTimersByTime(800);
         const data = jsPsych.data.get().values();
-        expect(data.length).toBe(7);
-        expect(data[6].stimulus).toMatch(/.*\+.*/);
+        expect(data.length).toBe(6);
+        expect(data[5].stimulus).toMatch(/.*\+.*/);
     });
-
+    
     it("shows feedback after the participant does a trial", () => {
         doTrainingInstructions();
         doTrainingTrial();
@@ -399,8 +399,6 @@ function doComprehension() {
 }
 
 function doMainInstructions() {
-    // welcome screen -> instruction
-    pressKey(" ");
     // instruction -> fixation 1
     pressKey(" ");
 }

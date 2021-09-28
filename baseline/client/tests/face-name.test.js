@@ -281,7 +281,7 @@ function doFirstRecall(answerCorrectly) {
 }
 
 function checkNoPractice(timeline) {
-    expect(timeline.length).toBe(7);
+    expect(timeline.length).toBe(6);
     expect(timeline[2].timeline_variables.length).toBe(8); // 0 and 1 are instructions; 2 should be first learning triel
     expect(timeline[3].timeline_variables.length).toBe(8); // second learning trial
 }

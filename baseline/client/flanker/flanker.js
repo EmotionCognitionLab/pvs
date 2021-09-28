@@ -4,14 +4,12 @@ import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "./style.css";
 import arrow_img from "./arrow.png";
-import introduction_html from "./frag/introduction.html";
 import instruction1_html from "./frag/instruction-1.html";
 import instruction2_html from "./frag/instruction-2.html";
 import instruction3_html from "./frag/instruction-3.html";
 import instruction4_html from "./frag/instruction-4.html";
 import instruction5_html from "./frag/instruction-5.html";
 import instruction6_html from "./frag/instruction-6.html";
-import completion_html from "./frag/completion.html";
 import comprehension1_html from "./frag/comprehension-1.html";
 import comprehension2_html from "./frag/comprehension-2.html";
 import comprehension3_html from "./frag/comprehension-3.html";
@@ -27,7 +25,6 @@ export class Flanker {
         if (this.setNum === 1) {
             return [
                 this.constructor.preload,
-                this.constructor.introduction,
                 this.constructor.instruction1,
                 this.constructor.instruction2,
                 this.constructor.instruction3,
@@ -36,15 +33,12 @@ export class Flanker {
                 this.trainingLoop(),
                 this.constructor.instruction6,
                 this.mainTrials(),
-                this.constructor.completion,
             ];
         } else {
             return [
                 this.constructor.preload,
-                this.constructor.introduction,
                 this.constructor.instruction1,
                 this.mainTrials(),
-                this.constructor.completion,
             ];
         }
         
@@ -145,11 +139,6 @@ Flanker.preload = {
     type: "preload",
     images: [arrow_img]
 }
-
-Flanker.introduction = {
-    type: "html-keyboard-response",
-    stimulus: introduction_html
-};
 
 Flanker.instruction1 = {
     type: "html-keyboard-response",
@@ -282,11 +271,6 @@ Flanker.comprehensionNode = {
     conditional_function: function() {
         return jsPsych.data.getLastTimelineData().filter({isTraining: true, correct: true}).values().length < 3;
     }
-}
-
-Flanker.completion = {
-    type: "html-keyboard-response",
-    stimulus: completion_html
 }
 
 Flanker.numMainBlocks = 18;
