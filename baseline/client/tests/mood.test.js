@@ -36,10 +36,10 @@ describe("mood-memory", () => {
     });
 });
 
-describe.skip("mood-prediction", () => {
+describe("mood-prediction", () => {
     it("results should have at least one result marked isRelevant", () => {
         const timeline = (new MoodPrediction()).getTimeline();
-        expect(timeline.length).toBe(3);
+        expect(timeline.length).toBe(1);
         completeMoodQuestionnaire(timeline);
         // check the data
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
