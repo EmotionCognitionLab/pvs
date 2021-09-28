@@ -102,8 +102,8 @@ describe("getSetAndTasks", () => {
     });
 
     it("should return remaining tasks when the number of characters in the first uncompleted task name is less than or equal to the number of completed tasks", () => {
-        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 1));
-        const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 1);
+        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 2));
+        const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 2);
         expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
         const input = buildInput(inputTasks);
         const result = dailyTasks.getSetAndTasks(input);
@@ -296,14 +296,14 @@ describe("doing the tasks", () => {
         
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();
-        const questions = dispElem.querySelectorAll(".jspsych-survey-likert-options");
-        expect(questions.length).toBeGreaterThan(0);
-        // each question should have radio buttons; click the first one for each question
-        for (let i = 0; i < questions.length; i++) {
-            const buttons = questions[i].getElementsByTagName('input');
-            expect(buttons.length).toBeGreaterThan(0);
-            buttons[0].click();
-        }
+        const questions = dispElem.querySelectorAll(".jspsych-percent-sum-field");
+        expect(questions.length).toBe(3);
+        // each question needs a number input; the three should sum to 100
+        questions[0].value = 33;
+        questions[1].value = 33;
+        questions[2].value = 34;
+        //trigger input event to get the jspsych-percent-sum plugin to activate the submit button
+        questions[0].dispatchEvent(new InputEvent("input"));
         clickContinue("input[type=submit]");
 
         expect(saveResultsMock.mock.calls.length).toBe(2);

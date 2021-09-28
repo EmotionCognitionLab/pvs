@@ -24,12 +24,13 @@ import { Dass } from "../dass/dass.js";
  * to the user in the correct order.
  */
 
-const set1 = ["panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
+const set1 = ["mood-memory", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
+const set2 = ["panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "flanker", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
-const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
-const set5 = ["panas", "daily-stressors", "verbal-learning", "face-name", "n-back", "mind-in-eyes", "face-name", "spatial-orientation", "verbal-fluency", "flanker"];
-const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "pattern-separation-recall", "mind-in-eyes", "flanker", "face-name"];
+const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes",  "flanker", "face-name", "pattern-separation-recall"];
+const set5 = ["verbal-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning"];
+const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "flanker", "face-name", "pattern-separation-recall"];
+
 const allSets = [set1, set2, set3, set4, set5, set6];
 const setFinished = "set-finished";
 const setStarted = "set-started";
