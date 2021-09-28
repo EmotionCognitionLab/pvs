@@ -1,9 +1,11 @@
 import "@adp-psych/jspsych/jspsych.js";
+import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
 import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-audio-keyboard-response.js";
 import "js/jspsych-memory-field.js";
+import "js/jspsych-countdown.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-memory-field.css";
 import "css/common.css";
@@ -39,54 +41,109 @@ import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
 import remember_a_long_html from "./frag/remember_a_long.html";
 
 export class VerbalLearning {
+    constructor(setNum, segmentNum, getLastSegmentEndTime = null) {
+        // validate setNum
+        if (Number.isInteger(setNum) && setNum > 0) {
+            this.setNum = setNum;
+        } else {
+            throw new Error("setNum must be a strictly positive integer");
+        }
+        // validate segmentNum and compute startTime
+        if (segmentNum < 1 || segmentNum > 2) {
+            throw new Error("segmentNum must be in 1..2");
+        } else if (segmentNum === 1 && getLastSegmentEndTime !== null) {
+            throw new Error("getLastSegmentEndTime must be null if segmentNum is 1");
+        } else if (segmentNum === 2 && getLastSegmentEndTime === null) {
+            throw new Error("getLastSegmentEndTime must not be null if segmentNum is 2");
+        }
+        this.segmentNum = segmentNum;
+        this.getLastSegmentEndTime = getLastSegmentEndTime ?? (() => 0);
+    }
+
     getTimeline() {
-        return [
-            this.constructor.preload,
-            this.constructor.introduction,
-            this.constructor.instruction(instruction_a_immediate_html),  // 1
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
-            ...this.constructor.cue_and_presentation(a_audio),
-            this.constructor.remember(remember_a_immediate_rep_html),
-            this.constructor.instruction(instruction_b_immediate_html),
-            ...this.constructor.cue_and_presentation(b_audio),
-            this.constructor.remember(remember_b_immediate_html),
-            this.constructor.instruction(instruction_a_short_html),
-            this.constructor.remember(remember_a_short_html),
-            this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(remember_a_cue_furniture_html),
-            this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(remember_a_cue_vegetable_html),
-            this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(remember_a_cue_traveling_html),
-            this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(remember_a_cue_animal_html),
-            this.constructor.instruction(instruction_a_long_html),
-            this.constructor.remember(remember_a_long_html),
-            this.constructor.instruction(instruction_a_cue_furniture_html),
-            this.constructor.remember(remember_a_cue_furniture_html),
-            this.constructor.instruction(instruction_a_cue_vegetable_html),
-            this.constructor.remember(remember_a_cue_vegetable_html),
-            this.constructor.instruction(instruction_a_cue_traveling_html),
-            this.constructor.remember(remember_a_cue_traveling_html),
-            this.constructor.instruction(instruction_a_cue_animal_html),
-            this.constructor.remember(remember_a_cue_animal_html),
-            this.constructor.completion,
-        ];
+        const glset = this.getLastSegmentEndTime.bind(this);
+        const segmentCountdownNode = {
+            timeline: [{
+                type: "call-function",
+                async: true,
+                func: async function(done) {
+                    const lastSegEndTime = await glset();
+                    const dur = (lastSegEndTime + (20 * 60 * 1000))  - Date.now();  // 20 minutes
+                    done({duration: dur});
+                }
+            },
+            {
+                timeline: [{
+                    type: "countdown",
+                    duration: function() {
+                        const data = jsPsych.data.get().last(1).values()[0];
+                        return data.value.duration;
+                    }
+                }],
+                conditional_function: function() {
+                    const data = jsPsych.data.get().last(1).values()[0];
+                    return data.value.duration > 0;
+                }
+            }]
+        };
+        if (this.segmentNum === 1) {
+            return [
+                this.constructor.preload,
+                this.constructor.introduction,
+                this.constructor.instruction(instruction_a_immediate_html),  // 1
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 2
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 3
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 4
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_a_immediate_rep_html),  // 5
+                ...this.constructor.cue_and_presentation(a_audio),
+                this.constructor.remember(remember_a_immediate_rep_html),
+                this.constructor.instruction(instruction_b_immediate_html),
+                ...this.constructor.cue_and_presentation(b_audio),
+                this.constructor.remember(remember_b_immediate_html),
+                this.constructor.instruction(instruction_a_short_html),
+                this.constructor.remember(remember_a_short_html),
+                this.constructor.instruction(instruction_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.instruction(instruction_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.instruction(instruction_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.instruction(instruction_a_cue_animal_html),
+                this.constructor.remember(remember_a_cue_animal_html),
+            ];
+        } else if (this.segmentNum === 2) {
+            return [
+                segmentCountdownNode,
+                this.constructor.instruction(instruction_a_long_html),
+                this.constructor.remember(remember_a_long_html),
+                this.constructor.instruction(instruction_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.instruction(instruction_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.instruction(instruction_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.instruction(instruction_a_cue_animal_html),
+                this.constructor.remember(remember_a_cue_animal_html),
+                this.constructor.completion,
+            ];
+        } else {
+            throw new Error("segmentNum must be in 1..2");
+        }
     }
 
     get taskName() {
-        return this.constructor.taskName;
+        if (this.segmentNum === 1) {
+            return this.constructor.taskName + "-learning";
+        }
+        return this.constructor.taskName + "-recall";
     }
 }
 
@@ -143,7 +200,10 @@ VerbalLearning.completion = {
 
 if (window.location.href.includes(VerbalLearning.taskName)) {
     jsPsych.init({
-        timeline: (new VerbalLearning()).getTimeline(),
+        timeline: [
+            {timeline: new VerbalLearning(1, 1).getTimeline()},
+            {timeline: new VerbalLearning(1, 2, () => Date.now()).getTimeline()},
+        ],
         on_finish: () => { jsPsych.data.displayData("json"); },
     });
 }
