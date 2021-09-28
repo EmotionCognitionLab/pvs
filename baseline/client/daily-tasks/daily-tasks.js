@@ -24,7 +24,7 @@ import { Dass } from "../dass/dass.js";
  * to the user in the correct order.
  */
 
-const set1 = ["mood-memory", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
+const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
 const set2 = ["panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "flanker", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
 const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes",  "flanker", "face-name", "pattern-separation-recall"];
