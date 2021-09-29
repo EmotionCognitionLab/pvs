@@ -25,6 +25,14 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.FLOAT,
                 default: undefined,
             },
+            mode: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: undefined,
+            },
+            instruction: {
+                type: jsPsych.plugins.parameterType.HTML_STRING,
+                default: "",
+            },
         },
     };
 
@@ -51,9 +59,21 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             // get angle from positive vertical
             return plugin.angleABC([0, options.radius], [0, 0], [x, y]);
         };
-        const draw = (pointerAngle) => {
+        const drawTarget = () => {
+            ctx.setLineDash([]);
+            ctx.strokeStyle = "rgba(255, 0, 0, 1)";
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(
+                centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
+                centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
+            );
+            ctx.stroke();
+        };
+        const drawIcirc = (pointerAngle) => {
             window.requestAnimationFrame(() => {
                 // clear
+                ctx.strokeStyle = "rgba(0, 0, 0, 1)";
                 ctx.fillStyle = "rgba(255, 255, 255, 1)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = "rgba(0, 0, 0, 1)";
@@ -71,7 +91,12 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 ctx.lineTo(centerX, centerY - options.radius);
                 ctx.stroke();
                 ctx.fillText(options.topText, centerX, centerY - options.radius - 20);
-                // draw pointer
+                // draw target pointer if example
+                if (options.mode === "example") {
+                    drawTarget();
+                    ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+                }
+                // draw input pointer
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
@@ -90,7 +115,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         let running = true;
         canvas.addEventListener("mousemove", e => {
             if (running) {
-                draw(pointerAngleFromMouseEvent(e));
+                drawIcirc(pointerAngleFromMouseEvent(e));
             }
         });
         canvas.addEventListener("click", e => {
@@ -102,27 +127,28 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                     responseRadians: responseRadians,
                     targetRadians: options.targetRadians,
                 };
-                // draw target pointer
-                ctx.setLineDash([]);
-                ctx.strokeStyle = "rgba(255, 0, 0, 1)";
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.lineTo(
-                    centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
-                    centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
-                );
-                ctx.stroke();
+                // draw target pointer if practice
+                if (options.mode === "practice") {
+                    drawTarget();
+                }
                 // call onClick
                 options.onClick(clickData);
             }
         });
-        draw(0);
+        drawIcirc(0);
     };
 
     plugin.trial = (displayElement, trial) => {
+        // validate parameters
+        if (!["example", "practice", "test"].includes(trial.mode)) {
+            throw new Error("invalid mode");
+        }
         // build and show display HTML
         {
             let html = "";
+            html += `<div id="jspsych-spatial-orientation-instruction">`;
+            html +=     trial.instruction;
+            html += `</div>`;
             html += `<div id="jspsych-spatial-orientation-wrapper">`;
             html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</div>`;
             html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
@@ -139,6 +165,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             topText: trial.topText,
             pointerText: trial.pointerText,
             targetRadians: trial.targetRadians,
+            mode: trial.mode,
             onClick: clickData => {
                 // build data
                 const rt = performance.now() - start;
