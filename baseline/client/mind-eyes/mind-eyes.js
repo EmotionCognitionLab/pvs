@@ -45,7 +45,7 @@ export class MindEyes {
     }
 }
 
-MindEyes.taskName = "mind-eyes";
+MindEyes.taskName = "mind-in-eyes";
 
 MindEyes.imageBucket = "https://d3vowlh1lzbs4j.cloudfront.net/eye/";
 

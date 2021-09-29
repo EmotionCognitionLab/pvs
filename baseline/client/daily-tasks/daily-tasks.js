@@ -168,7 +168,7 @@ function taskForName(name, options) {
         case "flanker":
             const setNum = options.setNum || 1;
             return new Flanker(setNum);
-        case "mind-eyes":
+        case "mind-in-eyes":
             return new MindEyes(options.setNum || 1);
         case "mood-memory":
             return new MoodMemory();

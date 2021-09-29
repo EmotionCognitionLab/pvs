@@ -82,7 +82,7 @@ add_page("task-switching", "task-switching/task-switching.js", "Task Switching")
 add_page("spatial-orientation", "spatial-orientation/spatial-orientation.js", "Spatial Orientation");
 add_page("face-name", "face-name/face-name.js", "Face-Name Task");
 add_page("pattern-separation", "pattern-separation/pattern-separation.js", "Pattern Separation Task");
-add_page("mind-eyes", "mind-eyes/mind-eyes.js", "Reading the Mind in the Eyes Task");
+add_page("mind-in-eyes", "mind-eyes/mind-eyes.js", "Reading the Mind in the Eyes Task");
 add_page("dass", "dass/dass.js", "Depression Anxiety Stress Scale");
 add_page("ffmq", "ffmq/ffmq.js", "Five Facet Mindfulness Questionnaire");
 add_page("demographics", "demographics/demographics.js", "Demographic information");

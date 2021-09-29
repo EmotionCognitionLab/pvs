@@ -232,15 +232,15 @@ describe("taskForName for face-name", () => {
     });
 });
 
-describe("taskForName for mind-eyes", () => {
-    it("returns a MindEyes object for mind-eyes", () => {
-        const result = dailyTasks.taskForName("mind-eyes", {setNum: 4});
+describe("taskForName for mind-in-eyes", () => {
+    it("returns a MindEyes object for mind-in-eyes", () => {
+        const result = dailyTasks.taskForName("mind-in-eyes", {setNum: 4});
         expect(result instanceof MindEyes).toBe(true);
     });
 
     it("defaults to set 1 if no set number is provided", () => {
-        const set1Result = dailyTasks.taskForName("mind-eyes", {setNum: 1});
-        const noSetResult = dailyTasks.taskForName("mind-eyes", {});
+        const set1Result = dailyTasks.taskForName("mind-in-eyes", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("mind-in-eyes", {});
         const set1Timeline = set1Result.getTimeline();
         const noSetTimeline = noSetResult.getTimeline();
         expect(noSetTimeline.length).toBe(set1Timeline.length);
