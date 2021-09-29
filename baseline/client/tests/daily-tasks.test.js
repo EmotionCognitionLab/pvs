@@ -2,6 +2,7 @@
 
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Dass } from "../dass/dass";
+import { Demographics } from "../demographics/demographics.js";
 import { FaceName } from "../face-name/face-name.js";
 import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
@@ -173,6 +174,10 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("dass", {});
         expect(result instanceof Dass).toBe(true);
     });
+    it("returns a Demographics object for demographics", () => {
+        const result = dailyTasks.taskForName("demographics", {});
+        expect(result instanceof Demographics).toBe(true);
+    })
     it("returns a Ffmq object for ffmq", () => {
         const result = dailyTasks.taskForName("ffmq", {});
         expect(result instanceof Ffmq).toBe(true);

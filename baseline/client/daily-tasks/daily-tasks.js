@@ -3,6 +3,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
+import { Demographics } from "../demographics/demographics.js";
 import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -25,7 +26,7 @@ import { Dass } from "../dass/dass.js";
  */
 
 const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "flanker", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
+const set2 = ["demographics", "physical-activity", "panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "flanker", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
 const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes",  "flanker", "face-name", "pattern-separation-recall"];
 const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning-recall"];
@@ -158,6 +159,8 @@ function taskForName(name, options) {
             return new DailyStressors();
         case "dass":
             return new Dass();
+        case "demographics":
+            return new Demographics();
         case "face-name":
             return new FaceName(options.setNum || 1);
         case "ffmq":
