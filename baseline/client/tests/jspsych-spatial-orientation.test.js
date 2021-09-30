@@ -40,6 +40,54 @@ describe("jspsych-spatial-orientation.js plugin", () => {
         // please don't explode
         expect(dataFromClick(0, 0)).not.toBe(NaN);
     });
+
+    it("skips if started past endTime", () => {
+        jsPsych.init({timeline: [{
+            type: "spatial-orientation",
+            scene: "scene",
+            centerText: "center",
+            topText: "top",
+            pointerText: "pointer",
+            targetRadians: 0,
+            mode: "test",
+            endTime: -1,
+        }]});
+        // expect trial and timeline to be completed
+        const progress = jsPsych.progress();
+        expect(progress.current_trial_global).toBe(progress.total_trials);
+        // expect completionReason to be "skipped"
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.completionReason).toBe("skipped");
+    });
+    
+    it("stops when encountering endTime", () => {
+        jest.useFakeTimers("legacy");
+        jsPsych.init({timeline: [{
+            type: "spatial-orientation",
+            scene: "scene",
+            centerText: "center",
+            topText: "top",
+            pointerText: "pointer",
+            targetRadians: 0,
+            mode: "test",
+            lingerDuration: 0,
+            endTime: Date.now() + 1000,
+        }]});
+        // expect trial and timeline to NOT be completed at the start
+        const progressA = jsPsych.progress();
+        expect(progressA.current_trial_global).toBeLessThan(progressA.total_trials);
+        // expect trial and timeline to still NOT be completed after only 100 ms
+        jest.advanceTimersByTime(100);
+        const progressB = jsPsych.progress();
+        expect(progressB.current_trial_global).toBeLessThan(progressB.total_trials);
+        // expect trial and timeline to be completed after more than 1000 ms
+        jest.advanceTimersByTime(1000);
+        const progressC = jsPsych.progress();
+        expect(progressC.current_trial_global).toBe(progressC.total_trials);
+        // expect completionReason to be "timedout"
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.completionReason).toBe("timedout");
+    });
 });
 
 describe("angleABC helper", () => {
