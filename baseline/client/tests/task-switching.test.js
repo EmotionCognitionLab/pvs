@@ -400,7 +400,7 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
             }
             break;
         case "font size":
-            if ( (correctly && size === "big") || (!correctly && color !== "big")) {
+            if ( (correctly && size === "big") || (!correctly && size !== "big")) {
                 pressKey("ArrowRight")
             } else {
                 pressKey("ArrowLeft");
