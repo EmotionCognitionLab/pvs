@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import "./style.css";
 import pre_exer_instr from "./frag/pre_exercise_instruction.html";
 import pre_mix_instr from "./frag/pre_mixed_instruction.html";

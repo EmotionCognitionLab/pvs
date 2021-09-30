@@ -2,6 +2,7 @@ import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import practice_introduction_html from "./frag/practice-introduction.html";
 import regular_introduction_html from "./frag/regular-introduction.html";
 import instr1_html from "./frag/instr1.html";

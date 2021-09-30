@@ -2,6 +2,7 @@
 
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
+import "css/common.css";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Demographics } from "../demographics/demographics.js";
 import { Ffmq } from "../ffmq/ffmq.js";

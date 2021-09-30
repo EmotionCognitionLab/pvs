@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-survey-likert.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import instruction_html from "./frag/introduction.html";
 import "css/jspsych-survey-likert-patch.css";
 

@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instructions.html";
 import stimuli from "./stimuli.json";

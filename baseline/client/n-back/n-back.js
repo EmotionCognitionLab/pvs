@@ -3,6 +3,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "js/jspsych-n-back.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-n-back.css";
+import "css/common.css";
 import "./style.css";
 // cue fragments
 import cue_0_html from "./frag/cue_0.html";

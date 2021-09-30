@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-survey-html-form";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import "./style.css";
 
 export class Demographics {
