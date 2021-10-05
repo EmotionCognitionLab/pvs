@@ -26,6 +26,8 @@ describe("spatial-orientation", () => {
     });
 
     it("completes test trials with timedout and skipped if 5 minutes have elapsed", () => {
+        const advanceDateNow = (dateNow, ms) => () => dateNow() + ms;
+        const originalDateNow = Date.now();  // original Starwalker
         jest.useFakeTimers("legacy");
         // skip timeline to test block
         const timeline = (new SpatialOrientation(1)).getTimeline();
@@ -45,12 +47,14 @@ describe("spatial-orientation", () => {
         // expect test trials to still NOT be completed after 4 minutes and 55 seconds
         {
             const ms = 4*60*1000 + 55*1000;  // 4 minutes and 55 seconds
+            Date.now = advanceDateNow(Date.now, ms);
             jest.advanceTimersByTime(ms);
         }
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
         // expect test trials to be completed after 5 minutes and 5 seconds
         {
             const ms = 10*1000;  // 10 seconds more
+            Date.now = advanceDateNow(Date.now, ms);
             jest.advanceTimersByTime(ms);
         }
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
@@ -59,6 +63,7 @@ describe("spatial-orientation", () => {
         relevant.slice(1).forEach(t => {
              expect(t.completionReason).toBe("skipped");
         });
+        Date.now = originalDateNow;
     });
 
     it("has well-formed stimuli", () => {
