@@ -1,6 +1,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-image-keyboard-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import introduction_html from "./frag/introduction.html";
@@ -25,8 +26,10 @@ export class PatternSeparation {
         const practiceLearningVariables = this.getTimelineVariables(true);
         const actualLearningVariables = this.getTimelineVariables(false);
         const practiceRecallVariables = this.getTimelineVariables(true);
+        const images = practiceLearningVariables.concat(actualLearningVariables).concat(practiceRecallVariables).map(lv => lv.picUrl);
 
         return [
+            this.constructor.preload(images),
             this.constructor.instruction(introduction_html),
             this.constructor.instruction(practice_instructions_html),
             { 
@@ -56,8 +59,10 @@ export class PatternSeparation {
 
     getRecallTimeline() {
         const actualRecallVariables = this.getTimelineVariables(false)
+        const images = actualRecallVariables.map(rv => rv.picUrl);
         
         return [
+            this.constructor.preload(images),
             this.constructor.instruction(recall_instructions_html),
             {
                 timeline: [this.constructor.recallStimulus(false)],
@@ -161,6 +166,13 @@ PatternSeparation.answerFasterNode = {
         return jsPsych.data.get().last(1).values()[0].response === null;
     }
 }
+
+PatternSeparation.preload = (images) => {
+    return {
+        type: "preload",
+        images: images
+    }
+};
 
 if (window.location.href.includes(PatternSeparation.taskName)) {
     const queryParams = new URLSearchParams(window.location.search.substring(1));

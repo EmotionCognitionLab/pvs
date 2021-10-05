@@ -8,7 +8,7 @@ describe("PatternSeparation learning phase", () => {
     const setNum = 1;
 
     beforeEach(() => {
-        tl = (new PatternSeparation(1)).getTimeline(setNum, false);
+        tl = (new PatternSeparation(1)).getTimeline(setNum, false).slice(1); // drop preload; doesn't play well with jest
         jsPsych.init({timeline: tl});
         jest.useFakeTimers("legacy");
     });
@@ -43,7 +43,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should randomize the order of the stimuli", () => {
-        const tl2 = (new PatternSeparation(1, false)).getTimeline();
+        const tl2 = (new PatternSeparation(1, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         for (let i of [2,3,5,7,8]) { // timeline entries that aren't instructions
             expect(tl[i].timeline_variables.length).toEqual(tl2[i].timeline_variables.length);
             expect(tl2[i].timeline_variables).toEqual(expect.arrayContaining(tl[i].timeline_variables));
@@ -136,7 +136,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should show different stimuli for different sets", () => {
-        const tl2 = (new PatternSeparation(3)).getTimeline();
+        const tl2 = (new PatternSeparation(3)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         for (let i=7; i<tl.length; i++) { // entries 0-6 are instructions and practice
             const node = tl[i];
             expect(node.timeline_variables);
@@ -149,7 +149,7 @@ describe("PatternSeparation recall phase", () => {
     let recallTl;
 
     beforeEach(() => {
-        recallTl = (new PatternSeparation(2, true)).getTimeline();
+        recallTl = (new PatternSeparation(2, true)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         jsPsych.init({timeline: recallTl});
     });
 
