@@ -3,9 +3,9 @@ import { pressKey } from "./utils.js"
 import "jest-canvas-mock";
 
 const originalDateNow = Date.now;  // original    Starwalker
-beforeEach(() => {
-    Date.now = originalDateNow;
-});
+const resetDateNow = { Date.now = originalDateNow; }
+beforeEach(resetDateNow);
+afterEach(resetDateNow);
 
 const advanceDateNowThenTimers = ms => {
     Date.now = (f => () => f() + ms)(Date.now);
