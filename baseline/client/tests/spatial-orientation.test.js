@@ -2,6 +2,16 @@ import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.j
 import { pressKey } from "./utils.js"
 import "jest-canvas-mock";
 
+const originalDateNow = Date.now;  // original    Starwalker
+beforeEach(() => {
+    Date.now = originalDateNow;
+});
+
+const advanceDateNowThenTimers = ms => {
+    Date.now = (f => () => f() + ms)(Date.now);
+    jest.advanceTimersByTime(ms);
+};
+
 const clickIcirc = (icirc, x, y) => {
     const rect = icirc.getBoundingClientRect();
     icirc.dispatchEvent(new MouseEvent("click", {
@@ -26,8 +36,6 @@ describe("spatial-orientation", () => {
     });
 
     it("completes test trials with timedout and skipped if 5 minutes have elapsed", () => {
-        const advanceDateNow = (dateNow, ms) => () => dateNow() + ms;
-        const originalDateNow = Date.now();  // original Starwalker
         jest.useFakeTimers("legacy");
         // skip timeline to test block
         const timeline = (new SpatialOrientation(1)).getTimeline();
@@ -45,25 +53,16 @@ describe("spatial-orientation", () => {
         // expect test trials to NOT be completed at their start
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
         // expect test trials to still NOT be completed after 4 minutes and 55 seconds
-        {
-            const ms = 4*60*1000 + 55*1000;  // 4 minutes and 55 seconds
-            Date.now = advanceDateNow(Date.now, ms);
-            jest.advanceTimersByTime(ms);
-        }
+        advanceDateNowThenTimers(4*60*1000 + 55*1000);  // 4 minutes and 55 seconds
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
         // expect test trials to be completed after 5 minutes and 5 seconds
-        {
-            const ms = 10*1000;  // 10 seconds more
-            Date.now = advanceDateNow(Date.now, ms);
-            jest.advanceTimersByTime(ms);
-        }
+        advanceDateNowThenTimers(10*1000);  // 10 seconds more
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevant.length).toBe(12);
         expect(relevant[0].completionReason).toBe("timedout");
         relevant.slice(1).forEach(t => {
              expect(t.completionReason).toBe("skipped");
         });
-        Date.now = originalDateNow;
     });
 
     it("has well-formed stimuli", () => {
