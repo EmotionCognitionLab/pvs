@@ -4,7 +4,6 @@ import "jest-canvas-mock";
 
 const originalDateNow = Date.now;  // original    Starwalker
 const resetDateNow = { Date.now = originalDateNow; }
-beforeEach(resetDateNow);
 afterEach(resetDateNow);
 
 const advanceDateNowThenTimers = ms => {
