@@ -3,7 +3,7 @@ import { pressKey } from "./utils.js"
 import "jest-canvas-mock";
 
 const originalDateNow = Date.now;  // original    Starwalker
-const resetDateNow = { Date.now = originalDateNow; }
+const resetDateNow = () => { Date.now = originalDateNow; }
 afterEach(resetDateNow);
 
 const advanceDateNowThenTimers = ms => {
