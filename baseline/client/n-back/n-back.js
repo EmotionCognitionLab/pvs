@@ -115,13 +115,13 @@ export class NBack {
                 {
                     timeline: [this.constructor.simpleInstruction(train_instruction_retry_html)],
                     conditional_function: () => {
-                        const trialData = jsPsych.data.get().filter({trial_type: "n-back"}).values()[0];
+                        const trialData = jsPsych.data.get().filter({trial_type: "n-back"}).values().at(-1);
                         return !passingPracticeData(trialData);
                     }
                 }
             ],
             loop_function: data => {
-                const trialData = data.filter({trial_type: "n-back"}).values()[0];
+                const trialData = data.filter({trial_type: "n-back"}).values().at(-1);
                 return !passingPracticeData(trialData);
             }
         };
