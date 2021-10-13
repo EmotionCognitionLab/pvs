@@ -23,6 +23,7 @@ import train_instruction_2b_html from "./frag/train/instruction_2b.html";
 import train_instruction_cue_0_html from "./frag/train/instruction_cue_0.html";
 import train_instruction_cue_1_html from "./frag/train/instruction_cue_1.html";
 import train_instruction_cue_2_html from "./frag/train/instruction_cue_2.html";
+import train_instruction_retry_html from "./frag/train/instruction_retry.html";
 // refresher fragments
 import refresh_instruction_start_html from "./frag/refresh/instruction_start.html";
 import refresh_instruction_0_html from "./frag/refresh/instruction_0.html";
@@ -65,20 +66,20 @@ export class NBack {
                 i(train_introduction_html),
                 i(train_instruction_start_html),
                 i(train_instruction_0a_html),
-                // insert short practice 0-back
+                this.randShortPracticeLoop(0),
                 i(train_instruction_0b_html),
                 i(train_instruction_1a_html),
-                // insert short practice 0-back
+                this.randShortPracticeLoop(1),
                 i(train_instruction_1b_html),
                 i(train_instruction_2a_html),
-                // insert short practice 0-back
+                this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
-                i(train/instruction_cue_0),
-                // insert full practice 0-back
-                i(train/instruction_cue_1),
-                // insert full practice 1-back
-                i(train/instruction_cue_2),
-                // insert full practice 2-back
+                i(train_instruction_cue_0_html),
+                ...this.randTrialGroup(0, 15, 4, false),
+                i(train_instruction_cue_1_html),
+                ...this.randTrialGroup(1, 15, 4, false),
+                i(train_instruction_cue_2_html),
+                ...this.randTrialGroup(2, 15, 4, false),
             ];
             return [
                 ...training_block,
@@ -102,7 +103,32 @@ export class NBack {
         return this.constructor.taskName;
     }
 
-    randTrialGroup(n) {
+    randShortPracticeLoop(n) {
+        const passingPracticeData = data => {
+            console.log(data);
+            const noMiss = data.missedIndices.length === 0;
+            const noIncorrect = data.responses.every(r => r.correct);
+            return noMiss && noIncorrect;
+        };
+        return {
+            timeline: [
+                ...this.randTrialGroup(n, 3, 1, false),
+                {
+                    timeline: [this.constructor.simpleInstruction(train_instruction_retry_html)],
+                    conditional_function: () => {
+                        const trialData = jsPsych.data.get().filter({trial_type: "n-back"}).values()[0];
+                        return !passingPracticeData(trialData);
+                    }
+                }
+            ],
+            loop_function: data => {
+                const trialData = data.filter({trial_type: "n-back"}).values()[0];
+                return !passingPracticeData(trialData);
+            }
+        };
+    }
+
+    randTrialGroup(n, length = 15, targets = 4, isRelevant = true) {
         const cue = (
             n === 0 ? this.constructor.cue0 :
             n === 1 ? this.constructor.cue1 :
@@ -112,24 +138,24 @@ export class NBack {
         if (cue === null) {
             throw new Error("cue not implemented for n");
         }
-        const trial = this.randTrial(n);
+        const trial = this.randTrial(n, length, targets, isRelevant);
         const rest = this.constructor.rest;
         return [cue, trial, rest];
     }
 
-    randTrial(n) {
+    randTrial(n, length, targets, isRelevant) {
         return {
             type: "n-back",
             n: n,
             sequence: this.randSequence(
-                ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                15,
+                this.constructor.choices,
+                length,
                 n,
-                4
+                targets
             ),
-            show_duration: 800,
-            hide_duration: 1000,
-            data: { isRelevant: true },
+            show_duration: this.constructor.show_duration,
+            hide_duration: this.constructor.hide_duration,
+            data: { isRelevant: isRelevant },
         }
     }
 
@@ -165,6 +191,10 @@ export class NBack {
 }
 
 NBack.taskName = "n-back";
+
+NBack.choices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+NBack.show_duration = 800;
+NBack.hide_duration = 1000;
 
 NBack.simpleInstruction = stimulus => ({
     type: "html-keyboard-response",
