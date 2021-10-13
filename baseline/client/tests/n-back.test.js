@@ -4,7 +4,7 @@ import { pressKey, cartesianProduct } from "./utils.js"
 describe("n-back", () => {
     it("results should have at least one result marked isRelevant", () => {
         // check timeline nodes
-        const timeline = (new NBack(1)).getTimeline();
+        const timeline = (new NBack(2)).getTimeline();
         expect(timeline.some(trial => trial.data && trial.data.isRelevant)).toBe(true);
         // check generated data
         jest.useFakeTimers("legacy");
