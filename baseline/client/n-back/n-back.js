@@ -20,8 +20,9 @@ import train_instruction_1a_html from "./frag/train/instruction_1a.html";
 import train_instruction_1b_html from "./frag/train/instruction_1b.html";
 import train_instruction_2a_html from "./frag/train/instruction_2a.html";
 import train_instruction_2b_html from "./frag/train/instruction_2b.html";
-import train_instruction_practice_html from "./frag/train/instruction_practice.html";
-import train_instruction_indicate_html from "./frag/train/instruction_indicate.html";
+import train_instruction_cue_0_html from "./frag/train/instruction_cue_0.html";
+import train_instruction_cue_1_html from "./frag/train/instruction_cue_1.html";
+import train_instruction_cue_2_html from "./frag/train/instruction_cue_2.html";
 // refresher fragments
 import refresh_instruction_start_html from "./frag/refresh/instruction_start.html";
 import refresh_instruction_0_html from "./frag/refresh/instruction_0.html";
@@ -64,18 +65,20 @@ export class NBack {
                 i(train_introduction_html),
                 i(train_instruction_start_html),
                 i(train_instruction_0a_html),
+                // insert short practice 0-back
                 i(train_instruction_0b_html),
                 i(train_instruction_1a_html),
+                // insert short practice 0-back
                 i(train_instruction_1b_html),
                 i(train_instruction_2a_html),
+                // insert short practice 0-back
                 i(train_instruction_2b_html),
-                i(train_instruction_practice_html),
-                this.constructor.indicate,  // TODO: choose from response
-                ...this.randTrialGroup(0),
-                this.constructor.indicate,
-                ...this.randTrialGroup(1),
-                this.constructor.indicate,
-                ...this.randTrialGroup(2),
+                i(train/instruction_cue_0),
+                // insert full practice 0-back
+                i(train/instruction_cue_1),
+                // insert full practice 1-back
+                i(train/instruction_cue_2),
+                // insert full practice 2-back
             ];
             return [
                 ...training_block,
@@ -194,12 +197,6 @@ NBack.rest = {
     stimulus: rest_html,
     choices: jsPsych.NO_KEYS,
     trial_duration: 10000,
-};
-
-NBack.indicate = {
-    type: "html-keyboard-response",
-    stimulus: train_instruction_indicate_html,
-    choices: ["0", "1", "2"],
 };
 
 
