@@ -103,10 +103,14 @@ jsPsych.plugins["n-back"] = (() => {
             document.removeEventListener("keydown", listener_callback);
             display_element.innerHTML = "";
             // build data
+            const missedIndices = [...trial.sequence.keys()]
+                .filter(i => plugin.is_correct(trial.n, trial.sequence, i))
+                .filter(i => !responses.some(r => r.index === i));
             const data = {
                 n: trial.n,
                 sequence: trial.sequence,
                 responses: responses,
+                missedIndices: missedIndices,
             };
             // finish trial
             jsPsych.finishTrial(data);
