@@ -1,5 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
 import "js/jspsych-spatial-orientation.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-spatial-orientation.css";
@@ -48,9 +49,14 @@ export class SpatialOrientation {
             jsPsych.randomization.shuffle(testSet.trials) :
             testSet.trials
         );
+        let endTime = undefined;
         const testBlock = [
             i(test_instruction_html),
-            ...testStim.map(s => t(s.center, s.facing, s.target, "test")),
+            {
+                type: "call-function",
+                func: () => { endTime = Date.now() + 5 * 60 * 1000; }  // 5 minutes after instruction shown
+            },
+            ...testStim.map(s => t(s.center, s.facing, s.target, "test", null, () => endTime)),
         ];
         // timeline
         return [
@@ -86,7 +92,7 @@ SpatialOrientation.simpleInstruction = stimulus => ({
     choices: [" "],
 });
 
-SpatialOrientation.trial = (center, facing, target, mode, instruction = null) => ({
+SpatialOrientation.trial = (center, facing, target, mode, instruction = null, endTime = null) => ({
     type: "spatial-orientation",
     scene: `<img src=${scene_img}>`,
     instruction: (
@@ -103,6 +109,7 @@ SpatialOrientation.trial = (center, facing, target, mode, instruction = null) =>
         SpatialOrientation.scenePositions[target],
     ),
     mode: mode,
+    endTime: endTime,
     data: { isRelevant: mode === "test" },
 });
 
