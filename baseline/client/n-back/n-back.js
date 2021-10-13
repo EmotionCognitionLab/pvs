@@ -105,7 +105,6 @@ export class NBack {
 
     randShortPracticeLoop(n) {
         const passingPracticeData = data => {
-            console.log(data);
             const noMiss = data.missedIndices.length === 0;
             const noIncorrect = data.responses.every(r => r.correct);
             return noMiss && noIncorrect;
