@@ -598,7 +598,7 @@ resource "aws_iam_policy" "console-log-write" {
           "logs:PutLogEvents",
           "logs:DescribeLogStreams"
         ]
-        Resource = [ "${aws_cloudwatch_log_group.console-log-group.arn}" ]
+        Resource = [ "${aws_cloudwatch_log_group.console-log-group.arn}:*:*" ]
       }
     ]
   })
