@@ -276,6 +276,10 @@ function saveResultsCallback(experimentName, results) {
 function handleError(err) {
     // TODO set up remote error logging
     console.log(err);
+    // something went wrong; redirect users to cognito sign-in page
+    const cognitoAuth = getAuth(() => {}, () => {});
+    const loginUrl = cognitoAuth.getFQDNSignIn();
+    window.location = loginUrl;
 }
 
 function taskNotAvailable(taskName) {
