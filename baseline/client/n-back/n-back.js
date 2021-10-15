@@ -111,7 +111,7 @@ export class NBack {
         };
         return {
             timeline: [
-                ...this.randTrialGroup(n, 3, 1, false, true),
+                ...this.randTrialGroup(n, 3, 1, false),
                 {
                     timeline: [this.constructor.simpleInstruction(train_instruction_retry_html)],
                     conditional_function: () => {
@@ -127,7 +127,7 @@ export class NBack {
         };
     }
 
-    randTrialGroup(n, length = 15, targets = 4, isRelevant = true, dynamic = false) {
+    randTrialGroup(n, length = 15, targets = 4, isRelevant = true) {
         const cue = (
             n === 0 ? this.constructor.cue0 :
             n === 1 ? this.constructor.cue1 :
@@ -137,17 +137,16 @@ export class NBack {
         if (cue === null) {
             throw new Error("cue not implemented for n");
         }
-        const trial = this.randTrial(n, length, targets, isRelevant, dynamic);
+        const trial = this.randTrial(n, length, targets, isRelevant);
         const rest = this.constructor.rest;
         return [cue, trial, rest];
     }
 
-    randTrial(n, length, targets, isRelevant, dynamic) {
-        const genSequence = () => this.randSequence(this.constructor.choices, length, n, targets);
+    randTrial(n, length, targets, isRelevant) {
         return {
             type: "n-back",
             n: n,
-            sequence: dynamic ? genSequence : genSequence(),
+            sequence: () => this.randSequence(this.constructor.choices, length, n, targets),
             show_duration: this.constructor.show_duration,
             hide_duration: this.constructor.hide_duration,
             data: { isRelevant: isRelevant },
