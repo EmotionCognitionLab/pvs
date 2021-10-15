@@ -57,7 +57,7 @@ function saveResults(session, experiment, results) {
     });
 }
 
-async function getAllResultsForCurrentUser(session) {
+async function getResultsForCurrentUser(session, expName=null) {
     const credentials = getCredentialsForSession(session);
 
     try {
@@ -73,6 +73,10 @@ async function getAllResultsForCurrentUser(session) {
                 KeyConditionExpression: `identityId = :idKey`,
                 ExpressionAttributeValues: { ':idKey': credentials.identityId }
             };
+            if (expName !== null) {
+                params.KeyConditionExpression += " and begins_with(experimentDateTimeUser, :expName)";
+                params.ExpressionAttributeValues[":expName"] = expName;
+            }
             dynResults = await docClient.query(params).promise();
             ExclusiveStartKey = dynResults.LastEvaluatedKey;
             const results = dynResults.Items.map(i => {
@@ -109,6 +113,14 @@ async function getAllResultsForCurrentUser(session) {
     }
 }
 
+async function getAllResultsForCurrentUser(session) {
+    return getResultsForCurrentUser(session);
+}
+
+async function getExperimentResultsForCurrentUser(session, expName) {
+    return getResultsForCurrentUser(session, expName);
+}
+
 function getCredentialsForSession(session) {
     const idToken = session.getIdToken().getJwtToken();
     const credentials = new AWS.CognitoIdentityCredentials({
@@ -128,4 +140,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser }

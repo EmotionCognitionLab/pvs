@@ -4,13 +4,8 @@ import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 describe("daily-stressors", () => {
     it("results should have at least one result marked isRelevant", () => {
         const timeline = (new DailyStressors()).getTimeline();
-        expect(timeline.length).toBe(3);
+        expect(timeline.length).toBe(1);
         jsPsych.init({timeline: timeline});
-
-        // welcome screen
-        const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
-        expect(buttons.length).toBe(1);
-        buttons[0].click();  // continue button
 
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();

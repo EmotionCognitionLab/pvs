@@ -2,6 +2,7 @@ import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/css/jspsych.css";
+import "css/common.css";
 import practice_introduction_html from "./frag/practice-introduction.html";
 import regular_introduction_html from "./frag/regular-introduction.html";
 import instr1_html from "./frag/instr1.html";
@@ -9,7 +10,6 @@ import single_set_recall_html from "./frag/single-set-recall.html";
 import multi_set_recall_html from "./frag/multi-set-recall.html";
 import all_set_recall_html from "./frag/all-set-recall.html";
 import instr3_html from "./frag/instr3.html";
-import completion_html from "./frag/completion.html";
 import stimuli from "./stimuli.json";
 
 
@@ -71,7 +71,6 @@ export class FaceName {
         const fullTl = timeline.concat([
             this.constructor.instruction(instr3_html),
             actualLearning, actualLearning, this.constructor.instruction(recallIntro), actualRecall,
-            this.constructor.instruction(completion_html)
         ]);
         
         const images = fullTl.flatMap(entry => (entry.timeline_variables || []).map(tlv => tlv.picUrl));

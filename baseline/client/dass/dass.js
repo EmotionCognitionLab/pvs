@@ -3,6 +3,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-survey-multi-choice.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-survey-multi-choice-patch.css";
+import "css/common.css";
 import "./style.css";
 import instruction_html from "./frag/instruction.html";
 

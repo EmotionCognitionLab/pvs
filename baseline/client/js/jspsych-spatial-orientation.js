@@ -25,6 +25,22 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 type: jsPsych.plugins.parameterType.FLOAT,
                 default: undefined,
             },
+            mode: {
+                type: jsPsych.plugins.parameterType.STRING,
+                default: undefined,
+            },
+            instruction: {
+                type: jsPsych.plugins.parameterType.HTML_STRING,
+                default: "",
+            },
+            lingerDuration: {
+                type: jsPsych.plugins.parameterType.INT,
+                default: 1000,
+            },
+            endTime: {
+                type: jsPsych.plugins.parameterType.INT,
+                default: null,
+            },
         },
     };
 
@@ -51,10 +67,22 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             // get angle from positive vertical
             return plugin.angleABC([0, options.radius], [0, 0], [x, y]);
         };
-        const draw = (pointerAngle) => {
+        const drawTarget = () => {
+            ctx.setLineDash([]);
+            ctx.strokeStyle = "rgba(255, 0, 0, 1)";
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(
+                centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
+                centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
+            );
+            ctx.stroke();
+        };
+        const drawIcirc = (pointerAngle) => {
             window.requestAnimationFrame(() => {
                 // clear
-                ctx.fillStyle = "rgba(255, 255, 255, 1)";
+                ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+                ctx.fillStyle = "rgba(244, 244, 216, 1)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = "rgba(0, 0, 0, 1)";
                 ctx.font = "16px sans-serif";
@@ -71,7 +99,12 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 ctx.lineTo(centerX, centerY - options.radius);
                 ctx.stroke();
                 ctx.fillText(options.topText, centerX, centerY - options.radius - 20);
-                // draw pointer
+                // draw target pointer if example
+                if (options.mode === "example") {
+                    drawTarget();
+                    ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+                }
+                // draw input pointer
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
@@ -90,66 +123,97 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         let running = true;
         canvas.addEventListener("mousemove", e => {
             if (running) {
-                draw(pointerAngleFromMouseEvent(e));
+                drawIcirc(pointerAngleFromMouseEvent(e));
             }
         });
         canvas.addEventListener("click", e => {
             if (running) {
                 running = false;
-                // build data
+                // build completionData
                 const responseRadians = pointerAngleFromMouseEvent(e);
-                const clickData = {
+                const completionData = {
+                    completionReason: "responded",
                     responseRadians: responseRadians,
                     targetRadians: options.targetRadians,
                 };
-                // draw target pointer
-                ctx.setLineDash([]);
-                ctx.strokeStyle = "rgba(255, 0, 0, 1)";
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.lineTo(
-                    centerX + options.radius * Math.cos(options.targetRadians + Math.PI/2),
-                    centerY - options.radius * Math.sin(options.targetRadians + Math.PI/2)
-                );
-                ctx.stroke();
-                // call onClick
-                options.onClick(clickData);
+                // draw target pointer if practice
+                if (options.mode === "practice") {
+                    drawTarget();
+                }
+                // call onCompletion
+                options.onCompletion(completionData);
             }
         });
-        draw(0);
+        if (options.timeLimit !== null) {
+            setTimeout(() => {
+                if (running) {
+                    running = false;
+                    // build completionData
+                    const completionData = {
+                        completionReason: "timedout",
+                    };
+                    // call onCompletion
+                    options.onCompletion(completionData);
+                }
+            }, options.timeLimit);
+        }
+        drawIcirc(0);
     };
 
     plugin.trial = (displayElement, trial) => {
-        // build and show display HTML
-        {
-            let html = "";
-            html += `<div id="jspsych-spatial-orientation-wrapper">`;
-            html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</div>`;
-            html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
-            html += `</div>`;
-            displayElement.innerHTML = html;
+        // validate parameters
+        if (!["example", "practice", "test"].includes(trial.mode)) {
+            throw new Error("invalid mode");
+        } else if (trial.endTime !== null && typeof trial.endTime !== "number") {
+            throw new Error("endTime must be null or a number representing ms since epoch");
         }
-        const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
-        // check canvas support
-        if (!icirc.getContext) { return; }
-        const start = performance.now();
-        plugin.buildIcirc(icirc, {
-            radius: 150,
-            centerText: trial.centerText,
-            topText: trial.topText,
-            pointerText: trial.pointerText,
-            targetRadians: trial.targetRadians,
-            onClick: clickData => {
-                // build data
-                const rt = performance.now() - start;
-                const data = {
-                    ...clickData,
-                    rt: rt,
-                };
-                // finish trial
-                setTimeout(() => { jsPsych.finishTrial(data); }, 1000);
-            },
-        });
+        // compute timeLimit (duration) from trial.endTime (instant)
+        const timeLimit = trial.endTime === null ? null : trial.endTime - Date.now();
+        // skip trial if timeLimit 
+        if (trial.endTime !== null && timeLimit <= 0) {
+            const data = {
+                completionReason: "skipped",
+                timeLimit: timeLimit,
+            };
+            jsPsych.finishTrial(data);
+        } else {
+            // build and show display HTML
+            {
+                let html = "";
+                html += `<div id="jspsych-spatial-orientation-instruction">`;
+                html +=     trial.instruction;
+                html += `</div>`;
+                html += `<div id="jspsych-spatial-orientation-wrapper">`;
+                html +=     `<div id="jspsych-spatial-orientation-scene">${trial.scene}</div>`;
+                html +=     `<canvas id="jspsych-spatial-orientation-icirc" width="500" height="500"></canvas>`;
+                html += `</div>`;
+                displayElement.innerHTML = html;
+            }
+            const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+            // check canvas support
+            if (!icirc.getContext) { return; }
+            const start = performance.now();
+            plugin.buildIcirc(icirc, {
+                radius: 150,
+                centerText: trial.centerText,
+                topText: trial.topText,
+                pointerText: trial.pointerText,
+                targetRadians: trial.targetRadians,
+                mode: trial.mode,
+                timeLimit: timeLimit,
+                onCompletion: completionData => {
+                    // build data
+                    const rt = performance.now() - start;
+                    const data = {
+                        ...completionData,
+                        rt: rt,
+                        timeLimit: timeLimit,
+                    };
+                    // finish trial
+                    setTimeout(() => { jsPsych.finishTrial(data); }, trial.lingerDuration);
+                },
+            });
+        }
     };
 
     return plugin;

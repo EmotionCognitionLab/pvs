@@ -6,7 +6,7 @@ jest.useFakeTimers('legacy'); // why legacy: https://github.com/facebook/jest/is
 
 beforeEach(() => {
     let timeline = (new VerbalFluency()).getTimeline();
-    expect(timeline.length).toBe(4);
+    expect(timeline.length).toBe(2);
     jsPsych.init({timeline: timeline});
 
     // welcome screen -> instruction

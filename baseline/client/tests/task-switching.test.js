@@ -94,8 +94,6 @@ describe("TaskSwitching timeline", () => {
                 expect(tl[delayScreenIdx].timeline.length).toBe(1);
                 expect(tl[delayScreenIdx].timeline[0].trial_duration).toBe(1000);
                 expect(tl[delayScreenIdx].timeline_variables.length).toBe(15);
-            } else {
-                expect(tl[delayScreenIdx].stimulus).toMatch(/Task complete/);
             }
             delayScreenCount++;
         }
@@ -402,7 +400,7 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
             }
             break;
         case "font size":
-            if ( (correctly && size === "big") || (!correctly && color !== "big")) {
+            if ( (correctly && size === "big") || (!correctly && size !== "big")) {
                 pressKey("ArrowRight")
             } else {
                 pressKey("ArrowLeft");

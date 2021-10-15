@@ -3,7 +3,10 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
+import "css/common.css";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
+import { Demographics } from "../demographics/demographics.js";
+import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
@@ -11,7 +14,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
-import { saveResults, getAllResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
@@ -32,6 +35,7 @@ const setStarted = "set-started";
 const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
+let userSession;
 
 /**
  * 
@@ -153,12 +157,16 @@ function taskForName(name, options) {
             return new DailyStressors();
         case "dass":
             return new Dass();
+        case "demographics":
+            return new Demographics();
         case "face-name":
             return new FaceName(options.setNum || 1);
+        case "ffmq":
+            return new Ffmq();
         case "flanker":
             const setNum = options.setNum || 1;
             return new Flanker(setNum);
-        case "mind-eyes":
+        case "mind-in-eyes":
             return new MindEyes(options.setNum || 1);
         case "mood-memory":
             return new MoodMemory();
@@ -189,12 +197,24 @@ function taskForName(name, options) {
             const rand = Math.floor(Math.random() * availableLettersArr.length);
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
-        case "verbal-learning":
-            return new VerbalLearning();
+        case "verbal-learning-learning":
+            return new VerbalLearning(options.setNum || 1, 1);
+        case "verbal-learning-recall":
+            return new VerbalLearning(options.setNum || 1, 2, verbalLearningEndTime.bind(this));
         default:
            // throw new Error(`Unknown task type: ${name}`);
            return {getTimeline: () => taskNotAvailable(name), taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
     }
+}
+
+async function verbalLearningEndTime() {
+    const vlResults = await getExperimentResultsForCurrentUser(userSession, 'verbal-learning-learning');
+    if (vlResults.length === 0) {
+        return 0;
+    }
+    const last = vlResults[vlResults.length - 1];
+    const parsedDate = Date.parse(last.dateTime);
+    return parsedDate;
 }
 
 
@@ -231,6 +251,7 @@ function init() {
 async function doAll(session) {
     // pre-fetch all results before doing browser check to avoid
     // lag after btowser check sends them to start experiments
+    userSession = session;
     const allResults = await getAllResultsForCurrentUser(session);
     browserCheck.run(startTasks.bind(null, allResults));
 }
@@ -252,6 +273,10 @@ function saveResultsCallback(experimentName, results) {
 function handleError(err) {
     // TODO set up remote error logging
     console.log(err);
+    // something went wrong; redirect users to cognito sign-in page
+    const cognitoAuth = getAuth(() => {}, () => {});
+    const loginUrl = cognitoAuth.getFQDNSignIn();
+    window.location = loginUrl;
 }
 
 function taskNotAvailable(taskName) {

@@ -1,7 +1,13 @@
 #jspsych-content {
     padding: 2.5%;
+    max-width: 40em;
 }
 
 .jspsych-btn {
     margin: 5%;
+}
+
+.jspsych-display-element {
+    font-size: 22px !important;
+    background-color: beige;
 }

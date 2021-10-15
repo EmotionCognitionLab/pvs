@@ -2,7 +2,9 @@
 
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Dass } from "../dass/dass";
+import { Demographics } from "../demographics/demographics.js";
 import { FaceName } from "../face-name/face-name.js";
+import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
@@ -101,8 +103,8 @@ describe("getSetAndTasks", () => {
     });
 
     it("should return remaining tasks when the number of characters in the first uncompleted task name is less than or equal to the number of completed tasks", () => {
-        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 1));
-        const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 1);
+        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 2));
+        const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 2);
         expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
         const input = buildInput(inputTasks);
         const result = dailyTasks.getSetAndTasks(input);
@@ -172,6 +174,14 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("dass", {});
         expect(result instanceof Dass).toBe(true);
     });
+    it("returns a Demographics object for demographics", () => {
+        const result = dailyTasks.taskForName("demographics", {});
+        expect(result instanceof Demographics).toBe(true);
+    })
+    it("returns a Ffmq object for ffmq", () => {
+        const result = dailyTasks.taskForName("ffmq", {});
+        expect(result instanceof Ffmq).toBe(true);
+    })
     it("returns a MoodMemory object for mood-memory", () => {
         const result = dailyTasks.taskForName("mood-memory", {});
         expect(result instanceof MoodMemory).toBe(true);
@@ -183,10 +193,6 @@ describe("taskForName", () => {
     it("returns a Panas object for panas", () => {
         const result = dailyTasks.taskForName("panas", {});
         expect(result instanceof Panas).toBe(true);
-    });
-    it("returns a VerbalLearning object for verbal-learning", () => {
-        const result = dailyTasks.taskForName("verbal-learning", {});
-        expect(result instanceof VerbalLearning).toBe(true);
     });
     it("returns a TaskSwitching object for task-switching", () => {
         const result = dailyTasks.taskForName("task-switching", {});
@@ -226,15 +232,15 @@ describe("taskForName for face-name", () => {
     });
 });
 
-describe("taskForName for mind-eyes", () => {
-    it("returns a MindEyes object for mind-eyes", () => {
-        const result = dailyTasks.taskForName("mind-eyes", {setNum: 4});
+describe("taskForName for mind-in-eyes", () => {
+    it("returns a MindEyes object for mind-in-eyes", () => {
+        const result = dailyTasks.taskForName("mind-in-eyes", {setNum: 4});
         expect(result instanceof MindEyes).toBe(true);
     });
 
     it("defaults to set 1 if no set number is provided", () => {
-        const set1Result = dailyTasks.taskForName("mind-eyes", {setNum: 1});
-        const noSetResult = dailyTasks.taskForName("mind-eyes", {});
+        const set1Result = dailyTasks.taskForName("mind-in-eyes", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("mind-in-eyes", {});
         const set1Timeline = set1Result.getTimeline();
         const noSetTimeline = noSetResult.getTimeline();
         expect(noSetTimeline.length).toBe(set1Timeline.length);
@@ -276,6 +282,25 @@ describe("taskForName for pattern-separation", () => {
     });
 });
 
+describe("taskForName for verbal-learning", () => {
+    it("returns a VerbalLearning object for verbal-learning-learning", () => {
+        const result = dailyTasks.taskForName("verbal-learning-learning", {});
+        expect(result instanceof VerbalLearning).toBe(true);
+    });
+
+    it("returns a VerbalLearning object for verbal-learning-recall", () => {
+        const result = dailyTasks.taskForName("verbal-learning-recall", {});
+        expect(result instanceof VerbalLearning).toBe(true);
+    });
+
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Task = dailyTasks.taskForName("verbal-learning-learning", {setNum: 1});
+        const noSetTask = dailyTasks.taskForName("verbal-learning-learning", {});
+        expect(set1Task.setNum).toBe(1);
+        expect(noSetTask.setNum).toBe(1);
+    });
+});
+
 describe("doing the tasks", () => {
     afterEach(() => {
         jest.useRealTimers();
@@ -288,23 +313,18 @@ describe("doing the tasks", () => {
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // welcome screen
-        clickContinue();
-
+        
         // questionnaire
         const dispElem = jsPsych.getDisplayElement();
-        const questions = dispElem.querySelectorAll(".jspsych-survey-likert-options");
-        expect(questions.length).toBeGreaterThan(0);
-        // each question should have radio buttons; click the first one for each question
-        for (let i = 0; i < questions.length; i++) {
-            const buttons = questions[i].getElementsByTagName('input');
-            expect(buttons.length).toBeGreaterThan(0);
-            buttons[0].click();
-        }
+        const questions = dispElem.querySelectorAll(".jspsych-percent-sum-field");
+        expect(questions.length).toBe(3);
+        // each question needs a number input; the three should sum to 100
+        questions[0].value = 33;
+        questions[1].value = 33;
+        questions[2].value = 34;
+        //trigger input event to get the jspsych-percent-sum plugin to activate the submit button
+        questions[0].dispatchEvent(new InputEvent("input"));
         clickContinue("input[type=submit]");
-
-        // finished screen
-        clickContinue();
 
         expect(saveResultsMock.mock.calls.length).toBe(2);
         // the experiment name saved to the results should be the name of the first task in allTimelines

@@ -6,6 +6,11 @@ h1 {
     font-size: 1.6em;
 }
 
+.n-back-cue-title {
+    margin-top: 2em;
+    font-weight: bold;
+}
+
 .n-back-cue-table {
     display: table;
     table-layout: fixed;
