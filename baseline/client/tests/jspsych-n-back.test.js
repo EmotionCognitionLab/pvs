@@ -51,7 +51,6 @@ describe("jspsych-n-back.js plugin", () => {
             show_duration: 1000,
             hide_duration: 0,
         }]});
-        
         jest.useFakeTimers("legacy");
         // all missed
         jsPsych.init(testSettings(0));
