@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "jest",
-    "build": "cd ../../common/auth/ && npx webpack && cd ../db && npx webpack && cd ../../baseline/client && npx webpack",
+    "build": "cd ../../common/auth/ && npx webpack && cd ../db && npx webpack && cd ../logger && npx webpack && cd ../../baseline/client && npx webpack",
     "deploy": "npm run build && npm run test && node deploy.js"
   },
   "dependencies": {
