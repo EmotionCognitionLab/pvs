@@ -13,6 +13,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
+import { Logger } from "../../../common/logger/dist/logger.js";
 import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
@@ -39,6 +40,7 @@ const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let userSession;
+const logger = new Logger();
 
 /**
  * 
@@ -274,8 +276,7 @@ function saveResultsCallback(experimentName, results) {
 }
 
 function handleError(err) {
-    // TODO set up remote error logging
-    console.log(err);
+    logger.error(err);
     // something went wrong; redirect users to cognito sign-in page
     const cognitoAuth = getAuth(() => {}, () => {});
     const loginUrl = cognitoAuth.getFQDNSignIn();
