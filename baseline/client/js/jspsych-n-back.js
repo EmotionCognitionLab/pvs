@@ -72,7 +72,7 @@ jsPsych.plugins["n-back"] = (() => {
         // helper for recording response
         const listener_callback = event => {
             event.preventDefault();
-            if (event.code === "Space") {
+            if (event.key === " " || event.code === "Space") {
                 // add response data
                 const now = performance.now();
                 responses.push({
