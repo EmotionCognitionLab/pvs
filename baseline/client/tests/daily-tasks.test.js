@@ -16,6 +16,7 @@ import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { clickContinue } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
+import { PhysicalActivity } from "../physical-activity/physical-activity.js";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -193,6 +194,10 @@ describe("taskForName", () => {
     it("returns a Panas object for panas", () => {
         const result = dailyTasks.taskForName("panas", {});
         expect(result instanceof Panas).toBe(true);
+    });
+    it("returns a PhysicalActivity object for physical-activity", () => {
+        const result = dailyTasks.taskForName("physical-activity", {});
+        expect(result instanceof PhysicalActivity).toBe(true);
     });
     it("returns a TaskSwitching object for task-switching", () => {
         const result = dailyTasks.taskForName("task-switching", {});

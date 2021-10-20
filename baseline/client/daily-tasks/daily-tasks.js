@@ -21,6 +21,7 @@ import { FaceName } from "../face-name/face-name.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
+import { PhysicalActivity } from "../physical-activity/physical-activity.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -183,6 +184,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, false);
         case "pattern-separation-recall":
             return new PatternSeparation(options.setNum || 1, true);
+        case "physical-activity":
+            return new PhysicalActivity();
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
