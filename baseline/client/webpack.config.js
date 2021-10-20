@@ -86,3 +86,4 @@ add_page("mind-in-eyes", "mind-eyes/mind-eyes.js", "Reading the Mind in the Eyes
 add_page("dass", "dass/dass.js", "Depression Anxiety Stress Scale");
 add_page("ffmq", "ffmq/ffmq.js", "Five Facet Mindfulness Questionnaire");
 add_page("demographics", "demographics/demographics.js", "Demographic information");
+add_page("physical-activity", "physical-activity/physical-activity.js", "Physical Activity Survey");
