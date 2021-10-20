@@ -51,6 +51,30 @@ describe("n-back", () => {
         expect(relevant.length).toBeGreaterThan(0);
     });
 
+    it("short practice loops until completed correctly", () => {
+        const timeline = (new NBack(1)).getTimeline();
+        jest.useFakeTimers("legacy");
+        let complete = false;
+        jsPsych.init({
+            timeline: timeline,
+            on_finish: () => { complete = true; },
+        });
+        // complete 100 trials incorrectly
+        for (let i = 0; i < 100 && !complete; ++i) {
+            completeCurrentTrial(false);
+        }
+        // should be at an n-back short practice trial
+        expect(complete).toBe(false);
+        expect(jsPsych.currentTrial().type).toBe("n-back");
+        expect(jsPsych.currentTrial().sequence.length).toBe(3);
+        // complete 100 trials correctly
+        for (let i = 0; i < 100 && !complete; ++i) {
+            completeCurrentTrial(true);
+        }
+        // should have completed timeline
+        expect(complete).toBe(true);
+    });
+
     it("n-back plugin trials are preceded by cues", () => {
         const timeline = (new NBack(1)).getTimeline();
         expect(
