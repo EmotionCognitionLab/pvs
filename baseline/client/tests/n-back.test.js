@@ -43,13 +43,9 @@ describe("n-back", () => {
             timeline: timeline,
             on_finish: () => { complete = true; },
         });
-        let trials = 0;
-        while (!complete) {
+        for (let trials = 0; !complete; ++trials) {
+            if (trials > 100) { throw new Error("too many trials"); }
             completeCurrentTrial(true);
-            ++trials;
-            if (trials > 100) {
-                throw new Error("why");
-            }
         }
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevant.length).toBeGreaterThan(0);
