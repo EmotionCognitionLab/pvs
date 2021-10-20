@@ -27,7 +27,12 @@ export class TaskSwitching {
             }
         }
         // hack to remove the black background we use for this task
-        mixedNodes[mixedNodes.length - 1].on_finish = () => { document.body.classList.remove("blackbg"); }
+        const finalNode = mixedNodes[mixedNodes.length - 1];
+        const finalTimeline = finalNode.timeline;
+        // use second from last element in timeline b/c final element is conditional that may not run
+        // side effect: If the user is too slow on the last item the "Answer faster next time" will
+        // use the default background, not the black background
+        finalTimeline[finalTimeline.length - 2].on_finish = () => { document.body.classList.remove("blackbg"); }
 
         const genericIntro = "We are going to start a round of the task. Please respond as quickly as you can but try to avoid mistakes.";
         const colorIntro = genericIntro + this.singleBlockHtml("color");
