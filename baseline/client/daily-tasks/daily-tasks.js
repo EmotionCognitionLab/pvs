@@ -123,6 +123,11 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
                 saveResultsCallback(setStarted, [{"setNum": setNum }]);
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
+            }
+        } else {
+            node.on_timeline_start = () => {
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
             }
         }
         allTimelines.push(node);

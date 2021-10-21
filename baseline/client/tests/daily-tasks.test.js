@@ -331,15 +331,15 @@ describe("doing the tasks", () => {
         questions[0].dispatchEvent(new InputEvent("input"));
         clickContinue("input[type=submit]");
 
-        expect(saveResultsMock.mock.calls.length).toBe(2);
+        expect(saveResultsMock.mock.calls.length).toBe(4); // set-started, task-started, results, next task started
         // the experiment name saved to the results should be the name of the first task in allTimelines
-        expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[2][0]).toBe(allTimelines.remainingTasks[0].taskName);
         // it should save the browser user agent as part of the results
-        const ua = saveResultsMock.mock.calls[1][1].filter(r => r.ua);
+        const ua = saveResultsMock.mock.calls[2][1].filter(r => r.ua);
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
         // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[1][1].filter(r => r.isRelevant)
+        let relevantResult = saveResultsMock.mock.calls[2][1].filter(r => r.isRelevant)
         expect(relevantResult.length).toBe(1);
         relevantResult = relevantResult[0];
         expect(relevantResult.response).toBeDefined();
@@ -359,18 +359,26 @@ describe("doing the tasks", () => {
         jest.runAllTimers();
         // not-implemented screen TODO replace with correct task completion once task is written
         clickContinue();
-        expect(saveResultsMock.mock.calls.length).toBe(2);
+        expect(saveResultsMock.mock.calls.length).toBe(3);
         // check experiment name
-        expect(saveResultsMock.mock.calls[1][0]).toBe(dailyTasks.setFinished);
-        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{setNum: 1}]);
+        expect(saveResultsMock.mock.calls[2][0]).toBe(dailyTasks.setFinished);
+        expect(saveResultsMock.mock.calls[2][1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
         const saveResultsMock = jest.fn((experimentName, results) => null);
         const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         jsPsych.init({timeline: allTimelines.remainingTasks});
-        expect(saveResultsMock.mock.calls.length).toBe(1);
+        expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
+    });
+    it("should save a result showing the task started at the start of a task", () => {
+        const saveResultsMock = jest.fn((experimentName, results) => null);
+        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+        jsPsych.init({timeline: allTimelines.remainingTasks});
+        expect(saveResultsMock.mock.calls.length).toBe(2);
+        expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true}]);
     });
     it("should put a full-screen task at the start of each experiment", () => {
         const saveResultsMock = jest.fn((experimentName, results) => null);
