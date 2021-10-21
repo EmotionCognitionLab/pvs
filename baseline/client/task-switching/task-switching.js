@@ -63,7 +63,10 @@ export class TaskSwitching {
         .concat([this.constructor.instruction(pre_mix_instr)])
         .concat(mixedNodes)
     }
-
+    get taskName() {
+        return this.constructor.taskName;
+    }
+    
     number(num, bigOrSmall=null) {
         if (!num) {
             num = jsPsych.randomization.sampleWithReplacement([1,2,3,4,6,7,8,9], 1)[0];
