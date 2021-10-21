@@ -307,12 +307,14 @@ describe("taskForName for verbal-learning", () => {
 });
 
 describe("doing the tasks", () => {
+    const saveResultsMock = jest.fn((experimentName, results) => null);
+    const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+
     afterEach(() => {
         jest.useRealTimers();
+        saveResultsMock.mockClear();
     });
     it("should save the data at the end of each task", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         jest.useFakeTimers("legacy");
         jsPsych.init({timeline: allTimelines.remainingTasks});
         // full-screen mode screen
@@ -348,8 +350,6 @@ describe("doing the tasks", () => {
 
     });
     it("should save a 'set-finished' result at the end of a set", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2)
         jest.useFakeTimers("legacy");
         jsPsych.init({timeline: tasksToRun});
@@ -365,35 +365,27 @@ describe("doing the tasks", () => {
         expect(saveResultsMock.mock.calls[2][1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         jsPsych.init({timeline: allTimelines.remainingTasks});
         expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a result showing the task started at the start of a task", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         jsPsych.init({timeline: allTimelines.remainingTasks});
         expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
         expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true}]);
     });
     it("should put a full-screen task at the start of each experiment", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         const firstTaskTypes = allTimelines.remainingTasks.slice(0, allTimelines.remainingTasks.length - 1)
             .map(rt => rt.timeline[0].timeline[0].type);
        expect(firstTaskTypes.every(tt => tt === "fullscreen")).toBe(true);
     });
     it("should display the full-screen task if the display is not already full screen", () => {
-        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
         jsPsych.init({timeline: allTimelines.remainingTasks});
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/full screen mode/);
     })
     it("should not display the full-screen task if the display is already full screen", () => {
-        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
         const origFsElement = document.fullscreenElement;
         global.document.fullscreenElement = true; // normally an HTMLElement, but daily-tasks just checks for existence
         jsPsych.init({timeline: allTimelines.remainingTasks});
