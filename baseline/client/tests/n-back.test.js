@@ -52,6 +52,14 @@ describe("n-back", () => {
     });
 
     it("short practice loops until completed correctly", () => {
+        // helpers
+        const completeNTrials = (n, correctly) => {
+            for (let i = 0; i < 100 && !complete; ++i) {
+                completeCurrentTrial(correctly);
+            }
+        }
+        const parseNodeID = id => id.split("-").map(pair => pair.split(".").map(s => parseInt(s, 10)));
+        // start timeline
         const timeline = (new NBack(1)).getTimeline();
         jest.useFakeTimers("legacy");
         let complete = false;
@@ -60,17 +68,19 @@ describe("n-back", () => {
             on_finish: () => { complete = true; },
         });
         // complete 100 trials incorrectly
-        for (let i = 0; i < 100 && !complete; ++i) {
-            completeCurrentTrial(false);
-        }
-        // should be at an n-back short practice trial
+        completeNTrials(100, false);
+        // should be at an n-back short practice sub-timeline
+        const idA = parseNodeID(jsPsych.currentTimelineNodeID());
         expect(complete).toBe(false);
-        expect(jsPsych.currentTrial().type).toBe("n-back");
-        expect(jsPsych.currentTrial().sequence.length).toBe(3);
+        // complete another 10 trials incorrectly
+        completeNTrials(10, false);
+        // should still be at the same n-back short practice sub-timeline
+        const idB = parseNodeID(jsPsych.currentTimelineNodeID());
+        expect(idB[0]).toStrictEqual(idA[0]);  // same top-level timeline node and same iteration
+        expect(idB[1][0]).toStrictEqual(idA[1][0]);  // same sub-level timeline node of the top-level timeline node
+        expect(idB[1][1]).toBeGreaterThan(idA[1][1]);  // but greater iteration of the sub-level timeline node
         // complete 100 trials correctly
-        for (let i = 0; i < 100 && !complete; ++i) {
-            completeCurrentTrial(true);
-        }
+        completeNTrials(100, true);
         // should have completed timeline
         expect(complete).toBe(true);
     });
