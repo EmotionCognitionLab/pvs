@@ -57,7 +57,7 @@ export class VerbalLearning {
             throw new Error("getLastSegmentEndTime must not be null if segmentNum is 2");
         }
         this.segmentNum = segmentNum;
-        this.getLastSegmentEndTime = getLastSegmentEndTime ?? (() => 0);
+        this.getLastSegmentEndTime = getLastSegmentEndTime !== null ? getLastSegmentEndTime : () => 0;
     }
 
     getTimeline() {
