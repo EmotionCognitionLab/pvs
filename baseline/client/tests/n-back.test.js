@@ -52,21 +52,20 @@ describe("n-back", () => {
     });
 
     it("short practice loops until completed correctly", () => {
-        // helpers
-        const completeNTrials = (n, correctly) => {
-            for (let i = 0; i < 100 && !complete; ++i) {
-                completeCurrentTrial(correctly);
-            }
-        }
+        // helper to parse timeline node ids
         const parseNodeID = id => id.split("-").map(pair => pair.split(".").map(s => parseInt(s, 10)));
         // start timeline
-        const timeline = (new NBack(1)).getTimeline();
         jest.useFakeTimers("legacy");
         let complete = false;
         jsPsych.init({
-            timeline: timeline,
+            timeline: (new NBack(1)).getTimeline(),
             on_finish: () => { complete = true; },
         });
+        const completeNTrials = (n, correctly) => {
+            for (let i = 0; i < n && !complete; ++i) {
+                completeCurrentTrial(correctly);
+            }
+        }
         // complete 100 trials incorrectly
         completeNTrials(100, false);
         // should be at an n-back short practice sub-timeline
