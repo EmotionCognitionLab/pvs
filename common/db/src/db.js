@@ -44,11 +44,11 @@ function saveResults(session, experiment, results) {
         }
         try {
             const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-            chunks.forEach(async chunk => {
+            for (const chunk of chunks) {
                 const params = { RequestItems: {} };
                 params['RequestItems'][awsSettings.ExperimentTable] = chunk;
                 await docClient.batchWrite(params).promise();
-            });
+            }
         } catch (err) {
             console.error(err); // TODO implement remote error logging
             throw err;
