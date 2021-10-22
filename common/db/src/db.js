@@ -10,6 +10,7 @@
   
 function saveResults(session, experiment, results) {
     const subId = getSubIdFromSession(session);
+    console.log(`There are ${results.length} results for ${subId}`);
     const credentials = getCredentialsForSession(session);
     const now = new Date().toISOString();
 
