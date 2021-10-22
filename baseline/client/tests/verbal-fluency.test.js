@@ -8,9 +8,6 @@ beforeEach(() => {
     let timeline = (new VerbalFluency()).getTimeline();
     expect(timeline.length).toBe(2);
     jsPsych.init({timeline: timeline});
-
-    // welcome screen -> instruction
-    pressKey(" ");
     // instruction screen -> trial
     pressKey(" ");
 });
@@ -22,10 +19,6 @@ describe("verbal-fluency", () => {
         inputField.value = "fee fi fo fum";
         // let's not wait 60 seconds for the trial to finish
         jest.runAllTimers();
-        // completion
-        pressKey(" ");
-
-
         // check the data
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBe(1);

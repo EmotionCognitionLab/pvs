@@ -16,7 +16,7 @@ export class VerbalFluency {
         return {
             type: "timed-writing",
             duration: 60000,
-            stimulus: stimulus_template_html.replaceAll("{letter}", this.letter),
+            stimulus: stimulus_template_html.replace(/{letter}/g, this.letter),
             textarea_rows: 6,
             textarea_cols: 60,
             data: { letter: this.letter, isRelevant: true },
