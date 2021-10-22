@@ -14,6 +14,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "../../../common/auth/dist/auth.js";
+import { Logger } from "../../../common/logger/dist/logger.js";
 import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
@@ -21,6 +22,7 @@ import { FaceName } from "../face-name/face-name.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
+import { PhysicalActivity } from "../physical-activity/physical-activity.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -36,6 +38,7 @@ const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let userSession;
+const logger = new Logger();
 
 /**
  * 
@@ -66,14 +69,13 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                 const setNum = i + 1; // add 1 b/c setNum starts from 1
                 if (j === 0 && !nextSetOk) {
                     // we're at the start of a new set and the participant
-                    // started their most recent set today
-                    // participants can only start one set per day
+                    // doesn't meet the criteria for starting the next one yet
                     return { set: setNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
                 }
                 // they didn't finish this set - return the remaining tasks
                 remainingTasks = set.slice(j)
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
-                if (j > 0 && nextSetOk) {
+                if (j > 0 && nextSetOk && i < allSets.length - 2) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
                     Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
@@ -117,6 +119,11 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
                 saveResultsCallback(setStarted, [{"setNum": setNum }]);
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
+            }
+        } else {
+            node.on_timeline_start = () => {
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
             }
         }
         allTimelines.push(node);
@@ -178,6 +185,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, false);
         case "pattern-separation-recall":
             return new PatternSeparation(options.setNum || 1, true);
+        case "physical-activity":
+            return new PhysicalActivity();
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
@@ -219,21 +228,36 @@ async function verbalLearningEndTime() {
 
 
 /**
- * Users may only start the next set if (a) they started the previous one yesterday or earlier and (b) at least one hour ago.
- * Example: If it is Tuesday at 12:17AM and the user started the previous set Monday at 11:43PM they can't start the next set.
+ * Users may only start the next set if:
+ * (a) They are in between sets and
+ *    (1) They completed the last set >= 1 hour ago or
+ *    (2) The last set took them >3 hours to complete
+ * or
+ * (b) They are in the middle of a set that they started >3 hours ago
+ * See https://github.com/EmotionCognitionLab/pvs/issues/68
  * @param {Object[]} allResults All results for the user, as returned by ../common/db/db.js:getAllResultsForCurrentUser()
  * @returns true if the user can start the next set, false otherwise
  */
 function canStartNextSet(allResults) {
-    const mostRecentStart = allResults.filter(r => r.experiment === setStarted).reverse()[0];
-    if (!mostRecentStart) {
-        return true;
+    if (allResults.length === 0) return false;
+
+    const setStarts = allResults.filter(r => r.experiment === setStarted);
+    const setFinishes = allResults.filter(r => r.experiment === setFinished);
+    const setNumsStarted = new Set(setStarts.map(ss => ss.results.setNum));
+    const setNumsFinished = new Set(setFinishes.map(sf => sf.results.setNum));
+    let inBetweenSets = true;
+    for (let setNum of setNumsStarted) if (!setNumsFinished.has(setNum)) inBetweenSets = false;
+    inBetweenSets = inBetweenSets && (setNumsStarted.size == setNumsFinished.size);
+
+    if (inBetweenSets) {
+        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
+        const lastSetFinishedAt = Date.parse(setFinishes[setFinishes.length - 1].dateTime);
+        return Date.now() - lastSetFinishedAt >= 1 * 60 * 60 * 1000 ||
+            (lastSetFinishedAt - lastSetStartedAt > 3 * 60 * 60 * 1000);
+    } else {
+        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
+        return Date.now() - lastSetStartedAt > 3 * 60 * 60 * 1000;
     }
-    const lastSetStart = new Date(mostRecentStart.dateTime);
-    const now = Date.now();
-    const yesterday = new Date(now - (1000 * 60 * 60 * 24));
-    return lastSetStart < yesterday || 
-        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now - (1000 * 60 * 60));
 }
 
 function init() {
@@ -271,8 +295,7 @@ function saveResultsCallback(experimentName, results) {
 }
 
 function handleError(err) {
-    // TODO set up remote error logging
-    console.log(err);
+    logger.error(err);
     // something went wrong; redirect users to cognito sign-in page
     const cognitoAuth = getAuth(() => {}, () => {});
     const loginUrl = cognitoAuth.getFQDNSignIn();

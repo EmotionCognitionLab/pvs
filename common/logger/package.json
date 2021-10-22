@@ -1,0 +1,41 @@
+{
+  "name": "logger",
+  "version": "1.0.0",
+  "description": "Overrides console.log|error and writes to cloudwatch logs",
+  "main": "logger.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "rootDir": ".",
+    "moduleDirectories": [
+      "<rootDir>",
+      "node_modules"
+    ],
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1002.0",
+    "process": "^0.11.10",
+    "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-regenerator": "^7.14.5",
+    "@babel/preset-env": "^7.15.8",
+    "jest": "^27.2.5",
+    "webpack": "^5.57.1",
+    "webpack-cli": "^4.9.0"
+  }
+}
