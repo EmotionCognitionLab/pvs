@@ -78,7 +78,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                 // they didn't finish this set - return the remaining tasks
                 remainingTasks = set.slice(j)
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
-                if (j > 0 && nextSetOk && i < allSets.length - 2) {
+                if (j > 0 && nextSetOk && i < allSets.length - 1) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
                     Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
