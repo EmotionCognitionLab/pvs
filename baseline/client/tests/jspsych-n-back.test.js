@@ -1,12 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-n-back.js";
-
-const pressBubblingKey = key => {
-    const initDict = {key: key, bubbles: true};
-    const display = document.querySelector(".jspsych-display-element");
-    display.dispatchEvent(new KeyboardEvent("keydown", initDict));
-    display.dispatchEvent(new KeyboardEvent("keyup", initDict));
-};
+import { pressKey } from "./utils.js"
 
 const getLastTrialData = () => jsPsych.data.getLastTrialData().values()[0];
 
@@ -29,7 +23,7 @@ describe("jspsych-n-back.js plugin", () => {
         jsPsych.init({timeline: [trial]});
         presses.forEach(n => {
             for (let i = 0; i < n; ++i) {
-                pressBubblingKey(" ");
+                pressKey(" ", true);
             }
             jest.advanceTimersByTime(trial.show_duration);
         });
@@ -59,15 +53,15 @@ describe("jspsych-n-back.js plugin", () => {
         // none missed
         jsPsych.init(testSettings(1));
         jest.advanceTimersByTime(1000);
-        pressBubblingKey(" ");
+        pressKey(" ", true);
         jest.advanceTimersByTime(2000);
-        pressBubblingKey(" ");
+        pressKey(" ", true);
         jest.runAllTimers();
         expect(getLastTrialData().missedIndices).toStrictEqual([]);
         // one missed
         jsPsych.init(testSettings(2));
         jest.advanceTimersByTime(5000);
-        pressBubblingKey(" ");
+        pressKey(" ", true);
         jest.runAllTimers();
         expect(getLastTrialData().missedIndices).toStrictEqual([6]);
     });

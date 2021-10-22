@@ -1,6 +1,8 @@
-export function pressKey(key) {
-    document.querySelector('.jspsych-display-element').dispatchEvent(new KeyboardEvent("keydown", {key: key}));
-    document.querySelector('.jspsych-display-element').dispatchEvent(new KeyboardEvent("keyup", {key: key}));
+export function pressKey(key, bubbles = false) {
+    const initDict = {key: key, bubbles: bubbles};
+    const display = document.querySelector(".jspsych-display-element");
+    display.dispatchEvent(new KeyboardEvent("keydown", initDict));
+    display.dispatchEvent(new KeyboardEvent("keyup", initDict));
 }
 
 export function clickContinue(querySelector="button") {

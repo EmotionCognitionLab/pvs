@@ -1,13 +1,6 @@
 import { NBack } from "../n-back/n-back.js";
 import { pressKey, cartesianProduct } from "./utils.js"
 
-const pressBubblingKey = key => {
-    const initDict = {key: key, bubbles: true};
-    const display = document.querySelector(".jspsych-display-element");
-    display.dispatchEvent(new KeyboardEvent("keydown", initDict));
-    display.dispatchEvent(new KeyboardEvent("keyup", initDict));
-};
-
 const completeCurrentTrial = correctly => {
     const trial = jsPsych.currentTrial();
     const progress = jsPsych.progress();
@@ -20,7 +13,7 @@ const completeCurrentTrial = correctly => {
     } else if (trial.type === "n-back") {
         trial.sequence.forEach((x, i) => {
             if (correctly && (trial.n === 0 ? x === "1" : x === trial.sequence[i - trial.n])) {
-                pressBubblingKey(" ");
+                pressKey(" ", true);
             }
             jest.advanceTimersByTime(trial.show_duration + trial.hide_duration);
         });
