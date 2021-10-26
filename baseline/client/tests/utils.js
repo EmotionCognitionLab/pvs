@@ -21,3 +21,11 @@ export function lastData(key) {
     if (key && lastData[key]) return lastData[key];
     return lastData;
 }
+
+export const clickIcirc = (icirc, x, y) => {
+    const rect = icirc.getBoundingClientRect();
+    icirc.dispatchEvent(new MouseEvent("click", {
+        clientX: +x + icirc.width/2 + rect.left,
+        clientY: -y + icirc.height/2 + rect.top,
+    }));
+};
