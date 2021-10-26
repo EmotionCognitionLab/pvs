@@ -13,10 +13,12 @@ import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { clickContinue } from "./utils.js";
+import { clickContinue, clickIcirc, pressKey } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import "jest-canvas-mock";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -364,6 +366,18 @@ describe("taskForName for pattern-separation", () => {
     });
 });
 
+describe("taskForName for spatial-orientation", () => {
+    it("returns a SpatialOrientation object for spatial-orientation", () => {
+        const result = dailyTasks.taskForName("spatial-orientation", {setNum: 2});
+        expect(result instanceof SpatialOrientation).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("spatial-orientation", {setNum: 1}).getTimeline();
+        const noSetResult = dailyTasks.taskForName("spatial-orientation", {}).getTimeline();
+        expect(set1Result.length).toEqual(noSetResult.length);
+    });
+});
+
 describe("taskForName for verbal-learning", () => {
     it("returns a VerbalLearning object for verbal-learning-learning", () => {
         const result = dailyTasks.taskForName("verbal-learning-learning", {});
@@ -434,12 +448,26 @@ describe("doing the tasks", () => {
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // not-implemented screen TODO replace with correct task completion once task is written
-        clickContinue();
-        expect(saveResultsMock.mock.calls.length).toBe(5);
+        // spatial-orientation
+        for (let i = 1; i < tasksToRun[0].timeline.length; i++) {
+            const task = tasksToRun[0].timeline[i];
+            if (task.type === "html-keyboard-response") {
+                pressKey(" ");
+            } else if (task.type === "spatial-orientation") {
+                const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+                if (icirc === null) {
+                    //we've been timed out
+                    break;
+                }
+                clickIcirc(icirc, 0, 0);
+                jest.runAllTimers();
+            }
+        }
+        expect(saveResultsMock.mock.calls.length).toBe(24);
         // check experiment name
-        expect(saveResultsMock.mock.calls[4][0]).toBe(dailyTasks.setFinished);
-        expect(saveResultsMock.mock.calls[4][1]).toStrictEqual([{setNum: 1}]);
+        const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
+        expect(lastRes[0]).toBe(dailyTasks.setFinished);
+        expect(lastRes[1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
         dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);

@@ -22,6 +22,7 @@ import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -188,6 +189,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, true);
         case "physical-activity":
             return new PhysicalActivity();
+        case "spatial-orientation":
+            return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
