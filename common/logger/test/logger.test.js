@@ -136,60 +136,56 @@ describe("Logger", () => {
         expect(mockPutLogEvents.mock.calls[0][0].sequenceToken).toBe(nextSequenceToken); // TODO make this less brittle; could break if someone changes mockDescribeLogStreams definition
     });
 
-    it("should write log events on the second try if the first one fails", () => {
-        mockPutLogEvents = jest.fn((params, callback) => callback(null, {nextSequenceToken: nextSequenceToken}));
-        mockPutLogEvents
-        .mockImplementationOnce((params, callback) => callback({
-            code: "SomeRandomException",
-            message: `Insert obscure error code here: CDE-123-ABC-789`
-        }, null));
-        jest.clearAllTimers();
-        const altLogger = new Logger();
-        const msg1 = "checking log event writing, take 1";
-        console.log(msg1);
-        jest.advanceTimersByTime(altLogger.pushFrequency);
-        const msg2 = "checking log event writing, take 2";
-        console.log(msg2);
-        jest.advanceTimersByTime(altLogger.pushFrequency);
-        expect(mockPutLogEvents.mock.calls.length).toBe(2);
-        const messages = mockPutLogEvents.mock.calls[1][0].logEvents.map(le => le.message);
-        expect(messages).toContain(JSON.stringify({message: msg1 + " \n", level: "log"}));
-        expect(messages).toContain(JSON.stringify({message: msg2 + " \n", level: "log"}));
-    });
-
-    it("should call console.error on a logging failure when override is false", () => {
+    describe("with error on putLogEvents", () => {
         const putLogError = {
             code: "SomeRandomException",
             message: `Insert obscure error code here: CDE-123-ABC-789`
         };
-        mockPutLogEvents
-            .mockImplementationOnce((params, callback) => callback(putLogError, null));
-        jest.clearAllTimers();
-        const mockError = jest.spyOn(console, "error");
-        const altLogger = new Logger(false);
-        const msg1 = "checking log event writing, take 1";
-        altLogger.log(msg1);
-        jest.advanceTimersByTime(altLogger.pushFrequency);
-        expect(mockError.mock.calls.length).toBe(1);
-        expect(mockError.mock.calls[0][0]).toBe("Error calling putLogEvents");
-        expect(mockError.mock.calls[0][1]).toStrictEqual(putLogError);
-        mockError.mockReset();
-    });
+        let mockError;
 
-    it("should not call console.error on a logging failure when override is true", () => {
-        const putLogError = {
-            code: "SomeRandomException",
-            message: `Insert obscure error code here: CDE-123-ABC-789`
-        };
-        mockPutLogEvents
-            .mockImplementationOnce((params, callback) => callback(putLogError, null));
-        jest.clearAllTimers();
-        const mockError = jest.spyOn(console, "error");
-        const altLogger = new Logger(true);
-        const msg1 = "checking log event writing, take 1";
-        altLogger.log(msg1);
-        jest.advanceTimersByTime(altLogger.pushFrequency);
-        expect(mockError.mock.calls.length).toBe(0);
-        mockError.mockReset();
+        beforeEach(() => {
+            mockPutLogEvents
+                .mockImplementationOnce((params, callback) => callback(putLogError, null));
+            jest.clearAllTimers();
+            mockError = jest.spyOn(console, "error");
+        });
+
+        afterEach(() => {
+            mockError.mockReset();
+        });
+
+        it("should write log events on the second try if the first one fails", () => {
+            const altLogger = new Logger();
+            const msg1 = "checking log event writing, take 1";
+            console.log(msg1);
+            jest.advanceTimersByTime(altLogger.pushFrequency);
+            const msg2 = "checking log event writing, take 2";
+            console.log(msg2);
+            jest.advanceTimersByTime(altLogger.pushFrequency);
+            expect(mockPutLogEvents.mock.calls.length).toBe(2);
+            const messages = mockPutLogEvents.mock.calls[1][0].logEvents.map(le => le.message);
+            expect(messages).toContain(JSON.stringify({message: msg1 + " \n", level: "log"}));
+            expect(messages).toContain(JSON.stringify({message: msg2 + " \n", level: "log"}));
+        });
+    
+        it("should call console.error on a logging failure when override is false", () => {
+            const altLogger = new Logger(false);
+            const msg1 = "checking log event writing, take 1";
+            altLogger.log(msg1);
+            jest.advanceTimersByTime(altLogger.pushFrequency);
+            expect(mockError.mock.calls.length).toBe(1);
+            expect(mockError.mock.calls[0][0]).toBe("Error calling putLogEvents");
+            expect(mockError.mock.calls[0][1]).toStrictEqual(putLogError);
+            mockError.mockReset();
+        });
+    
+        it("should not call console.error on a logging failure when override is true", () => {
+            const altLogger = new Logger(true);
+            const msg1 = "checking log event writing, take 1";
+            altLogger.log(msg1);
+            jest.advanceTimersByTime(altLogger.pushFrequency);
+            expect(mockError.mock.calls.length).toBe(0);
+            mockError.mockReset();
+        });
     });
 });
