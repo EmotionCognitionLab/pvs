@@ -149,6 +149,19 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
+    it("should not consider experiments as completed if they don't have at least one relevant result", () => {
+        const lastValidTaskIdx = 2;
+        const inputTasks = dailyTasks.allSets[0].slice(0, lastValidTaskIdx + 1);
+        const input = buildInput( [{taskNames: inputTasks, setNum: 1}]);
+        input[3].isRelevant = false;
+        const result = dailyTasks.getSetAndTasks(input);
+        const expectedTaskNames = dailyTasks.allSets[0].slice(lastValidTaskIdx);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
+
     it("should return remaining tasks when the number of characters in the first uncompleted task name is less than or equal to the number of completed tasks", () => {
         const inputSets = [ {
             taskNames: dailyTasks.allSets[0],
@@ -472,7 +485,7 @@ function buildInput(setList) {
         const startTime = s.setStartedTime || (new Date()).toISOString();
         let input = 
             [{experiment: dailyTasks.setStarted, dateTime: startTime, results: {setNum: s.setNum}}]
-            .concat(s.taskNames.map(task => ({experiment: task})))
+            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })))
         if (s.setFinishedTime) {
             input = input.concat({experiment: dailyTasks.setFinished, dateTime: s.setFinishedTime, results: {setNum: s.setNum}});
         }

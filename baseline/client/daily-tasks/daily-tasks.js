@@ -51,7 +51,12 @@ const logger = new Logger();
  */
 // TODO no need to return set
 function getSetAndTasks(allResults, saveResultsCallback) {
-    const completedTasks = dedupeExperimentResults(allResults.map(r => r.experiment));
+    // we don't consider an experiment "completed" unless it has
+    // at least one relevant result
+    // https://github.com/EmotionCognitionLab/pvs/issues/84
+    const completedTasks = dedupeExperimentResults(
+        allResults.filter(r => r.isRelevant).map(r => r.experiment)
+    );
     const nextSetOk = canStartNextSet(allResults);
     if (completedTasks.length === 0) {
         const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, nextSetOk);
