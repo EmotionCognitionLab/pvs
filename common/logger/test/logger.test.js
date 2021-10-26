@@ -152,7 +152,7 @@ describe("Logger", () => {
         console.log(msg2);
         jest.advanceTimersByTime(altLogger.pushFrequency);
         expect(mockPutLogEvents.mock.calls.length).toBe(2);
-        const messages = mockPutLogEvents.mock.calls.flatMap(call => call[0].logEvents.map(le => le.message));
+        const messages = mockPutLogEvents.mock.calls[1][0].logEvents.map(le => le.message);
         expect(messages).toContain(JSON.stringify({message: msg1 + " \n", level: "log"}));
         expect(messages).toContain(JSON.stringify({message: msg2 + " \n", level: "log"}));
     });
