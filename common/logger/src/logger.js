@@ -95,7 +95,6 @@ export class Logger {
     }
 
     init() {
-        this.setStream();
         const levels = ["log", "info", "warn", "error"];
         levels.forEach(level => {
             const origFn = console[level];
@@ -104,6 +103,7 @@ export class Logger {
                 console[level] = newFn;
             }
         });
+        this.setStream();
 
         // This timer both writes logs to CloudWatch periodically and calls setStream
         // to see if a new log stream needs to be created (i.e., when the date changes).
@@ -136,7 +136,11 @@ export class Logger {
                                         // ignore it - someone must have written to the stream since we called describeLogStreams
                                         // we'll just log everything on the next call
                                     } else {
-                                        this.error("Error calling putLogEvents", err);
+                                        if (!this.override) {
+                                            // don't do this if we've overridden console logging; it can result in 
+                                            // an infinitely growing list of error messages
+                                            console.error("Error calling putLogEvents", err);
+                                        }
                                     }
                                 }
                             });

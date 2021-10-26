@@ -1,5 +1,5 @@
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
-import { pressKey } from "./utils.js"
+import { pressKey, clickIcirc } from "./utils.js"
 import "jest-canvas-mock";
 
 const originalDateNow = Date.now;  // original    Starwalker
@@ -9,14 +9,6 @@ afterEach(resetDateNow);
 const advanceDateNowThenTimers = ms => {
     Date.now = (f => () => f() + ms)(Date.now);
     jest.advanceTimersByTime(ms);
-};
-
-const clickIcirc = (icirc, x, y) => {
-    const rect = icirc.getBoundingClientRect();
-    icirc.dispatchEvent(new MouseEvent("click", {
-        clientX: +x + icirc.width/2 + rect.left,
-        clientY: -y + icirc.height/2 + rect.top,
-    }));
 };
 
 describe("spatial-orientation", () => {
