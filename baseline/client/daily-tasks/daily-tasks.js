@@ -110,14 +110,7 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         const node = {
             timeline: taskTimeline,
             taskName: task.taskName,
-            on_timeline_finish: () => {
-                const results = jsPsych.data.getLastTimelineData().values();
-                results.push({ua: window.navigator.userAgent});
-                saveResultsCallback(task.taskName, results);
-                if (i === remainingTaskNames.length - 1) {
-                    saveResultsCallback(setFinished, [{ "setNum": setNum }]);
-                }
-            }
+            setNum: setNum
         }
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
@@ -285,8 +278,28 @@ async function doAll(session) {
 
 function startTasks(allResults) {
     const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
+    runTask(setAndTasks.remainingTasks, 0, saveResultsCallback)
+}
+
+function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
+    if (taskIdx >= tasks.length) {
+        logger.error(`Was asked to run task ${taskIdx}, but tasks array max index is ${tasks.length - 1}`);
+        return;
+    }
+    tasks[taskIdx].on_timeline_finish = () => {
+        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent}]);
+        if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+            saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
+        } 
+        if (taskIdx < tasks.length - 1) {
+            runTask(tasks, taskIdx + 1, saveResultsCallback);
+        }
+    };
     jsPsych.init({
-        timeline: setAndTasks.remainingTasks
+        timeline: [tasks[taskIdx]],
+        on_data_update: (data) => {
+            saveResultsCallback(tasks[taskIdx].taskName, [data])
+        }
     });
 }
 
@@ -357,7 +370,7 @@ if (window.location.href.includes("daily-tasks")) {
     init();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted, startNewSetQuery }
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery }
 
 
 
