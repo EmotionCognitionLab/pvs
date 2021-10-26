@@ -136,7 +136,11 @@ export class Logger {
                                         // ignore it - someone must have written to the stream since we called describeLogStreams
                                         // we'll just log everything on the next call
                                     } else {
-                                        this.error("Error calling putLogEvents", err);
+                                        if (!this.override) {
+                                            // don't do this if we've overridden console logging; it can result in 
+                                            // an infinitely growing list of error messages
+                                            console.error("Error calling putLogEvents", err);
+                                        }
                                     }
                                 }
                             });
