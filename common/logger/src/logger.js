@@ -95,7 +95,6 @@ export class Logger {
     }
 
     init() {
-        this.setStream();
         const levels = ["log", "info", "warn", "error"];
         levels.forEach(level => {
             const origFn = console[level];
@@ -104,6 +103,7 @@ export class Logger {
                 console[level] = newFn;
             }
         });
+        this.setStream();
 
         // This timer both writes logs to CloudWatch periodically and calls setStream
         // to see if a new log stream needs to be created (i.e., when the date changes).
