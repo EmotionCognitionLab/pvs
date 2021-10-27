@@ -19,7 +19,8 @@
       "\\.html": "../../client/__mocks__/fileMock.js",
       "\\.png": "../../client/__mocks__/fileMock.js",
       "\\.wav": "../../client/__mocks__/fileMock.js",
-      "\\.ogg": "../../client/__mocks__/fileMock.js"
+      "\\.ogg": "../../client/__mocks__/fileMock.js",
+      "\\.mp3": "../../client/__mocks__/fileMock.js"
     },
     "testEnvironment": "jsdom",
     "transform": {
