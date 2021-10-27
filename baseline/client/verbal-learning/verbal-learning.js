@@ -11,9 +11,9 @@ import "css/jspsych-memory-field.css";
 import "css/common.css";
 import "./style.css";
 // audio stimuli
-import a_audio from "./a.ogg";
-import b_audio from "./b.ogg";
-import check_audio from "./check.ogg";
+import a_audio from "./a.mp3";
+import b_audio from "./b.mp3";
+import check_audio from "./check.mp3";
 // instruction fragments
 import instruction_check_start_html from "./frag/instruction_check_start.html";
 import instruction_check_loop_html from "./frag/instruction_check_loop.html";
