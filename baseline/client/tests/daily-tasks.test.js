@@ -13,10 +13,12 @@ import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { clickContinue } from "./utils.js";
+import { clickContinue, clickIcirc, pressKey } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import "jest-canvas-mock";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -143,6 +145,19 @@ describe("getSetAndTasks", () => {
         const result = dailyTasks.getSetAndTasks(buildInput( [{taskNames: input, setNum: 1}] ));
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1].slice(5);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
+
+    it("should not consider experiments as completed if they don't have at least one relevant result", () => {
+        const lastValidTaskIdx = 2;
+        const inputTasks = dailyTasks.allSets[0].slice(0, lastValidTaskIdx + 1);
+        const input = buildInput( [{taskNames: inputTasks, setNum: 1}]);
+        input[3].isRelevant = false;
+        const result = dailyTasks.getSetAndTasks(input);
+        const expectedTaskNames = dailyTasks.allSets[0].slice(lastValidTaskIdx);
         const remainingTaskNames = result.remainingTasks
             .filter(t => t.taskName !== dailyTasks.doneForToday)
             .map(t => t.taskName);
@@ -351,6 +366,18 @@ describe("taskForName for pattern-separation", () => {
     });
 });
 
+describe("taskForName for spatial-orientation", () => {
+    it("returns a SpatialOrientation object for spatial-orientation", () => {
+        const result = dailyTasks.taskForName("spatial-orientation", {setNum: 2});
+        expect(result instanceof SpatialOrientation).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("spatial-orientation", {setNum: 1}).getTimeline();
+        const noSetResult = dailyTasks.taskForName("spatial-orientation", {}).getTimeline();
+        expect(set1Result.length).toEqual(noSetResult.length);
+    });
+});
+
 describe("taskForName for verbal-learning", () => {
     it("returns a VerbalLearning object for verbal-learning-learning", () => {
         const result = dailyTasks.taskForName("verbal-learning-learning", {});
@@ -380,7 +407,7 @@ describe("doing the tasks", () => {
     });
     it("should save the data at the end of each task", () => {
         jest.useFakeTimers("legacy");
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
@@ -397,15 +424,15 @@ describe("doing the tasks", () => {
         questions[0].dispatchEvent(new InputEvent("input"));
         clickContinue("input[type=submit]");
 
-        expect(saveResultsMock.mock.calls.length).toBe(4); // set-started, task-started, results, next task started
+        expect(saveResultsMock.mock.calls.length).toBe(6); // set-started, task-started, full-screen, results, user-agent, next task started
         // the experiment name saved to the results should be the name of the first task in allTimelines
-        expect(saveResultsMock.mock.calls[2][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[3][0]).toBe(allTimelines.remainingTasks[0].taskName);
         // it should save the browser user agent as part of the results
-        const ua = saveResultsMock.mock.calls[2][1].filter(r => r.ua);
+        const ua = saveResultsMock.mock.calls[4][1].filter(r => r.ua);
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
         // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[2][1].filter(r => r.isRelevant)
+        let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant)
         expect(relevantResult.length).toBe(1);
         relevantResult = relevantResult[0];
         expect(relevantResult.response).toBeDefined();
@@ -414,28 +441,42 @@ describe("doing the tasks", () => {
 
     });
     it("should save a 'set-finished' result at the end of a set", () => {
-        const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2)
+        const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2);
         jest.useFakeTimers("legacy");
-        jsPsych.init({timeline: tasksToRun});
+        dailyTasks.runTask(tasksToRun, 0, saveResultsMock);
 
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // not-implemented screen TODO replace with correct task completion once task is written
-        clickContinue();
-        expect(saveResultsMock.mock.calls.length).toBe(3);
+        // spatial-orientation
+        for (let i = 1; i < tasksToRun[0].timeline.length; i++) {
+            const task = tasksToRun[0].timeline[i];
+            if (task.type === "html-keyboard-response") {
+                pressKey(" ");
+            } else if (task.type === "spatial-orientation") {
+                const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+                if (icirc === null) {
+                    //we've been timed out
+                    break;
+                }
+                clickIcirc(icirc, 0, 0);
+                jest.runAllTimers();
+            }
+        }
+        expect(saveResultsMock.mock.calls.length).toBe(24);
         // check experiment name
-        expect(saveResultsMock.mock.calls[2][0]).toBe(dailyTasks.setFinished);
-        expect(saveResultsMock.mock.calls[2][1]).toStrictEqual([{setNum: 1}]);
+        const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
+        expect(lastRes[0]).toBe(dailyTasks.setFinished);
+        expect(lastRes[1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a result showing the task started at the start of a task", () => {
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
         expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true}]);
@@ -446,13 +487,13 @@ describe("doing the tasks", () => {
        expect(firstTaskTypes.every(tt => tt === "fullscreen")).toBe(true);
     });
     it("should display the full-screen task if the display is not already full screen", () => {
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/full screen mode/);
     })
     it("should not display the full-screen task if the display is already full screen", () => {
         const origFsElement = document.fullscreenElement;
         global.document.fullscreenElement = true; // normally an HTMLElement, but daily-tasks just checks for existence
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(jsPsych.getDisplayElement().innerHTML).not.toMatch(/full screen mode/);
         global.document.fullscreenElement = origFsElement;
     });
@@ -472,7 +513,7 @@ function buildInput(setList) {
         const startTime = s.setStartedTime || (new Date()).toISOString();
         let input = 
             [{experiment: dailyTasks.setStarted, dateTime: startTime, results: {setNum: s.setNum}}]
-            .concat(s.taskNames.map(task => ({experiment: task})))
+            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })))
         if (s.setFinishedTime) {
             input = input.concat({experiment: dailyTasks.setFinished, dateTime: s.setFinishedTime, results: {setNum: s.setNum}});
         }

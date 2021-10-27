@@ -155,9 +155,9 @@ VerbalLearning.preload = {
 };
 
 VerbalLearning.instruction = stimulus => ({
-    type: "html-button-response",
+    type: "html-keyboard-response",
     stimulus: stimulus,
-    choices: ["Start"],
+    choices: [" "],
 });
 
 VerbalLearning.cue = duration => ({
