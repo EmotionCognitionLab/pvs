@@ -151,7 +151,11 @@ VerbalLearning.taskName = "verbal-learning";
 
 VerbalLearning.preload = {
     type: "preload",
-    audio: [a_audio, b_audio],
+    audio: [
+        a_audio,
+        b_audio,
+        check_audio,
+    ],
 };
 
 VerbalLearning.instruction = stimulus => ({
