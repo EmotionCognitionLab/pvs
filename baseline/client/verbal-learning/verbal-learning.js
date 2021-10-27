@@ -13,10 +13,10 @@ import "./style.css";
 // audio stimuli
 import a_audio from "./a.ogg";
 import b_audio from "./b.ogg";
-// introduction and completion fragments
-import introduction_html from "./frag/introduction.html";
-import completion_html from "./frag/completion.html";
+import check_audio from "./check.ogg";
 // instruction fragments
+import instruction_check_start_html from "./frag/instruction_check_start.html";
+import instruction_check_loop_html from "./frag/instruction_check_loop.html";
 import instruction_a_immediate_html from "./frag/instruction_a_immediate.html";
 import instruction_a_immediate_rep_html from "./frag/instruction_a_immediate_rep.html";
 import instruction_b_immediate_html from "./frag/instruction_b_immediate.html";
@@ -89,7 +89,8 @@ export class VerbalLearning {
         if (this.segmentNum === 1) {
             return [
                 this.constructor.preload,
-                this.constructor.introduction,
+                this.constructor.instruction(instruction_check_start_html),
+                this.constructor.audio_check_loop,
                 this.constructor.instruction(instruction_a_immediate_html),  // 1
                 ...this.constructor.cue_and_presentation(a_audio),
                 this.constructor.remember(remember_a_immediate_html),
@@ -132,7 +133,6 @@ export class VerbalLearning {
                 this.constructor.remember(remember_a_cue_traveling_html),
                 this.constructor.instruction(instruction_a_cue_animal_html),
                 this.constructor.remember(remember_a_cue_animal_html),
-                this.constructor.completion,
             ];
         } else {
             throw new Error("segmentNum must be in 1..2");
@@ -151,13 +151,11 @@ VerbalLearning.taskName = "verbal-learning";
 
 VerbalLearning.preload = {
     type: "preload",
-    audio: [a_audio, b_audio],
-};
-
-VerbalLearning.introduction = {
-    type: "html-button-response",
-    stimulus: introduction_html,
-    choices: ["Continue"],
+    audio: [
+        a_audio,
+        b_audio,
+        check_audio,
+    ],
 };
 
 VerbalLearning.instruction = stimulus => ({
@@ -166,12 +164,12 @@ VerbalLearning.instruction = stimulus => ({
     choices: [" "],
 });
 
-VerbalLearning.cue = {
+VerbalLearning.cue = duration => ({
     type: "html-keyboard-response",
     stimulus: presentation_cue_html,
     choices: jsPsych.NO_KEYS,
-    trial_duration: 2000,
-};
+    trial_duration: duration,
+});
 VerbalLearning.presentation = audio_stimulus => ({
     type: "audio-keyboard-response",
     stimulus: audio_stimulus,
@@ -179,10 +177,25 @@ VerbalLearning.presentation = audio_stimulus => ({
     choices: jsPsych.NO_KEYS,
     trial_ends_after_audio: true,
 });
-VerbalLearning.cue_and_presentation = audio_stimulus => [
-    VerbalLearning.cue,
+VerbalLearning.cue_and_presentation = (audio_stimulus, duration = 2000) => [
+    VerbalLearning.cue(duration),
     VerbalLearning.presentation(audio_stimulus),
 ];
+
+VerbalLearning.audio_check_loop = {
+    timeline: [
+        ...VerbalLearning.cue_and_presentation(check_audio, 500),
+        {
+            type: "html-button-response",
+            stimulus: instruction_check_loop_html,
+            choices: ["Try Again", "Sound Worked Fine"],
+        },
+    ],
+    loop_function: data => {
+        const [buttonData] = data.filter({trial_type: "html-button-response"}).values().slice(-1);
+        return buttonData.response === 0;
+    }
+};
 
 VerbalLearning.remember = stimulus => ({
     type: "memory-field",
@@ -190,12 +203,6 @@ VerbalLearning.remember = stimulus => ({
     button_label: "Stop",
     data: { isRelevant: true },
 });
-
-VerbalLearning.completion = {
-    type: "html-button-response",
-    stimulus: completion_html,
-    choices: ["Finish"],
-};
 
 
 if (window.location.href.includes(VerbalLearning.taskName)) {
