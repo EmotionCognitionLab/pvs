@@ -14,7 +14,7 @@ import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "auth/auth.js";
 import { Logger } from "../../../common/logger/dist/logger.js";
-import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";

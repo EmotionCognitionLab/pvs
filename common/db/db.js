@@ -2,7 +2,7 @@
  * API for reading from and writing to the PVS DynamoDB database.
  */
 
- import awsSettings from '../../aws-settings.json';
+ import awsSettings from '../aws-settings.json';
  import AWS from 'aws-sdk/global';
  import DynamoDB from 'aws-sdk/clients/dynamodb';
  
@@ -44,7 +44,8 @@ function saveResults(session, experiment, results) {
         }
         try {
             const docClient = new DynamoDB.DocumentClient({region: awsSettings.AWSRegion, credentials: credentials});
-            for (const chunk of chunks) {
+            for (let i=0; i<chunks.length; i++) {
+                const chunk = chunks[i];
                 const params = { RequestItems: {} };
                 params['RequestItems'][awsSettings.ExperimentTable] = chunk;
                 await docClient.batchWrite(params).promise();
