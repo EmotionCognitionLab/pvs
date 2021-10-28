@@ -12,7 +12,7 @@ import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { getAuth } from "../../../common/auth/dist/auth.js";
+import { getAuth } from "auth/auth.js";
 import { Logger } from "../../../common/logger/dist/logger.js";
 import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";

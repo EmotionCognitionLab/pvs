@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
+    "auth": "file:../../common/auth",
     "ua-parser-js": "0.7.28"
   },
   "jest": {

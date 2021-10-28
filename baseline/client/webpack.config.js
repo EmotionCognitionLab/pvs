@@ -29,6 +29,7 @@ module.exports = {
         modules: [
             __dirname,
             path.join(__dirname, "node_modules"),
+            path.join(__dirname, "../..", "common/auth/node_modules")
         ],
     },
     output: {
