@@ -112,13 +112,27 @@ describe("n-back", () => {
             // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
             expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
             // there should 2*3 n-back trials in a training block
-            expect(nbTrains.length).toBe(setNum === 1 ? 6 : 0);
+            expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
             // there should 4*3 n-back trials in a full test block
-            expect(nbTests.length).toBe(12);
+            expect(nbTests.length).toBe(4*3);
             // there should be 15 digits and 4 targets per n-back test trials
             expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
             expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 4)).toBe(true);
         });
+    });
+
+    it("uses NBack.randSequence to evaluate n-back trials in its timeline", () => {
+        const nback = new NBack(1);
+        const spy = jest.spyOn(nback, "randSequence");
+        let complete = false;
+        jsPsych.init({
+            timeline: nback.getTimeline(),
+            on_finish: () => { complete = true; },
+        });
+        while (!complete) {
+            completeCurrentTrial(true);
+        }
+        expect(spy).toHaveBeenCalledTimes(2*3 + 4*3);
     });
 
     it("n-back plugin trials are preceded by cues", () => {
