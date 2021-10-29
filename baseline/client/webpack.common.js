@@ -3,12 +3,26 @@ const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {
-    entry: {},
+    entry: {
+        login: 'login/login.js',
+        'daily-tasks': 'daily-tasks/daily-tasks.js'
+    },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
         // by logger
         new webpack.DefinePlugin({
             'process.env': JSON.stringify({'NODE_DEBUG': false})
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Login',
+            template: 'login/index.ejs',
+            filename: 'login/index.html',
+            chunks: ['login']
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Daily Tasks',
+            filename: 'daily-tasks/index.html',
+            chunks: ['daily-tasks']
         })
     ],
     optimization: {
@@ -39,37 +53,5 @@ module.exports = {
             path.join(__dirname, "../..", "common/auth/node_modules"),
             path.join(__dirname, "../..", "common/db/node_moduless")
         ],
-    },
-    output: {
-        path: path.join(__dirname, "dist"),
-    },
-    devServer: {
-        contentBase: path.join(__dirname, "dist"),
-        compress: true,
-        port: 9000,
-    },
-    mode: "development",
+    }
 };
-
-module.exports.entry['login'] = {
-    import: 'login/login.js',
-    filename: 'login/login.bundle.js'
-}
-
-module.exports.plugins.push(new HtmlWebpackPlugin({
-    title: 'HeartBEAM Login',
-    template: 'login/index.ejs',
-    filename: 'login/index.html',
-    chunks: ['login']
-}));
-
-module.exports.entry['daily-tasks'] = {
-    import: 'daily-tasks/daily-tasks.js',
-    filename: 'daily-tasks/daily-tasks.bundle.js'
-}
-
-module.exports.plugins.push(new HtmlWebpackPlugin({
-    title: 'Daily Tasks',
-    filename: 'daily-tasks/index.html',
-    chunks: ['daily-tasks']
-}));
