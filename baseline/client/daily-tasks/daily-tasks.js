@@ -53,6 +53,15 @@ let logger;
  */
 // TODO no need to return set
 function getSetAndTasks(allResults, saveResultsCallback) {
+    const queryParams = new URLSearchParams(window.location.search.substring(1));
+    const tasks = queryParams.get("tasks");
+    if (tasks !== null) {
+        const requestedTasks = tasks.split(",");
+        const setNum = parseInt(queryParams.get("setNum")) || 1;
+        const timeline = tasksForSet(requestedTasks, setNum, [], saveResultsCallback, false);
+        return { set: 1, remainingTasks: timeline };
+    }
+
     // we don't consider an experiment "completed" unless it has
     // at least one relevant result
     // https://github.com/EmotionCognitionLab/pvs/issues/84
