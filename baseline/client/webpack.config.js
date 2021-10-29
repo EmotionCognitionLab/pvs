@@ -63,36 +63,13 @@ module.exports.plugins.push(new HtmlWebpackPlugin({
     chunks: ['login']
 }));
 
-function add_page(name, impo, title) {
-    // add entry point
-    module.exports.entry[name] = {
-        import: impo,
-        filename: `${name}/${name}.bundle.js`,
-    };
-    // add HTML file
-    module.exports.plugins.push(new HtmlWebpackPlugin({
-        filename: `${name}/index.html`,
-        chunks: [name],
-        title: title,
-    }));
+module.exports.entry['daily-tasks'] = {
+    import: 'daily-tasks/daily-tasks.js',
+    filename: 'daily-tasks/daily-tasks.bundle.js'
 }
 
-add_page("n-back", "n-back/n-back.js", "n-Back Task");
-add_page("verbal-learning", "verbal-learning/verbal-learning.js", "Verbal Learning Task");
-add_page("flanker", "flanker/flanker.js", "Flanker Task");
-add_page("verbal-fluency", "verbal-fluency/verbal-fluency.js", "Verbal Fluency Task");
-add_page("panas", "panas/panas.js", "PANAS Questionnaire");
-add_page("daily-stressors", "daily-stressors/daily-stressors.js", "Daily Stressors Questionnaire");
-add_page("mood-prediction", "mood-prediction/mood-prediction.js", "Mood Prediction Questionnaire");
-add_page("mood-memory", "mood-memory/mood-memory.js", "Mood Memory Questionnaire");
-add_page("daily-tasks", "daily-tasks/daily-tasks.js", "Daily Tasks");
-add_page("browser-check", "browser-check/browser-check.js", "Browser registration and confirmation");
-add_page("task-switching", "task-switching/task-switching.js", "Task Switching");
-add_page("spatial-orientation", "spatial-orientation/spatial-orientation.js", "Spatial Orientation");
-add_page("face-name", "face-name/face-name.js", "Face-Name Task");
-add_page("pattern-separation", "pattern-separation/pattern-separation.js", "Pattern Separation Task");
-add_page("mind-in-eyes", "mind-eyes/mind-eyes.js", "Reading the Mind in the Eyes Task");
-add_page("dass", "dass/dass.js", "Depression Anxiety Stress Scale");
-add_page("ffmq", "ffmq/ffmq.js", "Five Facet Mindfulness Questionnaire");
-add_page("demographics", "demographics/demographics.js", "Demographic information");
-add_page("physical-activity", "physical-activity/physical-activity.js", "Physical Activity Survey");
+module.exports.plugins.push(new HtmlWebpackPlugin({
+    title: 'Daily Tasks',
+    filename: 'daily-tasks/index.html',
+    chunks: ['daily-tasks']
+}));
