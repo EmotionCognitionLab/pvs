@@ -13,7 +13,7 @@ import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "auth/auth.js";
-import { Logger } from "../../../common/logger/dist/logger.js";
+import { Logger } from "logger/logger.js";
 import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
@@ -42,7 +42,7 @@ const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let userSession;
-const logger = new Logger();
+let logger;
 
 /**
  * 
@@ -265,6 +265,7 @@ function canStartNextSet(allResults) {
 }
 
 function init() {
+    logger = new Logger();
     const lStor = window.localStorage;
     const scopes = [];
     if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {

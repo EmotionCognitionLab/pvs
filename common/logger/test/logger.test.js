@@ -1,6 +1,6 @@
 import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs';
 import awsSettings from '../../aws-settings.json';
-import { Logger } from "../src/logger.js";
+import { Logger } from "../logger.js";
 import util from 'util';
 
 function logStreamName() {

@@ -1,9 +1,16 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
     entry: {},
-    plugins: [],
+    plugins: [
+        // here to quiet complaint about process.env not existing when util lib is loaded
+        // by logger
+        new webpack.DefinePlugin({
+            'process.env': JSON.stringify({'NODE_DEBUG': false})
+        })
+    ],
     optimization: {
         splitChunks: {
             chunks: "all",

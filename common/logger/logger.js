@@ -30,7 +30,7 @@
  * Uses local storage to save the CloudWatch sequence token and the stream name.
  */
 
-import awsSettings from '../../aws-settings.json';
+import awsSettings from '../aws-settings.json';
 import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs';
 import util from 'util';
 

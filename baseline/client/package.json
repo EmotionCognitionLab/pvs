@@ -8,6 +8,7 @@
     "@adp-psych/jspsych": "^6.3.1",
     "auth": "file:../../common/auth",
     "db": "file:../../common/db",
+    "logger": "file:../../common/logger",
     "ua-parser-js": "0.7.28"
   },
   "jest": {
