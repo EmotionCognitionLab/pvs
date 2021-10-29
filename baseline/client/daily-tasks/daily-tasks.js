@@ -316,10 +316,17 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
 }
 
 function saveResultsCallback(experimentName, results) {
-    const cognitoAuth = getAuth(session => {
-        saveResults(session, experimentName, results);
-    }, handleError);
+    const cognitoAuth = getAuth(
+        session => saveResults(session, experimentName, results),
+        err => handleSaveError(err, experimentName, results)
+    );
     cognitoAuth.getSession();
+}
+
+function handleSaveError(err, experimentName, results) {
+    const cognitoAuth = getAuth();
+    logger.error(`Error saving data for ${cognitoAuth.getUsername()}: ${JSON.stringify({experiment: experimentName, results: results})}`)
+    logger.error(err);
 }
 
 function handleError(err) {
