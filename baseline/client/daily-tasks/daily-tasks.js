@@ -303,6 +303,9 @@ function startTasks(allResults) {
 function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     if (taskIdx >= tasks.length) {
         logger.error(`Was asked to run task ${taskIdx}, but tasks array max index is ${tasks.length - 1}`);
+        jsPsych.init({
+            timeline: [errorHappenedMessage]
+        });
         return;
     }
     tasks[taskIdx].on_timeline_finish = () => {
@@ -390,6 +393,12 @@ const doneForTodayMessage = {
     stimulus: "Congratulations! You have done all of the daily measurements for today. Please come back tomorrow to continue.",
     choices: [],
 };
+
+const errorHappenedMessage = {
+    type: "html-button-response",
+    stimulus: "Unfortunately, an error has occurred. The team has been alerted and will work to fix it. Please try again in a few hours.",
+    choices: []
+}
 
 
 if (window.location.href.includes("daily-tasks")) {
