@@ -115,13 +115,10 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingFirstSetTasks));
     });
 
-    it("throws an error if completed tasks are not in the expected order", () => {
+    it("starts at first missed task if completed tasks are not in the expected order", () => {
         const input = buildInput([{ taskNames: [dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]], setNum: 1 }]);
-        function callWithBadOrder() {
-            dailyTasks.getSetAndTasks(input);
-        }
-        const expectedErrPatt = new RegExp(`^Expected ${dailyTasks.allSets[0][1]} but found ${dailyTasks.allSets[0][2]}.*$`);
-        expect(callWithBadOrder).toThrowError(expectedErrPatt);
+        const results = dailyTasks.getSetAndTasks(input);
+        expect(results.remainingTasks[0].taskName).toBe(dailyTasks.allSets[0][1]);
     });
 
     it("should include an 'all-done' message (and only that message) if the user has completed all tasks in all sets", () => {

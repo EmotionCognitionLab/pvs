@@ -78,12 +78,10 @@ function getSetAndTasks(allResults, saveResultsCallback) {
         for (var j = 0; j < set.length; j++) {
             const task = set[j];
             const completed = completedTasks.shift();
-            if (completed) {
-                if (completed !== task) {
-                    throw new Error(`Expected ${task} but found ${completed}. It looks like tasks have been done out of order.`);
-                }
-            } else {
-                // we've reached the end of the completed tasks; return our results
+            if (!completed || (completed !== task)) {
+                // We've either reached the end of the completed tasks
+                // or they somehow did some out of order and will do them again.
+                // Either way, return our results.
                 let remainingTasks = [];
                 const setNum = i + 1; // add 1 b/c setNum starts from 1
                 if (j === 0 && !nextSetOk) {
