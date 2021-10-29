@@ -9,6 +9,7 @@ import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
@@ -181,6 +182,8 @@ function taskForName(name, options) {
             return new MoodMemory();
         case "mood-prediction":
             return new MoodPrediction();
+        case "n-back":
+            return new NBack(options.setNum || 1);
         case "panas":
             return new Panas();
         case "pattern-separation-learning":

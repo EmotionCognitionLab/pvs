@@ -10,6 +10,7 @@ import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { MoodPrediction  } from "../mood-prediction/mood-prediction.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
@@ -336,6 +337,18 @@ describe("taskForName for mind-in-eyes", () => {
         }
     });
 })
+
+describe("taskForName for n-back", () => {
+    it("returns a NBack object for  n-back", () => {
+        const result = dailyTasks.taskForName("n-back", {setNum: 2});
+        expect(result instanceof NBack).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("n-back", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("n-back", {});
+        expect(noSetResult.getTimeline().length).toEqual(set1Result.getTimeline().length);
+    });
+});
 
 describe("taskForName for pattern-separation", () => {
     it("returns a PatternSeparation object for pattern-separation-learning", () => {
