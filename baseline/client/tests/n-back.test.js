@@ -1,8 +1,9 @@
 import { NBack } from "../n-back/n-back.js";
 import { pressKey, cartesianProduct } from "./utils.js"
 
-const completeCurrentTrial = correctly => {
+const completeCurrentTrial = (correctly, callback = trial => {}) => {
     const trial = jsPsych.currentTrial();
+    callback(trial);
     const progress = jsPsych.progress();
     if (trial.type === "html-keyboard-response") {
         if (typeof trial.trial_duration === "number") {
@@ -23,6 +24,12 @@ const completeCurrentTrial = correctly => {
         throw Error("progress didn't increase");
     }
 };
+
+const nbSequenceTargets = (n, sequence) => (
+    sequence
+        .filter((x, i) => n === 0 ? x === "1" : x === sequence[i - n])
+        .length
+);
 
 describe("n-back", () => {
     it("results should have at least one result marked isRelevant", () => {
@@ -77,6 +84,43 @@ describe("n-back", () => {
         expect(complete).toBe(true);
     });
 
+    it("evaluated n-back trials should match spec", () => {
+        const setNums = [1, 2];
+        setNums.forEach(setNum => {
+            // evaluate all n-back trials
+            jest.useFakeTimers("legacy");
+            let complete = false;
+            jsPsych.init({
+                timeline: (new NBack(setNum)).getTimeline(),
+                on_finish: () => { complete = true; },
+            });
+            const nbTrials = [];
+            while (!complete) {
+                completeCurrentTrial(
+                    true,
+                    trial => {
+                        if (trial.type === "n-back") {
+                            nbTrials.push(trial);
+                        }
+                    },
+                );
+            }
+            // filter out train and test
+            const nbTrains = nbTrials.filter(t => !t.data.isRelevant);
+            const nbTests = nbTrials.filter(t => t.data.isRelevant);
+            expect(nbTrials.length).toBe(nbTrains.length + nbTests.length);
+            // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
+            expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
+            // there should 2*3 n-back trials in a training block
+            expect(nbTrains.length).toBe(setNum === 1 ? 6 : 0);
+            // there should 4*3 n-back trials in a full test block
+            expect(nbTests.length).toBe(12);
+            // there should be 15 digits and 4 targets per n-back test trials
+            expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
+            expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 4)).toBe(true);
+        });
+    });
+
     it("n-back plugin trials are preceded by cues", () => {
         const timeline = (new NBack(1)).getTimeline();
         expect(
@@ -122,11 +166,7 @@ describe("n-back", () => {
             const sequence = nback.randSequence(choices, length, n, targets);
             expect(sequence.every(item => choices.includes(item))).toBe(true);
             expect(sequence.length).toBe(length);
-            expect(
-                sequence
-                    .filter((x, i) => n === 0 ? x === "1" : x === sequence[i - n])
-                    .length
-            ).toBe(targets);
+            expect(nbSequenceTargets(n, sequence)).toBe(targets);
         }
     });
 });
