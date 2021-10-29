@@ -1,8 +1,8 @@
 {
   "scripts": {
     "test": "jest",
-    "build": "cd ../../common/auth/ && npx webpack && cd ../db && npx webpack && cd ../logger && npx webpack && cd ../../baseline/client && npx webpack",
-    "deploy": "npm run build && npm run test && node deploy.js"
+    "build": "npx webpack",
+    "deploy": "cd ../../common/logger && npm run test && cd ../../baseline/client && npm run test && rm -rf dist/* && npm run build && node deploy.js"
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
