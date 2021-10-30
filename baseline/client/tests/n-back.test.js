@@ -84,6 +84,45 @@ describe("n-back", () => {
         expect(complete).toBe(true);
     });
 
+    describe.each([
+        [1],
+        [2],
+    ])("n-back set %i", setNum => {
+        it("evaluated n-back trials should match spec", () => {
+            // evaluate all n-back trials
+            jest.useFakeTimers("legacy");
+            let complete = false;
+            jsPsych.init({
+                timeline: (new NBack(setNum)).getTimeline(),
+                on_finish: () => { complete = true; },
+            });
+            const nbTrials = [];
+            while (!complete) {
+                completeCurrentTrial(
+                    true,
+                    trial => {
+                        if (trial.type === "n-back") {
+                            nbTrials.push(trial);
+                        }
+                    },
+                );
+            }
+            // filter out train and test
+            const nbTrains = nbTrials.filter(t => !t.data.isRelevant);
+            const nbTests = nbTrials.filter(t => t.data.isRelevant);
+            expect(nbTrials.length).toBe(nbTrains.length + nbTests.length);
+            // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
+            expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
+            // there should 2*3 n-back trials in a training block
+            expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
+            // there should 4*3 n-back trials in a full test block
+            expect(nbTests.length).toBe(4*3);
+            // there should be 15 digits and 4 targets per n-back test trials
+            expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
+            expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 4)).toBe(true);
+        });
+    });
+
     it("uses NBack.randSequence to evaluate n-back trials in its timeline", () => {
         const nback = new NBack(1);
         const spy = jest.spyOn(nback, "randSequence");
@@ -145,44 +184,5 @@ describe("n-back", () => {
             expect(sequence.length).toBe(length);
             expect(nbSequenceTargets(n, sequence)).toBe(targets);
         }
-    });
-
-    describe.each([
-        [1],
-        [2],
-    ])("n-back set %i", setNum => {
-        it("evaluated n-back trials should match spec", () => {
-            // evaluate all n-back trials
-            jest.useFakeTimers("legacy");
-            let complete = false;
-            jsPsych.init({
-                timeline: (new NBack(setNum)).getTimeline(),
-                on_finish: () => { complete = true; },
-            });
-            const nbTrials = [];
-            while (!complete) {
-                completeCurrentTrial(
-                    true,
-                    trial => {
-                        if (trial.type === "n-back") {
-                            nbTrials.push(trial);
-                        }
-                    },
-                );
-            }
-            // filter out train and test
-            const nbTrains = nbTrials.filter(t => !t.data.isRelevant);
-            const nbTests = nbTrials.filter(t => t.data.isRelevant);
-            expect(nbTrials.length).toBe(nbTrains.length + nbTests.length);
-            // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
-            expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
-            // there should 2*3 n-back trials in a training block
-            expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
-            // there should 4*3 n-back trials in a full test block
-            expect(nbTests.length).toBe(4*3);
-            // there should be 15 digits and 4 targets per n-back test trials
-            expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
-            expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 4)).toBe(true);
-        });
     });
 });
