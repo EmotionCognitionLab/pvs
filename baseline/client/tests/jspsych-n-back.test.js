@@ -34,6 +34,10 @@ describe("jspsych-n-back.js plugin", () => {
         trial.sequence.forEach((_, index) => {
             expect(data.responses.filter(r => r.index === index).length).toBe(presses[index]);
         });
+        // only responses to targets are marked as correct
+        data.responses.forEach(r => {
+            expect(r.correct).toBe(r.index === 1 || r.index === 3);
+        });
         // to-do: test time_from_start and time_from_focus by mocking performance.now
     });
 
