@@ -51,7 +51,8 @@ module.exports = {
             __dirname,
             path.join(__dirname, "node_modules"),
             path.join(__dirname, "../..", "common/auth/node_modules"),
-            path.join(__dirname, "../..", "common/db/node_moduless")
+            path.join(__dirname, "../..", "common/db/node_modules"),
+            path.join(__dirname, "../..", "common/logger/node_modules"),
         ],
     }
 };
