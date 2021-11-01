@@ -44,7 +44,7 @@ describe("n-back", () => {
             on_finish: () => { complete = true; },
         });
         for (let trials = 0; !complete; ++trials) {
-            if (trials > 100) { throw new Error("too many trials"); }
+            if (trials > 500) { throw new Error("too many trials"); }
             completeCurrentTrial(true);
         }
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
@@ -67,19 +67,19 @@ describe("n-back", () => {
             }
         }
         // complete 100 trials incorrectly
-        completeNTrials(100, false);
+        completeNTrials(500, false);
         // should be at an n-back short practice sub-timeline
         const idA = parseNodeID(jsPsych.currentTimelineNodeID());
         expect(complete).toBe(false);
         // complete another 10 trials incorrectly
-        completeNTrials(10, false);
+        completeNTrials(50, false);
         // should still be at the same n-back short practice sub-timeline
         const idB = parseNodeID(jsPsych.currentTimelineNodeID());
         expect(idB[0]).toStrictEqual(idA[0]);  // same top-level timeline node and same iteration
         expect(idB[1][0]).toStrictEqual(idA[1][0]);  // same sub-level timeline node of the top-level timeline node
         expect(idB[1][1]).toBeGreaterThan(idA[1][1]);  // but greater iteration of the sub-level timeline node
         // complete 100 trials correctly
-        completeNTrials(100, true);
+        completeNTrials(500, true);
         // should have completed timeline
         expect(complete).toBe(true);
     });

@@ -217,10 +217,13 @@ NBack.cue2 = {
 };
 
 NBack.rest = {
-    type: "html-keyboard-response",
-    stimulus: rest_html,
-    choices: jsPsych.NO_KEYS,
-    trial_duration: 10000,
+    timeline: [{
+        type: "html-keyboard-response",
+        stimulus: () => `<em>Please wait for ${jsPsych.timelineVariable("seconds")} seconds...</em>`,
+        choices: jsPsych.NO_KEYS,
+        trial_duration: 1000,
+    }],
+    timeline_variables: [7, 6, 5, 4, 3, 2, 1].map(x => ({seconds: String(x)})),
 };
 
 
