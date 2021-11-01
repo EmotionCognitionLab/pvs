@@ -10,12 +10,13 @@ import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { getAuth } from "../../../common/auth/dist/auth.js";
-import { Logger } from "../../../common/logger/dist/logger.js";
-import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { getAuth } from "auth/auth.js";
+import { Logger } from "logger/logger.js";
+import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
@@ -23,6 +24,7 @@ import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -38,7 +40,7 @@ const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let userSession;
-const logger = new Logger();
+let logger;
 
 /**
  * 
@@ -48,6 +50,15 @@ const logger = new Logger();
  */
 // TODO no need to return set
 function getSetAndTasks(allResults, saveResultsCallback) {
+    const queryParams = new URLSearchParams(window.location.search.substring(1));
+    const tasks = queryParams.get("tasks");
+    if (tasks !== null) {
+        const requestedTasks = tasks.split(",");
+        const setNum = parseInt(queryParams.get("setNum")) || 1;
+        const timeline = tasksForSet(requestedTasks, setNum, [], saveResultsCallback, false);
+        return { set: 1, remainingTasks: timeline };
+    }
+
     // we don't consider an experiment "completed" unless it has
     // at least one relevant result
     // https://github.com/EmotionCognitionLab/pvs/issues/84
@@ -64,12 +75,10 @@ function getSetAndTasks(allResults, saveResultsCallback) {
         for (var j = 0; j < set.length; j++) {
             const task = set[j];
             const completed = completedTasks.shift();
-            if (completed) {
-                if (completed !== task) {
-                    throw new Error(`Expected ${task} but found ${completed}. It looks like tasks have been done out of order.`);
-                }
-            } else {
-                // we've reached the end of the completed tasks; return our results
+            if (!completed || (completed !== task)) {
+                // We've either reached the end of the completed tasks
+                // or they somehow did some out of order and will do them again.
+                // Either way, return our results.
                 let remainingTasks = [];
                 const setNum = i + 1; // add 1 b/c setNum starts from 1
                 if (j === 0 && !nextSetOk) {
@@ -177,6 +186,8 @@ function taskForName(name, options) {
             return new MoodMemory();
         case "mood-prediction":
             return new MoodPrediction();
+        case "n-back":
+            return new NBack(options.setNum || 1);
         case "panas":
             return new Panas();
         case "pattern-separation-learning":
@@ -185,6 +196,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, true);
         case "physical-activity":
             return new PhysicalActivity();
+        case "spatial-orientation":
+            return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
@@ -259,6 +272,7 @@ function canStartNextSet(allResults) {
 }
 
 function init() {
+    logger = new Logger();
     const lStor = window.localStorage;
     const scopes = [];
     if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
@@ -286,6 +300,9 @@ function startTasks(allResults) {
 function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     if (taskIdx >= tasks.length) {
         logger.error(`Was asked to run task ${taskIdx}, but tasks array max index is ${tasks.length - 1}`);
+        jsPsych.init({
+            timeline: [errorHappenedMessage]
+        });
         return;
     }
     tasks[taskIdx].on_timeline_finish = () => {
@@ -306,10 +323,17 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
 }
 
 function saveResultsCallback(experimentName, results) {
-    const cognitoAuth = getAuth(session => {
-        saveResults(session, experimentName, results);
-    }, handleError);
+    const cognitoAuth = getAuth(
+        session => saveResults(session, experimentName, results),
+        err => handleSaveError(err, experimentName, results)
+    );
     cognitoAuth.getSession();
+}
+
+function handleSaveError(err, experimentName, results) {
+    const cognitoAuth = getAuth();
+    logger.error(`Error saving data for ${cognitoAuth.getUsername()}: ${JSON.stringify({experiment: experimentName, results: results})}`)
+    logger.error(err);
 }
 
 function handleError(err) {
@@ -370,6 +394,11 @@ const doneForTodayMessage = {
 const turkCode = {
     type: "html-button-response",
     stimulus: `Thanks for completing the task! Please enter the following code into Mechanical Turk to show that you have finished: ${jsPsych.randomization.sampleWithoutReplacement(['MARMADUKE', 'BEETLE', 'ZONKER', 'SNOOPY', 'GARFIELD', 'DENNIS', 'LINUS', 'OPUS'], 1)}`,
+};
+
+const errorHappenedMessage = {
+    type: "html-button-response",
+    stimulus: "Unfortunately, an error has occurred. The team has been alerted and will work to fix it. Please try again in a few hours.",
     choices: []
 }
 

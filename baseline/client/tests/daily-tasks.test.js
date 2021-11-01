@@ -10,13 +10,16 @@ import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { MoodPrediction  } from "../mood-prediction/mood-prediction.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { clickContinue, pressKey } from "./utils.js";
+import { clickContinue, clickIcirc, pressKey } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import "jest-canvas-mock";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
@@ -112,13 +115,10 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingFirstSetTasks));
     });
 
-    it("throws an error if completed tasks are not in the expected order", () => {
-        const input = buildInput([{ taskNames: [dailyTasks.allSets[0][1], dailyTasks.allSets[0][0]], setNum: 1 }]);
-        function callWithBadOrder() {
-            dailyTasks.getSetAndTasks(input);
-        }
-        const expectedErrPatt = new RegExp(`^Expected ${dailyTasks.allSets[0][0]} but found ${dailyTasks.allSets[0][1]}.*$`);
-        expect(callWithBadOrder).toThrowError(expectedErrPatt);
+    it("starts at first missed task if completed tasks are not in the expected order", () => {
+        const input = buildInput([{ taskNames: [dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]], setNum: 1 }]);
+        const results = dailyTasks.getSetAndTasks(input);
+        expect(results.remainingTasks[0].taskName).toBe(dailyTasks.allSets[0][1]);
     });
 
     it("should include an 'all-done' message (and only that message) if the user has completed all tasks in all sets", () => {
@@ -336,6 +336,18 @@ describe("taskForName for mind-in-eyes", () => {
     });
 })
 
+describe("taskForName for n-back", () => {
+    it("returns a NBack object for  n-back", () => {
+        const result = dailyTasks.taskForName("n-back", {setNum: 2});
+        expect(result instanceof NBack).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("n-back", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("n-back", {});
+        expect(noSetResult.getTimeline().length).toEqual(set1Result.getTimeline().length);
+    });
+});
+
 describe("taskForName for pattern-separation", () => {
     it("returns a PatternSeparation object for pattern-separation-learning", () => {
         const result = dailyTasks.taskForName("pattern-separation-learning", {});
@@ -362,6 +374,18 @@ describe("taskForName for pattern-separation", () => {
         const noSetTask = dailyTasks.taskForName("pattern-separation-learning", {});
         expect(set1Task.setNum).toBe(1);
         expect(noSetTask.setNum).toBe(1);
+    });
+});
+
+describe("taskForName for spatial-orientation", () => {
+    it("returns a SpatialOrientation object for spatial-orientation", () => {
+        const result = dailyTasks.taskForName("spatial-orientation", {setNum: 2});
+        expect(result instanceof SpatialOrientation).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("spatial-orientation", {setNum: 1}).getTimeline();
+        const noSetResult = dailyTasks.taskForName("spatial-orientation", {}).getTimeline();
+        expect(set1Result.length).toEqual(noSetResult.length);
     });
 });
 
@@ -470,12 +494,26 @@ describe("doing the tasks", () => {
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // not-implemented screen TODO replace with correct task completion once task is written
-        clickContinue();
-        expect(saveResultsMock.mock.calls.length).toBe(5);
+        // spatial-orientation
+        for (let i = 1; i < tasksToRun[0].timeline.length; i++) {
+            const task = tasksToRun[0].timeline[i];
+            if (task.type === "html-keyboard-response") {
+                pressKey(" ");
+            } else if (task.type === "spatial-orientation") {
+                const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+                if (icirc === null) {
+                    //we've been timed out
+                    break;
+                }
+                clickIcirc(icirc, 0, 0);
+                jest.runAllTimers();
+            }
+        }
+        expect(saveResultsMock.mock.calls.length).toBe(24);
         // check experiment name
-        expect(saveResultsMock.mock.calls[4][0]).toBe(dailyTasks.setFinished);
-        expect(saveResultsMock.mock.calls[4][1]).toStrictEqual([{setNum: 1}]);
+        const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
+        expect(lastRes[0]).toBe(dailyTasks.setFinished);
+        expect(lastRes[1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
         dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
