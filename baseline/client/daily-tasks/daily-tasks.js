@@ -135,11 +135,9 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         }
         allTimelines.push(node);
     }
-    if (setNum === allSets.length) {
-        allTimelines.push({timeline: [turkCode], taskName: 'turk'});
-    } else if (!nextSetOk || atSetStart) {
-        allTimelines.push({timeline: [turkCode], taskName: 'turk'});
-    }
+    
+    allTimelines.push({timeline: [turkCode], taskName: 'turk'});
+    
     return allTimelines;
 }
 
