@@ -9,8 +9,6 @@ import "./style.css";
 import cue_0_html from "./frag/cue_0.html";
 import cue_1_html from "./frag/cue_1.html";
 import cue_2_html from "./frag/cue_2.html";
-// rest fragment
-import rest_html from "./frag/rest.html";
 // training fragments
 import train_introduction_html from "./frag/train/introduction.html";
 import train_instruction_start_html from "./frag/train/instruction_start.html";
@@ -20,8 +18,10 @@ import train_instruction_1a_html from "./frag/train/instruction_1a.html";
 import train_instruction_1b_html from "./frag/train/instruction_1b.html";
 import train_instruction_2a_html from "./frag/train/instruction_2a.html";
 import train_instruction_2b_html from "./frag/train/instruction_2b.html";
-import train_instruction_practice_html from "./frag/train/instruction_practice.html";
-import train_instruction_indicate_html from "./frag/train/instruction_indicate.html";
+import train_instruction_cue_0_html from "./frag/train/instruction_cue_0.html";
+import train_instruction_cue_1_html from "./frag/train/instruction_cue_1.html";
+import train_instruction_cue_2_html from "./frag/train/instruction_cue_2.html";
+import train_instruction_retry_html from "./frag/train/instruction_retry.html";
 // refresher fragments
 import refresh_instruction_start_html from "./frag/refresh/instruction_start.html";
 import refresh_instruction_0_html from "./frag/refresh/instruction_0.html";
@@ -64,18 +64,20 @@ export class NBack {
                 i(train_introduction_html),
                 i(train_instruction_start_html),
                 i(train_instruction_0a_html),
+                this.randShortPracticeLoop(0),
                 i(train_instruction_0b_html),
                 i(train_instruction_1a_html),
+                this.randShortPracticeLoop(1),
                 i(train_instruction_1b_html),
                 i(train_instruction_2a_html),
+                this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
-                i(train_instruction_practice_html),
-                this.constructor.indicate,  // TODO: choose from response
-                ...this.randTrialGroup(0),
-                this.constructor.indicate,
-                ...this.randTrialGroup(1),
-                this.constructor.indicate,
-                ...this.randTrialGroup(2),
+                i(train_instruction_cue_0_html),
+                ...this.randTrialGroup(0, 15, 4, false),
+                i(train_instruction_cue_1_html),
+                ...this.randTrialGroup(1, 15, 4, false),
+                i(train_instruction_cue_2_html),
+                ...this.randTrialGroup(2, 15, 4, false),
             ];
             return [
                 ...training_block,
@@ -99,7 +101,31 @@ export class NBack {
         return this.constructor.taskName;
     }
 
-    randTrialGroup(n) {
+    randShortPracticeLoop(n) {
+        const passingPracticeData = data => {
+            const noMiss = data.missedIndices.length === 0;
+            const noIncorrect = data.responses.every(r => r.correct);
+            return noMiss && noIncorrect;
+        };
+        return {
+            timeline: [
+                ...this.randTrialGroup(n, 3, 1, false),
+                {
+                    timeline: [this.constructor.simpleInstruction(train_instruction_retry_html)],
+                    conditional_function: () => {
+                        const [trialData] = jsPsych.data.get().filter({trial_type: "n-back"}).values().slice(-1);
+                        return !passingPracticeData(trialData);
+                    }
+                }
+            ],
+            loop_function: data => {
+                const [trialData] = data.filter({trial_type: "n-back"}).values().slice(-1);
+                return !passingPracticeData(trialData);
+            }
+        };
+    }
+
+    randTrialGroup(n, length = 15, targets = 4, isRelevant = true) {
         const cue = (
             n === 0 ? this.constructor.cue0 :
             n === 1 ? this.constructor.cue1 :
@@ -109,24 +135,19 @@ export class NBack {
         if (cue === null) {
             throw new Error("cue not implemented for n");
         }
-        const trial = this.randTrial(n);
+        const trial = this.randTrial(n, length, targets, isRelevant);
         const rest = this.constructor.rest;
         return [cue, trial, rest];
     }
 
-    randTrial(n) {
+    randTrial(n, length, targets, isRelevant) {
         return {
             type: "n-back",
             n: n,
-            sequence: this.randSequence(
-                ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                15,
-                n,
-                4
-            ),
-            show_duration: 800,
-            hide_duration: 1000,
-            data: { isRelevant: true },
+            sequence: () => this.randSequence(this.constructor.choices, length, n, targets),
+            show_duration: this.constructor.show_duration,
+            hide_duration: this.constructor.hide_duration,
+            data: { isRelevant: isRelevant },
         }
     }
 
@@ -163,6 +184,10 @@ export class NBack {
 
 NBack.taskName = "n-back";
 
+NBack.choices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+NBack.show_duration = 800;
+NBack.hide_duration = 1000;
+
 NBack.simpleInstruction = stimulus => ({
     type: "html-keyboard-response",
     stimulus: stimulus,
@@ -190,16 +215,13 @@ NBack.cue2 = {
 };
 
 NBack.rest = {
-    type: "html-keyboard-response",
-    stimulus: rest_html,
-    choices: jsPsych.NO_KEYS,
-    trial_duration: 10000,
-};
-
-NBack.indicate = {
-    type: "html-keyboard-response",
-    stimulus: train_instruction_indicate_html,
-    choices: ["0", "1", "2"],
+    timeline: [{
+        type: "html-keyboard-response",
+        stimulus: () => `<em>Please wait for ${jsPsych.timelineVariable("seconds")} seconds...</em>`,
+        choices: jsPsych.NO_KEYS,
+        trial_duration: 1000,
+    }],
+    timeline_variables: [7, 6, 5, 4, 3, 2, 1].map(x => ({seconds: String(x)})),
 };
 
 
