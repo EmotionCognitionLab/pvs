@@ -394,6 +394,7 @@ const doneForTodayMessage = {
 const turkCode = {
     type: "html-button-response",
     stimulus: `Thanks for completing the task! Please enter the following code into Mechanical Turk to show that you have finished: ${jsPsych.randomization.sampleWithoutReplacement(['MARMADUKE', 'BEETLE', 'ZONKER', 'SNOOPY', 'GARFIELD', 'DENNIS', 'LINUS', 'OPUS'], 1)}`,
+    choices: []
 };
 
 const errorHappenedMessage = {
