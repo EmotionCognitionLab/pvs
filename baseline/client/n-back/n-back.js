@@ -9,8 +9,6 @@ import "./style.css";
 import cue_0_html from "./frag/cue_0.html";
 import cue_1_html from "./frag/cue_1.html";
 import cue_2_html from "./frag/cue_2.html";
-// rest fragment
-import rest_html from "./frag/rest.html";
 // training fragments
 import train_introduction_html from "./frag/train/introduction.html";
 import train_instruction_start_html from "./frag/train/instruction_start.html";
