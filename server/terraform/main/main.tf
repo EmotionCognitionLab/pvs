@@ -573,3 +573,47 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "unauthenticated" = aws_iam_role.unauthenticated.arn
   }
 }
+
+# resources for writing console logs to Cloudwatch
+resource "aws_iam_user" "console-log-writer" {
+  name = "pvs-${var.env}-console-log-writer"
+}
+
+resource "aws_cloudwatch_log_group" "console-log-group" {
+  name = "pvs-${var.env}-console"
+  retention_in_days = 30
+}
+
+resource "aws_iam_policy" "console-log-write" {
+  name = "pvs-${var.env}-cloudwatch-console-write"
+  path = "/policy/cloudwatch/console/"
+  description = "Allows writing to specific CloudWatch log group"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [ "${aws_cloudwatch_log_group.console-log-group.arn}:*:*" ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "console-log-writer-policy" {
+  user = aws_iam_user.console-log-writer.name
+  policy_arn = aws_iam_policy.console-log-write.arn
+}
+
+
+resource "aws_iam_access_key" "console-log-writer-key" {
+  user = aws_iam_user.console-log-writer.name
+}
+
+output "console_log_writer_id" {
+  value = aws_iam_access_key.console-log-writer-key.id
+}

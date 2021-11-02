@@ -9,17 +9,21 @@ import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
 import { MoodPrediction } from "../mood-prediction/mood-prediction.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { getAuth } from "../../../common/auth/dist/auth.js";
-import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "../../../common/db/dist/db.js";
+import { getAuth } from "auth/auth.js";
+import { Logger } from "logger/logger.js";
+import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
+import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -39,6 +43,7 @@ const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let userSession;
+let logger;
 
 /**
  * 
@@ -48,7 +53,21 @@ let userSession;
  */
 // TODO no need to return set
 function getSetAndTasks(allResults, saveResultsCallback) {
-    const completedTasks = dedupeExperimentResults(allResults.map(r => r.experiment));
+    const queryParams = new URLSearchParams(window.location.search.substring(1));
+    const tasks = queryParams.get("tasks");
+    if (tasks !== null) {
+        const requestedTasks = tasks.split(",");
+        const setNum = parseInt(queryParams.get("setNum")) || 1;
+        const timeline = tasksForSet(requestedTasks, setNum, [], saveResultsCallback, false);
+        return { set: 1, remainingTasks: timeline };
+    }
+
+    // we don't consider an experiment "completed" unless it has
+    // at least one relevant result
+    // https://github.com/EmotionCognitionLab/pvs/issues/84
+    const completedTasks = dedupeExperimentResults(
+        allResults.filter(r => r.isRelevant).map(r => r.experiment)
+    );
     const nextSetOk = canStartNextSet(allResults);
     if (completedTasks.length === 0) {
         const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, nextSetOk);
@@ -59,24 +78,21 @@ function getSetAndTasks(allResults, saveResultsCallback) {
         for (var j = 0; j < set.length; j++) {
             const task = set[j];
             const completed = completedTasks.shift();
-            if (completed) {
-                if (completed !== task) {
-                    throw new Error(`Expected ${task} but found ${completed}. It looks like tasks have been done out of order.`);
-                }
-            } else {
-                // we've reached the end of the completed tasks; return our results
+            if (!completed || (completed !== task)) {
+                // We've either reached the end of the completed tasks
+                // or they somehow did some out of order and will do them again.
+                // Either way, return our results.
                 let remainingTasks = [];
                 const setNum = i + 1; // add 1 b/c setNum starts from 1
                 if (j === 0 && !nextSetOk) {
                     // we're at the start of a new set and the participant
-                    // started their most recent set today
-                    // participants can only start one set per day
+                    // doesn't meet the criteria for starting the next one yet
                     return { set: setNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
                 }
                 // they didn't finish this set - return the remaining tasks
                 remainingTasks = set.slice(j)
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
-                if (j > 0 && nextSetOk) {
+                if (j > 0 && nextSetOk && i < allSets.length - 1) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
                     Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
@@ -108,18 +124,16 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         const node = {
             timeline: taskTimeline,
             taskName: task.taskName,
-            on_timeline_finish: () => {
-                const results = jsPsych.data.getLastTimelineData().values();
-                results.push({ua: window.navigator.userAgent});
-                saveResultsCallback(task.taskName, results);
-                if (i === remainingTaskNames.length - 1) {
-                    saveResultsCallback(setFinished, [{ "setNum": setNum }]);
-                }
-            }
+            setNum: setNum
         }
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
                 saveResultsCallback(setStarted, [{"setNum": setNum }]);
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
+            }
+        } else {
+            node.on_timeline_start = () => {
+                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
             }
         }
         allTimelines.push(node);
@@ -175,12 +189,18 @@ function taskForName(name, options) {
             return new MoodMemory();
         case "mood-prediction":
             return new MoodPrediction();
+        case "n-back":
+            return new NBack(options.setNum || 1);
         case "panas":
             return new Panas();
         case "pattern-separation-learning":
             return new PatternSeparation(options.setNum || 1, false);
         case "pattern-separation-recall":
             return new PatternSeparation(options.setNum || 1, true);
+        case "physical-activity":
+            return new PhysicalActivity();
+        case "spatial-orientation":
+            return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
             return new TaskSwitching();
         case "verbal-fluency":
@@ -222,24 +242,40 @@ async function verbalLearningEndTime() {
 
 
 /**
- * Users may only start the next set if (a) they started the previous one yesterday or earlier and (b) at least one hour ago.
- * Example: If it is Tuesday at 12:17AM and the user started the previous set Monday at 11:43PM they can't start the next set.
+ * Users may only start the next set if:
+ * (a) They are in between sets and
+ *    (1) They completed the last set >= 1 hour ago or
+ *    (2) The last set took them >3 hours to complete
+ * or
+ * (b) They are in the middle of a set that they started >3 hours ago
+ * See https://github.com/EmotionCognitionLab/pvs/issues/68
  * @param {Object[]} allResults All results for the user, as returned by ../common/db/db.js:getAllResultsForCurrentUser()
  * @returns true if the user can start the next set, false otherwise
  */
 function canStartNextSet(allResults) {
-    const mostRecentStart = allResults.filter(r => r.experiment === setStarted).reverse()[0];
-    if (!mostRecentStart) {
-        return true;
+    if (allResults.length === 0) return false;
+
+    const setStarts = allResults.filter(r => r.experiment === setStarted);
+    const setFinishes = allResults.filter(r => r.experiment === setFinished);
+    const setNumsStarted = new Set(setStarts.map(ss => ss.results.setNum));
+    const setNumsFinished = new Set(setFinishes.map(sf => sf.results.setNum));
+    let inBetweenSets = true;
+    for (let setNum of setNumsStarted) if (!setNumsFinished.has(setNum)) inBetweenSets = false;
+    inBetweenSets = inBetweenSets && (setNumsStarted.size == setNumsFinished.size);
+
+    if (inBetweenSets) {
+        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
+        const lastSetFinishedAt = Date.parse(setFinishes[setFinishes.length - 1].dateTime);
+        return Date.now() - lastSetFinishedAt >= 1 * 60 * 60 * 1000 ||
+            (lastSetFinishedAt - lastSetStartedAt > 3 * 60 * 60 * 1000);
+    } else {
+        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
+        return Date.now() - lastSetStartedAt > 3 * 60 * 60 * 1000;
     }
-    const lastSetStart = new Date(mostRecentStart.dateTime);
-    const now = Date.now();
-    const yesterday = new Date(now - (1000 * 60 * 60 * 24));
-    return lastSetStart < yesterday || 
-        (lastSetStart.getDate() === yesterday.getDate() && lastSetStart.valueOf() <= now - (1000 * 60 * 60));
 }
 
 function init() {
+    logger = new Logger();
     const lStor = window.localStorage;
     const scopes = [];
     if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
@@ -261,21 +297,54 @@ async function doAll(session) {
 
 function startTasks(allResults) {
     const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
+    runTask(setAndTasks.remainingTasks, 0, saveResultsCallback)
+}
+
+function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
+    if (taskIdx >= tasks.length) {
+        logger.error(`Was asked to run task ${taskIdx}, but tasks array max index is ${tasks.length - 1}`);
+        jsPsych.init({
+            timeline: [errorHappenedMessage]
+        });
+        return;
+    }
+    tasks[taskIdx].on_timeline_finish = () => {
+        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent}]);
+        if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+            saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
+        } 
+        if (taskIdx < tasks.length - 1) {
+            runTask(tasks, taskIdx + 1, saveResultsCallback);
+        }
+    };
     jsPsych.init({
-        timeline: setAndTasks.remainingTasks
+        timeline: [tasks[taskIdx]],
+        on_data_update: (data) => {
+            saveResultsCallback(tasks[taskIdx].taskName, [data])
+        }
     });
 }
 
 function saveResultsCallback(experimentName, results) {
-    const cognitoAuth = getAuth(session => {
-        saveResults(session, experimentName, results);
-    }, handleError);
+    const cognitoAuth = getAuth(
+        session => saveResults(session, experimentName, results),
+        err => handleSaveError(err, experimentName, results)
+    );
     cognitoAuth.getSession();
 }
 
+function handleSaveError(err, experimentName, results) {
+    const cognitoAuth = getAuth();
+    logger.error(`Error saving data for ${cognitoAuth.getUsername()}: ${JSON.stringify({experiment: experimentName, results: results})}`)
+    logger.error(err);
+}
+
 function handleError(err) {
-    // TODO set up remote error logging
-    console.log(err);
+    logger.error(err);
+    // something went wrong; redirect users to cognito sign-in page
+    const cognitoAuth = getAuth(() => {}, () => {});
+    const loginUrl = cognitoAuth.getFQDNSignIn();
+    window.location = loginUrl;
 }
 
 function taskNotAvailable(taskName) {
@@ -325,12 +394,18 @@ const doneForTodayMessage = {
     choices: [],
 };
 
+const errorHappenedMessage = {
+    type: "html-button-response",
+    stimulus: "Unfortunately, an error has occurred. The team has been alerted and will work to fix it. Please try again in a few hours.",
+    choices: []
+}
+
 
 if (window.location.href.includes("daily-tasks")) {
     init();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, setFinished, setStarted, startNewSetQuery }
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery }
 
 
 

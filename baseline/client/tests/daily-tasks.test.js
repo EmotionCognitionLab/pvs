@@ -10,17 +10,22 @@ import * as dailyTasks from "../daily-tasks/daily-tasks.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { MoodPrediction  } from "../mood-prediction/mood-prediction.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
+import { NBack } from "../n-back/n-back.js";
 import { Panas } from "../panas/panas.js";
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { clickContinue } from "./utils.js";
+import { clickContinue, clickIcirc, pressKey } from "./utils.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
+import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import "jest-canvas-mock";
 require("@adp-psych/jspsych/jspsych.js");
 
 describe("getSetAndTasks", () => {
     it("returns the set and remaining tasks in the set", () => {
-        const input = buildInput(dailyTasks.allSets[0].slice(0, 2));
+
+        const input = buildInput( [{ taskNames: dailyTasks.allSets[0].slice(0, 2), setNum: 1 }] );
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[0].slice(input.length - 1); // -1 because the input includes a set-started record
@@ -30,8 +35,15 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
-    it("returns the next set and all tasks in it if all tasks in the previous set have been completed and the previous set was started yesterday or earlier", () => {
-        const input = buildInput(dailyTasks.allSets[0], '2021-01-01T12:34:56.789Z');
+    it("returns the next set and all tasks in it if all tasks in the previous set have been completed and the previous set was finished more than one hour ago", () => {
+        const now = Date.now();
+        const moreThanAnHourAgo = new Date(now - ((1000 * 60 * 60 * 1) + 1));
+        const input = buildInput( [{ 
+            taskNames: dailyTasks.allSets[0], 
+            setStartedTime: new Date(now - (1000 * 60 * 60 * 1.8)).toISOString(),
+            setFinishedTime: moreThanAnHourAgo.toISOString(),
+            setNum: 1
+        }]);
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.set).toBe(2);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1];
@@ -41,18 +53,44 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
-    it("returns an 'all done for today' message if all tasks in the previous set were completed today", () => {
-        const input = buildInput(dailyTasks.allSets[0], new Date().toISOString());
+    it("returns an 'all done for today' message if all tasks in the previous set were completed less than an hour ago and the set took less than 3 hours to complete", () => {
+        const now = Date.now();
+        const lessThanAnHourAgo = new Date(now - (1000 * 60 * 60 * 0.5));
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0], 
+            setStartedTime: new Date(now - (1000 * 60 * 60 * 1)).toISOString(),
+            setFinishedTime: lessThanAnHourAgo.toISOString(),
+            setNum: 1
+        }]);
         const results = dailyTasks.getSetAndTasks(input);
         const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual([dailyTasks.doneForToday]);
     });
 
-    it("gives you the option to start a new set if you're finishing a set that you started yesterday", () => {
-        const yesterdayMs = Date.now() - (1000 * 60 * 60 * 24);
-        const yesterday = new Date(yesterdayMs);
+    it("lets you start the next set if the previous set took you more than three hours to complete, even if you just finished it", () => {
+        const now = Date.now();
+        const moreThanThreeHoursAgo = new Date(now - 1000 * 60 * 60 * 3.01);
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0],
+            setStartedTime: moreThanThreeHoursAgo.toISOString(),
+            setFinishedTime: new Date(now).toISOString(),
+            setNum: 1
+        }]);
+        const results = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        const secondSetTasks = dailyTasks.allSets[1];
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(secondSetTasks));
+    });
+
+    it("gives you the option to start a new set if you're finishing a set that you started more than three hours ago", () => {
+        const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
         const doneTasksIdx = 3;
-        const input = buildInput(dailyTasks.allSets[0].slice(0, doneTasksIdx), yesterday.toISOString());
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
+            setStartedTime: fourHoursAgo.toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 3.1)).toISOString(),
+            setNum: 1
+        }]);
         const results = dailyTasks.getSetAndTasks(input);
         const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
         expect(remainingTaskNames).toContain(dailyTasks.startNewSetQuery);
@@ -62,27 +100,36 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toEqual(expect.arrayContaining(secondSetTasks));
     });
 
-    it("does not give you the option to start a new set if you finished the last one yesterday but less than an hour ago", () => {
-        const lastSetFinishedDate = '2021-01-02T23:32:00.000Z';
-        const nowDateMs = Date.parse(lastSetFinishedDate).valueOf() + (1000 * 60 * 40);
-        const input = buildInput(dailyTasks.allSets[0], lastSetFinishedDate);
-        jest.spyOn(global.Date, 'now').mockImplementationOnce(() => nowDateMs);
+    it("does not give you the option to start a new set if you're finishing a set that you started less than three hours ago", () => {
+        const twoHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 2));
+        const doneTasksIdx = 4;
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx),
+            setStartedTime: twoHoursAgo,
+            setNum: 1
+        }]);
         const results = dailyTasks.getSetAndTasks(input);
-        expect(results.remainingTasks.length).toEqual(1);
-        expect(results.remainingTasks.map(t => t.taskName)[0]).toEqual(dailyTasks.doneForToday);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).not.toContain(dailyTasks.startNewSetQuery);
+        const remainingFirstSetTasks = dailyTasks.allSets[0].slice(doneTasksIdx);
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingFirstSetTasks));
     });
 
-    it("throws an error if completed tasks are not in the expected order", () => {
-        const input = buildInput([dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]]);
-        function callWithBadOrder() {
-            dailyTasks.getSetAndTasks(input);
-        }
-        const expectedErrPatt = new RegExp(`^Expected ${dailyTasks.allSets[0][1]} but found ${dailyTasks.allSets[0][2]}.*$`);
-        expect(callWithBadOrder).toThrowError(expectedErrPatt);
+    it("starts at first missed task if completed tasks are not in the expected order", () => {
+        const input = buildInput([{ taskNames: [dailyTasks.allSets[0][0], dailyTasks.allSets[0][2]], setNum: 1 }]);
+        const results = dailyTasks.getSetAndTasks(input);
+        expect(results.remainingTasks[0].taskName).toBe(dailyTasks.allSets[0][1]);
     });
 
     it("should include an 'all-done' message (and only that message) if the user has completed all tasks in all sets", () => {
-        const input = buildInput(dailyTasks.allSets.flatMap(s => s));
+        const setList = dailyTasks.allSets.map( (s, idx) => ( { 
+            taskNames: s,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
+            setNum: idx + 1 }
+        ));
+        
+        const input = buildInput(setList);
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.remainingTasks.length).toBe(1);
         expect(result.remainingTasks[0].taskName).toBe(dailyTasks.allDone);
@@ -93,7 +140,7 @@ describe("getSetAndTasks", () => {
         const input = [];
         inputTasks.forEach(t => { input.push(t); input.push(t) } );
         expect(input.length).toBe(2 * inputTasks.length);
-        const result = dailyTasks.getSetAndTasks(buildInput(input));
+        const result = dailyTasks.getSetAndTasks(buildInput( [{taskNames: input, setNum: 1}] ));
         expect(result.set).toBe(1);
         const expectedTaskNames = dailyTasks.allSets[result.set - 1].slice(5);
         const remainingTaskNames = result.remainingTasks
@@ -102,11 +149,36 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
     });
 
+    it("should not consider experiments as completed if they don't have at least one relevant result", () => {
+        const lastValidTaskIdx = 2;
+        const inputTasks = dailyTasks.allSets[0].slice(0, lastValidTaskIdx + 1);
+        const input = buildInput( [{taskNames: inputTasks, setNum: 1}]);
+        input[3].isRelevant = false;
+        const result = dailyTasks.getSetAndTasks(input);
+        const expectedTaskNames = dailyTasks.allSets[0].slice(lastValidTaskIdx);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
+
     it("should return remaining tasks when the number of characters in the first uncompleted task name is less than or equal to the number of completed tasks", () => {
-        let inputTasks = dailyTasks.allSets[0].concat(dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 2));
+        const inputSets = [ {
+            taskNames: dailyTasks.allSets[0],
+            setNum: 1,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 5)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 4)).toISOString()
+        },
+        {
+            taskNames: dailyTasks.allSets[1].slice(0, dailyTasks.allSets[1].length - 2),
+            setNum: 2,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
+        }
+        ];
+        
         const expectedTaskNames = dailyTasks.allSets[1].slice(dailyTasks.allSets[1].length - 2);
-        expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputTasks.length);
-        const input = buildInput(inputTasks);
+        expect(expectedTaskNames[0].length).toBeLessThanOrEqual(inputSets[0].taskNames.concat(inputSets[1].taskNames).length);
+        const input = buildInput(inputSets);
         const result = dailyTasks.getSetAndTasks(input);
         const remainingTaskNames = result.remainingTasks
             .filter(t => t.taskName !== dailyTasks.doneForToday)
@@ -115,20 +187,26 @@ describe("getSetAndTasks", () => {
     });
 
     it("should include a 'done-for-today' message after the user finishes the last task for the day", () => {
-        const input = buildInput(dailyTasks.allSets[0].slice(0, 2));
+        const input = buildInput( [{ taskNames: dailyTasks.allSets[0].slice(0, 2), setNum: 1 }] );
         const result = dailyTasks.getSetAndTasks(input);
         expect(result.remainingTasks[result.remainingTasks.length -1].taskName).toBe(dailyTasks.doneForToday);
     });
 
     it("should include an 'all-done' message when the user finishes the last task of the last set", () => {
-        let input = dailyTasks.allSets.flatMap(s => s);
-        input = input.slice(0, input.length - 2);
-        const result = dailyTasks.getSetAndTasks(buildInput(input));
+        const setList = dailyTasks.allSets.map( (s, idx) => ( { 
+            taskNames: s,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
+            setNum: idx + 1 }
+        ));
+        const lastSetTasks = setList[setList.length - 1].taskNames
+        setList[setList.length - 1].taskNames = lastSetTasks.slice(0, lastSetTasks.length - 2);
+        const result = dailyTasks.getSetAndTasks(buildInput(setList));
         expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
     });
 
     it("should return all of the tasks the first set if you have started the set today but have not yet done any tasks", () => {
-        const result = dailyTasks.getSetAndTasks(buildInput([]));
+        const result = dailyTasks.getSetAndTasks(buildInput([ { taskNames: [], setNum: 1 } ]));
         const remainingTaskNames = result.remainingTasks
             .filter(t => t.taskName !== dailyTasks.doneForToday)
             .map(t => t.taskName);
@@ -194,6 +272,10 @@ describe("taskForName", () => {
         const result = dailyTasks.taskForName("panas", {});
         expect(result instanceof Panas).toBe(true);
     });
+    it("returns a PhysicalActivity object for physical-activity", () => {
+        const result = dailyTasks.taskForName("physical-activity", {});
+        expect(result instanceof PhysicalActivity).toBe(true);
+    });
     it("returns a TaskSwitching object for task-switching", () => {
         const result = dailyTasks.taskForName("task-switching", {});
         expect(result instanceof TaskSwitching).toBe(true);
@@ -253,6 +335,18 @@ describe("taskForName for mind-in-eyes", () => {
     });
 })
 
+describe("taskForName for n-back", () => {
+    it("returns a NBack object for  n-back", () => {
+        const result = dailyTasks.taskForName("n-back", {setNum: 2});
+        expect(result instanceof NBack).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("n-back", {setNum: 1});
+        const noSetResult = dailyTasks.taskForName("n-back", {});
+        expect(noSetResult.getTimeline().length).toEqual(set1Result.getTimeline().length);
+    });
+});
+
 describe("taskForName for pattern-separation", () => {
     it("returns a PatternSeparation object for pattern-separation-learning", () => {
         const result = dailyTasks.taskForName("pattern-separation-learning", {});
@@ -282,6 +376,18 @@ describe("taskForName for pattern-separation", () => {
     });
 });
 
+describe("taskForName for spatial-orientation", () => {
+    it("returns a SpatialOrientation object for spatial-orientation", () => {
+        const result = dailyTasks.taskForName("spatial-orientation", {setNum: 2});
+        expect(result instanceof SpatialOrientation).toBe(true);
+    });
+    it("defaults to set 1 if no set number is provided", () => {
+        const set1Result = dailyTasks.taskForName("spatial-orientation", {setNum: 1}).getTimeline();
+        const noSetResult = dailyTasks.taskForName("spatial-orientation", {}).getTimeline();
+        expect(set1Result.length).toEqual(noSetResult.length);
+    });
+});
+
 describe("taskForName for verbal-learning", () => {
     it("returns a VerbalLearning object for verbal-learning-learning", () => {
         const result = dailyTasks.taskForName("verbal-learning-learning", {});
@@ -302,14 +408,16 @@ describe("taskForName for verbal-learning", () => {
 });
 
 describe("doing the tasks", () => {
+    const saveResultsMock = jest.fn((experimentName, results) => null);
+    const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
+
     afterEach(() => {
         jest.useRealTimers();
+        saveResultsMock.mockClear();
     });
     it("should save the data at the end of each task", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         jest.useFakeTimers("legacy");
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
@@ -326,15 +434,15 @@ describe("doing the tasks", () => {
         questions[0].dispatchEvent(new InputEvent("input"));
         clickContinue("input[type=submit]");
 
-        expect(saveResultsMock.mock.calls.length).toBe(2);
+        expect(saveResultsMock.mock.calls.length).toBe(6); // set-started, task-started, full-screen, results, user-agent, next task started
         // the experiment name saved to the results should be the name of the first task in allTimelines
-        expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[3][0]).toBe(allTimelines.remainingTasks[0].taskName);
         // it should save the browser user agent as part of the results
-        const ua = saveResultsMock.mock.calls[1][1].filter(r => r.ua);
+        const ua = saveResultsMock.mock.calls[4][1].filter(r => r.ua);
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
         // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[1][1].filter(r => r.isRelevant)
+        let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant)
         expect(relevantResult.length).toBe(1);
         relevantResult = relevantResult[0];
         expect(relevantResult.response).toBeDefined();
@@ -343,54 +451,82 @@ describe("doing the tasks", () => {
 
     });
     it("should save a 'set-finished' result at the end of a set", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
-        const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2)
+        const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2);
         jest.useFakeTimers("legacy");
-        jsPsych.init({timeline: tasksToRun});
+        dailyTasks.runTask(tasksToRun, 0, saveResultsMock);
 
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
-        // not-implemented screen TODO replace with correct task completion once task is written
-        clickContinue();
-        expect(saveResultsMock.mock.calls.length).toBe(2);
+        // spatial-orientation
+        for (let i = 1; i < tasksToRun[0].timeline.length; i++) {
+            const task = tasksToRun[0].timeline[i];
+            if (task.type === "html-keyboard-response") {
+                pressKey(" ");
+            } else if (task.type === "spatial-orientation") {
+                const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+                if (icirc === null) {
+                    //we've been timed out
+                    break;
+                }
+                clickIcirc(icirc, 0, 0);
+                jest.runAllTimers();
+            }
+        }
+        expect(saveResultsMock.mock.calls.length).toBe(24);
         // check experiment name
-        expect(saveResultsMock.mock.calls[1][0]).toBe(dailyTasks.setFinished);
-        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{setNum: 1}]);
+        const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
+        expect(lastRes[0]).toBe(dailyTasks.setFinished);
+        expect(lastRes[1]).toStrictEqual([{setNum: 1}]);
     });
     it("should save a 'set-started' result at the start of a set", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
-        jsPsych.init({timeline: allTimelines.remainingTasks});
-        expect(saveResultsMock.mock.calls.length).toBe(1);
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
+        expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setStarted);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual([{setNum: 1}]);
     });
+    it("should save a result showing the task started at the start of a task", () => {
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
+        expect(saveResultsMock.mock.calls.length).toBe(2);
+        expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true}]);
+    });
     it("should put a full-screen task at the start of each experiment", () => {
-        const saveResultsMock = jest.fn((experimentName, results) => null);
-        const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
         const firstTaskTypes = allTimelines.remainingTasks.slice(0, allTimelines.remainingTasks.length - 1)
             .map(rt => rt.timeline[0].timeline[0].type);
        expect(firstTaskTypes.every(tt => tt === "fullscreen")).toBe(true);
     });
     it("should display the full-screen task if the display is not already full screen", () => {
-        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/full screen mode/);
     })
     it("should not display the full-screen task if the display is already full screen", () => {
-        const allTimelines = dailyTasks.getSetAndTasks([], jest.fn());
         const origFsElement = document.fullscreenElement;
         global.document.fullscreenElement = true; // normally an HTMLElement, but daily-tasks just checks for existence
-        jsPsych.init({timeline: allTimelines.remainingTasks});
+        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(jsPsych.getDisplayElement().innerHTML).not.toMatch(/full screen mode/);
         global.document.fullscreenElement = origFsElement;
     });
 });
 
-function buildInput(taskList, dateTime = new Date().toISOString()) {
-    const input = taskList.map(task => ( {experiment: task} ));
-    input.unshift({experiment: dailyTasks.setStarted, dateTime: dateTime});
-    return input;
+/**
+ * 
+ * @param {*} setList Array of objects {
+ *  taskNames: ["first task", "second task",...], 
+ *  setStartedTime: ISO time string, (optional, defaults to now)
+ *  setFinishedTime: ISO time string, (optional)
+ *  setNum: number
+ * }
+ */
+function buildInput(setList) {
+    return setList.flatMap(s => {
+        const startTime = s.setStartedTime || (new Date()).toISOString();
+        let input = 
+            [{experiment: dailyTasks.setStarted, dateTime: startTime, results: {setNum: s.setNum}}]
+            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })))
+        if (s.setFinishedTime) {
+            input = input.concat({experiment: dailyTasks.setFinished, dateTime: s.setFinishedTime, results: {setNum: s.setNum}});
+        }
+        return input;
+    });
 }

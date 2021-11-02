@@ -1,4 +1,4 @@
-import { getAuth, sendPhoneVerificationCode, verifyPhone } from "../../../common/auth/dist/auth.js";
+import { getAuth, sendPhoneVerificationCode, verifyPhone } from "auth/auth.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import './style.css';
 
