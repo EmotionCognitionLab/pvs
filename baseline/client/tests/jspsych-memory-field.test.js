@@ -17,4 +17,19 @@ describe("jspsych-memory-field.js plugin", () => {
         expect(jsPsych.getDisplayElement().innerHTML).toContain(stimulus);
         expect(jsPsych.getDisplayElement().innerHTML).toContain(buttonLabel);
     });
+
+    it("finishes when button is pressed", () => {
+        let finished = false;
+        jsPsych.init({
+            timeline: [{
+                type: "memory-field",
+                stimulus: "",
+                button_label: "",
+            }],
+            on_finish: () => { finished = true; }
+        });
+        expect(finished).toBe(false);
+        document.getElementById("jspsych-memory-field-button").click();
+        expect(finished).toBe(true);
+    });
 });
