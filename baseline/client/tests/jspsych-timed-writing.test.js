@@ -17,4 +17,20 @@ describe("jspsych-timed-writing.js plugin", () => {
         }]});
         expect(jsPsych.getDisplayElement().innerHTML).toContain(stimulus);
     });
+
+    it("records response text", () => {
+        const response = "nice cock"
+        jest.useFakeTimers("legacy");
+        jsPsych.init({timeline: [{
+            type: "timed-writing",
+            duration: 1000,
+            stimulus: "",
+            textarea_rows: 1,
+            textarea_cols: 1,
+        }]});
+        document.getElementById("jspsych-timed-writing-textarea").value = response;
+        jest.runAllTimers();
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.response).toBe(response);
+    });
 });
