@@ -6,8 +6,8 @@ variable "env" {
     description = "Defines the environment (e.g. dev, QA, production) this infrastructure is intended for."
 }
 
-variable "cognito-callback-url" {
-    description = "The url the user is redirected to after authentication. Must be absolute and must be https unless it is localhost."
+variable "cognito-callback-urls" {
+    description = "The list of urls the user may be redirected to after authentication. Must be absolute and must be https unless it is localhost."
 }
 
 variable "cognito-logout-url" {
