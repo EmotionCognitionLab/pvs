@@ -1,5 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-memory-field.js";
+import { pressKey } from "./utils.js"
 
 describe("jspsych-memory-field.js plugin", () => {
     it("loads correctly", () => {
@@ -16,6 +17,25 @@ describe("jspsych-memory-field.js plugin", () => {
         }]});
         expect(jsPsych.getDisplayElement().innerHTML).toContain(stimulus);
         expect(jsPsych.getDisplayElement().innerHTML).toContain(buttonLabel);
+    });
+
+    it("records entered responses", () => {
+        const responses = ["spaghetti", "and", "meatballs"];
+        jsPsych.init({timeline: [{
+            type: "memory-field",
+            stimulus: "",
+            button_label: "",
+        }]});
+        const field = document.getElementById("jspsych-memory-field-field");
+        const initDict = {key: "Enter"}
+        responses.forEach(r => {
+            field.value = r;
+            field.dispatchEvent(new KeyboardEvent("keydown", initDict));
+            field.dispatchEvent(new KeyboardEvent("keyup", initDict));
+        });
+        document.getElementById("jspsych-memory-field-button").click();
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.response).toStrictEqual(responses);
     });
 
     it("finishes when button is pressed", () => {
