@@ -6,6 +6,7 @@ dist
 **/.terraform/*
 *.tfstate
 *.tfstate.*
+sensitive.tfvars
 
 vetur.config.js
 

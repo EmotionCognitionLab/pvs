@@ -21,3 +21,8 @@ variable "cognito-redirect-uri" {
 variable "ses-emailed-reports-bucket" {
     description = "Name for S3 bucket that will hold reports emailed to us from Lumosity"
 }
+
+variable "console-error-notification-emails" {
+    description = "Space-separated list of email addresses for recipients of console errors"
+    sensitive = true
+}
