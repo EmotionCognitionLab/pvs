@@ -33,4 +33,24 @@ describe("jspsych-timed-writing.js plugin", () => {
         const data = jsPsych.data.getLastTrialData().values()[0];
         expect(data.response).toBe(response);
     });
+
+    it("finishes only after duration elapses", () => {
+        let finished = false;
+        jest.useFakeTimers("legacy");
+        jsPsych.init({
+            timeline: [{
+                type: "timed-writing",
+                duration: 1000,
+                stimulus: "",
+                textarea_rows: 1,
+                textarea_cols: 1,
+            }],
+            on_finish: () => { finished = true },
+        });
+        expect(finished).toBe(false);
+        jest.advanceTimersByTime(900);
+        expect(finished).toBe(false);
+        jest.advanceTimersByTime(200);
+        expect(finished).toBe(true);
+    });
 });
