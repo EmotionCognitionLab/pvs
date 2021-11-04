@@ -135,9 +135,9 @@ describe("TaskSwitching timeline", () => {
 
 function taskType(stimulus) {
     stimulus = stimulus.replace("&gt;", ">").replace("&lt;", "<");
-    const fontSizePat = /<span class=\"(smalldot|dot white)\"><\/span><span class=\"(smalldot|dot white)\"><\/span>/;
+    const fontSizePat = /<span class="(smalldot|dot white)"><\/span><span class="(smalldot|dot white)"><\/span>/;
     const numberPat = /(>5|<5)<\/span> <span>(<5|>5)/;
-    const colorPat = /<span class=\"dot .*\"><\/span><span class=\"dot .*\"><\/span>/;
+    const colorPat = /<span class="dot .*"><\/span><span class="dot .*"><\/span>/;
     if (stimulus.match(fontSizePat)) {
         return "font size";
     }
@@ -303,7 +303,7 @@ describe("TaskSwitching", () => {
             doTraining();
             jest.advanceTimersByTime(3499);
             const fixHtml = dispElem().innerHTML;
-            expect(fixHtml).toMatch(/<div class=\"fix\">+/);
+            expect(fixHtml).toMatch(/<div class="fix">+/);
             jest.advanceTimersByTime(1);
             expect(dispElem().innerHTML).not.toEqual(fixHtml);
         });
