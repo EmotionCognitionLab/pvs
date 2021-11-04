@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 
 jest.useFakeTimers('legacy'); // why legacy: https://github.com/facebook/jest/issues/11500
 

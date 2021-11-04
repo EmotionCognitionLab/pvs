@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { TaskSwitching } from "../task-switching/task-switching.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 
 describe("TaskSwitching timeline", () => {
     let tl;
@@ -282,7 +282,7 @@ describe("TaskSwitching", () => {
         expect(data.round).toEqual(1);
     });
     describe("trial structure should consist of", () => {
-        const dispElem = jsPsych.getDisplayElement
+        const dispElem = jsPsych.getDisplayElement;
         it("a 500ms picture describing the type of task", () => {
             doTraining();
             const taskDescHtml = dispElem().innerHTML;
@@ -358,7 +358,7 @@ function doTraining() {
 }
 
 function stimulusNumberSizeAndColor(dispElemHtml) {
-    const classPat = /<div class="(big|small) (blue|ylw)">/
+    const classPat = /<div class="(big|small) (blue|ylw)">/;
     const match = dispElemHtml.match(classPat);
     const size = match[1];
     expect(size === "big" || size === "small").toBe(true);
@@ -394,21 +394,21 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
     switch(stimulus) {
         case "color":
             if ( (correctly && color === "blue") || (!correctly && color !== "blue")) {
-                pressKey("ArrowLeft")
+                pressKey("ArrowLeft");
             } else {
                 pressKey("ArrowRight");
             }
             break;
         case "font size":
             if ( (correctly && size === "big") || (!correctly && size !== "big")) {
-                pressKey("ArrowRight")
+                pressKey("ArrowRight");
             } else {
                 pressKey("ArrowLeft");
             }
             break;
         case "number":
             if ( (correctly && number > 5) || (!correctly && number < 5)) {
-                pressKey("ArrowRight")
+                pressKey("ArrowRight");
             } else {
                 pressKey("ArrowLeft");
             }

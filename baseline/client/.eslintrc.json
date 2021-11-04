@@ -18,7 +18,8 @@
                 "argsIgnorePattern": "^_",
                 "caughtErrorsIgnorePattern": "^_"
             }
-        ]
+        ],
+        "semi": 2
     },
     "plugins": [
         "jest"

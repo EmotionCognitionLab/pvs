@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
-import { pressKey, lastData } from "./utils.js"
+import { pressKey, lastData } from "./utils.js";
 import stimuli from "../mind-eyes/stimuli.json";
 
 describe("MindEyes", () => {

@@ -1,6 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-n-back.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 
 const getLastTrialData = () => jsPsych.data.getLastTrialData().values()[0];
 

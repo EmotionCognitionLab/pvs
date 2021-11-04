@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
-import { pressKey, lastData } from "./utils.js"
+import { pressKey, lastData } from "./utils.js";
 import stimuli from "../pattern-separation/stimuli.json";
 
 describe("PatternSeparation learning phase", () => {
@@ -155,7 +155,7 @@ describe("PatternSeparation recall phase", () => {
 
     it("should only show recall stimuli when isRecall is true", () => {
         expect(recallTl.length).toBe(2);
-        expect(recallTl[1].timeline[0].prompt).toMatch(/1 = definitely old/)
+        expect(recallTl[1].timeline[0].prompt).toMatch(/1 = definitely old/);
     });
 
     it("should display the next recall stimulus when the user responds to the current one", () => {

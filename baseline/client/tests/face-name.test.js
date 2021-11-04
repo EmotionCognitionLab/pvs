@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { FaceName } from "../face-name/face-name.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 import stimuli from "../face-name/stimuli.json";
 
 

@@ -31,10 +31,10 @@ describe("Demographics", () => {
     it("should set both biracial inputs to be enabled and required if biracial is selected", () => {
         const bi1Text = document.getElementById("bi1_text");
         const bi2Text = document.getElementById("bi1_text");
-        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], false)
+        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], false);
         const biRacial = document.getElementById("bi");
         biRacial.click();
-        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], true)
+        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], true);
     });
 
     it("should set other race text to be disabled and not required if an alternate race is selected", () => {
@@ -52,7 +52,7 @@ describe("Demographics", () => {
         biRacial.click();
         const bi1Text = document.getElementById("bi1_text");
         const bi2Text = document.getElementById("bi1_text");
-        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], true)
+        checkRequiredAndDisabledAttrs([bi1Text, bi2Text], true);
         const other = document.getElementById("o");
         other.click();
         checkRequiredAndDisabledAttrs([bi1Text, bi2Text], false);

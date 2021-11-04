@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { Flanker } from "../flanker/flanker.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 
 beforeEach(() => {
     jest.useFakeTimers("legacy");

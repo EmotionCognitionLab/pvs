@@ -1,9 +1,9 @@
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
-import { pressKey, clickIcirc } from "./utils.js"
+import { pressKey, clickIcirc } from "./utils.js";
 import "jest-canvas-mock";
 
 const originalDateNow = Date.now;  // original    Starwalker
-const resetDateNow = () => { Date.now = originalDateNow; }
+const resetDateNow = () => { Date.now = originalDateNow; };
 afterEach(resetDateNow);
 
 const advanceDateNowThenTimers = ms => {
@@ -70,7 +70,7 @@ describe("spatial-orientation", () => {
             ...SpatialOrientation.stimulus.example.trials,
             ...SpatialOrientation.stimulus.practice.trials,
             ...Object.values(SpatialOrientation.stimulus["test-sets"]).flatMap(set => set.trials),
-        ]
+        ];
         allTrials.forEach(validateTrial);
     });
 });

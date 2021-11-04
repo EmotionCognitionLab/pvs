@@ -86,7 +86,7 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
             [`${browserCheck.appName}.${browserCheck.screenSizeKey}`]: `${screen.width}x${screen.height}`,
             [`${browserCheck.appName}.${browserCheck.browserNameKey}`]: uaInfo.browser.name,
             [`${browserCheck.appName}.${browserCheck.osNameKey}`]: uaInfo.os.name
-        }
+        };
         setLStorMockResponse(lStorGetSpy, mockRespMap);
     });
 
