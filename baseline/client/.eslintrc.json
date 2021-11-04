@@ -19,7 +19,8 @@
                 "caughtErrorsIgnorePattern": "^_"
             }
         ],
-        "semi": 2
+        "semi": 2,
+        "eol-last": 2
     },
     "plugins": [
         "jest"
