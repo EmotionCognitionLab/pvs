@@ -31,6 +31,7 @@ describe("spatial-orientation", () => {
         // skip timeline to test block
         const timeline = (new SpatialOrientation(1)).getTimeline();
         jsPsych.init({timeline: timeline});
+        // actively progress trials until first test spatial-orientation trial is encountered
         for (const trial of timeline) {
             if (trial.data?.isRelevant === true) {
                 break;
@@ -38,10 +39,10 @@ describe("spatial-orientation", () => {
                 pressKey(" ");
             } else if (trial.type === "spatial-orientation") {
                 clickIcirc(document.getElementById("jspsych-spatial-orientation-icirc"), 0, 0);
-                jest.runAllTimers();
+                jest.advanceTimersByTime(trial.lingerDuration);
             }
         }
-        // expect test trials to NOT be completed at their start
+        // expect test trials to NOT be completed at first
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
         // expect test trials to still NOT be completed after 4 minutes and 55 seconds
         advanceDateNowThenTimers(4*60*1000 + 55*1000);  // 4 minutes and 55 seconds
