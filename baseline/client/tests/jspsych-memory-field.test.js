@@ -8,8 +8,8 @@ describe("jspsych-memory-field.js plugin", () => {
     });
 
     it("shows stimulus", () => {
-        const stimulus = "const stimulus";
-        const buttonLabel = "const buttonLabel";
+        const stimulus = "were you just frying chicken in there?";
+        const buttonLabel = "i think that's pretty cool";
         jsPsych.init({timeline: [{
             type: "memory-field",
             stimulus: stimulus,
