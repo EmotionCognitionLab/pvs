@@ -39,7 +39,7 @@ describe("spatial-orientation", () => {
                 pressKey(" ");
             } else if (trial.type === "spatial-orientation") {
                 clickIcirc(document.getElementById("jspsych-spatial-orientation-icirc"), 0, 0);
-                jest.advanceTimersByTime(trial.lingerDuration);
+                advanceDateNowThenTimers(trial.lingerDuration);
             }
         }
         // expect test trials to NOT be completed at first
@@ -55,6 +55,30 @@ describe("spatial-orientation", () => {
         relevant.slice(1).forEach(t => {
              expect(t.completionReason).toBe("skipped");
         });
+    });
+
+    it("can be finished without exceeding the time limit", () => {
+        const timeline = (new SpatialOrientation(1)).getTimeline();
+        jest.useFakeTimers("legacy");
+        let finished = false;
+        jsPsych.init({
+            timeline: timeline,
+            on_finish: () => { finished = true; },
+        });
+        // finish all trials as fast as possible (only waiting for the lingerDuration after each trial)
+        for (const trial of timeline) {
+            if (trial.type === "html-keyboard-response") {
+                pressKey(" ");
+            } else if (trial.type === "spatial-orientation") {
+                clickIcirc(document.getElementById("jspsych-spatial-orientation-icirc"), 0, 0);
+                advanceDateNowThenTimers(trial.lingerDuration);
+            }
+        }
+        // task should be finished
+        expect(finished).toBe(true);
+        const sotTrials = jsPsych.data.get().filter({trial_type: "spatial-orientation"}).values();
+        // no trials should have been timedout or skipped
+        expect(sotTrials.every(t => t.completionReason === "responded")).toBe(true);
     });
 
     it("has well-formed stimuli", () => {
