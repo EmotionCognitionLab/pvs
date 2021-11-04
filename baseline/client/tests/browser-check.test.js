@@ -46,10 +46,10 @@ describe("browser check if window.localStorage.heartBeam.ua is not set", () => {
     it("should not save the computer profile if the user says this is not their permanent computer", () => {
         buttons[0].click();
         expect(localValForKey(browserCheck.uaKey)).toBeNull();
-        expect(localValForKey(browserCheck.platformKey)).toBeNull();;
-        expect(localValForKey(browserCheck.browserNameKey)).toBeNull();;
-        expect(localValForKey(browserCheck.osNameKey)).toBeNull();;
-        expect(localValForKey(browserCheck.screenSizeKey)).toBeNull();;
+        expect(localValForKey(browserCheck.platformKey)).toBeNull();
+        expect(localValForKey(browserCheck.browserNameKey)).toBeNull();
+        expect(localValForKey(browserCheck.osNameKey)).toBeNull();
+        expect(localValForKey(browserCheck.screenSizeKey)).toBeNull();
     });
 
     it("should not call the callback if the user says this is not their permanent computer", () => {
