@@ -1,6 +1,5 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
-import { clickContinue } from "./utils.js";
 
 describe("verbal-learning", () => {
     it("results should have at least one result marked isRelevant", () => {

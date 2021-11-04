@@ -408,7 +408,7 @@ describe("taskForName for verbal-learning", () => {
 });
 
 describe("doing the tasks", () => {
-    const saveResultsMock = jest.fn((experimentName, results) => null);
+    const saveResultsMock = jest.fn((_experimentName, _results) => null);
     const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
 
     afterEach(() => {

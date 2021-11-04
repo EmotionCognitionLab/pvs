@@ -1,7 +1,10 @@
 import { NBack } from "../n-back/n-back.js";
 import { pressKey, cartesianProduct } from "./utils.js"
 
-const completeCurrentTrial = (correctly, callback = trial => {}) => {
+const completeCurrentTrial = (
+    correctly,
+    callback = _trial => {}
+) => {
     const trial = jsPsych.currentTrial();
     callback(trial);
     const progress = jsPsych.progress();

@@ -232,17 +232,17 @@ describe("TaskSwitching", () => {
         expect(data.correct).toBe(false);
     });
     it("should include the stimulus size in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [_number, size, _color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.size).toBe(size);
     });
     it("should include the stimulus color in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [_number, _size, color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.color).toBe(color);
     });
     it("should include the stimulus number in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [number, _size, _color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.number).toBe(number);
     });
@@ -330,7 +330,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 2 -> training trial 2 feedback
-    let [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    let [_stimulus, _number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (color === "blue") {
         pressKey("ArrowLeft");
     } else {
@@ -340,7 +340,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 3 -> training trial 3 feedback
-    [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    [_stimulus, _number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (size === "small") {
         pressKey("ArrowLeft");
     } else {
