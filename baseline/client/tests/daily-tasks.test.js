@@ -221,7 +221,7 @@ describe("taskForName for verbal-fluency", () => {
     });
 
     it("throws an error if all possible letters have already been used", () => {
-        const input = VerbalFluency.possibleLetters.map(l => { return { letter: l }; });
+        const input = VerbalFluency.possibleLetters.map(l => ({ letter: l }));
         function callWithAllLetters() {
             dailyTasks.taskForName("verbal-fluency", { allResults: input });
         }
@@ -229,7 +229,7 @@ describe("taskForName for verbal-fluency", () => {
     });
 
     it("returns a VerbalFluency object with a letter that has not been used", () => {
-        const input = VerbalFluency.possibleLetters.slice(1).map(l => { return { letter: l }; });
+        const input = VerbalFluency.possibleLetters.slice(1).map(l => ({ letter: l }));
         const result = dailyTasks.taskForName("verbal-fluency", { allResults: input });
         expect(result.letter).toBe(VerbalFluency.possibleLetters[0]);
     });
