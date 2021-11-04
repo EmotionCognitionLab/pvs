@@ -464,13 +464,8 @@ describe("doing the tasks", () => {
             if (task.type === "html-keyboard-response") {
                 pressKey(" ");
             } else if (task.type === "spatial-orientation") {
-                const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
-                if (icirc === null) {
-                    //we've been timed out
-                    break;
-                }
-                clickIcirc(icirc, 0, 0);
-                jest.runAllTimers();
+                clickIcirc(document.getElementById("jspsych-spatial-orientation-icirc"), 0, 0);
+                jest.advanceTimersByTime(task.lingerDuration);
             }
         }
         expect(saveResultsMock.mock.calls.length).toBe(24);

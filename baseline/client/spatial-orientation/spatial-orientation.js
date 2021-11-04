@@ -75,6 +75,7 @@ export class SpatialOrientation {
 SpatialOrientation.taskName = "spatial-orientation";
 
 SpatialOrientation.stimulus = stimulus;
+SpatialOrientation.lingerDuration = 1000;
 
 SpatialOrientation.scenePositions = {
     "trash can": [0, 0],
@@ -109,6 +110,7 @@ SpatialOrientation.trial = (center, facing, target, mode, instruction = null, en
         SpatialOrientation.scenePositions[target],
     ),
     mode: mode,
+    lingerDuration: SpatialOrientation.lingerDuration,
     endTime: endTime,
     data: { isRelevant: mode === "test" },
 });
