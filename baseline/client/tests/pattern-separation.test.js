@@ -1,3 +1,5 @@
+/* eslint-disable no-irregular-whitespace */
+
 require("@adp-psych/jspsych/jspsych.js");
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { pressKey, lastData } from "./utils.js";
