@@ -1,7 +1,10 @@
 import { NBack } from "../n-back/n-back.js";
-import { pressKey, cartesianProduct } from "./utils.js"
+import { pressKey, cartesianProduct } from "./utils.js";
 
-const completeCurrentTrial = (correctly, callback = trial => {}) => {
+const completeCurrentTrial = (
+    correctly,
+    callback = _trial => {}
+) => {
     const trial = jsPsych.currentTrial();
     callback(trial);
     const progress = jsPsych.progress();
@@ -65,7 +68,7 @@ describe("n-back", () => {
             for (let i = 0; i < n && !complete; ++i) {
                 completeCurrentTrial(correctly);
             }
-        }
+        };
         // complete 100 trials incorrectly
         completeNTrials(500, false);
         // should be at an n-back short practice sub-timeline

@@ -138,7 +138,7 @@ describe("getSetAndTasks", () => {
     it("should handle cases where an experiment has multiple results in a row", () => {
         const inputTasks = dailyTasks.allSets[0].slice(0, 5);
         const input = [];
-        inputTasks.forEach(t => { input.push(t); input.push(t) } );
+        inputTasks.forEach(t => { input.push(t); input.push(t); } );
         expect(input.length).toBe(2 * inputTasks.length);
         const result = dailyTasks.getSetAndTasks(buildInput( [{taskNames: input, setNum: 1}] ));
         expect(result.set).toBe(1);
@@ -199,7 +199,7 @@ describe("getSetAndTasks", () => {
             setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
             setNum: idx + 1 }
         ));
-        const lastSetTasks = setList[setList.length - 1].taskNames
+        const lastSetTasks = setList[setList.length - 1].taskNames;
         setList[setList.length - 1].taskNames = lastSetTasks.slice(0, lastSetTasks.length - 2);
         const result = dailyTasks.getSetAndTasks(buildInput(setList));
         expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
@@ -221,7 +221,7 @@ describe("taskForName for verbal-fluency", () => {
     });
 
     it("throws an error if all possible letters have already been used", () => {
-        const input = VerbalFluency.possibleLetters.map(l => { return { letter: l } });
+        const input = VerbalFluency.possibleLetters.map(l => ({ letter: l }));
         function callWithAllLetters() {
             dailyTasks.taskForName("verbal-fluency", { allResults: input });
         }
@@ -229,7 +229,7 @@ describe("taskForName for verbal-fluency", () => {
     });
 
     it("returns a VerbalFluency object with a letter that has not been used", () => {
-        const input = VerbalFluency.possibleLetters.slice(1).map(l => { return { letter: l } });
+        const input = VerbalFluency.possibleLetters.slice(1).map(l => ({ letter: l }));
         const result = dailyTasks.taskForName("verbal-fluency", { allResults: input });
         expect(result.letter).toBe(VerbalFluency.possibleLetters[0]);
     });
@@ -242,7 +242,7 @@ describe("taskForName", () => {
         function callWithBadTaskName() {
             dailyTasks.taskForName(badTaskName);
         }
-        expect(callWithBadTaskName).toThrowError(`Unknown task type: ${badTaskName}`)
+        expect(callWithBadTaskName).toThrowError(`Unknown task type: ${badTaskName}`);
     });
     it("returns a DailyStressors object for daily-stressors", () => {
         const result = dailyTasks.taskForName("daily-stressors", {});
@@ -255,11 +255,11 @@ describe("taskForName", () => {
     it("returns a Demographics object for demographics", () => {
         const result = dailyTasks.taskForName("demographics", {});
         expect(result instanceof Demographics).toBe(true);
-    })
+    });
     it("returns a Ffmq object for ffmq", () => {
         const result = dailyTasks.taskForName("ffmq", {});
         expect(result instanceof Ffmq).toBe(true);
-    })
+    });
     it("returns a MoodMemory object for mood-memory", () => {
         const result = dailyTasks.taskForName("mood-memory", {});
         expect(result instanceof MoodMemory).toBe(true);
@@ -279,7 +279,7 @@ describe("taskForName", () => {
     it("returns a TaskSwitching object for task-switching", () => {
         const result = dailyTasks.taskForName("task-switching", {});
         expect(result instanceof TaskSwitching).toBe(true);
-    })
+    });
 });
 
 describe("taskForName for flanker", () => {
@@ -333,7 +333,7 @@ describe("taskForName for mind-in-eyes", () => {
             }
         }
     });
-})
+});
 
 describe("taskForName for n-back", () => {
     it("returns a NBack object for  n-back", () => {
@@ -408,7 +408,7 @@ describe("taskForName for verbal-learning", () => {
 });
 
 describe("doing the tasks", () => {
-    const saveResultsMock = jest.fn((experimentName, results) => null);
+    const saveResultsMock = jest.fn((_experimentName, _results) => null);
     const allTimelines = dailyTasks.getSetAndTasks([], saveResultsMock);
 
     afterEach(() => {
@@ -442,7 +442,7 @@ describe("doing the tasks", () => {
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
         // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant)
+        let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant);
         expect(relevantResult.length).toBe(1);
         relevantResult = relevantResult[0];
         expect(relevantResult.response).toBeDefined();
@@ -494,7 +494,7 @@ describe("doing the tasks", () => {
     it("should display the full-screen task if the display is not already full screen", () => {
         dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/full screen mode/);
-    })
+    });
     it("should not display the full-screen task if the display is already full screen", () => {
         const origFsElement = document.fullscreenElement;
         global.document.fullscreenElement = true; // normally an HTMLElement, but daily-tasks just checks for existence
@@ -518,7 +518,7 @@ function buildInput(setList) {
         const startTime = s.setStartedTime || (new Date()).toISOString();
         let input = 
             [{experiment: dailyTasks.setStarted, dateTime: startTime, results: {setNum: s.setNum}}]
-            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })))
+            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })));
         if (s.setFinishedTime) {
             input = input.concat({experiment: dailyTasks.setFinished, dateTime: s.setFinishedTime, results: {setNum: s.setNum}});
         }

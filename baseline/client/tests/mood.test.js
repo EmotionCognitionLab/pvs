@@ -44,5 +44,5 @@ describe("mood-prediction", () => {
         // check the data
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevantData.length).toBe(1);
-    })
-})
+    });
+});

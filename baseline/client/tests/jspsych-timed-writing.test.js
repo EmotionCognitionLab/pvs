@@ -19,7 +19,7 @@ describe("jspsych-timed-writing.js plugin", () => {
     });
 
     it("records response text", () => {
-        const response = "nice cock"
+        const response = "nice cock";
         jest.useFakeTimers("legacy");
         jsPsych.init({timeline: [{
             type: "timed-writing",
@@ -45,7 +45,7 @@ describe("jspsych-timed-writing.js plugin", () => {
                 textarea_rows: 1,
                 textarea_cols: 1,
             }],
-            on_finish: () => { finished = true },
+            on_finish: () => { finished = true; },
         });
         expect(finished).toBe(false);
         jest.advanceTimersByTime(900);

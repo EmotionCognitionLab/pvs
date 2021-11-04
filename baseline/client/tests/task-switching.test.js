@@ -1,6 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { TaskSwitching } from "../task-switching/task-switching.js";
-import { pressKey } from "./utils.js"
+import { pressKey } from "./utils.js";
 
 describe("TaskSwitching timeline", () => {
     let tl;
@@ -135,9 +135,9 @@ describe("TaskSwitching timeline", () => {
 
 function taskType(stimulus) {
     stimulus = stimulus.replace("&gt;", ">").replace("&lt;", "<");
-    const fontSizePat = /<span class=\"(smalldot|dot white)\"><\/span><span class=\"(smalldot|dot white)\"><\/span>/;
+    const fontSizePat = /<span class="(smalldot|dot white)"><\/span><span class="(smalldot|dot white)"><\/span>/;
     const numberPat = /(>5|<5)<\/span> <span>(<5|>5)/;
-    const colorPat = /<span class=\"dot .*\"><\/span><span class=\"dot .*\"><\/span>/;
+    const colorPat = /<span class="dot .*"><\/span><span class="dot .*"><\/span>/;
     if (stimulus.match(fontSizePat)) {
         return "font size";
     }
@@ -232,17 +232,17 @@ describe("TaskSwitching", () => {
         expect(data.correct).toBe(false);
     });
     it("should include the stimulus size in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [_number, size, _color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.size).toBe(size);
     });
     it("should include the stimulus color in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [_number, _size, color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.color).toBe(color);
     });
     it("should include the stimulus number in the data field", () => {
-        const [number, size, color] = doFirstTrial(true);
+        const [number, _size, _color] = doFirstTrial(true);
         const data = jsPsych.data.get().last(1).values()[0];
         expect(data.number).toBe(number);
     });
@@ -282,7 +282,7 @@ describe("TaskSwitching", () => {
         expect(data.round).toEqual(1);
     });
     describe("trial structure should consist of", () => {
-        const dispElem = jsPsych.getDisplayElement
+        const dispElem = jsPsych.getDisplayElement;
         it("a 500ms picture describing the type of task", () => {
             doTraining();
             const taskDescHtml = dispElem().innerHTML;
@@ -303,7 +303,7 @@ describe("TaskSwitching", () => {
             doTraining();
             jest.advanceTimersByTime(3499);
             const fixHtml = dispElem().innerHTML;
-            expect(fixHtml).toMatch(/<div class=\"fix\">+/);
+            expect(fixHtml).toMatch(/<div class="fix">+/);
             jest.advanceTimersByTime(1);
             expect(dispElem().innerHTML).not.toEqual(fixHtml);
         });
@@ -330,7 +330,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 2 -> training trial 2 feedback
-    let [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    let [_stimulus, _number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (color === "blue") {
         pressKey("ArrowLeft");
     } else {
@@ -340,7 +340,7 @@ function doTraining() {
     pressKey(" ");
 
     // training trial 3 -> training trial 3 feedback
-    [stimulus, number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
+    [_stimulus, _number, size, color] = stimulusNumberSizeAndColor(jsPsych.getDisplayElement().innerHTML);
     if (size === "small") {
         pressKey("ArrowLeft");
     } else {
@@ -358,7 +358,7 @@ function doTraining() {
 }
 
 function stimulusNumberSizeAndColor(dispElemHtml) {
-    const classPat = /<div class="(big|small) (blue|ylw)">/
+    const classPat = /<div class="(big|small) (blue|ylw)">/;
     const match = dispElemHtml.match(classPat);
     const size = match[1];
     expect(size === "big" || size === "small").toBe(true);
@@ -394,21 +394,21 @@ function doTrial(correctly, fully=false, isExerciseNode=false) {
     switch(stimulus) {
         case "color":
             if ( (correctly && color === "blue") || (!correctly && color !== "blue")) {
-                pressKey("ArrowLeft")
+                pressKey("ArrowLeft");
             } else {
                 pressKey("ArrowRight");
             }
             break;
         case "font size":
             if ( (correctly && size === "big") || (!correctly && size !== "big")) {
-                pressKey("ArrowRight")
+                pressKey("ArrowRight");
             } else {
                 pressKey("ArrowLeft");
             }
             break;
         case "number":
             if ( (correctly && number > 5) || (!correctly && number < 5)) {
-                pressKey("ArrowRight")
+                pressKey("ArrowRight");
             } else {
                 pressKey("ArrowLeft");
             }
