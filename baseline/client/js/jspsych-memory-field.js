@@ -33,7 +33,7 @@ jsPsych.plugins["memory-field"] = (() => {
         const memory = [];
         field.addEventListener("keyup", event => {
             event.preventDefault();
-            if (event.code === "Enter") {
+            if (event.key === "Enter" || event.code === "Enter") {
                 // save value and clear field
                 memory.push(event.target.value);
                 event.target.value = "";
