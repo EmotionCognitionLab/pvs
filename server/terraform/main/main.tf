@@ -624,7 +624,7 @@ resource "aws_cloudwatch_log_metric_filter" "console-error" {
   log_group_name = aws_cloudwatch_log_group.console-log-group.name
 
   metric_transformation {
-    name = "EventCount"
+    name = "pvs-${var.env}-console-error-count"
     namespace = "LogMetrics"
     value = "1"
   }
@@ -655,7 +655,7 @@ resource "aws_cloudwatch_metric_alarm" "console-error-alarm" {
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods = 1
   period = 300
-  metric_name = "Error"
+  metric_name = "pvs-${var.env}-console-error-count"
   namespace = "LogMetrics"
   statistic = "Sum"
   threshold = 0
