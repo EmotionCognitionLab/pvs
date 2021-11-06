@@ -20,8 +20,9 @@ function saveResults(session, experiment, results) {
         putRequests.push({
             PutRequest: {
                 Item: {
-                    experimentDateTimeUser: `${experiment}|${now}|${subId}|${idx}`,
+                    experimentDateTime: `${experiment}|${now}|${idx}`,
                     identityId: credentials.identityId,
+                    userId: subId,
                     results: r,
                     isRelevant: isRelevant
                 }
@@ -75,20 +76,19 @@ async function getResultsForCurrentUser(session, expName=null) {
                 ExpressionAttributeValues: { ':idKey': credentials.identityId }
             };
             if (expName !== null) {
-                params.KeyConditionExpression += " and begins_with(experimentDateTimeUser, :expName)";
+                params.KeyConditionExpression += " and begins_with(experimentDateTime, :expName)";
                 params.ExpressionAttributeValues[":expName"] = expName;
             }
             dynResults = await docClient.query(params).promise();
             ExclusiveStartKey = dynResults.LastEvaluatedKey;
             const results = dynResults.Items.map(i => {
-                const parts = i.experimentDateTimeUser.split('|');
-                if (parts.length != 4) {
-                    throw new Error(`Unexpected experimentDateTimeUser value: ${i.experimentDateTimeUser}. Expected four parts, but found ${parts.length}.`)
+                const parts = i.experimentDateTime.split('|');
+                if (parts.length != 3) {
+                    throw new Error(`Unexpected experimentDateTime value: ${i.experimentDateTime}. Expected three parts, but found ${parts.length}.`)
                 }
                 const experiment = parts[0];
                 const dateTime = parts[1];
-                // cognito sub id is parts[2]
-                // index of result in original results list is parts[3] (exists only for uniqueness)
+                // index of result in original results list is parts[2] (exists only for uniqueness)
                 return {
                     experiment: experiment,
                     dateTime: dateTime,
