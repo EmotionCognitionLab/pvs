@@ -161,6 +161,33 @@ async function getSetsForUser(userId) {
     }
 }
 
+async function getBaselineIncompleteUsers(preOrPost) {
+    let filter;
+
+    if (preOrPost === 'pre') {
+        filter = 'attribute_not_exists(preComplete) or preComplete = :f';
+    } else if (preOrPost === 'post') {
+        filter = 'attribute_not_exists(postComplete) or postComplete = :f';
+    } else {
+        throw new Error(`Expected preOrPost to be either 'pre' or 'post' but received "${preOrPost}".`);
+    }
+
+    try {
+        const docClient = new DynamoDB.DocumentClient({region: process.env.AWSRegion});
+            const params = {
+                TableName: process.env.UsersTable,
+                FilterExpression: filter,
+                ExpressionAttributeValues: { ':f': false }
+            };
+        const dynResults = await docClient.scan(params).promise();
+        return dynResults.Items;
+        
+    } catch (err) {
+        console.error(err); // TODO implement remote error logging
+        throw err;
+    }
+}
+
 async function getAllResultsForCurrentUser(session) {
     return getResultsForCurrentUser(session);
 }
@@ -188,4 +215,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser, getSetsForUser }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser, getSetsForUser, getBaselineIncompleteUsers }
