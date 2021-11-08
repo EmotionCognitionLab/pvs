@@ -6,3 +6,7 @@
 #jspsych-spatial-orientation-instruction {
     padding: 2em;
 }
+
+#jspsych-spatial-orientation-scene img {
+    border-radius: 50px;
+}
