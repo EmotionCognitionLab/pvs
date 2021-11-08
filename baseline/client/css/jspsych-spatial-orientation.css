@@ -1,3 +1,7 @@
 #jspsych-spatial-orientation-wrapper {
     display: flex;
 }
+
+#jspsych-spatial-orientation-instruction {
+    padding: 2em;
+}
