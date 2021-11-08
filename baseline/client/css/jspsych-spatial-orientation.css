@@ -1,5 +1,6 @@
 #jspsych-spatial-orientation-wrapper {
     display: flex;
+    justify-content: center;
 }
 
 #jspsych-spatial-orientation-instruction {
