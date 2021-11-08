@@ -114,6 +114,53 @@ async function getResultsForCurrentUser(session, expName=null) {
     }
 }
 
+async function getSetsForUser(userId) {
+    try {
+        const docClient = new DynamoDB.DocumentClient({region: process.env.AWSRegion});
+        let ExclusiveStartKey, dynResults
+        let allResults = [];
+
+        do {
+            const params = {
+                TableName: process.env.ExperimentTable,
+                IndexName: process.env.UserExperimentIndex,
+                ExclusiveStartKey,
+                KeyConditionExpression: 'userId = :userId and begins_with(experimentDateTime, :set)',
+                ExpressionAttributeValues: { ':userId': userId, ':set': "set" },
+            };
+            dynResults = await docClient.query(params).promise();
+            ExclusiveStartKey = dynResults.LastEvaluatedKey;
+            const results = dynResults.Items.map(i => {
+                const parts = i.experimentDateTime.split('|');
+                if (parts.length != 3) {
+                    throw new Error(`Unexpected experimentDateTime value: ${i.experimentDateTime}. Expected three parts, but found ${parts.length}.`)
+                }
+                const experiment = parts[0];
+                const dateTime = parts[1];
+                // index of result in original results list is parts[2] (exists only for uniqueness)
+                return {
+                    experiment: experiment,
+                    dateTime: dateTime,
+                }
+            });
+            allResults = [...allResults, ...results];
+        } while (dynResults.LastEvaluatedKey)
+        
+        return allResults.sort((r1, r2) => {
+            if (r1.dateTime < r2.dateTime) {
+                return -1
+            }
+            if (r1.dateTime > r2.dateTime) {
+                return 1;
+            }
+            return 0;
+        });
+    } catch (err) {
+        console.error(err); // TODO implement remote error logging
+        throw err;
+    }
+}
+
 async function getAllResultsForCurrentUser(session) {
     return getResultsForCurrentUser(session);
 }
@@ -141,4 +188,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser, getSetsForUser }
