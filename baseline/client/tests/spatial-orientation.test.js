@@ -18,7 +18,10 @@ describe("spatial-orientation", () => {
         jsPsych.init({timeline: timeline});
         timeline.forEach(() => {
             pressKey(" ");
-            clickIcirc(document.getElementById("jspsych-spatial-orientation-icirc"), 0, 0);
+            const icirc = document.getElementById("jspsych-spatial-orientation-icirc");
+            if (icirc !== null) {
+                clickIcirc(icirc, 0, 0);
+            }
             jest.runAllTimers();
         });
         const progress = jsPsych.progress();

@@ -468,7 +468,7 @@ describe("doing the tasks", () => {
                 jest.advanceTimersByTime(task.lingerDuration);
             }
         }
-        expect(saveResultsMock.mock.calls.length).toBe(24);
+        expect(saveResultsMock.mock.calls.length).toBe(25);
         // check experiment name
         const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
         expect(lastRes[0]).toBe(dailyTasks.setFinished);
