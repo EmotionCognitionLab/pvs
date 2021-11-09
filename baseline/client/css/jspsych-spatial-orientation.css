@@ -1,3 +1,12 @@
 #jspsych-spatial-orientation-wrapper {
     display: flex;
+    justify-content: center;
+}
+
+#jspsych-spatial-orientation-instruction {
+    padding: 2em;
+}
+
+#jspsych-spatial-orientation-scene img {
+    border-radius: 50px;
 }

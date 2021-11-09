@@ -5,10 +5,15 @@ import "js/jspsych-spatial-orientation.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-spatial-orientation.css";
 import "css/common.css";
-import scene_img from "./scene.png";
+import "./style.css";
+// stimulus
 import stimulus from "./stim.json";
+// images
+import sample_img from "./sample.png";
+import scene_img from "./scene.png";
 // fragments
-import instruction_html from "./frag/instruction.html";
+import instruction_0_html from "./frag/instruction_0.html";
+import instruction_1_html from "./frag/instruction_1.html";
 import sample_instruction_html from "./frag/sample_instruction.html";
 import practice_instruction_html from "./frag/practice_instruction.html";
 import test_instruction_html from "./frag/test_instruction.html";
@@ -60,7 +65,8 @@ export class SpatialOrientation {
         ];
         // timeline
         return [
-            i(instruction_html),
+            i(instruction_0_html),
+            i(instruction_1_html),
             ...exampleBlock,
             ...(this.setNum === 1 ? practiceBlock : []),
             ...testBlock,
@@ -86,6 +92,11 @@ SpatialOrientation.scenePositions = {
     barrel: [395, 78],
     tree: [342, -129],
 }
+
+SpatialOrientation.preload = {
+    type: "preload",
+    images: [sample_img, scene_img]
+};
 
 SpatialOrientation.simpleInstruction = stimulus => ({
     type: "html-keyboard-response",
