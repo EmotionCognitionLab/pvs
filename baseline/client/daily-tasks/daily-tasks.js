@@ -15,7 +15,7 @@ import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "auth/auth.js";
 import { Logger } from "logger/logger.js";
-import { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser } from "db/db.js";
+import { Db } from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
@@ -42,8 +42,8 @@ const setStarted = "set-started";
 const doneForToday = "done-for-today";
 const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
-let userSession;
 let logger;
+let db;
 
 /**
  * 
@@ -231,7 +231,7 @@ function taskForName(name, options) {
 }
 
 async function verbalLearningEndTime() {
-    const vlResults = await getExperimentResultsForCurrentUser(userSession, 'verbal-learning-learning');
+    const vlResults = await db.getExperimentResultsForCurrentUser('verbal-learning-learning');
     if (vlResults.length === 0) {
         return 0;
     }
@@ -288,10 +288,10 @@ function init() {
 }
 
 async function doAll(session) {
+    db = new Db({session: session});
     // pre-fetch all results before doing browser check to avoid
     // lag after btowser check sends them to start experiments
-    userSession = session;
-    const allResults = await getAllResultsForCurrentUser(session);
+    const allResults = await db.getAllResultsForCurrentUser();
     browserCheck.run(startTasks.bind(null, allResults));
 }
 
@@ -326,11 +326,11 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
 }
 
 function saveResultsCallback(experimentName, results) {
-    const cognitoAuth = getAuth(
-        session => saveResults(session, experimentName, results),
-        err => handleSaveError(err, experimentName, results)
-    );
-    cognitoAuth.getSession();
+    try {
+        db.saveResults(experimentName, results);
+    } catch (err) {
+        handleSaveError(err, experimentName, results);
+    }
 }
 
 function handleSaveError(err, experimentName, results) {
