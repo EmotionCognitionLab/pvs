@@ -174,14 +174,48 @@ async function getBaselineIncompleteUsers(preOrPost) {
 
     try {
         const docClient = new DynamoDB.DocumentClient({region: process.env.AWSRegion});
-            const params = {
-                TableName: process.env.UsersTable,
-                FilterExpression: filter,
-                ExpressionAttributeValues: { ':f': false }
-            };
+        const params = {
+            TableName: process.env.UsersTable,
+            FilterExpression: filter,
+            ExpressionAttributeValues: { ':f': false }
+        };
         const dynResults = await docClient.scan(params).promise();
         return dynResults.Items;
         
+    } catch (err) {
+        console.error(err); // TODO implement remote error logging
+        throw err;
+    }
+}
+
+async function updateUser(userId, updates) {
+    disallowedAttrs = ['userId', 'createdAt', 'email', 'name', 'phone_number', 'phone_number_verified'];
+    const expressionAttrVals = {};
+    const expressionAttrNames = {};
+    let updateExpression = 'set';
+    for (prop in updates) {
+        if (!disallowedAttrs.includes(prop) ) {
+            const propName = `#${prop}`;
+            const propVal = `:${prop}`
+            expressionAttrNames[propName] = prop;
+            expressionAttrVals[propVal] = updates[prop];
+            updateExpression += ` ${propName} = ${propVal}`
+        }
+    }
+    if (Object.keys(expressionAttrVals).length < 1) {
+        throw new Error("You must provide an update to at least one allowed attribute.");
+    }
+    try {
+        const docClient = new DynamoDB.DocumentClient({region: process.env.AWSRegion});
+        const params = {
+            TableName: process.env.UsersTable,
+            Key: { userId: userId },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: expressionAttrNames,
+            ExpressionAttributeValues: expressionAttrVals
+        };
+        const dynResults = await docClient.update(params).promise();
+        return dynResults.Items;
     } catch (err) {
         console.error(err); // TODO implement remote error logging
         throw err;
@@ -215,4 +249,4 @@ function getSubIdFromSession(session) {
     return tokenobj['sub'];
 }
 
-export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser, getSetsForUser, getBaselineIncompleteUsers }
+export { saveResults, getAllResultsForCurrentUser, getExperimentResultsForCurrentUser, getSetsForUser, getBaselineIncompleteUsers, updateUser }
