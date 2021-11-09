@@ -11,7 +11,7 @@
  export class Db {
      constructor(options = {}) {
         this.region = options.region || awsSettings.AWSRegion;
-        this.IdentityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;
+        this.identityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;
         this.userPoolId = options.userPoolId || awsSettings.UserPoolId;
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
@@ -66,7 +66,7 @@
                 const chunk = chunks[i];
                 const params = { RequestItems: {} };
                 params['RequestItems'][this.experimentTable] = chunk;
-                await this.docClient.batchWrite(params).promise();
+                await this.batchWrite(params);
             }
         } catch (err) {
             console.error(err); // TODO implement remote error logging
@@ -79,7 +79,6 @@
         if (!this.credentials && !identityId) {
             throw new Error("You must provide either session or identityId to get results for the current user");
         }
-        console.log(JSON.stringify(this.credentials))
 
         try {
             let ExclusiveStartKey, dynResults
@@ -96,7 +95,7 @@
                     params.KeyConditionExpression += " and begins_with(experimentDateTime, :expName)";
                     params.ExpressionAttributeValues[":expName"] = expName;
                 }
-                dynResults = await this.docClient.query(params).promise();
+                dynResults = await this.query(params);
                 ExclusiveStartKey = dynResults.LastEvaluatedKey;
                 const results = dynResults.Items.map(i => {
                     const parts = i.experimentDateTime.split('|');
@@ -164,7 +163,7 @@
                     KeyConditionExpression: 'userId = :userId and begins_with(experimentDateTime, :set)',
                     ExpressionAttributeValues: { ':userId': userId, ':set': "set" },
                 };
-                dynResults = await this.docClient.query(params).promise();
+                dynResults = await this.query(params);
                 ExclusiveStartKey = dynResults.LastEvaluatedKey;
                 const results = dynResults.Items.map(i => {
                     const parts = i.experimentDateTime.split('|');
@@ -214,7 +213,7 @@
                 FilterExpression: filter,
                 ExpressionAttributeValues: { ':f': false }
             };
-            const dynResults = await this.docClient.scan(params).promise();
+            const dynResults = await this.scan(params);
             return dynResults.Items;
             
         } catch (err) {
@@ -248,12 +247,53 @@
                 ExpressionAttributeNames: expressionAttrNames,
                 ExpressionAttributeValues: expressionAttrVals
             };
-            const dynResults = await this.docClient.update(params).promise();
+            const dynResults = await this.update(params);
             return dynResults.Items;
         } catch (err) {
             console.error(err); // TODO implement remote error logging
             throw err;
         }
+    }
+
+    async dynamoOp(dynamoFn, params, fnName) {
+        let curTry = 0;
+        const maxTries = 3;
+        let sleepTime = 200;
+        while (curTry < maxTries) {
+            try {
+                return await dynamoFn(params).promise();
+            } catch (err) {
+                curTry++;
+                if (err.code === 'CredentialsError') {
+                    this.credentials.refresh(async refreshErr => {
+                        if (refreshErr) {
+                            console.error(refreshErr);
+                        }
+                    });
+                } else {
+                    console.error(err);
+                }
+                // sleep before retrying
+                await new Promise(resolve => setTimeout(resolve, sleepTime * curTry));
+            }
+        }
+        console.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
+    }
+
+    async query(params) {
+        return this.dynamoOp(this.docClient.query.bind(this.docClient), params, 'query');
+    }
+
+    async scan(params) {
+        return this.dynamoOp(this.docClient.scan.bind(this.docClient), params, 'scan');
+    }
+
+    async update(params) {
+        return this.dynamoOp(this.docClient.update.bind(this.docClient), params, 'update');
+    }
+
+    async batchWrite(params) {
+        return this.dynamoOp(this.docClient.batchWrite.bind(this.docClient), params, 'batchWrite');
     }
 
 }
