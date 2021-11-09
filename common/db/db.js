@@ -5,6 +5,7 @@
  import awsSettings from '../aws-settings.json';
  import AWS from 'aws-sdk/global';
  import DynamoDB from 'aws-sdk/clients/dynamodb';
+ import { Logger } from "../logger/logger.js";
  
  'use strict';
 
@@ -21,6 +22,7 @@
         this.docClient = this.credentials ? 
             new DynamoDB.DocumentClient({region: this.region, credentials: this.credentials}) :
             new DynamoDB.DocumentClient({region: this.region});
+        this.logger = new Logger(false);
      }
 
      async saveResults(experiment, results, userId = null) {
@@ -69,7 +71,7 @@
                 await this.batchWrite(params);
             }
         } catch (err) {
-            console.error(err); // TODO implement remote error logging
+            this.logger.error(err);
             throw err;
         }
             
@@ -125,7 +127,7 @@
                 return 0;
             });
         } catch (err) {
-            console.error(err); // TODO implement remote error logging
+            this.logger.error(err);
             throw err;
         }
     }
@@ -191,7 +193,7 @@
                 return 0;
             });
         } catch (err) {
-            console.error(err); // TODO implement remote error logging
+            this.logger.error(err);
             throw err;
         }
     }
@@ -217,7 +219,7 @@
             return dynResults.Items;
             
         } catch (err) {
-            console.error(err); // TODO implement remote error logging
+            this.logger.error(err);
             throw err;
         }
     }
@@ -250,7 +252,7 @@
             const dynResults = await this.update(params);
             return dynResults.Items;
         } catch (err) {
-            console.error(err); // TODO implement remote error logging
+            this.logger.error(err);
             throw err;
         }
     }
@@ -267,17 +269,17 @@
                 if (err.code === 'CredentialsError') {
                     this.credentials.refresh(async refreshErr => {
                         if (refreshErr) {
-                            console.error(refreshErr);
+                            this.logger.error(refreshErr);
                         }
                     });
                 } else {
-                    console.error(err);
+                    this.logger.error(err);
                 }
                 // sleep before retrying
                 await new Promise(resolve => setTimeout(resolve, sleepTime * curTry));
             }
         }
-        console.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
+        this.logger.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
     }
 
     async query(params) {
