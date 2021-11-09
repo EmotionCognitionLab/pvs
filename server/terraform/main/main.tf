@@ -113,7 +113,7 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
-  range_key      = "experimentDateTimeUser"
+  range_key      = "experimentDateTime"
 
   attribute {
     name = "identityId"
@@ -121,8 +121,21 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 
   attribute {
-    name = "experimentDateTimeUser"
+    name = "experimentDateTime"
     type = "S"
+  }
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "userId-experimentDateTime-index"
+    hash_key = "userId"
+    range_key = "experimentDateTime"
+    projection_type = "INCLUDE"
+    non_key_attributes = ["identityId"]
   }
 }
 
