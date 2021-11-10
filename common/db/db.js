@@ -25,6 +25,7 @@
         this.logger = new Logger(false);
      }
 
+     // TODO make this work for use in node (i.e. w/o logged-in user)
      async saveResults(experiment, results, userId = null) {
         if (!this.session && !userId) {
             throw new Error("You must provide either session or userId to save results.");
@@ -82,6 +83,9 @@
             throw new Error("You must provide either session or identityId to get results for the current user");
         }
 
+        // credentials override passed-in identity
+        const identId = this.credentials ? this.credentials.identityId : identityId;
+
         try {
             let ExclusiveStartKey, dynResults
             let allResults = [];
@@ -91,7 +95,7 @@
                     TableName: this.experimentTable,
                     ExclusiveStartKey,
                     KeyConditionExpression: `identityId = :idKey`,
-                    ExpressionAttributeValues: { ':idKey': this.credentials.identityId }
+                    ExpressionAttributeValues: { ':idKey': identId }
                 };
                 if (expName !== null) {
                     params.KeyConditionExpression += " and begins_with(experimentDateTime, :expName)";
@@ -176,6 +180,7 @@
                     const dateTime = parts[1];
                     // index of result in original results list is parts[2] (exists only for uniqueness)
                     return {
+                        identityId: i.identityId,
                         experiment: experiment,
                         dateTime: dateTime,
                     }
@@ -225,11 +230,11 @@
     }
 
     async updateUser(userId, updates) {
-        disallowedAttrs = ['userId', 'createdAt', 'email', 'name', 'phone_number', 'phone_number_verified'];
+        const disallowedAttrs = ['userId', 'createdAt', 'email', 'name', 'phone_number', 'phone_number_verified'];
         const expressionAttrVals = {};
         const expressionAttrNames = {};
         let updateExpression = 'set';
-        for (prop in updates) {
+        for (const prop in updates) {
             if (!disallowedAttrs.includes(prop) ) {
                 const propName = `#${prop}`;
                 const propVal = `:${prop}`
