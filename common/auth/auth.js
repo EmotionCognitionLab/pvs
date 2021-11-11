@@ -5,7 +5,7 @@
  * with cognito.
  * 
  */
-import awsSettings from '../aws-settings.json';
+import awsSettings from '../aws-settings.mjs';
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js');
 import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
 const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({region: awsSettings.AWSRegion, apiVersion: '2016-04-18'});

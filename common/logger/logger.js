@@ -30,8 +30,8 @@
  * Uses local storage to save the CloudWatch sequence token and the stream name.
  */
 
-import awsSettings from '../aws-settings.json';
-import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs';
+import awsSettings from '../aws-settings.mjs';
+import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs.js';
 import util from 'util';
 
 const streamKey = 'ConsoleCloudWatch:stream';
