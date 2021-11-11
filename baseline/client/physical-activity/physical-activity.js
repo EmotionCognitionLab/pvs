@@ -8,13 +8,13 @@ export class PhysicalActivity {
     getTimeline() {
         const formTrial = {
             type: "survey-html-form",
-            preamble: "<h2>Phsyical Activity Survey</h2>",
+            preamble: "<h2>Physical Activity Survey</h2>",
             html: this.constructor.form,
             css_classes: ['physact'],
             data: {isRelevant: true}
         };
         
-        return [formTrial]
+        return [formTrial];
     }
 
     get taskName() {
@@ -79,7 +79,7 @@ PhysicalActivity.form = `
         <option value="1">Female</option>
     </select>
 </div>
-`
+`;
 
 if (window.location.href.includes(PhysicalActivity.taskName)) {
     jsPsych.init({
