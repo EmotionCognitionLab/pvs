@@ -390,7 +390,7 @@ const allDoneMessage = {
 
 const doneForTodayMessage = {
     type: "html-button-response",
-    stimulus: "Congratulations! You have done all of the daily measurements for today. Please come back tomorrow to continue.",
+    stimulus: "Congratulations! You have done all of the daily measurements for today. Please come back tomorrow to continue. Press 'esc' to exit full screen mode.",
     choices: [],
 };
 
