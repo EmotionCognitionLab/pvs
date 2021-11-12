@@ -5,7 +5,7 @@ import { pressKey } from "./utils.js";
 jest.useFakeTimers('legacy'); // why legacy: https://github.com/facebook/jest/issues/11500
 
 beforeEach(() => {
-    let timeline = (new VerbalFluency()).getTimeline();
+    let timeline = (new VerbalFluency(VerbalFluency.possibleLetters[0])).getTimeline();
     expect(timeline.length).toBe(2);
     jsPsych.init({timeline: timeline});
     // instruction screen -> trial
