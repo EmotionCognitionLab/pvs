@@ -9,7 +9,11 @@ import stimulus_template_html from "./frag/stimulus-template.html";
 
 export class VerbalFluency {
     constructor(letter) {
-        this.letter = letter;
+        if (this.constructor.possibleLetters.includes(letter)) {
+            this.letter = letter;
+        } else {
+            throw new Error("unsupported letter");
+        }
     }
     
     trial() {
