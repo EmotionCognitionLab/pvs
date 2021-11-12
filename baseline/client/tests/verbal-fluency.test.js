@@ -22,6 +22,20 @@ describe("verbal-fluency", () => {
         expect(relevantData.length).toBe(1);
     });
 
+    it("records letter prompt and user response", () => {
+        // prepare letter and response
+        const letter = "c";
+        const response = "change da world\nmy final message. Goodb ye";
+        // run task
+        startAtTimedWriting(letter);
+        document.querySelector("#jspsych-timed-writing-textarea").value = response;
+        jest.runAllTimers();
+        // check data
+        const data = jsPsych.data.get().filter({isRelevant: true}).values()[0];
+        expect(data.letter).toBe(letter);
+        expect(data.response).toBe(response);
+    });
+
     it("should give the user 60 seconds to generate words", () => {
         jest.useFakeTimers("legacy");
         startAtTimedWriting(VerbalFluency.possibleLetters[0]);
