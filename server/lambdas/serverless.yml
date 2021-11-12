@@ -1,5 +1,5 @@
 service: pvs
-frameworkVersion: '2.47.0'
+frameworkVersion: '2.66.1'
 configValidationMode: error
 variablesResolutionMode: 20210326
 package:
