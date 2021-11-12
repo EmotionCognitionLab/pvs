@@ -399,9 +399,13 @@ Demographics.form = `
 
 <div class="demo-question">
     <p>When was the last time you had your menstrual period?<br/>
-        (Please indicate both the month and the year if you remember.)
     </p>
-    <input type="text" name="last_menstrual_period" id="lastMenstrualPeriod">
+    <select name="last_menstrual_period" id="lastMenstrualPeriod">
+        <option value="1-2y"/>1-2 years</option>
+        <option value="3-6y"/>3-6 years</option>
+        <option value="7-10y"/>7-10 years</option>
+        <option value="10+y"/>&gt;10 years</option>
+    </select>
 </div>
 
 <div class="demo-question" id="estrogen-question">
