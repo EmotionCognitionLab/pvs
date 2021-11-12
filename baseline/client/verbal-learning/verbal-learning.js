@@ -49,8 +49,8 @@ export class VerbalLearning {
             throw new Error("setNum must be a strictly positive integer");
         }
         // validate segmentNum and compute startTime
-        if (segmentNum < 1 || segmentNum > 2) {
-            throw new Error("segmentNum must be in 1..2");
+        if (!Number.isInteger(segmentNum) || segmentNum < 1 || segmentNum > 2) {
+            throw new Error("segmentNum must be an integer in 1..2");
         } else if (segmentNum === 1 && getLastSegmentEndTime !== null) {
             throw new Error("getLastSegmentEndTime must be null if segmentNum is 1");
         } else if (segmentNum === 2 && getLastSegmentEndTime === null) {
