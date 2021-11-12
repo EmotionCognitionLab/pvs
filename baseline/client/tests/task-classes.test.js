@@ -38,7 +38,15 @@ describe.each([
     
     it(`${name} has taskName`, () => {
         expect(typeof taskClass.taskName).toBe("string");
-        const inst = new taskClass(1);
+        const args = (() => {
+            switch (taskClass) {
+                case VerbalLearning:
+                    return [1, 1];
+                default:
+                    return [1];
+            }
+        })();
+        const inst = new taskClass(...args);
         expect(typeof inst.taskName).toBe("string");
     });
     
