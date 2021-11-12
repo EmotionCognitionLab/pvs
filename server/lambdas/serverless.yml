@@ -24,10 +24,11 @@ provider:
 
 plugins:
   - serverless-ssm-publish
+  - serverless-webpack
 
 functions:
   process-lumosity-emails:
-    handler: process-lumosity-emails.saveattachments
+    handler: process-lumosity-emails/process-lumosity-emails.saveattachments
     events:
       - s3:
           bucket: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ses/bucket}
@@ -71,6 +72,32 @@ functions:
       patterns:
         - 'api/*.js'
 
+  reminders:
+    handler: reminders/reminders.handler
+    events:
+      - schedule:
+          name: "pre-baseline-6am-email-reminder"
+          rate: cron(0 14 * * ? *)
+          input:
+              commType: email
+      - schedule:
+          rate:
+            - cron(0 19 * * ? *)
+            - cron(0 4 * * ? *)
+          input:
+            commType: sms
+        
+    environment:
+      SITE_URL: "https://dev.heartbeamstudy.org/daily-tasks/"
+      REGION: ${self:provider.region}
+      EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
+      SNS_ENDPOINT: "https://sns.${self:provider.region}.amazonaws.com"
+      SES_ENDPOINT: "https://email.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb}
+    package:
+      patterns:
+        - 'reminders/*.js'
+
 resources:
   Resources:
     PostConfirmationTriggerInvokePermission:
@@ -94,4 +121,9 @@ custom:
       - path: /${self:service}/${self:provider.stage}/info/lambdas/write-user-on-verify/arn
         source: PostConfirmationLambdaArn
         description: Arn for the post-cognito-verification lambda trigger
+  webpack:
+    excludeFiles: "**/__test__/*"
+    includeModules:
+      forceExclude:
+        - aws-sdk
 
