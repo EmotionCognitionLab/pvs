@@ -2,7 +2,7 @@
  * API for reading from and writing to the PVS DynamoDB database.
  */
 
- import awsSettings from '../aws-settings.mjs';
+ import awsSettings from '../aws-settings.json';
  import AWS from 'aws-sdk/global.js';
  import DynamoDB from 'aws-sdk/clients/dynamodb.js';
  import { Logger } from "../logger/logger.js";
