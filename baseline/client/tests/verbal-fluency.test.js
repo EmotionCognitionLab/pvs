@@ -40,7 +40,6 @@ describe("verbal-fluency", () => {
         VerbalFluency.possibleLetters.forEach(letter => {
             jest.useFakeTimers("legacy");
             startAtTimedWriting(letter);
-            console.log(document.querySelector("#jspsych-timed-writing-stimulus").innerHTML);
             const displayedLetter = document.querySelector("#verbal-fluency-letter").textContent;
             expect(displayedLetter).toBe(letter);
         });

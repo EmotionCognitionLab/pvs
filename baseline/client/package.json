@@ -20,7 +20,6 @@
     ],
     "moduleNameMapper": {
       "\\.css$": "identity-obj-proxy",
-      "\\.html": "../../client/__mocks__/fileMock.js",
       "\\.png": "../../client/__mocks__/fileMock.js",
       "\\.wav": "../../client/__mocks__/fileMock.js",
       "\\.ogg": "../../client/__mocks__/fileMock.js",
@@ -28,7 +27,8 @@
     },
     "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest"
+      "^.+\\.(js|jsx)$": "babel-jest",
+      "\\.html$": "jest-raw-loader"
     }
   },
   "devDependencies": {
@@ -44,6 +44,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.0.5",
     "jest-canvas-mock": "^2.3.1",
+    "jest-raw-loader": "^1.0.1",
     "mime-types": "^2.1.31",
     "style-loader": "^2.0.0",
     "webpack": "^5.40.0",
