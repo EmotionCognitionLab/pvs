@@ -167,31 +167,31 @@ describe('hasDoneSetToday', () => {
     const today = new Date().toISOString();
     const earlier = new Date('1980-11-02').toISOString();
 
-    it('should return false if there is no set-started reocrd', () => {
+    it('should return false if there is no set-started record', () => {
         const sets = [ { experiment: 'set-finished', dateTime: today }, { experiment: 'set-finished', dateTime: today } ];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
     });
 
-    it("should return false if the set-started reocrd does not have today's date", () => {
+    it("should return false if the set-started record does not have today's date", () => {
         const sets = [ { experiment: 'set-started', dateTime: earlier }, { experiment: 'set-finished', dateTime: today } ];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
     });
 
-    it('should return false if there is no set-finished reocrd', () => {
+    it('should return false if there is no set-finished record', () => {
         const sets = [ { experiment: 'set-started', dateTime: today }, { experiment: 'set-started', dateTime: today } ];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
     });
 
-    it("should return false if the set-finished reocrd does not have today's date", () => {
+    it("should return false if the set-finished record does not have today's date", () => {
         const sets = [ { experiment: 'set-started', dateTime: today }, { experiment: 'set-finished', dateTime: earlier } ];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
     });
 
-    it('should return true if there is a set-started and a set-finished reocrd for today', () => {
+    it('should return true if there is a set-started and a set-finished record for today', () => {
         const sets = [ { experiment: 'set-started', dateTime: today }, { experiment: 'set-finished', dateTime: today } ];
         const res = hasDoneSetToday(sets);
         expect(res).toBeTruthy();
