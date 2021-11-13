@@ -80,7 +80,8 @@ describe("reminders", () => {
     });
 
     it("should not remind people who have done a set today", async () => {
-        const today = new Date().toISOString();
+        const now = new Date();
+        const today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
         mockGetSetsForUser.mockImplementationOnce(() => [ 
             { identityId: identityId, experiment: 'set-started', dateTime: today }, 
             { identityId: identityId, experiment: 'set-finished', dateTime: today }, 
@@ -164,8 +165,9 @@ describe("hasCompletedBaseline", () => {
 });
 
 describe('hasDoneSetToday', () => {
-    const today = new Date().toISOString();
-    const earlier = new Date('1980-11-02').toISOString();
+    const now = new Date();
+    const today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
+    const earlier = '1980-11-02';
 
     it('should return false if there is no set-started record', () => {
         const sets = [ { experiment: 'set-finished', dateTime: today }, { experiment: 'set-finished', dateTime: today } ];
