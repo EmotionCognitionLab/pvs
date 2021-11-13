@@ -44,6 +44,9 @@ module.exports = {
                 test: /\.(png|svg|jpg|jpeg|gif|wav|ogg|mp3)$/i,
                 type: 'asset/resource',
             },
+            {
+                exclude: [path.join(__dirname, "deploy.js")]
+            }
         ],
     },
     resolve: {
