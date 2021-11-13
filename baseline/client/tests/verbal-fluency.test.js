@@ -36,6 +36,16 @@ describe("verbal-fluency", () => {
         expect(data.response).toBe(response);
     });
 
+    it("displays the letter in the stimulus", () => {
+        VerbalFluency.possibleLetters.forEach(letter => {
+            jest.useFakeTimers("legacy");
+            startAtTimedWriting(letter);
+            console.log(document.querySelector("#jspsych-timed-writing-stimulus").innerHTML);
+            const displayedLetter = document.querySelector("#verbal-fluency-letter").textContent;
+            expect(displayedLetter).toBe(letter);
+        });
+    });
+
     it("should give the user 60 seconds to generate words", () => {
         // start at timed-writing trial
         jest.useFakeTimers("legacy");
