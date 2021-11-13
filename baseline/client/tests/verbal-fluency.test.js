@@ -37,9 +37,22 @@ describe("verbal-fluency", () => {
     });
 
     it("should give the user 60 seconds to generate words", () => {
+        // start at timed-writing trial
         jest.useFakeTimers("legacy");
-        startAtTimedWriting(VerbalFluency.possibleLetters[0]);
-        //expect(setTimeout).toHaveBeenCalledTimes(1);  // display timer prevents this
+        let finished = false;
+        jsPsych.init({
+            timeline: (new VerbalFluency(VerbalFluency.possibleLetters[0])).getTimeline(),
+            on_finish: () => { finished = true; },
+        });
+        pressKey(" ");
+        // check mocked setTimeout (slightly fragile)
+        //expect(setTimeout).toHaveBeenCalledTimes(1);  // display timer code prevents this
         expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 60000);
+        // check finished
+        expect(finished).toBe(false);  // should not be finished at the start
+        jest.advanceTimersByTime(59000);
+        expect(finished).toBe(false);  // should not be finished after 59 seconds
+        jest.advanceTimersByTime(2000);
+        expect(finished).toBe(true);  // should be finished after 61 seconds
     });
 });
