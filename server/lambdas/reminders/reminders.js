@@ -1,9 +1,9 @@
 
 'use strict';
 
-import SES from 'aws-sdk/clients/ses';
-import SNS from 'aws-sdk/clients/sns';
-import Db  from 'db/db.js';
+import SES from 'aws-sdk/clients/ses.js';
+import SNS from 'aws-sdk/clients/sns.js';
+import { Db } from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
 const snsEndpoint = process.env.SNS_ENDPOINT;
