@@ -1,4 +1,5 @@
 require("@adp-psych/jspsych/jspsych.js");
+import instruction6_html from "../flanker/frag/instruction-6.html";
 import { Flanker } from "../flanker/flanker.js";
 import { pressKey } from "./utils.js";
 
@@ -355,7 +356,7 @@ describe("flanker training with controlled randomization", () => {
         // final instruction screen -> fixation 1
         pressKey(" ");
         const data = jsPsych.data.get().last(1).values()[0];
-        expect(data.stimulus).toBe('test-file-stub');
+        expect(data.stimulus).toBe(instruction6_html);
     });
 
     it("randomizes the order of the trial stimuli", () => {
