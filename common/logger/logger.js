@@ -48,7 +48,6 @@ class LocalStorage {
 
     setItem(name, value) {
         this.storage[name] = value;
-        console.log('setItem was called in loggers own LocalStorage')
     }
 }
 
