@@ -203,8 +203,8 @@ function taskForName(name, options) {
             return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
             return new TaskSwitching();
-        case "verbal-fluency":
-            const allResults = options.allResults;
+        case "verbal-fluency": {
+            const allResults = options.allResults.map(r => r.results);
             const availableLetters = new Set(VerbalFluency.possibleLetters);
             // iterate over allResults, find out which letters have been used,
             // pick letter 
@@ -220,6 +220,7 @@ function taskForName(name, options) {
             const rand = Math.floor(Math.random() * availableLettersArr.length);
             const letter = availableLettersArr[rand];
             return new VerbalFluency(letter);
+        }
         case "verbal-learning-learning":
             return new VerbalLearning(options.setNum || 1, 1);
         case "verbal-learning-recall":
