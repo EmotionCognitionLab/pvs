@@ -155,6 +155,21 @@ describe("Demographics", () => {
         expect(data.length).toBe(0);
         expect(jsPsych.getDisplayElement()).toBeDefined();
     });
+
+    it("should not allow you to submit the form if you don't choose at least one item in the drugs section", () => {
+        fillMinimumForm();
+        const drugElems = document.getElementById("drugs-question").getElementsByTagName("input");
+        for (let i=0; i<drugElems.length; i++) {
+            const cb = drugElems[i];
+            if (cb.getAttribute("type") === "checkbox") cb.checked = false;
+        }
+
+        const submitButton = document.querySelector("input[type=submit]");
+        submitButton.click();
+        const data = jsPsych.data.get().values();
+        expect(data.length).toBe(0);
+        expect(jsPsych.getDisplayElement()).toBeDefined();
+    });
 });
 
 function checkRequiredAndDisabledAttrs(elemList, required) {
@@ -165,7 +180,7 @@ function checkRequiredAndDisabledAttrs(elemList, required) {
 }
 
 function fillMinimumForm() {
-    const clickIds = ["aa", "ethH", "retiredN", "covidVaxN", "everSmokedY", "psychDiagN", "heartDisease"];
+    const clickIds = ["aa", "ethH", "retiredN", "covidVaxN", "everSmokedY", "psychDiagN", "heartDisease", "thyroidMed"];
     clickIds.forEach(elem => document.getElementById(elem).click());
 
     document.getElementById("educationYears").value = 2;

@@ -137,6 +137,21 @@ Demographics.setDynamicallyRequiredFields = () => {
         }
     });
 
+    const drugInputs = document.getElementById("drugs-question").getElementsByTagName("input");
+
+    document.getElementById("drugs-question").addEventListener("input", (event) => {
+        if (event.target.type === "checkbox" && event.target.checked) {
+            if (event.target.id === "noneMed") {
+                for (let i=0; i<drugInputs.length; i++) {
+                    const cb = drugInputs[i];
+                    if (cb.id !== event.target.id) cb.checked = false;
+                }
+            } else {
+                document.getElementById("noneMed").checked = false;
+            }
+        }
+    });
+
     document.getElementById("jspsych-survey-html-form-next").addEventListener("click", (event) => {
         const diabetes = document.getElementById("diabetes");
         const diabetesFollowupComplete = diabetesFollowupElems.filter(elem => elem.checked).length > 0;
@@ -149,6 +164,13 @@ Demographics.setDynamicallyRequiredFields = () => {
         const doctorComplete = Array.from(doctorInputs).filter(elem => elem.checked).length > 0;
         if (!doctorComplete) {
             const choiceRequired = document.querySelector("#doctor-question div.required");
+            choiceRequired.style = "display: block";
+            event.preventDefault();
+        }
+
+        const drugsComplete = Array.from(drugInputs).filter(elem => elem.checked).length > 0;
+        if (!drugsComplete) {
+            const choiceRequired = document.querySelector("#drugs-question div.required");
             choiceRequired.style = "display: block";
             event.preventDefault();
         }
@@ -379,10 +401,11 @@ Demographics.form = `
     </div>
 </div>
 
-<div class="demo-question">
+<div class="demo-question" id="drugs-question">
     <p>Are you currently taking any medications/drugs for any of the following?<br/>
-        (Including over-the-counter drug, alternative remedies and prescription medication.)
+        (Including over-the-counter drugs, alternative remedies and prescription medication.)
     </p>
+    <div class="required">Please choose at least one option below.</div>
     <input type="checkbox" name="antidepressant_med" id="antidepressantMed">
     <label for="antidepressantMed">Antidepressant or anti-anxiety medication</label><br/>
     <input type="checkbox" name="blood_pressure_med" id="bloodPressureMed">
@@ -398,7 +421,9 @@ Demographics.form = `
     <input type="checkbox" name="inhaler_med" id="inhalerMed">
     <label for="inhalerMed">Inhaler</label><br/>
     <input type="checkbox" name="headache_reliever_med" id="headacheRelieverMed">
-    <label for="headacheRelieverMed">Headache relievers</label>
+    <label for="headacheRelieverMed">Headache relievers</label><br/>
+    <input type="checkbox" name="none_med" id="noneMed">
+    <label for="noneMed">None</label>
 </div>
 
 <div class="demo-question">
