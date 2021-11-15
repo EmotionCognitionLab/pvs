@@ -16,7 +16,7 @@ export class Demographics {
             data: {isRelevant: true}
         };
         
-        return [formTrial]
+        return [formTrial];
     }
 
     get taskName() {
@@ -61,7 +61,7 @@ Demographics.setDynamicallyRequiredFields = () => {
         if (event.target.type !== "radio") return;
 
         const dispStyle = event.target.id === "covidVaxY" ? "display: block;" : "display: none;";
-        document.getElementById("vax-followup").style = dispStyle
+        document.getElementById("vax-followup").style = dispStyle;
         document.getElementById("1stdose").required = event.target.id === "covidVaxY";
     });
 
@@ -69,7 +69,7 @@ Demographics.setDynamicallyRequiredFields = () => {
         if (event.target.type !== "radio") return;
 
         const dispStyle = event.target.id === "psychDiagY" ? "display: block;" : "display: none;";
-        document.getElementById("psych-followup").style = dispStyle
+        document.getElementById("psych-followup").style = dispStyle;
         const psychWhich = document.getElementById("psychDiagWhich");
         psychWhich.required = event.target.id === "psychDiagY";
         const psychNo = document.getElementById("psychDiagN").checked;
@@ -97,13 +97,13 @@ Demographics.setDynamicallyRequiredFields = () => {
         let dispStyle;
         let followupRequired;
         if (event.target.id === "estrogenReplacementMedY") {
-            dispStyle = "display: block;"
+            dispStyle = "display: block;";
             followupRequired = true;
         } else if (event.target.id === "estrogenReplacementMedN") {
             dispStyle = "display: none;";
             followupRequired = false;
         }
-        document.getElementById("estrogen-followup").style = dispStyle
+        document.getElementById("estrogen-followup").style = dispStyle;
         const estrogenCurrent = document.getElementById("estrogenReplacementCurrentY");
         estrogenCurrent.required = followupRequired;
     });
@@ -132,7 +132,7 @@ Demographics.setDynamicallyRequiredFields = () => {
         }
     });
 
-}
+};
 
 // We put this here rather than in a standalone file
 // so that it is loaded for tests. If it's in a standalone
@@ -250,10 +250,10 @@ Demographics.form = `
 <div class="demo-question" id="doctor-question">
     <p>Are you <em>currently</em> under a doctor’s care for any of the following?</p>
     <input type="checkbox" name="heart_disease" id="heartDisease"/>
-    <label for="heartDisease">Heart disease</label>
-    <input type="checkbox" name="vascular_disease" id="vascularDisease"/>
+    <label for="heartDisease">Heart disease (including coronary artery disease, angina, and arrhythmia)</label>
+    <br/><input type="checkbox" name="vascular_disease" id="vascularDisease"/>
     <label for="vascularDisease">Vascular disease</label>
-    <input type="checkbox" name="diabetes" id="diabetes"/>
+    <br/><input type="checkbox" name="diabetes" id="diabetes"/>
     <label for="diabetes">Diabetes</label>
     <div id="diabetes-followup">
         <div class="required">Please indicate which type(s) of diabetes you have:</div>
@@ -422,7 +422,7 @@ Demographics.form = `
         <label for="estrogenReplacementCurrentN">No</label>
     </div>
 </div>
-`
+`;
 
 if (window.location.href.includes(Demographics.taskName)) {
     jsPsych.init({
