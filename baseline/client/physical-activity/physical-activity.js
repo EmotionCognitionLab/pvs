@@ -29,24 +29,28 @@ PhysicalActivity.taskName = "physical-activity";
 // file we just get "test.file.stub" instead of all this HTML.
 PhysicalActivity.form = `
 <div class="pa-question">
-    Please rate your physical activity: <br/>
+    Please select one of the 8 options listed below that best describes your physical activity level. <br/>
 
-    <ol>
-        <li>Do not participate regularly in programmed recreation, sport, or physical activity.</li>
+    <div>
+        Do not participate regularly in programmed recreation, sport, or physical activity.<br/>
         <input type="radio" name="activity_level" id="point0" value="0" required="true">
         <label for="point0">Avoid walking or exercise (for example, always use elevators, drive whenever possible instead of walking).</label>
         <br/>
         <input type="radio" name="activity_level" id="point1" value="1" required="true">
         <label for="point1">Walk for pleasure, routinely use stairs, occasionally exercise sufficiently to cause heavy breathing or perspiration.</label>
+    </div>
 
-        <li>Participate regularly in recreation or work requiring modest physical activity (such as golf, horseback riding, calisthenics, gymnastics, table tennis, bowling, weight lifting, or yard work).</li>
+    <div>
+        Participate regularly in recreation or work requiring modest physical activity (such as golf, horseback riding, calisthenics, gymnastics, table tennis, bowling, weight lifting, or yard work).<br/>
         <input type="radio" name="activity_level" id="point2" value="2" required="true">
         <label for="point2">10–60 minutes per week</label>
         <br/>
         <input type="radio" name="activity_level" id="point3" value="3" required="true">
         <label for="point3">Over 1 hour per week</label>
+    </div>
 
-        <li>Participate regularly in heavy physical exercise (such as running or jogging, swimming, cycling, rowing, skipping rope, running in place) or engage in vigorous aerobic type activity (such as tennis, basketball, or handball).</li>
+    <div>
+        Participate regularly in heavy physical exercise (such as running or jogging, swimming, cycling, rowing, skipping rope, running in place) or engage in vigorous aerobic type activity (such as tennis, basketball, or handball).<br/>
         <input type="radio" name="activity_level" id="point4" value="4" required="true">
         <label for="point4">Run less than 1 mile per week or spend less than 30 minutes per week in comparable physical activity.</label>
         <br/>
@@ -59,7 +63,7 @@ PhysicalActivity.form = `
         <input type="radio" name="activity_level" id="point7" value="7" required="true">
         <label for="point7">Run more than 10 miles per week or spend more than 3 hours per week in comparable physical activity.</label>
         <br/>
-    </ol>
+    </div>
 
     <label for="weight">Body weight (lbs.): </label>
     <input type="number" min="50" max="300" name="weight" id="weight" required="true">
