@@ -423,7 +423,7 @@ Demographics.form = `
     <input type="checkbox" name="headache_reliever_med" id="headacheRelieverMed">
     <label for="headacheRelieverMed">Headache relievers</label><br/>
     <input type="checkbox" name="none_med" id="noneMed">
-    <label for="noneMed">None</label>
+    <label for="noneMed">None of them</label>
 </div>
 
 <div class="demo-question">
