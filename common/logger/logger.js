@@ -31,10 +31,25 @@
  */
 
 import awsSettings from '../aws-settings.json';
-import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs';
+import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs.js';
 import util from 'util';
 
 const streamKey = 'ConsoleCloudWatch:stream';
+
+// if we're not in a browser environment we don't need persistent localStorage
+class LocalStorage {
+    constructor() {
+        this.storage = {};
+    }
+    
+    getItem(name) {
+        return this.storage[name];
+    }
+
+    setItem(name, value) {
+        this.storage[name] = value;
+    }
+}
 
 export class Logger {
     /**
@@ -52,6 +67,15 @@ export class Logger {
         this.logGroupName = awsSettings.CloudwatchLogGroup;
         this.logEntries = [];
         this.pushFrequency = 10000; // push new log entries to cloudwatch every 10s
+        if (typeof window === "undefined" || typeof window.localStorage === "undefined" || window.localStorage === null) {  
+            if (typeof global === "undefined" || typeof global.localStorage === "undefined" || global.localStorage === null) {
+                this.localStorage = new LocalStorage();
+            } else {
+                this.localStorage = global.localStorage;
+            }
+        } else {
+            this.localStorage = window.localStorage;
+        }
         this.init();
     }
 
@@ -65,7 +89,7 @@ export class Logger {
         const month = String(now.getMonth() + 1).padStart(2, "0");
         const day = String(now.getDate()).padStart(2, "0");
         const stream = `${year}-${month}-${day}`;
-        const curStream = localStorage.getItem(streamKey);
+        const curStream = this.localStorage.getItem(streamKey);
         if (stream !== curStream) {
             this.cwLogs.createLogStream({
                 logGroupName: this.logGroupName,
@@ -74,7 +98,7 @@ export class Logger {
                 if (err && err.code !== "ResourceAlreadyExistsException") {
                     this.error(err, err.stack);
                 } else {
-                    localStorage.setItem(streamKey, stream);
+                    this.localStorage.setItem(streamKey, stream);
                 }
             });
         }
@@ -107,10 +131,10 @@ export class Logger {
 
         // This timer both writes logs to CloudWatch periodically and calls setStream
         // to see if a new log stream needs to be created (i.e., when the date changes).
-        setInterval(() => {
+        const loggingInterval = setInterval(() => {
             this.setStream();
             const unsent = this.logEntries.splice(0);
-            const streamName = localStorage.getItem(streamKey);
+            const streamName = this.localStorage.getItem(streamKey);
             if (unsent.length) {
                 this.cwLogs.describeLogStreams({
                     logGroupName: this.logGroupName,
@@ -149,5 +173,10 @@ export class Logger {
                 });
             }
         }, this.pushFrequency || 10000);
+        // if this is running in a node process we don't want this logging
+        // interval to keep the process running forever. Calling unref()
+        // will ensure it doesn't.
+        // https://nodejs.org/api/timers.html#timers_timeout_unref
+        if (loggingInterval.unref) loggingInterval.unref();
     }
 }

@@ -16,7 +16,7 @@ export class Demographics {
             data: {isRelevant: true}
         };
         
-        return [formTrial]
+        return [formTrial];
     }
 
     get taskName() {
@@ -61,7 +61,7 @@ Demographics.setDynamicallyRequiredFields = () => {
         if (event.target.type !== "radio") return;
 
         const dispStyle = event.target.id === "covidVaxY" ? "display: block;" : "display: none;";
-        document.getElementById("vax-followup").style = dispStyle
+        document.getElementById("vax-followup").style = dispStyle;
         document.getElementById("1stdose").required = event.target.id === "covidVaxY";
     });
 
@@ -69,7 +69,7 @@ Demographics.setDynamicallyRequiredFields = () => {
         if (event.target.type !== "radio") return;
 
         const dispStyle = event.target.id === "psychDiagY" ? "display: block;" : "display: none;";
-        document.getElementById("psych-followup").style = dispStyle
+        document.getElementById("psych-followup").style = dispStyle;
         const psychWhich = document.getElementById("psychDiagWhich");
         psychWhich.required = event.target.id === "psychDiagY";
         const psychNo = document.getElementById("psychDiagN").checked;
@@ -97,13 +97,13 @@ Demographics.setDynamicallyRequiredFields = () => {
         let dispStyle;
         let followupRequired;
         if (event.target.id === "estrogenReplacementMedY") {
-            dispStyle = "display: block;"
+            dispStyle = "display: block;";
             followupRequired = true;
         } else if (event.target.id === "estrogenReplacementMedN") {
             dispStyle = "display: none;";
             followupRequired = false;
         }
-        document.getElementById("estrogen-followup").style = dispStyle
+        document.getElementById("estrogen-followup").style = dispStyle;
         const estrogenCurrent = document.getElementById("estrogenReplacementCurrentY");
         estrogenCurrent.required = followupRequired;
     });
@@ -122,6 +122,36 @@ Demographics.setDynamicallyRequiredFields = () => {
         }
     });
 
+    const doctorInputs = document.getElementById("doctor-question").getElementsByTagName("input");
+
+    document.getElementById("doctor-question").addEventListener("input", (event) => {
+        if (event.target.type === "checkbox" && event.target.checked) {
+            if (event.target.id === "doctorNone") {
+                for (let i=0; i<doctorInputs.length; i++) {
+                    const cb = doctorInputs[i];
+                    if (cb.id != event.target.id) cb.checked = false;
+                }
+            } else {
+                document.getElementById("doctorNone").checked = false;
+            }
+        }
+    });
+
+    const drugInputs = document.getElementById("drugs-question").getElementsByTagName("input");
+
+    document.getElementById("drugs-question").addEventListener("input", (event) => {
+        if (event.target.type === "checkbox" && event.target.checked) {
+            if (event.target.id === "noneMed") {
+                for (let i=0; i<drugInputs.length; i++) {
+                    const cb = drugInputs[i];
+                    if (cb.id !== event.target.id) cb.checked = false;
+                }
+            } else {
+                document.getElementById("noneMed").checked = false;
+            }
+        }
+    });
+
     document.getElementById("jspsych-survey-html-form-next").addEventListener("click", (event) => {
         const diabetes = document.getElementById("diabetes");
         const diabetesFollowupComplete = diabetesFollowupElems.filter(elem => elem.checked).length > 0;
@@ -130,9 +160,23 @@ Demographics.setDynamicallyRequiredFields = () => {
             followupRequired.style = "display: block";
             event.preventDefault();
         }
+
+        const doctorComplete = Array.from(doctorInputs).filter(elem => elem.checked).length > 0;
+        if (!doctorComplete) {
+            const choiceRequired = document.querySelector("#doctor-question div.required");
+            choiceRequired.style = "display: block";
+            event.preventDefault();
+        }
+
+        const drugsComplete = Array.from(drugInputs).filter(elem => elem.checked).length > 0;
+        if (!drugsComplete) {
+            const choiceRequired = document.querySelector("#drugs-question div.required");
+            choiceRequired.style = "display: block";
+            event.preventDefault();
+        }
     });
 
-}
+};
 
 // We put this here rather than in a standalone file
 // so that it is loaded for tests. If it's in a standalone
@@ -249,11 +293,12 @@ Demographics.form = `
 
 <div class="demo-question" id="doctor-question">
     <p>Are you <em>currently</em> under a doctor’s care for any of the following?</p>
+    <div class="required">Please choose at least one option below.</div>
     <input type="checkbox" name="heart_disease" id="heartDisease"/>
-    <label for="heartDisease">Heart disease</label>
-    <input type="checkbox" name="vascular_disease" id="vascularDisease"/>
+    <label for="heartDisease">Heart disease (including coronary artery disease, angina, and arrhythmia)</label>
+    <br/><input type="checkbox" name="vascular_disease" id="vascularDisease"/>
     <label for="vascularDisease">Vascular disease</label>
-    <input type="checkbox" name="diabetes" id="diabetes"/>
+    <br/><input type="checkbox" name="diabetes" id="diabetes"/>
     <label for="diabetes">Diabetes</label>
     <div id="diabetes-followup">
         <div class="required">Please indicate which type(s) of diabetes you have:</div>
@@ -265,6 +310,8 @@ Demographics.form = `
         <input type="checkbox" name="diabetes_pre_diabetes" id="preDiabetes"/>
         <label for="diabetes_pre_diabetes">Pre-diabetes</label>
     </div>
+    <br/><input type="checkbox" name="doctorNone" id="doctorNone"/>
+    <label for="doctorNone">None of them</label>
 </div>
 
 <div class="demo-question" id="psych-question">
@@ -354,10 +401,11 @@ Demographics.form = `
     </div>
 </div>
 
-<div class="demo-question">
+<div class="demo-question" id="drugs-question">
     <p>Are you currently taking any medications/drugs for any of the following?<br/>
-        (Including over-the-counter drug, alternative remedies and prescription medication.)
+        (Including over-the-counter drugs, alternative remedies and prescription medication.)
     </p>
+    <div class="required">Please choose at least one option below.</div>
     <input type="checkbox" name="antidepressant_med" id="antidepressantMed">
     <label for="antidepressantMed">Antidepressant or anti-anxiety medication</label><br/>
     <input type="checkbox" name="blood_pressure_med" id="bloodPressureMed">
@@ -373,7 +421,9 @@ Demographics.form = `
     <input type="checkbox" name="inhaler_med" id="inhalerMed">
     <label for="inhalerMed">Inhaler</label><br/>
     <input type="checkbox" name="headache_reliever_med" id="headacheRelieverMed">
-    <label for="headacheRelieverMed">Headache relievers</label>
+    <label for="headacheRelieverMed">Headache relievers</label><br/>
+    <input type="checkbox" name="none_med" id="noneMed">
+    <label for="noneMed">None of them</label>
 </div>
 
 <div class="demo-question">
@@ -399,9 +449,14 @@ Demographics.form = `
 
 <div class="demo-question">
     <p>When was the last time you had your menstrual period?<br/>
-        (Please indicate both the month and the year if you remember.)
     </p>
-    <input type="text" name="last_menstrual_period" id="lastMenstrualPeriod">
+    <select name="last_menstrual_period" id="lastMenstrualPeriod">
+        <option value="NA">Please select</option>
+        <option value="1-2y"/>1-2 years</option>
+        <option value="3-6y"/>3-6 years</option>
+        <option value="7-10y"/>7-10 years</option>
+        <option value="10+y"/>&gt;10 years</option>
+    </select>
 </div>
 
 <div class="demo-question" id="estrogen-question">
@@ -418,7 +473,7 @@ Demographics.form = `
         <label for="estrogenReplacementCurrentN">No</label>
     </div>
 </div>
-`
+`;
 
 if (window.location.href.includes(Demographics.taskName)) {
     jsPsych.init({

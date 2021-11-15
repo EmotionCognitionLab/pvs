@@ -6,6 +6,11 @@
   "scripts": {
     "test": "jest --runInBand"
   },
+  "jest": {
+    "transform": {
+      "^.+\\.(js|jsx|mjs)$": "babel-jest"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
@@ -17,9 +22,16 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
     "aws-sdk": "^2.924.0",
+    "babel-jest": "^27.3.1",
     "jest": "^27.0.4",
     "lambda-local": "^1.7.4",
-    "serverless-ssm-publish": "^1.4.1"
+    "serverless-ssm-publish": "^1.4.1",
+    "serverless-webpack": "^5.5.5"
+  },
+  "dependencies": {
+    "serverless": "^2.66.1"
   }
 }

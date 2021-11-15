@@ -216,12 +216,22 @@ describe("getSetAndTasks", () => {
 
 describe("taskForName for verbal-fluency", () => {
     it("returns a VerbalFluency object", () => {
-        const result = dailyTasks.taskForName("verbal-fluency", { allResults: [{letter: "a"}] } );
+        const result = dailyTasks.taskForName("verbal-fluency", { allResults: 
+            [
+                {experiment: "verbal-fluency", isRelevant: true, results: {letter: "a"}}
+            ]}
+        );
         expect(result instanceof VerbalFluency).toBe(true);
     });
 
     it("throws an error if all possible letters have already been used", () => {
-        const input = VerbalFluency.possibleLetters.map(l => ({ letter: l }));
+        const input = VerbalFluency.possibleLetters.map(l => (
+            { 
+                experiment: "verbal-fluency",
+                isRelevant: true,
+                results: { letter: l }
+            }
+        ));
         function callWithAllLetters() {
             dailyTasks.taskForName("verbal-fluency", { allResults: input });
         }
@@ -229,7 +239,13 @@ describe("taskForName for verbal-fluency", () => {
     });
 
     it("returns a VerbalFluency object with a letter that has not been used", () => {
-        const input = VerbalFluency.possibleLetters.slice(1).map(l => ({ letter: l }));
+        const input = VerbalFluency.possibleLetters.slice(1).map(l => (
+            { 
+                experiment: "verbal-fluency",
+                isRelevant: true,
+                results: { letter: l }
+            }
+        ));
         const result = dailyTasks.taskForName("verbal-fluency", { allResults: input });
         expect(result.letter).toBe(VerbalFluency.possibleLetters[0]);
     });
@@ -518,7 +534,7 @@ function buildInput(setList) {
         const startTime = s.setStartedTime || (new Date()).toISOString();
         let input = 
             [{experiment: dailyTasks.setStarted, dateTime: startTime, results: {setNum: s.setNum}}]
-            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true })));
+            .concat(s.taskNames.map(task => ({experiment: task, isRelevant: true, results: {} })));
         if (s.setFinishedTime) {
             input = input.concat({experiment: dailyTasks.setFinished, dateTime: s.setFinishedTime, results: {setNum: s.setNum}});
         }

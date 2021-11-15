@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest"
   },
+  "type": "module",
   "jest": {
     "rootDir": ".",
     "moduleDirectories": [
@@ -13,7 +14,7 @@
       "node_modules"
     ],
     "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest"
+      "^.+\\.(js|jsx|mjs)$": "babel-jest"
     }
   },
   "repository": {

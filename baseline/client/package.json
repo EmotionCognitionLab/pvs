@@ -27,7 +27,7 @@
     },
     "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest",
+      "^.+\\.(js|jsx|mjs)$": "babel-jest",
       "\\.html$": "jest-raw-loader"
     }
   },
