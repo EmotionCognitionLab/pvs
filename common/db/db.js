@@ -9,7 +9,7 @@
  
  'use strict';
 
- export class Db {
+export default class Db {
      constructor(options = {}) {
         this.region = options.region || awsSettings.AWSRegion;
         this.identityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;

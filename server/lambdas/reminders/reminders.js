@@ -3,7 +3,7 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
-import { Db } from 'db/db.js';
+import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
 const snsEndpoint = process.env.SNS_ENDPOINT;
@@ -51,13 +51,13 @@ async function sendPreBaselineReminders(commType) {
         }
         
         if (commType === "email") {
-            usersToRemind.forEach(u => {
-                sendEmail(u.email, preBaselineMsg);
+            usersToRemind.forEach(async u => {
+                await sendEmail(u.email, preBaselineMsg);
                 sentCount++;
             });
         } else if (commType === "sms") {
-            usersToRemind.filter(u => u.phone_number_verified).forEach(u => {
-                sendSMS(u.phone_number, preBaselineMsg);
+            usersToRemind.filter(u => u.phone_number_verified).forEach(async u => {
+                await sendSMS(u.phone_number, preBaselineMsg);
                 sentCount++;
             });
         }
