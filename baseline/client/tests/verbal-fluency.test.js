@@ -8,9 +8,16 @@ const startAtTimedWriting = letter => {
     pressKey(" ");
 };
 
+beforeEach(() => {
+    jest.useFakeTimers("legacy");  // why legacy: https://github.com/facebook/jest/issues/11500
+});
+
+afterEach(() => {
+    jest.useRealTimers();
+});
+
 describe("verbal-fluency", () => {
     it("results should have at least one result marked isRelevant", () => {
-        jest.useFakeTimers("legacy");  // why legacy: https://github.com/facebook/jest/issues/11500
         startAtTimedWriting("f");
         // timed writing trial
         const inputField = document.querySelector("#jspsych-timed-writing-textarea");
@@ -38,7 +45,6 @@ describe("verbal-fluency", () => {
 
     it("displays the letter in the stimulus", () => {
         VerbalFluency.possibleLetters.forEach(letter => {
-            jest.useFakeTimers("legacy");
             startAtTimedWriting(letter);
             const displayedLetter = document.querySelector("#verbal-fluency-letter").textContent;
             expect(displayedLetter).toBe(letter);
@@ -47,7 +53,6 @@ describe("verbal-fluency", () => {
 
     it("should give the user 60 seconds to generate words", () => {
         // start at timed-writing trial
-        jest.useFakeTimers("legacy");
         let finished = false;
         jsPsych.init({
             timeline: (new VerbalFluency(VerbalFluency.possibleLetters[0])).getTimeline(),
