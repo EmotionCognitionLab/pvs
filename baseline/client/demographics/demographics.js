@@ -122,12 +122,34 @@ Demographics.setDynamicallyRequiredFields = () => {
         }
     });
 
+    const doctorInputs = document.getElementById("doctor-question").getElementsByTagName("input");
+
+    document.getElementById("doctor-question").addEventListener("input", (event) => {
+        if (event.target.type === "checkbox" && event.target.checked) {
+            if (event.target.id === "doctorNone") {
+                for (let i=0; i<doctorInputs.length; i++) {
+                    const cb = doctorInputs[i];
+                    if (cb.id != event.target.id) cb.checked = false;
+                }
+            } else {
+                document.getElementById("doctorNone").checked = false;
+            }
+        }
+    });
+
     document.getElementById("jspsych-survey-html-form-next").addEventListener("click", (event) => {
         const diabetes = document.getElementById("diabetes");
         const diabetesFollowupComplete = diabetesFollowupElems.filter(elem => elem.checked).length > 0;
         if (diabetes.checked && !diabetesFollowupComplete) {
             const followupRequired = document.querySelector("#diabetes-followup div.required");
             followupRequired.style = "display: block";
+            event.preventDefault();
+        }
+
+        const doctorComplete = Array.from(doctorInputs).filter(elem => elem.checked).length > 0;
+        if (!doctorComplete) {
+            const choiceRequired = document.querySelector("#doctor-question div.required");
+            choiceRequired.style = "display: block";
             event.preventDefault();
         }
     });
@@ -249,6 +271,7 @@ Demographics.form = `
 
 <div class="demo-question" id="doctor-question">
     <p>Are you <em>currently</em> under a doctor’s care for any of the following?</p>
+    <div class="required">Please choose at least one option below.</div>
     <input type="checkbox" name="heart_disease" id="heartDisease"/>
     <label for="heartDisease">Heart disease (including coronary artery disease, angina, and arrhythmia)</label>
     <br/><input type="checkbox" name="vascular_disease" id="vascularDisease"/>
@@ -265,6 +288,8 @@ Demographics.form = `
         <input type="checkbox" name="diabetes_pre_diabetes" id="preDiabetes"/>
         <label for="diabetes_pre_diabetes">Pre-diabetes</label>
     </div>
+    <br/><input type="checkbox" name="doctorNone" id="doctorNone"/>
+    <label for="doctorNone">None of them</label>
 </div>
 
 <div class="demo-question" id="psych-question">
