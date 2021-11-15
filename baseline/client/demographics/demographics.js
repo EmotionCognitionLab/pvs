@@ -451,6 +451,7 @@ Demographics.form = `
     <p>When was the last time you had your menstrual period?<br/>
     </p>
     <select name="last_menstrual_period" id="lastMenstrualPeriod">
+        <option value="NA">Please select</option>
         <option value="1-2y"/>1-2 years</option>
         <option value="3-6y"/>3-6 years</option>
         <option value="7-10y"/>7-10 years</option>
