@@ -15,7 +15,7 @@ import { VerbalFluency } from "../verbal-fluency/verbal-fluency.js";
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import { getAuth } from "auth/auth.js";
 import { Logger } from "logger/logger.js";
-import { Db } from "db/db.js";
+import Db from "db/db.js";
 import { browserCheck } from "../browser-check/browser-check.js";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { FaceName } from "../face-name/face-name.js";
@@ -71,7 +71,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
     const nextSetOk = canStartNextSet(allResults);
     if (completedTasks.length === 0) {
         const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, nextSetOk);
-        return { set: 1, remainingTasks: timeline }
+        return { set: 1, remainingTasks: timeline };
     }
     for (var i = 0; i < allSets.length; i++) {
         const set = allSets[i];
@@ -90,18 +90,18 @@ function getSetAndTasks(allResults, saveResultsCallback) {
                     return { set: setNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
                 }
                 // they didn't finish this set - return the remaining tasks
-                remainingTasks = set.slice(j)
+                remainingTasks = set.slice(j);
                 const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
                 if (j > 0 && nextSetOk && i < allSets.length - 1) {
                     timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
                     Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
                 }
-                return { set: setNum, remainingTasks: timeline }
+                return { set: setNum, remainingTasks: timeline };
             }
         }
     }
     // the participant has completed all tasks in all sets - let them know
-    return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] }
+    return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] };
 }
 
 /**
@@ -125,16 +125,16 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
             timeline: taskTimeline,
             taskName: task.taskName,
             setNum: setNum
-        }
+        };
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
                 saveResultsCallback(setStarted, [{"setNum": setNum }]);
                 saveResultsCallback(task.taskName, [{"taskStarted": true}]);
-            }
+            };
         } else {
             node.on_timeline_start = () => {
                 saveResultsCallback(task.taskName, [{"taskStarted": true}]);
-            }
+            };
         }
         allTimelines.push(node);
     }
@@ -181,8 +181,7 @@ function taskForName(name, options) {
         case "ffmq":
             return new Ffmq();
         case "flanker":
-            const setNum = options.setNum || 1;
-            return new Flanker(setNum);
+            return new Flanker(options.setNum || 1);
         case "mind-in-eyes":
             return new MindEyes(options.setNum || 1);
         case "mood-memory":
@@ -298,7 +297,7 @@ async function doAll(session) {
 
 function startTasks(allResults) {
     const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
-    runTask(setAndTasks.remainingTasks, 0, saveResultsCallback)
+    runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
 }
 
 function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
@@ -321,7 +320,7 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     jsPsych.init({
         timeline: [tasks[taskIdx]],
         on_data_update: (data) => {
-            saveResultsCallback(tasks[taskIdx].taskName, [data])
+            saveResultsCallback(tasks[taskIdx].taskName, [data]);
         }
     });
 }
@@ -336,7 +335,7 @@ function saveResultsCallback(experimentName, results) {
 
 function handleSaveError(err, experimentName, results) {
     const cognitoAuth = getAuth();
-    logger.error(`Error saving data for ${cognitoAuth.getUsername()}: ${JSON.stringify({experiment: experimentName, results: results})}`)
+    logger.error(`Error saving data for ${cognitoAuth.getUsername()}: ${JSON.stringify({experiment: experimentName, results: results})}`);
     logger.error(err);
 }
 
@@ -362,15 +361,15 @@ const fullScreenTrial = {
     message: "<p>These experiments must be run in full screen mode. Please click the button below to set your browser to full screen mode.</p>",
     button_label: "Go full screen",
     delay_after: 0
-}
+};
 
 const fullScreenNode = {
     timeline: [fullScreenTrial],
     conditional_function: function() {
         return !(document.fullscreenElement || document.webkitFullscreenElement ||
-        document.mozFullScreenElement || document.msFullscreenElement)
+        document.mozFullScreenElement || document.msFullscreenElement);
     }
-}
+};
 
 const startNewSetQueryTask = {
     type: "html-button-response",
@@ -381,7 +380,7 @@ const startNewSetQueryTask = {
             jsPsych.endExperiment("Thanks! You're all done for today.");
         }
     }
-}
+};
 
 const allDoneMessage = {
     type: "html-button-response",
@@ -399,14 +398,14 @@ const errorHappenedMessage = {
     type: "html-button-response",
     stimulus: "Unfortunately, an error has occurred. The team has been alerted and will work to fix it. Please try again in a few hours.",
     choices: []
-}
+};
 
 
 if (window.location.href.includes("daily-tasks")) {
     init();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery }
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery };
 
 
 
