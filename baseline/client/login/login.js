@@ -1,5 +1,4 @@
 import { getAuth, sendPhoneVerificationCode, verifyPhone } from "auth/auth.js";
-import { browserCheck } from "../browser-check/browser-check.js";
 import './style.css';
 
 const phoneVerificationFormId = 'phoneVerification';
@@ -7,7 +6,6 @@ const errorMessageId = 'errorMessage';
 const phoneVerificationSubmitButtonId = 'submitPhoneVerification';
 const phoneVerificationSuccessId = 'phoneVerificationSuccess';
 const phoneCodeSendFailedId = 'phoneCodeSendFailed';
-const extraScopeKey = 'heartBeam.extraScope';
 const resendPhoneCodeNormalId = 'resendPhoneCodeNormal';
 const resendPhoneCodeErrorId = 'resendPhoneCodeError';
 let cachedSession = null;
@@ -25,7 +23,7 @@ function loginSuccess(session) {
             goToDailyTasks();
         }
     } else {
-        showError(null, "There was a problem logging you in. Please try again.")
+        showError(null, "There was a problem logging you in. Please try again.");
     }
 }
 
@@ -47,7 +45,7 @@ function confirmPhoneVerificationCode(successCallback, failureCallback) {
 function showPhoneVerificationForm() {
     document.getElementById(phoneVerificationFormId).classList.remove('hidden');
     document.getElementById(resendPhoneCodeNormalId).addEventListener('click',
-        () => { sendPhoneCode(cachedSession) }
+        () => { sendPhoneCode(cachedSession); }
     );
 }
 
@@ -55,7 +53,7 @@ function sendingPhoneVerificationCodeFailed(err) {
     console.error(err); // TODO remote logging
     document.getElementById(phoneCodeSendFailedId).classList.remove('hidden');
     document.getElementById(resendPhoneCodeErrorId).addEventListener('click',
-        () => { sendPhoneCode(cachedSession) }
+        () => { sendPhoneCode(cachedSession); }
     );
 }
 
@@ -64,7 +62,7 @@ function phoneVerificationSuccess() {
     // any error message we might be showing
     const errDiv = document.getElementById(errorMessageId);
     if (errDiv) {
-        errDiv.classList.remove('hidden');
+        errDiv.classList.add('hidden');
     }
     document.getElementById(phoneVerificationFormId).classList.add('hidden');
     document.getElementById(phoneVerificationSuccessId).classList.remove('hidden');
@@ -100,7 +98,7 @@ function handleLogin() {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(phoneVerificationSubmitButtonId).addEventListener('click', 
-        () => { confirmPhoneVerificationCode(phoneVerificationSuccess, phoneVerificationFailure) }
+        () => { confirmPhoneVerificationCode(phoneVerificationSuccess, phoneVerificationFailure); }
     );
     handleLogin();
 });
