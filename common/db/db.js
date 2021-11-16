@@ -6,6 +6,7 @@
  import AWS from 'aws-sdk/global.js';
  import DynamoDB from 'aws-sdk/clients/dynamodb.js';
  import { Logger } from "../logger/logger.js";
+ import { getAuth } from "../auth/auth.js";
  
  'use strict';
 
@@ -277,6 +278,15 @@ export default class Db {
                             this.logger.error(refreshErr);
                         }
                     });
+                } else if (err.code === 'NotAuthorizedException') {
+                    console.log(err);
+                    // try refreshing the session
+                    const auth = getAuth(session => {
+                        console.log('successfully refreshed session; setting it and resetting credentials');
+                        this.session = session;
+                        this.getCredentials();
+                    }, err => this.logger.err(err));
+                    auth.getSession();
                 } else {
                     this.logger.error(err);
                 }
