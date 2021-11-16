@@ -373,6 +373,39 @@ resource "aws_iam_policy" "dynamodb-read-write" {
 }
 POLICY
 }
+# policy to allow sns publishing
+resource "aws_iam_policy" "sns-publish" {
+  name = "pvs-${var.env}-sns-publish"
+  path = "/policy/sns/publish/"
+  description = "Allows SNS publishing"
+  policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [ "sns:publish" ]
+          Resource = [ "*" ]
+        }
+      ]
+    }) 
+}
+
+# policy to allow email send via SES
+resource "aws_iam_policy" "ses-send" {
+  name = "pvs-${var.env}-ses-send"
+  path = "/policy/ses/send/"
+  description = "Allows emails sends via SES"
+  policy = jsonencode({
+    Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [ "ses:SendEmail", "ses:SendRawEmail" ]
+          Resource = [ "*" ]
+        }
+      ]
+  })
+}
 
 # IAM roles
 resource "aws_iam_role" "lambda-ses-process" {
@@ -539,6 +572,41 @@ resource "aws_ssm_parameter" "lambda-dynamodb-role" {
   value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
+resource "aws_iam_role" "lambda-dynamodb-sns-ses" {
+  name = "pvs-${var.env}-lambda-dynamodb-sns-ses"
+  path = "/role/lambda/dynamodb/sns/ses/"
+  description = "Role for lambda functions needing dynamo, sns and ses access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-read-write.arn,
+    aws_iam_policy.sns-publish.arn,
+    aws_iam_policy.ses-send.arn,
+    aws_iam_policy.cloudwatch-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-dynamodb-sns-ses-role" {
+  name = "/pvs/${var.env}/role/lambda/dynamodb/sns/ses"
+  description = "ARN for lambda role with dynamodb, sns and ses access"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-dynamodb-sns-ses.arn}"
+}
+
 resource "aws_iam_role" "cognito-sns" {
   name = "pvs-${var.env}-cognito-sns"
   path = "/role/cognito/sns/"
@@ -563,19 +631,7 @@ resource "aws_iam_role" "cognito-sns" {
     ]
   })
 
-  inline_policy {
-    name = "pvs-${var.env}-sns-publish"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [ "sns:publish" ]
-          Resource = [ "*" ]
-        }
-      ]
-    })
-  }
+  managed_policy_arns = [aws_iam_policy.sns-publish.arn]
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
