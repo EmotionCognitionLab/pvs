@@ -36,6 +36,7 @@ export async function handler (event) {
 async function sendPreBaselineReminders(commType) {
     const usersToRemind = [];
     let sentCount = 0;
+    let sends = [];
 
     try {
         const incompleteUsers = await db.getBaselineIncompleteUsers('pre');
@@ -51,16 +52,17 @@ async function sendPreBaselineReminders(commType) {
         }
         
         if (commType === "email") {
-            usersToRemind.forEach(async u => {
+            sends = usersToRemind.map(async u => {
                 await sendEmail(u.email, preBaselineMsg);
                 sentCount++;
             });
         } else if (commType === "sms") {
-            usersToRemind.filter(u => u.phone_number_verified).forEach(async u => {
+            sends = usersToRemind.filter(u => u.phone_number_verified).map(async u => {
                 await sendSMS(u.phone_number, preBaselineMsg);
                 sentCount++;
             });
         }
+        await Promise.all(sends);
 
     } catch (err) {
         console.error(`Error sending ${commType} reminders for pre baseline tasks: ${err.message}`, err);
