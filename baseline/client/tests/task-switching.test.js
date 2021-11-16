@@ -1,4 +1,6 @@
 require("@adp-psych/jspsych/jspsych.js");
+import pre_exer_instr from "../task-switching/frag/pre_exercise_instruction.html";
+import pre_mix_instr from "../task-switching/frag/pre_mixed_instruction.html";
 import { TaskSwitching } from "../task-switching/task-switching.js";
 import { pressKey } from "./utils.js";
 
@@ -55,7 +57,7 @@ describe("TaskSwitching timeline", () => {
         confirmSingleBlock(10);
     });
     it("should show a screen introducing the exercise trials after the final 34 trials", () => {
-        expect(tl[11].stimulus).toBe('test-file-stub'); // blech - using imported html here prevents us from checking screen contents
+        expect(tl[11].stimulus).toBe(pre_exer_instr);
         expect(tl[11].timeline).toBeUndefined();
     });
     it("should show 16 trials of varying task types after the exercise trial intro screen", () => {
@@ -73,7 +75,7 @@ describe("TaskSwitching timeline", () => {
         expect(tl[28].timeline).toBeUndefined();
     });
     it("should show a screen introducing the main trials after the exercise trials", () => {
-        expect(tl[28].stimulus).toBe('test-file-stub'); // blech - again, using imported html here prevents us from checking screen contents
+        expect(tl[28].stimulus).toBe(pre_mix_instr);
         expect(tl[28].timeline).toBeUndefined();
     });
     it("should then show 4 blocks of 34 trials of varying task types with a countdown delay in between each block", () => {

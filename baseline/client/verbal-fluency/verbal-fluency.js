@@ -4,12 +4,17 @@ import "../js/jspsych-timed-writing.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import "css/jspsych-timed-writing.css";
+import "./style.css";
 import instruction_html from "./frag/instruction.html";
 import stimulus_template_html from "./frag/stimulus-template.html";
 
 export class VerbalFluency {
     constructor(letter) {
-        this.letter = letter;
+        if (this.constructor.possibleLetters.includes(letter)) {
+            this.letter = letter;
+        } else {
+            throw new Error("unsupported letter");
+        }
     }
     
     trial() {
