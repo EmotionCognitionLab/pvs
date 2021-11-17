@@ -46,6 +46,9 @@ jsPsych.plugins["memory-field"] = (() => {
         });
         // add button listener
         button.addEventListener("click", () => {
+            if (field.value) {
+                memory.push(field.value);
+            }
             const data = {
                 stimulus: trial.stimulus,
                 response: memory,
