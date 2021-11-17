@@ -26,14 +26,17 @@ const completeCurrentTrial = async () => {
     } else if (trial.type === "audio-keyboard-response") {
         // audio plugin is mocked to finish trial immediately
     } else if (trial.type === "call-function") {
+        await null;
     } else if (trial.type === "countdown") {
-        jest.advanceTimersByTime(trial.duration);
+        // countdown uses performance.now() so just un-disable the button
+        const button = document.getElementById("jspsych-countdown-button");
+        button.disabled = false;
+        button.click();
     } else if (trial.type === "memory-field") {
         document.getElementById("jspsych-memory-field-button").click();
     }
     // assert that progress occurred
     if (jsPsych.progress().current_trial_global <= progress.current_trial_global) {
-        console.log(trial);
         throw Error("progress didn't increase");
     }
 };
