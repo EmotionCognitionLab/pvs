@@ -65,23 +65,26 @@ PhysicalActivity.form = `
         <br/>
     </div>
 
-    <label for="weight">Body weight (lbs.): </label>
-    <input type="number" min="50" max="300" name="weight" id="weight" required="true">
-    <br/>
-    Height: <input type="number" min="2" max="8" name="height_feet" id="height_feet" required="true">
-    <label for="height_feet">feet</label>
-    <input type="number" min="0" max="11" name="height_inches" id="height_inches" required="true">
-    <label for="height_inches">inches</label>
-    <br/>
-    Age: <input type="number" min="18" max="100" name="age" id="age" required="true">
-    <label for="age">years old</label>
-    <br/>
-    <label for="gender">Gender</label>
-    <select name="gender" id="gender" required="true">
-        <option value="" selected>Please select</option>
-        <option value="0">Male</option>
-        <option value="1">Female</option>
-    </select>
+    <div>
+        <p>Please fill in the appropriate values for yourself for the following variables:</p>
+        <label for="weight">Body weight (lbs.): </label>
+        <input type="number" min="50" max="300" name="weight" id="weight" required="true">
+        <br/>
+        Height: <input type="number" min="2" max="8" name="height_feet" id="height_feet" required="true">
+        <label for="height_feet">feet</label>
+        <input type="number" min="0" max="11" name="height_inches" id="height_inches" required="true">
+        <label for="height_inches">inches</label>
+        <br/>
+        Age: <input type="number" min="18" max="100" name="age" id="age" required="true">
+        <label for="age">years old</label>
+        <br/>
+        <label for="gender">Gender</label>
+        <select name="gender" id="gender" required="true">
+            <option value="" selected>Please select</option>
+            <option value="0">Male</option>
+            <option value="1">Female</option>
+        </select>
+    </div>
 </div>
 `;
 
