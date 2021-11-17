@@ -38,6 +38,30 @@ describe("jspsych-memory-field.js plugin", () => {
         expect(data.response).toStrictEqual(responses);
     });
 
+    it("records lingering response in input field", () => {
+        const response = "my enter key is broken";
+        jsPsych.init({timeline: [{
+            type: "memory-field",
+            stimulus: "",
+            button_label: "",
+        }]});
+        document.getElementById("jspsych-memory-field-field").value = response;
+        document.getElementById("jspsych-memory-field-button").click();
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.response).toStrictEqual([response]);
+    });
+
+    it("records nothing for no response in input field", () => {
+        jsPsych.init({timeline: [{
+            type: "memory-field",
+            stimulus: "",
+            button_label: "",
+        }]});
+        document.getElementById("jspsych-memory-field-button").click();
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(data.response).toStrictEqual([]);
+    });
+
     it("finishes when button is pressed", () => {
         let finished = false;
         jsPsych.init({
