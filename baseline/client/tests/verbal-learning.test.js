@@ -11,7 +11,7 @@ const dummyPlugin = {
 jsPsych.plugins["preload"] = dummyPlugin;
 jsPsych.plugins["audio-keyboard-response"] = dummyPlugin;
 
-const completeCurrentTrial = () => {
+const completeCurrentTrial = async () => {
     const trial = jsPsych.currentTrial();
     const progress = jsPsych.progress();
     if (trial.type === "html-keyboard-response") {
@@ -25,6 +25,7 @@ const completeCurrentTrial = () => {
         jsPsych.getDisplayElement().querySelectorAll("button")[1].click();
     } else if (trial.type === "audio-keyboard-response") {
         // audio plugin is mocked to finish trial immediately
+    } else if (trial.type === "call-function") {
     } else if (trial.type === "countdown") {
         jest.advanceTimersByTime(trial.duration);
     } else if (trial.type === "memory-field") {
@@ -46,7 +47,7 @@ afterEach(() => {
 });
 
 describe("verbal-learning", () => {
-    it("results should have at least one result marked isRelevant", () => {
+    it("results should have at least one result marked isRelevant", async () => {
         // get timelines for segments 1 and 2
         const timeline1 = (new VerbalLearning(1, 1)).getTimeline();
         const timeline2 = (new VerbalLearning(1, 2, () => Date.now())).getTimeline();
@@ -70,7 +71,7 @@ describe("verbal-learning", () => {
         expect(timelineHasRelevantData(timeline1)).toBe(true);
         expect(timelineHasRelevantData(timeline2)).toBe(true);
         // test recorded data for relevant data
-        const recordRelevantDataFromTimeline = timeline => {
+        const recordRelevantDataFromTimeline = async timeline => {
             let finished = false;
             jsPsych.init({
                 timeline: timeline,
@@ -78,12 +79,11 @@ describe("verbal-learning", () => {
             });
             for (let trials = 0; !finished; ++trials) {
                 if (trials > 100) { throw new Error("too many trials"); }
-                completeCurrentTrial();
+                await completeCurrentTrial();
             }
             return jsPsych.data.get().filter({isRelevant: true}).values();
-            expect(relevant.length).toBeGreaterThan(0);
         };
-        expect(recordRelevantDataFromTimeline(timeline1).length).toBeGreaterThan(0);
-        expect(recordRelevantDataFromTimeline(timeline2).length).toBeGreaterThan(0);
+        expect((await recordRelevantDataFromTimeline(timeline1)).length).toBeGreaterThan(0);
+        expect((await recordRelevantDataFromTimeline(timeline2)).length).toBeGreaterThan(0);
     });
 });
