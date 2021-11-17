@@ -93,7 +93,7 @@ functions:
       EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
       SNS_ENDPOINT: "https://sns.${self:provider.region}.amazonaws.com"
       SES_ENDPOINT: "https://email.${self:provider.region}.amazonaws.com"
-    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb/sns/ses}
     package:
       patterns:
         - 'reminders/*.js'
