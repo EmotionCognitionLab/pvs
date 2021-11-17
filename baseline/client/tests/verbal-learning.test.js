@@ -1,6 +1,7 @@
 import { VerbalLearning } from "../verbal-learning/verbal-learning.js";
 import instruction_check_loop_html from "../verbal-learning/frag/instruction_check_loop.html";
 import { pressKey } from "./utils.js";
+import "regenerator-runtime/runtime";
 
 // mock away annoying plugins with a dummy
 const dummyPlugin = {
