@@ -52,4 +52,13 @@ describe("jspsych-memory-field.js plugin", () => {
         document.getElementById("jspsych-memory-field-button").click();
         expect(finished).toBe(true);
     });
+
+    it("disables autocomplete", () => {
+        jsPsych.init({timeline: [{
+            type: "memory-field",
+            stimulus: "",
+            button_label: "",
+        }]});
+        expect(document.getElementById("jspsych-memory-field-field").autocomplete).toBe("off");
+    });
 });
