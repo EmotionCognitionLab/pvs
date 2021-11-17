@@ -26,7 +26,8 @@ const completeCurrentTrial = async () => {
     } else if (trial.type === "audio-keyboard-response") {
         // audio plugin is mocked to finish trial immediately
     } else if (trial.type === "call-function") {
-        await null;
+        // pause to allow the async function in the call-function trial to resolve???
+        await null;  // comment this out and the function will throw for the async call-function
     } else if (trial.type === "countdown") {
         // countdown uses performance.now() so just un-disable the button
         const button = document.getElementById("jspsych-countdown-button");
@@ -37,7 +38,7 @@ const completeCurrentTrial = async () => {
     }
     // assert that progress occurred
     if (jsPsych.progress().current_trial_global <= progress.current_trial_global) {
-        throw Error("progress didn't increase");
+        throw Error("progress didn't increase for trial " + JSON.stringify(trial));
     }
 };
 
