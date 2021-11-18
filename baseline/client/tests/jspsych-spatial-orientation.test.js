@@ -2,13 +2,20 @@ import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-spatial-orientation.js";
 import "jest-canvas-mock";
 
+beforeEach(() => {
+    jest.useFakeTimers("legacy");
+});
+
+afterEach(() => {
+    jest.useRealTimers();
+});
+
 describe("jspsych-spatial-orientation.js plugin", () => {
     it("loads correctly", () => {
         expect(jsPsych.plugins["spatial-orientation"]).toBeDefined();
     });
 
     it("registers clicks correctly", () => {
-        jest.useFakeTimers("legacy");
         const dataFromClick = (x, y) => {
             jsPsych.init({timeline: [{
                 type: "spatial-orientation",
@@ -61,7 +68,6 @@ describe("jspsych-spatial-orientation.js plugin", () => {
     });
     
     it("stops when encountering endTime", () => {
-        jest.useFakeTimers("legacy");
         jsPsych.init({timeline: [{
             type: "spatial-orientation",
             scene: "scene",
@@ -87,6 +93,33 @@ describe("jspsych-spatial-orientation.js plugin", () => {
         // expect completionReason to be "timedout"
         const data = jsPsych.data.getLastTrialData().values()[0];
         expect(data.completionReason).toBe("timedout");
+    });
+
+    it("records all important parameters", () => {
+        // define trial params
+        const trial = {
+            type: "spatial-orientation",
+            scene: "scene",
+            centerText: "a",
+            topText: "b",
+            pointerText: "c",
+            targetRadians: 0,
+            mode: "test",
+            endTime: -1,
+        };
+        // spy on Date.now to check timeLimit later
+        const spy = jest.spyOn(global.Date, "now");
+        // run trial
+        jsPsych.init({timeline: [trial]});
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        // check data
+        expect(data.center).toBe(trial.centerText);
+        expect(data.facing).toBe(trial.topText);
+        expect(data.target).toBe(trial.pointerText);
+        expect(data.mode).toBe(trial.mode);
+        expect(data.targetRadians).toBe(trial.targetRadians);
+        const dateNowResult = spy.mock.results[0].value;
+        expect(data.timeLimit).toBe(trial.endTime - dateNowResult);
     });
 });
 

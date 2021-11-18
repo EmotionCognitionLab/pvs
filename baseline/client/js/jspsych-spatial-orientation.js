@@ -134,7 +134,6 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 const completionData = {
                     completionReason: "responded",
                     responseRadians: responseRadians,
-                    targetRadians: options.targetRadians,
                 };
                 // draw target pointer if practice
                 if (options.mode === "practice") {
@@ -169,11 +168,20 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         }
         // compute timeLimit (duration) from trial.endTime (instant)
         const timeLimit = trial.endTime === null ? null : trial.endTime - Date.now();
+        // build trial params data
+        const paramsData = {
+            center: trial.centerText,
+            facing: trial.topText,
+            target: trial.pointerText,
+            mode: trial.mode,
+            targetRadians: trial.targetRadians,
+            timeLimit: timeLimit,
+        };
         // skip trial if timeLimit 
         if (trial.endTime !== null && timeLimit <= 0) {
             const data = {
+                ...paramsData,
                 completionReason: "skipped",
-                timeLimit: timeLimit,
             };
             jsPsych.finishTrial(data);
         } else {
@@ -206,8 +214,8 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                     const rt = performance.now() - start;
                     const data = {
                         ...completionData,
+                        ...paramsData,
                         rt: rt,
-                        timeLimit: timeLimit,
                     };
                     // finish trial
                     setTimeout(() => { jsPsych.finishTrial(data); }, trial.lingerDuration);
