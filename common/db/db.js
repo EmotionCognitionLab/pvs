@@ -19,26 +19,38 @@ export default class Db {
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.session = options.session || null;
-        this.credentials = this.session ? this.getCredentials() : null;
-        this.docClient = this.credentials ? 
-            new DynamoDB.DocumentClient({region: this.region, credentials: this.credentials}) :
-            new DynamoDB.DocumentClient({region: this.region});
+        if (!options.session) {
+            this.docClient = new DynamoDB.DocumentClient({region: this.region});
+        }
         this.logger = new Logger(false);
+        this.isRefreshing = false; // credential/session refreshing flag
      }
 
-     // TODO make this work for use in node (i.e. w/o logged-in user)
+     /**
+      * Creates the dynamodb docclient using credentials built from the session.
+      * Also sets this.subId to the subscriber id in the session.
+      */
+     set session(sess) {
+         if (!sess) return;
+
+        const idToken = sess.getIdToken().getJwtToken();
+        this.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: this.identityPoolId,
+            Logins: {
+                [`cognito-idp.${this.region}.amazonaws.com/${this.userPoolId}`]: idToken
+            }
+        }, {region: this.region});
+        this.docClient = new DynamoDB.DocumentClient({region: this.region, credentials: this.credentials});
+        this.subId = this.constructor.getSubIdFromSession(sess);
+     }
+
      async saveResults(experiment, results, userId = null) {
-        if (!this.session && !userId) {
+        if (!this.subId && !userId) {
             throw new Error("You must provide either session or userId to save results.");
         }
 
-        let subId;
-        // if we have a session the sub id from that overrides any passed in
-        if (this.session) {
-            subId = this.constructor.getSubIdFromSession(this.session);
-        } else {
-            subId = userId;
-        }
+        // if we have a subId (which is set when session is set) that overrides any passed-in userId
+        const subscriberId = this.subId ? this.subId : userId;
         const now = new Date().toISOString();
     
         const putRequests = [];
@@ -50,7 +62,7 @@ export default class Db {
                     Item: {
                         experimentDateTime: `${experiment}|${now}|${idx}`,
                         identityId: this.credentials.identityId,
-                        userId: subId,
+                        userId: subscriberId,
                         results: r,
                         isRelevant: isRelevant
                     }
@@ -143,18 +155,6 @@ export default class Db {
     
     async getExperimentResultsForCurrentUser(expName) {
         return this.getResultsForCurrentUser(expName);
-    }
-
-    getCredentials() {
-        const idToken = this.session.getIdToken().getJwtToken();
-        const credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: this.identityPoolId,
-            Logins: {
-                [`cognito-idp.${this.region}.amazonaws.com/${this.userPoolId}`]: idToken
-            }
-        }, {region: this.region});
-        
-        return credentials;
     }
 
     async getSetsForUser(userId) {
@@ -263,30 +263,31 @@ export default class Db {
         }
     }
 
-    async dynamoOp(dynamoFn, params, fnName) {
+    async dynamoOp(params, fnName) {
         let curTry = 0;
         const maxTries = 3;
         let sleepTime = 200;
         while (curTry < maxTries) {
             try {
-                return await dynamoFn(params).promise();
+                if (this.isRefreshing) {
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // sleep to let the refresh happen
+                }
+                switch(fnName) {
+                    case 'query':
+                        return await this.docClient.query(params).promise();
+                    case 'scan':
+                        return await this.docClient.scan(params).promise();
+                    case 'update':
+                        return await this.docClient.update(params).promise();
+                    case 'batchWrite': 
+                        return await this.docClient.batchWrite(params).promise();
+                    default:
+                        throw new Error(`Unknown operation ${fnName}`);
+                }
             } catch (err) {
                 curTry++;
                 if (err.code === 'CredentialsError') {
-                    this.credentials.refresh(async refreshErr => {
-                        if (refreshErr) {
-                            this.logger.error(refreshErr);
-                        }
-                    });
-                } else if (err.code === 'NotAuthorizedException') {
-                    console.log(err);
-                    // try refreshing the session
-                    const auth = getAuth(session => {
-                        console.log('successfully refreshed session; setting it and resetting credentials');
-                        this.session = session;
-                        this.getCredentials();
-                    }, err => this.logger.err(err));
-                    auth.getSession();
+                    await this.refreshPermissions();
                 } else {
                     this.logger.error(err);
                 }
@@ -298,21 +299,51 @@ export default class Db {
     }
 
     async query(params) {
-        return this.dynamoOp(this.docClient.query.bind(this.docClient), params, 'query');
+        return this.dynamoOp(params, 'query');
     }
 
     async scan(params) {
-        return this.dynamoOp(this.docClient.scan.bind(this.docClient), params, 'scan');
+        return this.dynamoOp(params, 'scan');
     }
 
     async update(params) {
-        return this.dynamoOp(this.docClient.update.bind(this.docClient), params, 'update');
+        return this.dynamoOp(params, 'update');
     }
 
     async batchWrite(params) {
-        return this.dynamoOp(this.docClient.batchWrite.bind(this.docClient), params, 'batchWrite');
+        return this.dynamoOp(params, 'batchWrite');
     }
 
+    refreshSession() {
+        return new Promise((resolve, reject) => {
+            const auth = getAuth(session => resolve(session), err => reject(err));
+            auth.getSession();
+        });
+    }
+
+    async refreshPermissions() {
+        if (this.isRefreshing) {
+            this.logger.log('refreshPermissions called while refresh is already in progress; skipping');
+            return;
+        }
+
+        try {
+            this.isRefreshing = true;
+            try {
+                await this.credentials.getPromise();
+            } catch (refreshErr) {
+                if (refreshErr.code === 'NotAuthorizedException') {
+                    this.session = await this.refreshSession();
+                } else {
+                    this.logger.error("Unexpected error refreshing credentials", refreshErr);
+                }
+            }
+        } catch (err) {
+            this.logger.error("Error trying to refresh permissions", err);
+        } finally {
+            this.isRefreshing = false;
+        }
+    }
 }
 
 Db.getSubIdFromSession = (session) => {
