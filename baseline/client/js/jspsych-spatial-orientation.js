@@ -134,7 +134,6 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 const completionData = {
                     completionReason: "responded",
                     responseRadians: responseRadians,
-                    targetRadians: options.targetRadians,
                 };
                 // draw target pointer if practice
                 if (options.mode === "practice") {
@@ -175,6 +174,7 @@ jsPsych.plugins["spatial-orientation"] = (() => {
             facing: trial.topText,
             target: trial.pointerText,
             mode: trial.mode,
+            targetRadians: trial.targetRadians,
             timeLimit: timeLimit,
         };
         // skip trial if timeLimit 
