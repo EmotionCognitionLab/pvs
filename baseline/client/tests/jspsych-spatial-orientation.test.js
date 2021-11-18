@@ -96,6 +96,7 @@ describe("jspsych-spatial-orientation.js plugin", () => {
     });
 
     it("records all important parameters", () => {
+        // define trial params
         const trial = {
             type: "spatial-orientation",
             scene: "scene",
@@ -106,14 +107,19 @@ describe("jspsych-spatial-orientation.js plugin", () => {
             mode: "test",
             endTime: -1,
         };
+        // spy on Date.now to check timeLimit later
+        const spy = jest.spyOn(global.Date, "now");
+        // run trial
         jsPsych.init({timeline: [trial]});
         const data = jsPsych.data.getLastTrialData().values()[0];
+        // check data
         expect(data.center).toBe(trial.centerText);
         expect(data.facing).toBe(trial.topText);
         expect(data.target).toBe(trial.pointerText);
         expect(data.mode).toBe(trial.mode);
-        expect(typeof data.targetRadians).toBe("number");
-        expect(data.timeLimit).toBeLessThanOrEqual(0);
+        expect(data.targetRadians).toBe(trial.targetRadians);
+        const dateNowResult = spy.mock.results[0].value;
+        expect(data.timeLimit).toBe(trial.endTime - dateNowResult);
     });
 });
 
