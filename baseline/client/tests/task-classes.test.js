@@ -42,6 +42,8 @@ describe.each([
             switch (taskClass) {
                 case VerbalFluency:
                     return [VerbalFluency.possibleLetters[0]];
+                case VerbalLearning:
+                    return [1, 1];
                 default:
                     return [1];
             }
