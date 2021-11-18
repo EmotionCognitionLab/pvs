@@ -54,7 +54,7 @@ describe("verbal-learning", () => {
     it("results should have at least one result marked isRelevant", async () => {
         // get timelines for segments 1 and 2
         const timeline1 = (new VerbalLearning(1, 1)).getTimeline();
-        const timeline2 = (new VerbalLearning(1, 2, () => Date.now())).getTimeline();
+        const timeline2 = (new VerbalLearning(1, 2, Date.now)).getTimeline();
         // test recorded data for relevant data
         const recordRelevantDataFromTimeline = async timeline => {
             let finished = false;
