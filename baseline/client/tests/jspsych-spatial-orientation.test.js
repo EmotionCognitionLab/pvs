@@ -112,6 +112,8 @@ describe("jspsych-spatial-orientation.js plugin", () => {
         expect(data.facing).toBe(trial.topText);
         expect(data.target).toBe(trial.pointerText);
         expect(data.mode).toBe(trial.mode);
+        expect(typeof data.targetRadians).toBe("number");
+        expect(data.timeLimit).toBeLessThanOrEqual(0);
     });
 });
 
