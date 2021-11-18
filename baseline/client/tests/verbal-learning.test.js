@@ -55,25 +55,6 @@ describe("verbal-learning", () => {
         // get timelines for segments 1 and 2
         const timeline1 = (new VerbalLearning(1, 1)).getTimeline();
         const timeline2 = (new VerbalLearning(1, 2, () => Date.now())).getTimeline();
-        // test timeline nodes for relevant data
-        const timelineHasRelevantData = timeline => {
-            for (const node of timeline) {
-                if (node.timeline === undefined) {
-                    // node is a trial, hopefully
-                    if (node.data && node.data.isRelevant) {
-                        return true;
-                    }
-                } else {
-                    // node is a timeline, hopefully... recurse!
-                    if (timelineHasRelevantData(node.timeline)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
-        expect(timelineHasRelevantData(timeline1)).toBe(true);
-        expect(timelineHasRelevantData(timeline2)).toBe(true);
         // test recorded data for relevant data
         const recordRelevantDataFromTimeline = async timeline => {
             let finished = false;
