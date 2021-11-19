@@ -364,24 +364,33 @@ function canDoAdditionalSet(highestStartedSet, highestFinishedSet) {
 }
 
 function init() {
-    logger = new Logger();
-    const lStor = window.localStorage;
-    const scopes = [];
-    if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
-        // we may have a new user who needs phone # verification
-        scopes.push('openid');
-        scopes.push('aws.cognito.signin.user.admin');
+    try {
+        logger = new Logger();
+        const lStor = window.localStorage;
+        const scopes = [];
+        if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
+            // we may have a new user who needs phone # verification
+            scopes.push('openid');
+            scopes.push('aws.cognito.signin.user.admin');
+        }
+        const cognitoAuth = getAuth(doAll, handleError, null, scopes);
+        cognitoAuth.getSession();
+    } catch (err) {
+        console.error('Error in dailyTasks.init', err);
     }
-    const cognitoAuth = getAuth(doAll, handleError, null, scopes);
-    cognitoAuth.getSession();
+    
 }
 
 async function doAll(session) {
-    db = new Db({session: session});
-    // pre-fetch all results before doing browser check to avoid
-    // lag after btowser check sends them to start experiments
-    const allResults = await db.getAllResultsForCurrentUser();
-    browserCheck.run(startTasks.bind(null, allResults));
+    try {
+        db = new Db({session: session});
+        // pre-fetch all results before doing browser check to avoid
+        // lag after btowser check sends them to start experiments
+        const allResults = await db.getAllResultsForCurrentUser();
+        browserCheck.run(startTasks.bind(null, allResults));
+    } catch (err) {
+        logger.error('Error in dailyTasks.doAll', err);
+    }
 }
 
 function startTasks(allResults) {
