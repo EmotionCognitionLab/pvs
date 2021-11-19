@@ -1,5 +1,6 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-preload.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import introduction_html from "./frag/introduction.html";
@@ -32,7 +33,14 @@ export class MindEyes {
             timeline: [this.constructor.stimulus(false)],
             timeline_variables: this.getTimelineVariables(false)
         }]);
-        return result;
+
+        const images = result[result.length - 1].timeline_variables.map(tlv => tlv.picURL);
+        const preload = {
+            type: "preload",
+            images: images // jspsych will de-dupe the images
+        };
+
+        return [preload, ...result];
     }
 
     getTimelineVariables(isPractice) {

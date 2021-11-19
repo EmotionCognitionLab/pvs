@@ -5,7 +5,7 @@ import stimuli from "../mind-eyes/stimuli.json";
 
 describe("MindEyes", () => {
     beforeEach(() => {
-        jsPsych.init({ timeline: (new MindEyes(1)).getTimeline() });
+        jsPsych.init({ timeline: (new MindEyes(1)).getTimeline().slice(1) }); // use slice to drop preload step; it doesn't work well in test env
     });
 
     it("should have at least one result marked isRelevant", () => {
@@ -55,7 +55,7 @@ describe("MindEyes", () => {
 
     it("should randomize the stimuli", () => {
         const setNum = 2;
-        const tl = (new MindEyes(setNum)).getTimeline();
+        const tl = (new MindEyes(setNum)).getTimeline().slice(1); // use slice to drop the preload step
         const tlPics = tl[2].timeline_variables.map(item => item.pic);
         const stimPics = stimuli["Set"+setNum].map(s => s.pic);
         expect(tlPics.length).toBe(stimPics.length);
