@@ -6,7 +6,7 @@ import introduction_html from "./frag/introduction.html";
 import instruction_html from "./frag/instructions.html";
 import stimuli from "./stimuli.json";
 import glossary from "./glossary.json";
-import "./style.css"
+import "./style.css";
 
 export class MindEyes {
     constructor(setNum) {
@@ -55,8 +55,8 @@ MindEyes.instruction = (html) => {
         type: "html-keyboard-response",
         stimulus: html,
         choices: [" "]
-    }
-}
+    };
+};
 
 MindEyes.stimulus = function(isPractice) {
     const result = {
@@ -77,10 +77,10 @@ MindEyes.stimulus = function(isPractice) {
                 const wordSide = idx % 2 === 0 ? "mind-eyes-left" : "mind-eyes-right";
                 const tipPos = idx < 2 ? "bottom" : "top";
                 return `<span class="${wordSide} tooltip">${idx+1}. ${w} <span class="tooltiptext ${tipPos}">${definition}<hr/>${usage}</span></span>`;
-            })
+            });
             
             
-            return `<div class="mind-eyes-words">${wordsHtml[0]}${wordsHtml[1]}</div><img src="${jsPsych.timelineVariable("picURL")}"/><div class="words">${wordsHtml[2]}${wordsHtml[3]}</div>`
+            return `<div class="mind-eyes-words">${wordsHtml[0]}${wordsHtml[1]}</div><img src="${jsPsych.timelineVariable("picURL")}"/><div class="words">${wordsHtml[2]}${wordsHtml[3]}</div>`;
         },
         choices: ["1", "2", "3", "4"],
         data: {
@@ -88,14 +88,14 @@ MindEyes.stimulus = function(isPractice) {
             pic: jsPsych.timelineVariable("pic"),
             isRelevant: true,
         }
-    }
+    };
 
     if (isPractice) {
-        result.data.isPractice = true
+        result.data.isPractice = true;
     }
 
     return result;
-}
+};
 
 if (window.location.href.includes(MindEyes.taskName)) {
     jsPsych.init({
