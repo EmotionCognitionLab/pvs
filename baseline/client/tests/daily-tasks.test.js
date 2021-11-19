@@ -88,7 +88,6 @@ describe("getSetAndTasks", () => {
         const input = buildInput( [{
             taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
             setStartedTime: fourHoursAgo.toISOString(),
-            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 3.1)).toISOString(),
             setNum: 1
         }]);
         const results = dailyTasks.getSetAndTasks(input);
