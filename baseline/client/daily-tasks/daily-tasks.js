@@ -62,46 +62,126 @@ function getSetAndTasks(allResults, saveResultsCallback) {
         return { set: 1, remainingTasks: timeline };
     }
 
-    // we don't consider an experiment "completed" unless it has
-    // at least one relevant result
-    // https://github.com/EmotionCognitionLab/pvs/issues/84
-    const completedTasks = dedupeExperimentResults(
-        allResults.filter(r => r.isRelevant).map(r => r.experiment)
-    );
-    const nextSetOk = canStartNextSet(allResults);
-    if (completedTasks.length === 0) {
-        const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, nextSetOk);
+    const highestFinishedSet = findHighestSet(allResults, setFinished);
+    const highestStartedSet = findHighestSet(allResults, setStarted);
+
+    if (highestStartedSet === null && highestFinishedSet === null) {
+        const timeline = tasksForSet(set1, 1, allResults, saveResultsCallback, false);
         return { set: 1, remainingTasks: timeline };
-    }
-    for (var i = 0; i < allSets.length; i++) {
-        const set = allSets[i];
-        for (var j = 0; j < set.length; j++) {
-            const task = set[j];
-            const completed = completedTasks.shift();
-            if (!completed || (completed !== task)) {
-                // We've either reached the end of the completed tasks
-                // or they somehow did some out of order and will do them again.
-                // Either way, return our results.
-                let remainingTasks = [];
-                const setNum = i + 1; // add 1 b/c setNum starts from 1
-                if (j === 0 && !nextSetOk) {
-                    // we're at the start of a new set and the participant
-                    // doesn't meet the criteria for starting the next one yet
-                    return { set: setNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
-                }
-                // they didn't finish this set - return the remaining tasks
-                remainingTasks = set.slice(j);
-                const timeline = tasksForSet(remainingTasks, setNum, allResults, saveResultsCallback, nextSetOk);
-                if (j > 0 && nextSetOk && i < allSets.length - 1) {
-                    timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
-                    Array.prototype.push.apply(timeline, tasksForSet(allSets[i+1], setNum + 1, allResults, saveResultsCallback, false));
-                }
-                return { set: setNum, remainingTasks: timeline };
+    } else if ( highestFinishedSet && 
+        (highestStartedSet === null || 
+        highestStartedSet.results.setNum === highestFinishedSet.results.setNum ||
+        highestStartedSet.results.setNum < highestFinishedSet.results.setNum) ) {
+        // treat them as between sets
+       if (canDoAdditionalSet(highestStartedSet, highestFinishedSet)) {
+           const nextSet = highestFinishedSet.results.setNum + 1;
+           const timeline = tasksForSet(allSets[nextSet - 1], nextSet, allResults, saveResultsCallback, false);
+           return { set: nextSet, remainingTasks: timeline };
+       } else {
+           // done for today (or for good)
+           return allDoneTimeline(highestFinishedSet.results.setNum);
+       }
+    } else {
+        // treat them as in the middle of a set
+        const tasksToDo = findRemainingTasksForSet(highestStartedSet, allResults);
+        if (tasksToDo.length === 0) {
+            // somehow the set finished record didn't get written
+            // write it and figure out if they can do another set
+            console.warn(`User has done all tasks for set ${highestStartedSet.results.setNum}, but no set-finished record was saved. Creating one now.`);
+            const newSetFinishedRec = {
+                experiment: setFinished,
+                dateTime: new Date().toISOString(),
+                results: [{"setNum": highestStartedSet.results.setNum }]
+            };
+            saveResultsCallback(newSetFinishedRec.experiment, newSetFinishedRec.results);
+            
+            if (canDoAdditionalSet(highestStartedSet, newSetFinishedRec)) {
+                const nextSet = highestFinishedSet.results.setNum + 1;
+                const timeline = tasksForSet(allSets[nextSet - 1], nextSet, allResults, saveResultsCallback, false);
+                return { set: nextSet, remainingTasks: timeline };
+            } else {
+                // done for today (or for good)
+                return allDoneTimeline(highestFinishedSet.results.setNum);
             }
         }
+
+        const nextSetOk = canDoAdditionalSet(highestStartedSet, highestFinishedSet);
+        const timeline = tasksForSet(tasksToDo, highestStartedSet.results.setNum, allResults, saveResultsCallback, nextSetOk);
+        if (nextSetOk) {
+            const nextSetNum = highestStartedSet.results.setNum + 1;
+            timeline.push({timeline: startNewSetQueryTask, taskName: startNewSetQuery}); // give them the choice to start the next set
+            Array.prototype.push.apply(timeline, tasksForSet(allSets[nextSetNum - 1], nextSetNum, allResults, saveResultsCallback, false));
+        }
+        return { set: highestStartedSet.results.setNum, remainingTasks: timeline };
     }
-    // the participant has completed all tasks in all sets - let them know
-    return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] };
+}
+
+function allDoneTimeline(highestFinishedSetNum) {
+    if (highestFinishedSetNum === allSets.length) {
+        return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] };
+    } else {
+        return { set: highestFinishedSetNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
+    }
+}
+
+/**
+ * Returns the result record for the highest set number the user has started or finished.
+ * Returns null if the user has not started/finished any sets.
+ * @param {Object[]} allResults List of all experimental results for the user, sorted from least to most recent
+ * @param {string} startedOrFinished either 'set-started' or 'set-finished'
+ */
+function findHighestSet(allResults, startedOrFinished) {
+    if (startedOrFinished !== setStarted && startedOrFinished !== setFinished) {
+        throw new Error(`Expected ${setStarted} or ${setFinished} for startedOrFinished param, but got ${startedOrFinished}.`);
+    }
+    const sets = allResults.filter(r => r.experiment === startedOrFinished);
+    let lastSet;
+    let lastSetNum = 0;
+    sets.forEach(s => {
+        if (s.results.setNum > lastSetNum) {
+            lastSet = s;
+            lastSetNum  = s.results.setNum;
+        }
+    });
+    if (lastSetNum === 0) return null;
+    return lastSet;
+}
+
+/**
+ * Returns a list of the names of the tasks from the set that the user has not already done.
+ * The user is considered to have done the task if they have at least one
+ * relevant result from it. Returns an empty list if the user has done all of the tasks
+ * from that set.
+ * @param {Object} set The set-started record 
+ * @param {Object[]} allResults 
+ */
+function findRemainingTasksForSet(set, allResults) {
+    let setStartedIdx = null;
+    for (const [idx, r] of allResults.entries()) {
+        if (r.experiment === set.experiment && 
+            r.results.setNum === set.results.setNum &&
+            r.dateTime === set.dateTime
+            ) {
+                setStartedIdx = idx;
+            }
+    }
+
+    if (setStartedIdx === null) {
+        throw new Error(`Could not find set ${JSON.stringify(set)} in allResults while trying to identify remaining tasks.`);
+    }
+
+    const doneResults = allResults.slice(setStartedIdx).filter(r => r.isRelevant).map(r => r.experiment);
+    const doneTasks = dedupeExperimentResults(doneResults);
+    if (doneTasks.length === 0) return allSets[set.results.setNum - 1];
+
+    const setTasks = allSets[set.results.setNum - 1];
+    for (let i = 0; i < setTasks.length; i++) {
+        const doneTask = doneTasks.shift();
+        if (!doneTask || doneTask !== setTasks[i]) {
+            return setTasks.slice(i);
+        }
+    }
+    return [];
 }
 
 /**
@@ -242,7 +322,9 @@ async function verbalLearningEndTime() {
 
 
 /**
- * Users may only start the next set if:
+ * Users may only do an additional set (that is, do 
+ * another set if they already finished one today or 
+ * are in the middle of one they started today) if:
  * (a) They are in between sets and
  *    (1) They completed the last set >= 1 hour ago or
  *    (2) The last set took them >3 hours to complete
@@ -252,25 +334,32 @@ async function verbalLearningEndTime() {
  * @param {Object[]} allResults All results for the user, as returned by ../common/db/db.js:getAllResultsForCurrentUser()
  * @returns true if the user can start the next set, false otherwise
  */
-function canStartNextSet(allResults) {
-    if (allResults.length === 0) return false;
+function canDoAdditionalSet(highestStartedSet, highestFinishedSet) {
+    if (highestStartedSet === null && highestFinishedSet === null) return false;
 
-    const setStarts = allResults.filter(r => r.experiment === setStarted);
-    const setFinishes = allResults.filter(r => r.experiment === setFinished);
-    const setNumsStarted = new Set(setStarts.map(ss => ss.results.setNum));
-    const setNumsFinished = new Set(setFinishes.map(sf => sf.results.setNum));
-    let inBetweenSets = true;
-    for (let setNum of setNumsStarted) if (!setNumsFinished.has(setNum)) inBetweenSets = false;
-    inBetweenSets = inBetweenSets && (setNumsStarted.size == setNumsFinished.size);
+    if (highestFinishedSet && highestFinishedSet.results.setNum === allSets.length) return false;
 
-    if (inBetweenSets) {
-        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
-        const lastSetFinishedAt = Date.parse(setFinishes[setFinishes.length - 1].dateTime);
-        return Date.now() - lastSetFinishedAt >= 1 * 60 * 60 * 1000 ||
-            (lastSetFinishedAt - lastSetStartedAt > 3 * 60 * 60 * 1000);
+    if (highestFinishedSet && ( highestStartedSet === null ||
+        highestStartedSet.results.setNum < highestFinishedSet.results.setNum || 
+        highestStartedSet.results.setNum === highestFinishedSet.results.setNum )) {
+        // they're in between sets
+        // (the started is null and the started < finished
+        // conditions shouldn't happen, but if they do
+        // we treat them as between sets)
+        const lastFinishedTime = new Date(highestFinishedSet.dateTime);
+        const oneHourAgo = new Date(Date.now() - (1000 * 60 * 60));
+        if (highestStartedSet === null) return oneHourAgo > lastFinishedTime;
+
+        const lastStartedTime = new Date(highestStartedSet.dateTime);
+        const lastSetDuration =  lastFinishedTime - lastStartedTime; 
+        return oneHourAgo > lastFinishedTime || lastSetDuration > (3 * 60 * 60 * 1000);
     } else {
-        const lastSetStartedAt = Date.parse(setStarts[setStarts.length - 1].dateTime);
-        return Date.now() - lastSetStartedAt > 3 * 60 * 60 * 1000;
+        // they're in the middle of a set
+        // (or we failed to save the set finished record for their latest set,
+        // but in that case we treat them as being in the middle of a set)
+        const threeHoursAgo = new Date(Date.now() - (3 * 60 * 60 * 1000));
+        const lastStartedTime = new Date(highestStartedSet.dateTime);
+        return threeHoursAgo > lastStartedTime;
     }
 }
 
