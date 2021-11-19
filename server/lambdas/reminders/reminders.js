@@ -3,6 +3,7 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
+import { format } from 'date-fns-tz';
 import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
@@ -86,13 +87,13 @@ async function hasCompletedBaseline(sets) {
 }
 
 function hasDoneSetToday(sets) {
-    const now = new Date();
-    const todayYMD = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
+    const todayYMD = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
     let setStartedToday = false;
     let setFinishedToday = false;
     sets.forEach(set => {
-        if (set.experiment === 'set-started' && set.dateTime.startsWith(todayYMD)) setStartedToday = true;
-        if (set.experiment === 'set-finished' && set.dateTime.startsWith(todayYMD)) setFinishedToday = true;
+        const setDate = format(new Date(set.dateTime), 'yyyy-MM-dd', { timeZone: 'America/Los_Angeles'});
+        if (set.experiment === 'set-started' && setDate === todayYMD) setStartedToday = true;
+        if (set.experiment === 'set-finished' && setDate === todayYMD) setFinishedToday = true;
     });
 
     return setStartedToday && setFinishedToday;

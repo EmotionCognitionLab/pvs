@@ -1,5 +1,6 @@
 'use strict';
 
+import { format } from 'date-fns-tz';
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
@@ -7,7 +8,7 @@ const user =  { userId: '123abc', email: 'nobody@example.com' };
 const mockGetBaselineIncompleteUsers = jest.fn(() => [ user ]);
 const mockGetResultsForCurrentUser = jest.fn(() => []);
 const identityId = '456def';
-const mockGetSetsForUser = jest.fn(() => [ { identityId: identityId }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} ]);
+const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
 
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
@@ -42,6 +43,21 @@ jest.mock('db/db', () => {
     });
 });
 
+function buildSets(setStartedCount, setFinishedCount, startDate = new Date(Date.now() - (1000 * 60 * 60 * 24 * 5))) {
+    const sets = [];
+    if (setFinishedCount > setStartedCount) throw new Error("setFinishedCount must be <= setStartedCount");
+    let date = startDate;
+    for (let i=0; i < setStartedCount; i++) {
+        sets.push({identityId: identityId, experiment: "set-started", dateTime: date.toISOString(), results: {setNum: i + 1}});
+        date = new Date(date.getTime() + (Math.random() * (1000 * 60 * 60))); // add a random amount to the date (<=1 hr) to keep things moving forward
+        if (i < setFinishedCount) {
+            sets.push({identityId: identityId, experiment: "set-finished", dateTime: date.toISOString(), results: {setNum: i + 1}});
+            date = new Date(date.getTime() + (Math.random()  * (1000 * 60 * 6)));
+        }
+    }
+    return sets;
+}
+
 describe("reminders", () => {
     afterEach(() => {
         allMocks.forEach(mock => mock.mockClear());
@@ -56,10 +72,11 @@ describe("reminders", () => {
     });
 
     describe("for people who have already completed the baseline", () => {
-        const setsDone = [1,2,3,4,5,6].map(setNum => ({results: { setNum: setNum }}));
+        const setsDone = buildSets(6,6);
 
         beforeEach(() => {
-            mockGetResultsForCurrentUser.mockImplementationOnce(() => setsDone);
+            mockGetResultsForCurrentUser.mockImplementationOnce(() => setsDone.filter(s => s.experiment === 'set-finished'));
+            mockGetSetsForUser.mockImplementationOnce(() => setsDone);
         });
 
         it("should not be sent", async () => {
@@ -117,7 +134,6 @@ describe("reminders", () => {
         await handler({commType: 'sms'});
         expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
         expect(mockGetSetsForUser).toHaveBeenCalledWith(user.userId);
-        expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
         expect(mockSnsPublish).not.toHaveBeenCalled();
         expect(mockSendEmail).not.toHaveBeenCalled();
     });
@@ -165,9 +181,8 @@ describe("hasCompletedBaseline", () => {
 });
 
 describe('hasDoneSetToday', () => {
-    const now = new Date();
-    const today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
-    const earlier = '1980-11-02';
+    const today = new Date().toISOString();
+    const earlier = new Date(Date.now() - (1000 * 60 * 60 * 24 * 3)).toISOString();
 
     it('should return false if there is no set-started record', () => {
         const sets = [ { experiment: 'set-finished', dateTime: today }, { experiment: 'set-finished', dateTime: today } ];
@@ -195,6 +210,23 @@ describe('hasDoneSetToday', () => {
 
     it('should return true if there is a set-started and a set-finished record for today', () => {
         const sets = [ { experiment: 'set-started', dateTime: today }, { experiment: 'set-finished', dateTime: today } ];
+        const res = hasDoneSetToday(sets);
+        expect(res).toBeTruthy();
+    });
+
+    it("should return false if the YYYY-MM-DD matches today but the fact that it's UTC means that it was really yesterday", () => {
+        const yyyyMMdd = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
+        const localYesterday = new Date(`${yyyyMMdd}T02:03:45.678Z`); // UTC YMD of today, but time of 2:03AM means that it was really yesterday in LA
+        const sets = [ { experiment: 'set-started', dateTime: localYesterday }, { experiment: 'set-finished', dateTime: localYesterday }];
+        const res = hasDoneSetToday(sets);
+        expect(res).toBeFalsy();
+    });
+
+    it("should return true if the YYYY-MM-DD matches tomorrow but the fact that it's UTC means that it was really today", () => {
+        const tomorrow = new Date(Date.now() + (1000 * 60 * 60 * 24));
+        const tomorrowYMD = format(tomorrow, 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
+        const localToday = new Date(`${tomorrowYMD}T02:34:56.789Z`); // UTC YMD of tomorrow, but time of 2:34AM means that it was really today in LA
+        const sets = [ { experiment: 'set-started', dateTime: localToday }, { experiment: 'set-finished', dateTime: localToday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeTruthy();
     });
