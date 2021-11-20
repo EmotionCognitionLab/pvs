@@ -82,12 +82,15 @@ jsPsych.plugins["percent-sum"] = (() => {
             event.preventDefault();
             // guarantee that response is valid
             if (percent_sum() === 100) {
+                // build response object using input names as keys and input values as values
+                const response = {};
+                inputs.forEach(inp => {
+                    response[inp.name] = parseInt(inp.value, 10);
+                });
+                // build data and finish trial
                 const data = {
                     preamble: trial.preamble,
-                    response: Array.from(inputs).map(inp => ({
-                        field: inp.name,
-                        value: parseInt(inp.value, 10),
-                    })),
+                    response: response,
                 };
                 jsPsych.finishTrial(data);
             } else {

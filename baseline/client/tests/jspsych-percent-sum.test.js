@@ -65,6 +65,35 @@ describe("jspsych-percent-sum.js plugin", () => {
         expect(button.hasAttribute("disabled")).toBe(true);  // sum should be 120
     });
 
+    it("records response data", () => {
+        // define fields and their corresponding response values
+        const fieldValuePairs = [
+            {field: "a", value: 10},
+            {field: "b", value: 20},
+            {field: "c", value: 30},
+            {field: "d", value: 40},
+        ];
+        // run trial
+        jsPsych.init({timeline: [{
+            type: "percent-sum",
+            preamble: "",
+            fields: fieldValuePairs.map(pair => pair.field),
+        }]});
+        const inputs = jsPsych.getDisplayElement().querySelectorAll("input[type=number]");
+        inputs.forEach((inp, index) => {
+            inp.value = fieldValuePairs[index].value;
+            inp.dispatchEvent(new Event("input"));
+        });
+        jsPsych.getDisplayElement().querySelector("input[type=submit]").click();
+        // check data
+        const data = jsPsych.data.getLastTrialData().values()[0];
+        expect(
+            Object.entries(data.response)
+        ).toStrictEqual(
+            fieldValuePairs.map(pair => [pair.field, pair.value])
+        );
+    });
+
     it("throws on empty fields", () => {
         const trial = {
             type: "percent-sum",
