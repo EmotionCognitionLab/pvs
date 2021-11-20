@@ -58,7 +58,7 @@ function getSetAndTasks(allResults, saveResultsCallback) {
     if (tasks !== null) {
         const requestedTasks = tasks.split(",");
         const setNum = parseInt(queryParams.get("setNum")) || 1;
-        const timeline = tasksForSet(requestedTasks, setNum, [], saveResultsCallback, false);
+        const timeline = tasksForSet(requestedTasks, setNum, allResults, saveResultsCallback, false);
         return { set: 1, remainingTasks: timeline };
     }
 
