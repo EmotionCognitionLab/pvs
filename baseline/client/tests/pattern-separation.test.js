@@ -10,7 +10,7 @@ describe("PatternSeparation learning phase", () => {
     const setNum = 1;
 
     beforeEach(() => {
-        tl = (new PatternSeparation(1)).getTimeline(setNum, false).slice(1); // drop preload; doesn't play well with jest
+        tl = (new PatternSeparation(setNum, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         jsPsych.init({timeline: tl});
         jest.useFakeTimers("legacy");
     });
@@ -65,7 +65,7 @@ describe("PatternSeparation learning phase", () => {
             const prompt = document.getElementById("prompt").innerHTML;
             expect(prompt).toMatch(/shoe box/);
             pressKey("y");
-            jest.advanceTimersByTime(2500);
+            jest.advanceTimersByTime(3000);
         }
     });
 
@@ -74,13 +74,13 @@ describe("PatternSeparation learning phase", () => {
         pressKey(" ");
         for (let i=0; i<tl[2].timeline_variables.length; i++) {
             pressKey("y");
-            jest.advanceTimersByTime(2500);
+            jest.advanceTimersByTime(3000);
         }
         for (let i=0; i<tl[3].timeline_variables.length; i++) {
             const prompt = document.getElementById("prompt").innerHTML;
             expect(prompt).toMatch(/right hand/);
             pressKey("y");
-            jest.advanceTimersByTime(2500);
+            jest.advanceTimersByTime(3000);
         }
     });
 
@@ -98,20 +98,38 @@ describe("PatternSeparation learning phase", () => {
         }
     });
 
-    it("should keep learning stimuli on the screen for 2500ms if the user responds to the prompt", () => {
+    it("should keep learning stimuli on the screen for 3000ms if the user responds to the prompt", () => {
         pressKey(" ");
         pressKey(" ");
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
         pressKey("y");
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
-        jest.advanceTimersByTime(2499);
+        jest.advanceTimersByTime(2999);
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
         jest.advanceTimersByTime(2);
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).not.toBe(img);
     });
 
-    it("should keep learning stimuli on the screen for 2500ms if the user doesn't respond to the prompt", () => {
+    it("should keep learning stimuli on the screen for 3000ms if the user doesn't respond to the prompt", () => {
         pressKey(" ");
+        pressKey(" ");
+        const img = document.getElementsByTagName("img")[0].getAttribute("src");
+        jest.advanceTimersByTime(2999);
+        expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
+        jest.advanceTimersByTime(2);
+        expect(document.getElementsByTagName("img").length).toBe(0);
+    });
+
+    it("should keep learning stimuli on the screen for 2500ms during the actual (non-practice) test", () => {
+        pressKey(" ");
+        pressKey(" ");
+        for (let i=0; i<stimuli["Practice"].length * 2; i++) {
+            jest.advanceTimersByTime(3000);
+        }
+        pressKey(" ");
+        for (let i=0; i<stimuli["Practice"].length * 2; i++) {
+           pressKey("1");
+        }
         pressKey(" ");
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
         jest.advanceTimersByTime(2499);
@@ -120,10 +138,10 @@ describe("PatternSeparation learning phase", () => {
         expect(document.getElementsByTagName("img").length).toBe(0);
     });
 
-    it("should tell the user to answer faster if they don't answer within 2500ms", () => {
+    it("should tell the user to answer faster if they don't answer within 3000ms", () => {
         pressKey(" ");
         pressKey(" ");
-        jest.advanceTimersByTime(2500);
+        jest.advanceTimersByTime(3000);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Answer faster/);
     });
 
@@ -183,5 +201,5 @@ function doFirstTrial() {
 
 function doLearningTrial() {
     pressKey("y");
-    jest.advanceTimersByTime(2500); // get to end of trial
+    jest.advanceTimersByTime(3000); // get to end of trial
 }

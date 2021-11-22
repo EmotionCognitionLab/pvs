@@ -127,6 +127,7 @@ PatternSeparation.learningStimulus = (isShoebox, isPractice=false) => {
     };
     if (isPractice) {
         result.data.isPractice = true;
+        result.trial_duration = 3000;
     }
     return result; 
 };
