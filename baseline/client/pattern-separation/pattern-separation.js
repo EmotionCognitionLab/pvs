@@ -9,7 +9,7 @@ import practice_instructions_html from "./frag/practice_instructions.html";
 import recall_instructions_html from "./frag/recall_instructions.html";
 import actual_instructions_html from "./frag/actual_instructions.html";
 import stimuli from "./stimuli.json";
-import "./style.css"
+import "./style.css";
 
 export class PatternSeparation {
     constructor(setNum, isRecall) {
@@ -54,11 +54,11 @@ export class PatternSeparation {
                 timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
                 timeline_variables: actualLearningVariables
             }
-        ]
+        ];
     }
 
     getRecallTimeline() {
-        const actualRecallVariables = this.getTimelineVariables(false)
+        const actualRecallVariables = this.getTimelineVariables(false);
         const images = actualRecallVariables.map(rv => rv.picUrl);
         
         return [
@@ -68,7 +68,7 @@ export class PatternSeparation {
                 timeline: [this.constructor.recallStimulus(false)],
                 timeline_variables: actualRecallVariables
             },
-        ]
+        ];
     }
 
     getTimeline() {
@@ -101,8 +101,8 @@ PatternSeparation.instruction = (html) => {
         type: "html-keyboard-response",
         stimulus: html,
         choices: [" "]
-    }
-}
+    };
+};
 
 // when isShoebox is true, use the prompt "Will the object fit inside a lady's medium shoe box?"
 // when isShoebox is false, use the prompt "Can you carry the object across the room using only your right hand?"
@@ -124,12 +124,12 @@ PatternSeparation.learningStimulus = (isShoebox, isPractice=false) => {
         render_on_canvas: false,
         stimulus_width: 800,
         maintain_aspect_ratio: true
-    }
+    };
     if (isPractice) {
         result.data.isPractice = true;
     }
     return result; 
-}
+};
 
 PatternSeparation.recallStimulus = (isPractice=false) => {
     const result = {
@@ -146,32 +146,32 @@ PatternSeparation.recallStimulus = (isPractice=false) => {
         render_on_canvas: false,
         stimulus_width: 800,
         maintain_aspect_ratio: true
-    }
+    };
     if (isPractice) {
         result.data.isPractice = true;
     }
     return result;
-}
+};
 
 PatternSeparation.answerFasterStimulus = {
     type: "html-keyboard-response",
     stimulus: "Answer faster next time",
     choices: jsPsych.NO_KEYS,
     trial_duration: 800,
-}
+};
 
 PatternSeparation.answerFasterNode = {
     timeline: [PatternSeparation.answerFasterStimulus],
     conditional_function: function() {
         return jsPsych.data.get().last(1).values()[0].response === null;
     }
-}
+};
 
 PatternSeparation.preload = (images) => {
     return {
         type: "preload",
         images: images
-    }
+    };
 };
 
 if (window.location.href.includes(PatternSeparation.taskName)) {
