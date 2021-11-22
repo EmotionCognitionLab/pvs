@@ -28,33 +28,49 @@ export class PatternSeparation {
         const practiceRecallVariables = this.getTimelineVariables(true);
         const images = practiceLearningVariables.concat(actualLearningVariables).concat(practiceRecallVariables).map(lv => lv.picUrl);
 
-        return [
-            this.constructor.preload(images),
-            this.constructor.instruction(introduction_html),
-            this.constructor.instruction(practice_instructions_html),
-            { 
-                timeline: [this.constructor.learningStimulus(true, true), this.constructor.answerFasterNode],
-                timeline_variables: practiceLearningVariables
-            },
-            {
-                timeline: [this.constructor.learningStimulus(false, true), this.constructor.answerFasterNode],
-                timeline_variables: practiceLearningVariables
-            },
-            this.constructor.instruction(recall_instructions_html),
-            {
-                timeline: [this.constructor.recallStimulus(true)],
-                timeline_variables: practiceRecallVariables
-            },
-            this.constructor.instruction(actual_instructions_html),
-            {
-                timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
-                timeline_variables: actualLearningVariables
-            },
-            {
-                timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
-                timeline_variables: actualLearningVariables
-            }
-        ];
+        if (this.setNum === 1 || this.setNum === 4) {
+            return [
+                this.constructor.preload(images),
+                this.constructor.instruction(introduction_html),
+                this.constructor.instruction(practice_instructions_html),
+                { 
+                    timeline: [this.constructor.learningStimulus(true, true), this.constructor.answerFasterNode],
+                    timeline_variables: practiceLearningVariables
+                },
+                {
+                    timeline: [this.constructor.learningStimulus(false, true), this.constructor.answerFasterNode],
+                    timeline_variables: practiceLearningVariables
+                },
+                this.constructor.instruction(recall_instructions_html),
+                {
+                    timeline: [this.constructor.recallStimulus(true)],
+                    timeline_variables: practiceRecallVariables
+                },
+                this.constructor.instruction(actual_instructions_html),
+                {
+                    timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
+                },
+                {
+                    timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
+                }
+            ];
+        } else {
+            return [
+                this.constructor.preload(images),
+                this.constructor.instruction(introduction_html),
+                this.constructor.instruction(actual_instructions_html),
+                {
+                    timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
+                },
+                {
+                    timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
+                }
+            ];
+        }            
     }
 
     getRecallTimeline() {

@@ -157,10 +157,10 @@ describe("PatternSeparation learning phase", () => {
 
     it("should show different stimuli for different sets", () => {
         const tl2 = (new PatternSeparation(3)).getTimeline().slice(1); // drop preload; doesn't play well with jest
-        for (let i=7; i<tl.length; i++) { // entries 0-6 are instructions and practice
+        for (let i=7; i<tl.length; i++) { // entries 0-6 are instructions and practice in set 1
             const node = tl[i];
             expect(node.timeline_variables);
-            expect(node.timeline_variables).not.toStrictEqual(tl2[i].timeline_variables);
+            expect(node.timeline_variables).not.toStrictEqual(tl2[i - 7].timeline_variables); // -7 because set 3 should not have proactice
         }
     });
 });
