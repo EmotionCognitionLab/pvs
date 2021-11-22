@@ -10,11 +10,11 @@
         },
         {
             "type": "Target",
-            "pic": "violin1.jpg"
+            "pic": "pamphlet1.jpg"
         },
         {
             "type": "Target",
-            "pic": "waffle_maker1.jpg"
+            "pic": "violin1.jpg"
         },
         {
             "type": "Lure",
@@ -22,15 +22,7 @@
         },
         {
             "type": "Lure",
-            "pic": "Wagon_2.jpg"
-        },
-        {
-            "type": "Lure",
             "pic": "violin2.jpg"
-        },
-        {
-            "type": "Lure",
-            "pic": "waffle_maker2.jpg"
         },
         {
             "type": "New",

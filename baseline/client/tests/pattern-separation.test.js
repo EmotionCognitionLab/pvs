@@ -84,13 +84,13 @@ describe("PatternSeparation learning phase", () => {
         }
     });
 
-    it("should only show images marked 'target' during the learning phase", () => {
+    it("should only show images marked 'target'", () => {
         const practiceStims = stimuli["Practice"];
         const allStims = practiceStims.concat(stimuli["Set"+setNum]);
         const nonTargetPics = allStims.filter(s => s.type !== "Target").map(s => s.pic);
-        const nodesWithTimelineVars = tl.filter(node => node.timeline_variables);
-        expect(nodesWithTimelineVars.length).toBeGreaterThan(0);
-        for (let node of nodesWithTimelineVars) {
+        const learningNodes = tl.filter(node => node.timeline && node.timeline[0].data.isLearning);
+        expect(learningNodes.length).toBeGreaterThan(0);
+        for (let node of learningNodes) {
             for (let tlVar of node.timeline_variables) {
                 expect(tlVar.type).toBe("Target");
                 expect(nonTargetPics).not.toContain(tlVar.pic);
@@ -189,6 +189,13 @@ describe("PatternSeparation recall phase", () => {
         pressKey(" ");
         pressKey("2");
         expect(lastData("isRecall")).toBe(true);
+    });
+
+    it("should show all of the practice recall stimuli during practice", () => {
+        const practiceTl = (new PatternSeparation(1, false)).getTimeline().slice(1); // drop preload
+        const practiceStim = stimuli["Practice"];
+        const practiceRecallIdx = 2 + 1 + 1 + 1; // 2 instructions, shoebox, right hand, 1 instruction
+        expect(practiceTl[practiceRecallIdx].timeline_variables.length).toBe(practiceStim.length);
     });
 
 });

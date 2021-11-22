@@ -25,7 +25,7 @@ export class PatternSeparation {
     getLearningTimeline() {
         const practiceLearningVariables = this.getTimelineVariables(true);
         const actualLearningVariables = this.getTimelineVariables(false);
-        const practiceRecallVariables = this.getTimelineVariables(true);
+        const practiceRecallVariables = this.getTimelineVariables(true, true);
         const images = practiceLearningVariables.concat(actualLearningVariables).concat(practiceRecallVariables).map(lv => lv.picUrl);
 
         if (this.setNum === 1 || this.setNum === 4) {
@@ -92,7 +92,7 @@ export class PatternSeparation {
         return this.getLearningTimeline();
     }
 
-    getTimelineVariables(isPractice) {
+    getTimelineVariables(isPractice, isRecall=false) {
         let stims;
         if (isPractice) {
             stims = stimuli["Practice"];
@@ -103,7 +103,7 @@ export class PatternSeparation {
         
         stims.forEach(s => s.picUrl = this.constructor.imageBucket + s.pic);
         stims = jsPsych.randomization.shuffle(stims);
-        if (this.isRecall) return stims;
+        if (isRecall || this.isRecall) return stims; // local param overrides instance param
         return stims.filter(s => s["type"] === "Target");
     }
 }
