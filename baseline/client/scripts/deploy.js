@@ -1,5 +1,6 @@
 const awsSettings = require("../../../common/aws-settings.json");
 const S3 = require("aws-sdk/clients/S3");
+const CF = require("aws-sdk/clients/CloudFront");
 const { readdirSync, readFileSync } =  require("fs");
 const path = require("path");
 const mime = require("mime-types");
@@ -42,7 +43,29 @@ function uploadFile(fpath, key) {
     });
 }
 
+function invalidateCloudFrontDistribution(distId) {
+    // because all of the bundles are fingerprinted we only invalidate index.html
+    const params = {
+        DistributionId: distId,
+        InvalidationBatch: {
+            CallerReference: Date.now().toString(),
+            Paths: {
+                Quantity: 2,
+                Items: [
+                    '/daily-tasks/*',
+                    '/login/*'
+                ]
+            }
+        }
+    };
+    const cloudFront = new CF();
+    return cloudFront.createInvalidation(params).promise();
+}
+
 readDir(distDir);
+invalidateCloudFrontDistribution(awsSettings.CloudFrontDistributionId)
+.catch(err => console.error('Error invalidating cloudfront distribution', err));
+
 
 
 
