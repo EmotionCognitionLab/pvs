@@ -5,7 +5,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import introduction_html from "./frag/introduction.html";
 import different_html from "./frag/different.html";
 import permanent_change_html from "./frag/permanent-change.html";
-import "./style.css"
+import "./style.css";
 const uaParser = require("ua-parser-js");
 
 const uaKey = 'ua';
@@ -46,7 +46,7 @@ const badDevice = {
     stimulus: "These experiments cannot be done on tablets, mobile devices, game consoles, etc. - only on computers that do not have a virtual keyboard. " +
         `When you are at regular computer, please enter this URL in your browser there to continue: ${window.location.href}`,
     choices: []
-}
+};
 
 const introduction = {
     type: "html-button-response",
@@ -60,14 +60,14 @@ function completion(onStartFn) {
         stimulus: "Great - we're all set! Click the continue button when you're ready to start the experiments.",
         on_start: onStartFn,
         choices: ["Continue"]
-    }
+    };
 }
 
 const switchSetup = {
     type: "html-button-response",
     stimulus: `OK. Once you're using the computer, browser, keyboard and monitor you plan to use for all of the experiments, please enter this URL in your browser there to continue: ${window.location.href}`,
     choices: []
-}
+};
 
 const switchNode = {
     timeline: [switchSetup],
@@ -75,7 +75,7 @@ const switchNode = {
         const data = jsPsych.data.get().last(1).values()[0];
         return data.response === 0; // introduction.choices[0]
     }
-}
+};
 
 // Welcomes user to experiment, 
 // emphasizes need to use consistent hw & sw,
@@ -92,7 +92,7 @@ const different = {
     type: "html-button-response",
     stimulus: different_html,
     choices: ["No", "Yes"]
-}
+};
 
 const switchNeededNode = {
     timeline: [switchSetup],
@@ -100,7 +100,7 @@ const switchNeededNode = {
         const data = jsPsych.data.get().last(1).values()[0];
         return data.response === 1; // different.choices[1]
     }
-}
+};
 
 const permanentChange = {
     type: "html-button-response",
@@ -112,7 +112,7 @@ const permanentChange = {
             saveComputerProfile();
         }
     }
-}
+};
 
 // If computer profile has changed, this
 // asks if the change is permanent and, if so,
@@ -172,5 +172,5 @@ const browserCheck = {
     screenSizeKey: screenSizeKey,
     platformKey: platformKey,
     appName: appName
-}
-export {browserCheck}
+};
+export {browserCheck};
