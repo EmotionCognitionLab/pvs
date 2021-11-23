@@ -10,5 +10,4 @@ sensitive.tfvars
 
 vetur.config.js
 
-common/aws-settings.mjs
-common/aws-settings.json
+common/aws-settings*json
