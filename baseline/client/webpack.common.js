@@ -45,7 +45,7 @@ module.exports = {
                 type: 'asset/resource',
             },
             {
-                exclude: [path.join(__dirname, "deploy.js")]
+                exclude: [path.join(__dirname, "scripts")]
             }
         ],
     },

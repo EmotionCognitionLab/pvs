@@ -1,9 +1,11 @@
 {
   "scripts": {
     "test": "jest",
+    "test-all": "cd ../../common/logger && npm run test && cd ../../baseline/client && npm run test",
     "start": "npx webpack serve --config webpack.dev.js",
-    "build": "npx webpack --config webpack.prod.js",
-    "deploy": "cd ../../common/logger && npm run test && cd ../../baseline/client && npm run test && rm -rf dist/* && npm run build && node deploy.js"
+    "build": "rm -rf dist/* && npx webpack --config webpack.prod.js",
+    "predeploy": "node scripts/pre-deploy.js $npm_config_env && npm run test-all && npm run build",
+    "deploy": "node scripts/version-deploy.js && node scripts/deploy.js"
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
@@ -46,6 +48,7 @@
     "jest-canvas-mock": "^2.3.1",
     "jest-raw-loader": "^1.0.1",
     "mime-types": "^2.1.31",
+    "prompt": "^1.2.0",
     "regenerator-runtime": "^0.13.9",
     "style-loader": "^2.0.0",
     "webpack": "^5.40.0",
