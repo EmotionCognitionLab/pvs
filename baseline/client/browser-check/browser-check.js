@@ -166,6 +166,7 @@ function fetchStoredProfile() {
 
 const browserCheck = {
     run: run,
+    fetchCurrentProfile: fetchCurrentProfile,
     uaKey: uaKey,
     browserNameKey: browserNameKey,
     osNameKey: osNameKey,

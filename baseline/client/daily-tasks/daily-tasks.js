@@ -407,7 +407,8 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
         return;
     }
     tasks[taskIdx].on_timeline_finish = () => {
-        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent}]);
+        const computerDetails = browserCheck.fetchCurrentProfile();
+        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent, screen: computerDetails[browserCheck.screenSizeKey]}]);
         if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
             saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
         } 

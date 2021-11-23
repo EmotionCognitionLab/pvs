@@ -454,6 +454,10 @@ describe("doing the tasks", () => {
         saveResultsMock.mockClear();
     });
     it("should save the data at the end of each task", () => {
+        const screenWidth = 222;
+        const screenHeight = 333;
+        jest.spyOn(window.screen, "width", "get").mockReturnValue(screenWidth);
+        jest.spyOn(window.screen, "height", "get").mockReturnValue(screenHeight);
         jest.useFakeTimers("legacy");
         dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         // full-screen mode screen
@@ -479,6 +483,10 @@ describe("doing the tasks", () => {
         const ua = saveResultsMock.mock.calls[4][1].filter(r => r.ua);
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
+        // it should save the screen size as part of the results
+        const screen = saveResultsMock.mock.calls[4][1].filter(r => r.screen);
+        expect(screen.length).toBe(1);
+        expect(screen[0].screen).toBe(`${screenWidth}x${screenHeight}`);
         // we only care about the relevant result
         let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant);
         expect(relevantResult.length).toBe(1);
