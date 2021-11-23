@@ -91,17 +91,17 @@ function getSetAndTasks(allResults, saveResultsCallback) {
             const newSetFinishedRec = {
                 experiment: setFinished,
                 dateTime: new Date().toISOString(),
-                results: [{"setNum": highestStartedSet.results.setNum }]
+                results: {"setNum": highestStartedSet.results.setNum }
             };
             saveResultsCallback(newSetFinishedRec.experiment, newSetFinishedRec.results);
             
             if (canDoAdditionalSet(highestStartedSet, newSetFinishedRec)) {
-                const nextSet = highestFinishedSet.results.setNum + 1;
+                const nextSet = newSetFinishedRec.results.setNum + 1;
                 const timeline = tasksForSet(allSets[nextSet - 1], nextSet, allResults, saveResultsCallback, false);
                 return { set: nextSet, remainingTasks: timeline };
             } else {
                 // done for today (or for good)
-                return allDoneTimeline(highestFinishedSet.results.setNum);
+                return allDoneTimeline(newSetFinishedRec.results.setNum);
             }
         }
 

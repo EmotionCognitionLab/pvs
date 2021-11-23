@@ -211,6 +211,29 @@ describe("getSetAndTasks", () => {
             .map(t => t.taskName);
         expect(remainingTaskNames).toStrictEqual(dailyTasks.allSets[0]);
     });
+
+    it("should have you start the next set if you (a) have a set-started record and (b) lack a corresponding set-finished record and (c) have done all of the tasks in the set and (d) you took > 3 hours to do your last set", () => {
+        const startTime = new Date(Date.now() - (1000 * 60 * 60 * 3.1)).toISOString(); // > 3 hours ago
+        const setNum = 1;
+        const input = buildInput([{setNum: setNum, setStartedTime: startTime, taskNames: dailyTasks.allSets[setNum - 1]}]);
+        const saveResultsMock = jest.fn();
+        const result = dailyTasks.getSetAndTasks(input, saveResultsMock);
+        expect(result.set).toBe(setNum + 1);
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(dailyTasks.allSets[setNum]);
+    });
+
+    it("should save a new set-finished record if you (a) have a set-started record and (b) lack a corresponding set-finished record and (c) have done all of the tasks in the set", () => {
+        const setNum = 3;
+        const input = buildInput([{setNum: setNum, taskNames: dailyTasks.allSets[setNum - 1]}]);
+        const saveResultsMock = jest.fn();
+        dailyTasks.getSetAndTasks(input, saveResultsMock);
+        expect(saveResultsMock).toHaveBeenCalled();
+        expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setFinished);
+        expect(saveResultsMock.mock.calls[0][1]).toStrictEqual({"setNum": setNum});
+    });
 });
 
 describe("taskForName for verbal-fluency", () => {
