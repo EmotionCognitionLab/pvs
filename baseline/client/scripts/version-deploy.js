@@ -3,19 +3,17 @@
 /** 
  * Usage: version-deploy.js
  * 
- * Does the following:
- *  1. Asks what the next tagged git version should be.
- *  2. Writes new version to version.json.
- *  3. Calls git tag -a <new version> to tag it.
- *  4. Optionally pushes new version to remote repo.
+ * Asks what the next version number should be and writes it to version.json.
 */
 
 const { spawnSync } = require('child_process');
-
+const fs = require('fs');
 const prompt = require('prompt');
 // Turn off some defaults in the prompt framework
 prompt.message = '';
 prompt.delimiter = '';
+
+const versionFile = 'version.json';
 
 function getCurGitVersion() {
     const git = spawnSync('git', ['tag', '-l', '--sort=v:refname', '[0-9]*']);
@@ -71,70 +69,24 @@ function requestVersion(curVersion, suggestedVersion) {
     });       
 }
 
-function requestYesNo(msg) {
-    const schema = {
-        properties: {
-            continue: {
-                pattern: /[yYnN]/,
-                message: 'Please answer Y (yes) or N (no):',
-                description: msg,
-                required: true
-            }
-        }
-    };
+function writeVersionFile(version, targetFile) {
     return new Promise((resolve, reject) => {
-        prompt.get(schema, function(err, result) {
+        fs.writeFile(targetFile, JSON.stringify(version), err => {
             if (err) {
                 reject(err);
             } else {
-                resolve(result.continue);
+                resolve();
             }
         });
     });
 }
 
-
 const curGitVersion = getCurGitVersion();
 const patch = incrementVersion(curGitVersion, 'patch');
 console.log(`Current git version is ${curGitVersion}`);
 requestVersion(curGitVersion, patch)
-.then(newGitVersion => {
-    const gitTag = spawnSync('git', ['tag', '-a', newGitVersion, '-m', `Bumping to version ${newGitVersion}`]);
-    if (gitTag.status !== 0 || gitTag.error) {
-        const gitTagErr = `git tag exited with status ${gitTag.status}`;
-        console.log(gitTag.stderr.toString());
-        if (gitTag.error) {
-            throw gitTag.error;
-        } else {
-            throw new Error(gitTagErr);
-        }
-    }
-})
-.then(() => {
-    return requestYesNo('Push new version tag to remote repository? (Y/N):');
-})
-.then(answer => {
-    if (answer.toUpperCase() === 'Y') {
-        const gitPush = spawnSync('git', ['push', '--tags'], {stdio: 'inherit'}); // TODO decide what to do about branches
-        if (gitPush.status !== 0 || gitPush.error) {
-            const gitPushErr = `git push exited with status ${gitPush.status}`;
-            console.log(gitPush.stderr);
-            if (gitPush.error) {
-                throw gitPush.error;
-            } else {
-                throw new Error(gitPushErr);
-            }
-        }
-    }
-})
+.then(newGitVersion => writeVersionFile({v: newGitVersion}, versionFile))
 .catch(err => {
     console.log(err);
     process.exit(1);
 });
-
-
-
-
-
-
-

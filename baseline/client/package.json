@@ -4,8 +4,8 @@
     "test-all": "cd ../../common/logger && npm run test && cd ../../baseline/client && npm run test",
     "start": "npx webpack serve --config webpack.dev.js",
     "build": "rm -rf dist/* && npx webpack --config webpack.prod.js",
-    "predeploy": "node scripts/pre-deploy.js $npm_config_env && npm run test-all && npm run build",
-    "deploy": "node scripts/version-deploy.js && node scripts/deploy.js"
+    "predeploy": "node scripts/pre-deploy.js $npm_config_env && node scripts/version-deploy.js && npm run test-all && npm run build",
+    "deploy": "node scripts/tag-deploy.js && node scripts/deploy.js"
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
