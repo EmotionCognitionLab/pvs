@@ -96,7 +96,7 @@ export class Flanker {
             },
             save_trial_parameters: {trial_duration: true},
             trial_duration: this.responseTimeLimitMs.bind(this),
-        }
+        };
 
         if (isTraining) {
             result.data.isTraining = true;
@@ -112,7 +112,7 @@ export class Flanker {
             timeline: [this.constructor.fixation, this.trial(true), this.constructor.trainingFeedback],
             timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.trainingStimuli),
             randomize_order: true
-        }
+        };
     }
 
     mainTrials() {
@@ -121,7 +121,7 @@ export class Flanker {
             timeline_variables: this.constructor.timelineVarsForStimuli(this.constructor.mainStimuli),
             repetitions: this.constructor.numMainBlocks,
             randomize_order: true
-        }
+        };
     }
     
     trainingLoop() {
@@ -130,7 +130,7 @@ export class Flanker {
             loop_function: function(data) {
                 return data.filter({isTraining: true, correct: true}).values().length < 3;
             }
-        }
+        };
     }
 }
 
@@ -139,7 +139,7 @@ Flanker.taskName = "flanker";
 Flanker.preload = {
     type: "preload",
     images: [arrow_img]
-}
+};
 
 Flanker.instruction1 = {
     type: "html-keyboard-response",
@@ -184,7 +184,7 @@ Flanker.fixation = {
         return Math.floor((Math.random() * 300) + 400);
     },
     choices: jsPsych.NO_KEYS
-}
+};
 
 Flanker.stimulus = arrows => {
     const head = "<div class=\"arrows\">";
@@ -211,7 +211,7 @@ Flanker.timelineVarsForStimuli = (stimuli) => {
         correct_response: arrows[2] === 1 ? "arrowright": "arrowleft",
         congruent: arrows[2] === arrows[1]
     }));
-}
+};
 
 Flanker.trainingFeedback = {
     type: "html-keyboard-response",
@@ -228,14 +228,14 @@ Flanker.trainingFeedback = {
     },
     choices: jsPsych.NO_KEYS,
     trial_duration: 800
-}
+};
 
 Flanker.mainFeedback = {
     type: "html-keyboard-response",
     stimulus: "Answer faster next time",
     choices: jsPsych.NO_KEYS,
     trial_duration: 800
-}
+};
 
 Flanker.mainFeedbackNode = {
     timeline: [Flanker.mainFeedback],
@@ -244,35 +244,35 @@ Flanker.mainFeedbackNode = {
         const values = data.last(1).values()[0];
         return values.response === null;
     }
-}
+};
 
 Flanker.comprehension1 = {
     type: "html-keyboard-response",
     stimulus: comprehension1_html,
     choices: ["ArrowRight", "ArrowLeft"],
     data: { isComprehension: true }
-}
+};
 
 Flanker.comprehension2 = {
     type: "html-keyboard-response",
     stimulus: comprehension2_html,
     choices: ["ArrowRight", "ArrowLeft"],
     data: { isComprehension: true }
-}
+};
 
 Flanker.comprehension3 = {
     type: "html-keyboard-response",
     stimulus: comprehension3_html,
     choices: [" "],
     data: { isComprehension: true }
-}
+};
 
 Flanker.comprehensionNode = {
     timeline: [Flanker.comprehension1, Flanker.comprehension2, Flanker.comprehension3],
     conditional_function: function() {
         return jsPsych.data.getLastTimelineData().filter({isTraining: true, correct: true}).values().length < 3;
     }
-}
+};
 
 Flanker.numMainBlocks = 18;
 Flanker.defaultResponseTimeLimitMs = 1050;
