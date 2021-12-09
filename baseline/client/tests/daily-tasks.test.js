@@ -548,6 +548,25 @@ describe("doing the tasks", () => {
         expect(jsPsych.getDisplayElement().innerHTML).not.toMatch(/full screen mode/);
         global.document.fullscreenElement = origFsElement;
     });
+    // see https://github.com/EmotionCognitionLab/pvs/issues/158
+    it("should decrease the flanker response time limit if they get >= 13 trials out of the first 16 correct", () => {
+        const saveMock = jest.fn((_experimentName, results) => results.forEach(r => delete(r.isRelevant)));
+        jest.useFakeTimers("legacy");
+        const task = dailyTasks.taskForName("flanker", {setNum: 2});
+        const timeline = task.getTimeline().slice(1); // skip preload
+        const trialCount = timeline[1].timeline_variables.length;
+        dailyTasks.runTask( [{timeline: timeline, taskName: task.taskName, setNum: 2}], 0, saveMock);
+        pressKey(" ");
+        for (let i = 0; i < trialCount; i++) {
+            jest.advanceTimersByTime(800);
+            const trial = jsPsych.currentTrial();
+            const answer = trial.data.correct_response === "arrowright" ? "ArrowRight" : "ArrowLeft";
+            pressKey(answer);
+        }
+        jest.advanceTimersByTime(800);
+        const trial = jsPsych.currentTrial();
+        expect(trial.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs - 90);
+    });
 });
 
 /**
