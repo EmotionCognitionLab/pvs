@@ -19,6 +19,7 @@ import { TaskSwitching } from "../task-switching/task-switching.js";
 import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import version from "../version.json";
 import "jest-canvas-mock";
 require("@adp-psych/jspsych/jspsych.js");
 
@@ -487,6 +488,10 @@ describe("doing the tasks", () => {
         const screen = saveResultsMock.mock.calls[4][1].filter(r => r.screen);
         expect(screen.length).toBe(1);
         expect(screen[0].screen).toBe(`${screenWidth}x${screenHeight}`);
+        // it should save the application version as part of the results
+        const vers = saveResultsMock.mock.calls[4][1].filter(r => r.v);
+        expect(vers.length).toBe(1);
+        expect(vers[0].v).toBe(version.v);
         // we only care about the relevant result
         let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant);
         expect(relevantResult.length).toBe(1);

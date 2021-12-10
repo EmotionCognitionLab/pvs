@@ -24,6 +24,7 @@ import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import version from "../version.json";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
@@ -408,7 +409,7 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     }
     tasks[taskIdx].on_timeline_finish = () => {
         const computerDetails = browserCheck.fetchCurrentProfile();
-        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent, screen: computerDetails[browserCheck.screenSizeKey]}]);
+        saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent, screen: computerDetails[browserCheck.screenSizeKey], v: version.v}]);
         if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
             saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
         } 
