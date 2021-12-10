@@ -1,6 +1,5 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-memory-field.js";
-import { pressKey } from "./utils.js"
 
 describe("jspsych-memory-field.js plugin", () => {
     it("loads correctly", () => {
@@ -27,7 +26,7 @@ describe("jspsych-memory-field.js plugin", () => {
             button_label: "",
         }]});
         const field = document.getElementById("jspsych-memory-field-field");
-        const initDict = {key: "Enter"}
+        const initDict = {key: "Enter"};
         responses.forEach(r => {
             field.value = r;
             field.dispatchEvent(new KeyboardEvent("keydown", initDict));
