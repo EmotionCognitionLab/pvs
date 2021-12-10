@@ -46,14 +46,17 @@ jsPsych.plugins["memory-field"] = (() => {
         });
         // add button listener
         button.addEventListener("click", () => {
-            if (field.value) {
-                memory.push(field.value);
+            const allDone = confirm("Click OK if you've thought of all the words you can. Click cancel if you can remember more.");
+            if (allDone) {
+                if (field.value) {
+                    memory.push(field.value);
+                }
+                const data = {
+                    stimulus: trial.stimulus,
+                    response: memory,
+                };
+                jsPsych.finishTrial(data);
             }
-            const data = {
-                stimulus: trial.stimulus,
-                response: memory,
-            };
-            jsPsych.finishTrial(data);
         });
     };
 

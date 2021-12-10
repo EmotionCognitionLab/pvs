@@ -2,6 +2,8 @@ import "@adp-psych/jspsych/jspsych.js";
 import "js/jspsych-memory-field.js";
 
 describe("jspsych-memory-field.js plugin", () => {
+    global.confirm = () => true; // stub window.confirm
+
     it("loads correctly", () => {
         expect(jsPsych.plugins["memory-field"]).toBeDefined();
     });
@@ -74,6 +76,37 @@ describe("jspsych-memory-field.js plugin", () => {
         expect(finished).toBe(false);
         document.getElementById("jspsych-memory-field-button").click();
         expect(finished).toBe(true);
+    });
+
+    it("prompts to make sure user is finished when button is pressed", () => {
+        global.confirm = jest.fn(() => true);
+        expect(global.confirm.mock.calls.length).toBe(0);
+        jsPsych.init({
+            timeline: [{
+                type: "memory-field",
+                stimulus: "",
+                button_label: "",
+            }]
+        });
+        document.getElementById("jspsych-memory-field-button").click();
+        expect(global.confirm.mock.calls.length).toBe(1);
+    });
+
+    it("does not finish the trial if the user says they're not done after pressing the button", () => {
+        global.confirm = jest.fn(() => false);
+        expect(global.confirm.mock.calls.length).toBe(0);
+        let finished = false;
+        jsPsych.init({
+            timeline: [{
+                type: "memory-field",
+                stimulus: "",
+                button_label: "",
+            }],
+            on_finish: () => { finished = true; }
+        });
+        document.getElementById("jspsych-memory-field-button").click();
+        expect(global.confirm.mock.calls.length).toBe(1);
+        expect(finished).toBe(false);
     });
 
     it("disables autocomplete", () => {
