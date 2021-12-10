@@ -21,10 +21,6 @@ import instruction_a_immediate_html from "./frag/instruction_a_immediate.html";
 import instruction_a_immediate_rep_html from "./frag/instruction_a_immediate_rep.html";
 import instruction_b_immediate_html from "./frag/instruction_b_immediate.html";
 import instruction_a_short_html from "./frag/instruction_a_short.html";
-import instruction_a_cue_furniture_html from "./frag/instruction_a_cue_furniture.html";
-import instruction_a_cue_vegetable_html from "./frag/instruction_a_cue_vegetable.html";
-import instruction_a_cue_traveling_html from "./frag/instruction_a_cue_traveling.html";
-import instruction_a_cue_animal_html from "./frag/instruction_a_cue_animal.html";
 import instruction_a_long_html from "./frag/instruction_a_long.html";
 // presentation fragments
 import presentation_cue_html from "./frag/presentation_cue.html";
@@ -111,13 +107,9 @@ export class VerbalLearning {
                 this.constructor.remember(remember_b_immediate_html),
                 this.constructor.instruction(instruction_a_short_html),
                 this.constructor.remember(remember_a_short_html),
-                this.constructor.instruction(instruction_a_cue_furniture_html),
                 this.constructor.remember(remember_a_cue_furniture_html),
-                this.constructor.instruction(instruction_a_cue_vegetable_html),
                 this.constructor.remember(remember_a_cue_vegetable_html),
-                this.constructor.instruction(instruction_a_cue_traveling_html),
                 this.constructor.remember(remember_a_cue_traveling_html),
-                this.constructor.instruction(instruction_a_cue_animal_html),
                 this.constructor.remember(remember_a_cue_animal_html),
             ];
         } else if (this.segmentNum === 2) {
@@ -125,13 +117,9 @@ export class VerbalLearning {
                 segmentCountdownNode,
                 this.constructor.instruction(instruction_a_long_html),
                 this.constructor.remember(remember_a_long_html),
-                this.constructor.instruction(instruction_a_cue_furniture_html),
                 this.constructor.remember(remember_a_cue_furniture_html),
-                this.constructor.instruction(instruction_a_cue_vegetable_html),
                 this.constructor.remember(remember_a_cue_vegetable_html),
-                this.constructor.instruction(instruction_a_cue_traveling_html),
                 this.constructor.remember(remember_a_cue_traveling_html),
-                this.constructor.instruction(instruction_a_cue_animal_html),
                 this.constructor.remember(remember_a_cue_animal_html),
             ];
         } else {
