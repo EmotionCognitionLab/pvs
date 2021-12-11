@@ -51,6 +51,7 @@ afterEach(() => {
 });
 
 describe("verbal-learning", () => {
+    global.confirm = () => true; // stub out window.confirm
     it("results should have at least one result marked isRelevant", async () => {
         // get timelines for segments 1 and 2
         const timeline1 = (new VerbalLearning(1, 1)).getTimeline();
