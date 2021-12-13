@@ -286,7 +286,7 @@ export default class Db {
                 }
             } catch (err) {
                 curTry++;
-                if (err.code === 'CredentialsError') {
+                if (err.code === 'CredentialsError' || err.code === 'ValidationException') { // ValidationException is usually a sign that this.credentials.identityId is empty
                     await this.refreshPermissions();
                 } else {
                     this.logger.error(err);
