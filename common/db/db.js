@@ -18,6 +18,7 @@ export default class Db {
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
+        this.userApiUrl = awsSettings.UserApiUrl;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -33,11 +34,11 @@ export default class Db {
      set session(sess) {
          if (!sess) return;
 
-        const idToken = sess.getIdToken().getJwtToken();
+        this.idToken = sess.getIdToken().getJwtToken();
         this.credentials = new AWS.CognitoIdentityCredentials({
             IdentityPoolId: this.identityPoolId,
             Logins: {
-                [`cognito-idp.${this.region}.amazonaws.com/${this.userPoolId}`]: idToken
+                [`cognito-idp.${this.region}.amazonaws.com/${this.userPoolId}`]: this.idToken
             }
         }, {region: this.region});
         this.docClient = new DynamoDB.DocumentClient({region: this.region, credentials: this.credentials});
@@ -261,6 +262,23 @@ export default class Db {
             this.logger.error(err);
             throw err;
         }
+    }
+
+    async updateSelf(updates) {
+        if (!this.idToken) throw new Error("You must provide a session to update the current user");
+
+        const url = `${this.userApiUrl}/update`;
+        const response = await fetch(url, {
+            method: "PUT",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": this.idToken,
+            },
+            body: JSON.stringify(updates)
+        });
+        return response;
     }
 
     async dynamoOp(params, fnName) {
