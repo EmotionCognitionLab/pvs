@@ -1,4 +1,5 @@
 import { getAuth, sendPhoneVerificationCode, verifyPhone } from "auth/auth.js";
+import Db from "db/db.js";
 import './style.css';
 
 const phoneVerificationFormId = 'phoneVerification';
@@ -67,6 +68,8 @@ function phoneVerificationSuccess() {
     document.getElementById(phoneVerificationFormId).classList.add('hidden');
     document.getElementById(phoneVerificationSuccessId).classList.remove('hidden');
     document.getElementById('continueButton').addEventListener('click', goToDailyTasks);
+    const db = new Db({session: cachedSession});
+    db.updateSelf({"phone_number_verified": true});
 }
 
 function phoneVerificationFailure(err) {
