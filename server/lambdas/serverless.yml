@@ -58,11 +58,15 @@ functions:
         - 'on-user-verify/*.js'
 
   api:
-    handler: api/api.getUser
+    handler: api/api.handler
     events:
       - httpApi:
           method: GET
           path: /user
+          authorizer: serviceAuthorizer
+      - httpApi:
+          method: PUT
+          path: /user/update
           authorizer: serviceAuthorizer
     environment:
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
