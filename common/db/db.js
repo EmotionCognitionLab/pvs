@@ -281,6 +281,23 @@ export default class Db {
         return response;
     }
 
+    async getSelf() {
+        if (!this.idToken) throw new Error("You must provide a session to update the current user");
+
+        const url = `${this.userApiUrl}`;
+        const response = await fetch(url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": this.idToken,
+            }
+        });
+        const userData = await response.json();
+        return userData;
+    }
+
     async dynamoOp(params, fnName) {
         let curTry = 0;
         const maxTries = 3;

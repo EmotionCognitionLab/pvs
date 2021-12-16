@@ -20,5 +20,10 @@
   "dependencies": {
     "aws-sdk": "^2.929.0",
     "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-regenerator": "^7.16.5",
+    "@babel/plugin-transform-runtime": "^7.16.5",
+    "@babel/preset-env": "^7.16.5"
   }
 }
