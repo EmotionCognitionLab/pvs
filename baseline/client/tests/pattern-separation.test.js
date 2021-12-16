@@ -7,7 +7,7 @@ import stimuli from "../pattern-separation/stimuli.json";
 
 describe("PatternSeparation learning phase", () => {
     let tl;
-    const setNum = 1;
+    const setNum = 2;
 
     beforeEach(() => {
         tl = (new PatternSeparation(setNum, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
@@ -45,7 +45,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should randomize the order of the stimuli", () => {
-        const tl2 = (new PatternSeparation(1, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
+        const tl2 = (new PatternSeparation(2, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         for (let i of [2,3,5,7,8]) { // timeline entries that aren't instructions
             expect(tl[i].timeline_variables.length).toEqual(tl2[i].timeline_variables.length);
             expect(tl2[i].timeline_variables).toEqual(expect.arrayContaining(tl[i].timeline_variables));
@@ -156,7 +156,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should show different stimuli for different sets", () => {
-        const tl2 = (new PatternSeparation(3)).getTimeline().slice(1); // drop preload; doesn't play well with jest
+        const tl2 = (new PatternSeparation(4)).getTimeline().slice(1); // drop preload; doesn't play well with jest
         for (let i=7; i<tl.length; i++) { // entries 0-6 are instructions and practice in set 1
             const node = tl[i];
             expect(node.timeline_variables);
@@ -192,7 +192,7 @@ describe("PatternSeparation recall phase", () => {
     });
 
     it("should show all of the practice recall stimuli during practice", () => {
-        const practiceTl = (new PatternSeparation(1, false)).getTimeline().slice(1); // drop preload
+        const practiceTl = (new PatternSeparation(2, false)).getTimeline().slice(1); // drop preload
         const practiceStim = stimuli["Practice"];
         const practiceRecallIdx = 2 + 1 + 1 + 1; // 2 instructions, shoebox, right hand, 1 instruction
         expect(practiceTl[practiceRecallIdx].timeline_variables.length).toBe(practiceStim.length);

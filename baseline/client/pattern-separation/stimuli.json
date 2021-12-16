@@ -33,7 +33,7 @@
             "pic": "Whisk_1.jpg"
         }
     ],
-    "Set1": [
+    "Set2": [
         {
             "type": "Target",
             "pic": "abacus1.jpg"
@@ -299,7 +299,7 @@
             "pic": "stethescope1.jpg"
         }
     ],
-    "Set2": [
+    "Set4": [
         {
             "type": "Target",
             "pic": "america_flag1.jpg"
@@ -565,7 +565,7 @@
             "pic": "swingset1.jpg"
         }
     ],
-    "Set3": [
+    "Set6": [
         {
             "type": "Target",
             "pic": "antique_chess1.jpg"
@@ -831,7 +831,7 @@
             "pic": "tennis_ball1.jpg"
         }
     ],
-    "Set4": [
+    "Set8": [
         {
             "type": "Target",
             "pic": "altoids1.jpg"
@@ -1097,7 +1097,7 @@
             "pic": "tire_truck1.jpg"
         }
     ],
-    "Set5": [
+    "Set10": [
         {
             "type": "Target",
             "pic": "acorn1.jpg"
@@ -1363,7 +1363,7 @@
             "pic": "toothbrush1.jpg"
         }
     ],
-    "Set6": [
+    "Set12": [
         {
             "type": "Target",
             "pic": "accordian1.jpg"

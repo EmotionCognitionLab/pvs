@@ -28,7 +28,7 @@ export class PatternSeparation {
         const practiceRecallVariables = this.getTimelineVariables(true, true);
         const images = practiceLearningVariables.concat(actualLearningVariables).concat(practiceRecallVariables).map(lv => lv.picUrl);
 
-        if (this.setNum === 1 || this.setNum === 4) {
+        if (this.setNum === 2 || this.setNum === 8) {
             return [
                 this.constructor.preload(images),
                 this.constructor.instruction(introduction_html),
