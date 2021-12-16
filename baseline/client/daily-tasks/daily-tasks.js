@@ -210,11 +210,11 @@ function tasksForSet(remainingTaskNames, setNum, allResults, saveResultsCallback
         if (i === 0 && atSetStart) {
             node.on_timeline_start = () => {
                 saveResultsCallback(setStarted, [{"setNum": setNum }]);
-                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
+                saveResultsCallback(task.taskName, [{"taskStarted": true, "setNum": setNum}]);
             };
         } else {
             node.on_timeline_start = () => {
-                saveResultsCallback(task.taskName, [{"taskStarted": true}]);
+                saveResultsCallback(task.taskName, [{"taskStarted": true, "setNum": setNum}]);
             };
         }
         allTimelines.push(node);

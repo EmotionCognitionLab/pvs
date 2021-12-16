@@ -535,7 +535,7 @@ describe("doing the tasks", () => {
         dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
         expect(saveResultsMock.mock.calls.length).toBe(2);
         expect(saveResultsMock.mock.calls[1][0]).toBe(allTimelines.remainingTasks[0].taskName);
-        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true}]);
+        expect(saveResultsMock.mock.calls[1][1]).toStrictEqual([{"taskStarted": true, "setNum": 1}]); // allTimeslines is using set 1
     });
     it("should put a full-screen task at the start of each experiment", () => {
         const firstTaskTypes = allTimelines.remainingTasks.slice(0, allTimelines.remainingTasks.length - 1)
