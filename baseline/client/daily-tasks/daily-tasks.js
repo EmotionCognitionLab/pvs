@@ -369,7 +369,7 @@ function init() {
         logger = new Logger();
         const lStor = window.localStorage;
         const scopes = [];
-        if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.uaKey}`)) {
+        if (!lStor.getItem(`${browserCheck.appName}.${browserCheck.initKey}`)) {
             // we may have a new user who needs phone # verification
             scopes.push('openid');
             scopes.push('aws.cognito.signin.user.admin');
@@ -388,7 +388,7 @@ async function doAll(session) {
         // pre-fetch all results before doing browser check to avoid
         // lag after btowser check sends them to start experiments
         const allResults = await db.getAllResultsForCurrentUser();
-        browserCheck.run(startTasks.bind(null, allResults));
+        await browserCheck.run(startTasks.bind(null, allResults), session);
     } catch (err) {
         logger.error('Error in dailyTasks.doAll', err);
     }

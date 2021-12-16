@@ -1,27 +1,25 @@
 require("@adp-psych/jspsych/jspsych.js");
-import { browserCheck } from "../browser-check/browser-check";
+import { browserCheck, forTesting } from "../browser-check/browser-check";
 import { clickContinue } from "./utils";
+import Db from "../../../common/db/db.js";
+jest.mock("../../../common/db/db.js");
 const uaParser = require("ua-parser-js");
 
-function localValForKey(key) {
-    return window.localStorage.getItem(`${browserCheck.appName}.${key}`);
-}
-
-describe("browser check if window.localStorage.heartBeam.ua is not set", () => {
+describe("browser check if computer profile is not saved", () => {
     let buttons;
-    let uaSpy;
+    let uaSpy = jest.spyOn(window.navigator, "userAgent", "get").mockImplementation(() => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
     let callback;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         window.localStorage.clear();
         callback = jest.fn();
-        browserCheck.run(callback);
+        await browserCheck.run(callback, null);
         buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
-        uaSpy = jest.spyOn(window.navigator, "userAgent", "get").mockImplementation(() => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
     });
 
     afterEach(() => {
+        Db.mockClear();
         callback.mockClear();
         uaSpy.mockRestore();
     });
@@ -35,21 +33,24 @@ describe("browser check if window.localStorage.heartBeam.ua is not set", () => {
 
     it("should save the computer profile if the user says this is their permanent computer", () => {
         buttons[1].click();
-        expect(localValForKey(browserCheck.uaKey)).toBe(window.navigator.userAgent);
-        expect(localValForKey(browserCheck.platformKey)).toBe(window.navigator.platform);
+        const mockDbInstance = Db.mock.instances[0];
+        const mockUpdateSelf = mockDbInstance.updateSelf;
+        expect(mockUpdateSelf).toHaveBeenCalled();
+        expect(mockUpdateSelf.mock.calls[0][0].computer).not.toBe(null);
+        const data = mockUpdateSelf.mock.calls[0][0].computer;
+        expect(data[forTesting.uaKey]).toBe(window.navigator.userAgent);
+        expect(data[forTesting.platformKey]).toBe(window.navigator.platform);
         const uaInfo = uaParser(window.navigator.userAgent);
-        expect(localValForKey(browserCheck.browserNameKey)).toBe(uaInfo.browser.name);
-        expect(localValForKey(browserCheck.osNameKey)).toBe(uaInfo.os.name);
-        expect(localValForKey(browserCheck.screenSizeKey)).toBe(`${screen.width}x${screen.height}`);
+        expect(data[forTesting.browserNameKey]).toBe(uaInfo.browser.name);
+        expect(data[forTesting.osNameKey]).toBe(uaInfo.os.name);
+        expect(data[browserCheck.screenSizeKey]).toBe(`${screen.width}x${screen.height}`);
     });
 
     it("should not save the computer profile if the user says this is not their permanent computer", () => {
         buttons[0].click();
-        expect(localValForKey(browserCheck.uaKey)).toBeNull();
-        expect(localValForKey(browserCheck.platformKey)).toBeNull();
-        expect(localValForKey(browserCheck.browserNameKey)).toBeNull();
-        expect(localValForKey(browserCheck.osNameKey)).toBeNull();
-        expect(localValForKey(browserCheck.screenSizeKey)).toBeNull();
+        const mockDbInstance = Db.mock.instances[0];
+        const mockUpdateSelf = mockDbInstance.updateSelf;
+        expect(mockUpdateSelf).not.toHaveBeenCalled();
     });
 
     it("should not call the callback if the user says this is not their permanent computer", () => {
@@ -62,45 +63,76 @@ describe("browser check if window.localStorage.heartBeam.ua is not set", () => {
         clickContinue();
         expect(callback.mock.calls.length).toBe(1);
     });
+
+    it("should save a flag in local storage letting us know that this is not a first-time user", async () => {
+        expect(window.localStorage.getItem(`${browserCheck.appName}.${browserCheck.initKey}`)).toBeNull();
+        buttons[1].click();
+        await clickContinue();
+        expect(window.localStorage.getItem(`${browserCheck.appName}.${browserCheck.initKey}`)).toBeTruthy();
+    });
 });
 
-function setLStorMockResponse(spy, respMap) {
-    spy.mockImplementation((key) => respMap[key]);
-}
-
-describe("browser check if window.localStorage.heartBeam.ua is set", () => {
-    let lStorGetSpy;
-    let lStorSetSpy;
+describe("browser check if user agent info is saved", () => {
     let uaSpy;
-    let mockRespMap;
+    const baseMockUserData = () => ({
+        userId: "123abc",
+        computer: {
+            "browser.name": "Firefox",
+            "screen.size": "0x0",
+            "os.name": "Mac OS",
+            ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:94.0) Gecko/20100101 Firefox/94.0",
+            platform: ""
+        }
+    });
+    let mockUserData = baseMockUserData();
+
+    const mockGetSelf = jest.fn(() => mockUserData);
+    const mockUpdateSelf = jest.fn();
+
+    beforeAll(() => {
+        Db.mockImplementation(() => {
+            return {
+                getSelf: mockGetSelf,
+                updateSelf: mockUpdateSelf
+            };
+        });
+    });
 
     beforeEach(() => {
-        lStorGetSpy = jest.spyOn(global.Storage.prototype, "getItem");
-        lStorSetSpy = jest.spyOn(global.Storage.prototype, "setItem");
-        uaSpy = jest.spyOn(window.navigator, "userAgent", "get").mockImplementation(() => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36");
-        
-        const uaInfo = uaParser(window.navigator.userAgent);
-        mockRespMap = {
-            [`${browserCheck.appName}.${browserCheck.uaKey}`]: window.navigator.userAgent,
-            [`${browserCheck.appName}.${browserCheck.platformKey}`]: window.navigator.platform,
-            [`${browserCheck.appName}.${browserCheck.screenSizeKey}`]: `${screen.width}x${screen.height}`,
-            [`${browserCheck.appName}.${browserCheck.browserNameKey}`]: uaInfo.browser.name,
-            [`${browserCheck.appName}.${browserCheck.osNameKey}`]: uaInfo.os.name
-        };
-        setLStorMockResponse(lStorGetSpy, mockRespMap);
+        uaSpy = jest.spyOn(window.navigator, "userAgent", "get").mockImplementation(() => mockUserData.computer.ua);
     });
 
     afterEach(() => {
+        mockUserData = baseMockUserData();
         uaSpy.mockRestore();
-        lStorGetSpy.mockRestore();
-        lStorSetSpy.mockRestore();
+        Db.mockClear();
+        mockUpdateSelf.mockRestore();
     });
 
-    function testProfileMismatch(key) {
-        mockRespMap[`${browserCheck.appName}.${key}`] = 'foo';
-        setLStorMockResponse(lStorGetSpy, mockRespMap);
+    function setGetSelfMockResponse(key, value) {
+        mockUserData.computer[key] = value;
+    }
+
+    function fetchCurrentProfile() {
+        const uaInfo = uaParser(window.navigator.userAgent);
+        const result = {};
+        result[forTesting.uaKey] = uaInfo.ua;
+        result[forTesting.browserNameKey] = uaInfo.browser.name;
+        result[forTesting.osNameKey] = uaInfo.os.name;
+        result[browserCheck.screenSizeKey] = `${screen.width}x${screen.height}`;
+        result[forTesting.platformKey] = window.navigator.platform;
+        return result;
+    }
+
+    async function testProfileMismatch(key) {
+        setGetSelfMockResponse(key, 'foo');
+        const curProfile = fetchCurrentProfile();
+        const mockDataKeys = Object.keys(mockUserData.computer);
+        for (const k of mockDataKeys) {
+            if (k !== key) expect(curProfile[k]).toBe(mockUserData.computer[k]);
+        }
         const callback = jest.fn();
-        browserCheck.run(callback);
+        await browserCheck.run(callback);
         expect(callback).not.toHaveBeenCalled();
     
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
@@ -111,12 +143,11 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         // this is about all we can test
     }
 
-    function canUseRegularComputer(callback, answer) {
+    async function canUseRegularComputer(callback, answer) {
         // create a mismatch so that user is alerted they're using the wrong computer
-        mockRespMap[`${browserCheck.appName}.${browserCheck.browserNameKey}`] = 'foo';
-        setLStorMockResponse(lStorGetSpy, mockRespMap);
+        setGetSelfMockResponse(forTesting.browserNameKey, 'foo');
 
-        browserCheck.run(callback);
+        await browserCheck.run(callback);
         expect(callback).not.toHaveBeenCalled();
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
@@ -131,53 +162,53 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         }
     }
 
-    it("should call the callback if the stored profile matches the current profile", () => {
+    it("should call the callback if the stored profile matches the current profile", async () => {
         const callback = jest.fn();
-        browserCheck.run(callback);
+        await browserCheck.run(callback, null);
         expect(callback.mock.calls.length).toBe(1);
     });
 
-    it("should alert the user the computer is different if the browser name does not match", () => {
-        testProfileMismatch(browserCheck.browserNameKey);
+    it("should alert the user the computer is different if the browser name does not match", async () => {
+        await testProfileMismatch(forTesting.browserNameKey);
     });
 
-    it("should alert the user the computer is different if the os name does not match", () => {
-        testProfileMismatch(browserCheck.osNameKey);
+    it("should alert the user the computer is different if the os name does not match", async () => {
+        await testProfileMismatch(forTesting.osNameKey);
     });
 
-    it("should alert the user the computer is different if the screen size does not match", () => {
-        testProfileMismatch(browserCheck.screenSizeKey);
+    it("should alert the user the computer is different if the screen size does not match", async () => {
+        await testProfileMismatch(browserCheck.screenSizeKey);
     });
 
-    it("should alert the user the computer is different if the platform does not match", () => {
-        testProfileMismatch(browserCheck.platformKey);
+    it("should alert the user the computer is different if the platform does not match", async () => {
+        await testProfileMismatch(forTesting.platformKey);
     });
 
-    it("should not alert the user the computer is different if the user agent does not match", () => {
-        mockRespMap[`${browserCheck.appName}.${browserCheck.uaKey}`] = 'foo';
-        setLStorMockResponse(lStorGetSpy, mockRespMap);
+    it("should not alert the user the computer is different if the user agent does not match", async () => {
+        setGetSelfMockResponse(forTesting.uaKey, 'foo');
+        uaSpy.mockImplementation(() => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:94.0) Gecko/20100101 Firefox/94.0");
         const callback = jest.fn();
-        browserCheck.run(callback);
+        await browserCheck.run(callback, null);
         expect(callback).toHaveBeenCalled();
     });
 
-    it("should ask the user if they can use their regular computer", () => {
+    it("should ask the user if they can use their regular computer", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback);
+        await canUseRegularComputer(callback);
     });
 
-    it("should not call the callback if the user says they can use their regular computer", () => {
+    it("should not call the callback if the user says they can use their regular computer", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "yes");
+        await canUseRegularComputer(callback, "yes");
 
         const stimulus = jsPsych.getDisplayElement().querySelectorAll("#jspsych-html-button-response-stimulus");
         expect(stimulus[0].innerHTML).toMatch(/using the computer, browser, keyboard and monitor you plan to use/);
         expect(callback).not.toHaveBeenCalled();
     });
 
-    it("should ask the user if the change is permanent if they say they can't use their regular computer", () => {
+    it("should ask the user if the change is permanent if they say they can't use their regular computer", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "no");
+        await canUseRegularComputer(callback, "no");
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
@@ -186,46 +217,42 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         expect(callback).not.toHaveBeenCalled();
     });
 
-    it("should store the new profile if the user says the change is permanent", () => {
+    it("should store the new profile if the user says the change is permanent", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "no");
+        await canUseRegularComputer(callback, "no");
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
         expect(buttons[0].innerHTML).toBe("It's permanent");
         expect(buttons[1].innerHTML).toBe("I can use the original later");
-
-        expect(window.localStorage.getItem([`${browserCheck.appName}.${browserCheck.browserNameKey}`])).toBe("foo"); // set in canUseRegularComputer
         
         buttons[0].click();
-        expect(lStorSetSpy).toHaveBeenCalled();
+        expect(mockUpdateSelf).toHaveBeenCalled();
 
-        const uaInfo = uaParser(window.navigator.userAgent);
-        mockRespMap[`${browserCheck.appName}.${browserCheck.browserNameKey}`] = uaInfo.browser.name;
-        for (const call of lStorSetSpy.mock.calls) {
-            expect(call[1]).toBe(mockRespMap[call[0]]);
+        const stored = mockUpdateSelf.mock.calls[0][0].computer;
+        const keys = Object.keys(stored);
+        for (let i=0; i<keys.length; i++) {
+            const k = keys[i];
+            if (k === forTesting.browserNameKey) continue; // canUseRegularComputer sets this to 'foo' to force a mismatch
+            expect(stored[k]).toEqual(mockUserData.computer[k]);
         }
-
     });
 
-    it("should not store the new profile if the user says the change is not permanent", () => {
+    it("should not store the new profile if the user says the change is not permanent", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "no");
+        await canUseRegularComputer(callback, "no");
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
         expect(buttons[0].innerHTML).toBe("It's permanent");
-        expect(buttons[1].innerHTML).toBe("I can use the original later");
-
-        expect(window.localStorage.getItem([`${browserCheck.appName}.${browserCheck.browserNameKey}`])).toBe("foo"); // set in canUseRegularComputer
-        
+        expect(buttons[1].innerHTML).toBe("I can use the original later");        
         buttons[1].click();
-        expect(lStorSetSpy).not.toHaveBeenCalled();
+        expect(mockUpdateSelf).not.toHaveBeenCalled();
     });
 
-    it("should call the callback when the user is ready to continue if the change is permanent", () => {
+    it("should call the callback when the user is ready to continue if the change is permanent", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "no");
+        await canUseRegularComputer(callback, "no");
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
@@ -236,9 +263,9 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         expect(callback).toHaveBeenCalled();
     });
 
-    it("should also call the callback when the user is ready to continue if the change is *not* permanent", () => {
+    it("should also call the callback when the user is ready to continue if the change is *not* permanent", async () => {
         const callback = jest.fn();
-        canUseRegularComputer(callback, "no");
+        await canUseRegularComputer(callback, "no");
 
         const buttons = jsPsych.getDisplayElement().querySelectorAll("button");
         expect(buttons.length).toBe(2);
@@ -249,9 +276,9 @@ describe("browser check if window.localStorage.heartBeam.ua is set", () => {
         expect(callback).toHaveBeenCalled();
     });
 
-    it("should reject any device type other than undefined", () => {
+    it("should reject any device type other than undefined", async () => {
         uaSpy.mockImplementation(() => "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1");
-        browserCheck.run();
+        await browserCheck.run();
         const stimulus = jsPsych.getDisplayElement().querySelectorAll("#jspsych-html-button-response-stimulus");
         expect(stimulus[0].innerHTML).toMatch(/cannot be done on tablets/);
     });

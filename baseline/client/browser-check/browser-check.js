@@ -2,21 +2,26 @@
 
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
+import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
+import Db from "db/db.js";
 import introduction_html from "./frag/introduction.html";
 import different_html from "./frag/different.html";
 import permanent_change_html from "./frag/permanent-change.html";
 import "./style.css";
 const uaParser = require("ua-parser-js");
 
+const initKey = 'initialized';
 const uaKey = 'ua';
 const browserNameKey = 'browser.name';
 const osNameKey = 'os.name';
 const screenSizeKey = 'screen.size';
 const platformKey = 'platform';
-const profileKeys = [uaKey, browserNameKey, osNameKey, screenSizeKey, platformKey];
 const appName = 'heartBeam';
+let db;
 
-function run(callback) {
+
+async function run(callback, session) {
+    db = new Db({session: session});
     const uaInfo = uaParser(window.navigator.userAgent);
     if (uaInfo.device.type) { // uaParser only defines device type for non-computers
         jsPsych.init({
@@ -24,12 +29,12 @@ function run(callback) {
         });
         return;
     }
-    const profile = fetchStoredProfile();
     // check for saved browser/monitor details
-    const firstTimeUser = profile[uaKey] === null;
+    const firstTimeUser = !window.localStorage.getItem(`${appName}.${initKey}`);
     if (firstTimeUser) {
         gatherComputerProfile(callback);
     } else {
+        const profile = await fetchStoredProfile();
         if (computerProfileMatchesStoredProfile(profile)) {
             callback();
         } else {
@@ -102,23 +107,34 @@ const switchNeededNode = {
     }
 };
 
+const saveProfileCall = {
+    type: "call-function",
+    async: true,
+    func: function(done) {
+        saveComputerProfile();
+        done();
+    }
+};
+
+const saveNeededNode = {
+    timeline: [saveProfileCall],
+    conditional_function: function () {
+        const data = jsPsych.data.get().last(1).values()[0];
+        return data.response === 0; // permanentChange.choices[0]
+    }
+};
+
 const permanentChange = {
     type: "html-button-response",
     stimulus: permanent_change_html,
     choices: ["It's permanent", "I can use the original later"],
-    on_finish: function(data) {
-        if (data.response === 0) {
-            // it's a permanent change; save the new profile
-            saveComputerProfile();
-        }
-    }
 };
 
 // If computer profile has changed, this
 // asks if the change is permanent and, if so,
 // saves the new profile.
 function queryChangePermanent(callback) {
-    const timeline = [different, switchNeededNode, permanentChange, completion(null)];
+    const timeline = [different, switchNeededNode, permanentChange, saveNeededNode, completion(null)];
     jsPsych.init({
         timeline: timeline,
         on_finish: callback
@@ -147,31 +163,36 @@ function fetchCurrentProfile() {
     return result;
 }
 
-function saveComputerProfile() {
-    const curProfile = fetchCurrentProfile();
-    const lStor = window.localStorage;
-    for (const item in curProfile) {
-        lStor.setItem(`${appName}.${item}`, curProfile[item]);
-    }
+async function saveComputerProfile() {
+    try {
+        const curProfile = fetchCurrentProfile();
+        await db.updateSelf({"computer": curProfile});
+        // save something to local storage for a rough, quick check
+        // of whether the user is brand new or not
+        const lstor = window.localStorage;
+        lstor.setItem(`${appName}.${initKey}`, true);
+    } catch (err) {
+        console.error(err);
+    } 
 }
 
-function fetchStoredProfile() {
-    const result = {};
-    const lStor = window.localStorage;
-    profileKeys.forEach(k => {
-        result[k] = lStor.getItem(`${appName}.${k}`);
-    });
-    return result;
+async function fetchStoredProfile() {
+    try {
+        const user = await db.getSelf();
+        if (user && user.computer) return user.computer;
+        return null;
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
 }
 
 const browserCheck = {
     run: run,
     fetchCurrentProfile: fetchCurrentProfile,
-    uaKey: uaKey,
-    browserNameKey: browserNameKey,
-    osNameKey: osNameKey,
+    initKey: initKey,
     screenSizeKey: screenSizeKey,
-    platformKey: platformKey,
     appName: appName
 };
 export {browserCheck};
+export const forTesting = { uaKey, browserNameKey, osNameKey, platformKey };
