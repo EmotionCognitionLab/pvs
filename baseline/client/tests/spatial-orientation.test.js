@@ -84,6 +84,31 @@ describe("spatial-orientation", () => {
         expect(sotTrials.every(t => t.completionReason === "responded")).toBe(true);
     });
 
+    it("has 12 relevant test trials per set", () => {
+        for (let i = 1; i <= 12; ++i) {
+            const timeline = (new SpatialOrientation(i)).getTimeline();
+            const sots = timeline.filter(trial => trial.data?.isRelevant);
+            expect(sots.length).toBe(12);
+            expect(sots.every(trial => trial.mode === "test")).toBe(true);
+        }
+    });
+
+    it("includes example and practice blocks only in the first set", () => {
+        {
+            const timeline1 = (new SpatialOrientation(1)).getTimeline();
+            const sots1 = timeline1.filter(trial => trial.type === "spatial-orientation");
+            expect(sots1.slice(0, 1).every(trial => trial.mode === "example")).toBe(true);
+            expect(sots1.slice(1, 4).every(trial => trial.mode === "practice")).toBe(true);
+            expect(sots1.slice(4).every(trial => trial.mode === "test")).toBe(true);
+        }
+        for (let i = 2; i <= 12; ++i) {
+            const timelineI = (new SpatialOrientation(i)).getTimeline();
+            const sotsI = timelineI.filter(trial => trial.type === "spatial-orientation");
+            // all trials should be test trials
+            expect(sotsI.every(trial => trial.mode === "test")).toBe(true);
+        }
+    });
+
     it("has well-formed stimuli", () => {
         const validateTrial = trial => {
             const objectNames = [trial.center, trial.facing, trial.target];
