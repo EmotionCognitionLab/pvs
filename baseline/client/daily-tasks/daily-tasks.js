@@ -31,8 +31,8 @@ import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.j
  * to the user in the correct order.
  */
 
-const set1 = ["flanker", "task-switching"];
-const set2 = ["flanker", "task-switching"];;
+const set1 = ["flanker"];
+const set2 = ["flanker"];
 const allSets = [set1, set2];
 const setFinished = "set-finished";
 const setStarted = "set-started";
@@ -63,7 +63,9 @@ function getSetAndTasks(allResults, saveResultsCallback) {
     // at least one relevant result
     // https://github.com/EmotionCognitionLab/pvs/issues/84
     const completedTasks = dedupeExperimentResults(
-        allResults.filter(r => r.isRelevant).map(r => r.experiment)
+        allResults
+        .filter(r => r.isRelevant || r.experiment === setStarted || r.experiment === setFinished)
+        .map(r => r.experiment)
     );
     const nextSetOk = canStartNextSet(allResults);
     if (completedTasks.length === 0) {
