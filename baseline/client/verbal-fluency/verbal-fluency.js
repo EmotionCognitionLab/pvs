@@ -41,7 +41,7 @@ export class VerbalFluency {
 }
 
 VerbalFluency.taskName = "verbal-fluency";
-VerbalFluency.possibleLetters = ["s", "c", "f", "a", "d", "p"];
+VerbalFluency.possibleLetters = ["s", "c", "f", "a", "d"];
 
 VerbalFluency.instruction = {
     type: "html-keyboard-response",
