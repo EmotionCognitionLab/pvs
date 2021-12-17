@@ -69,4 +69,11 @@ describe("verbal-fluency", () => {
         jest.advanceTimersByTime(2000);
         expect(finished).toBe(true);  // should be finished after 61 seconds
     });
+
+    it("throws when constructed with an invalid letter", () => {
+        VerbalFluency.possibleLetters.forEach(letter => {
+            expect(() => new VerbalFluency(letter)).not.toThrow();
+        });
+        expect(() => new VerbalFluency("p")).toThrow(Error);
+    });
 });
