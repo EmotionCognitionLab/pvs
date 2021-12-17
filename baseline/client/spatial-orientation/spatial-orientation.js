@@ -67,7 +67,7 @@ export class SpatialOrientation {
         return [
             i(instruction_0_html),
             i(instruction_1_html),
-            ...exampleBlock,
+            ...(this.setNum === 1 ? exampleBlock : []),
             ...(this.setNum === 1 ? practiceBlock : []),
             ...testBlock,
         ];
