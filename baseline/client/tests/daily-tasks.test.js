@@ -572,6 +572,37 @@ describe("doing the tasks", () => {
         const trial = jsPsych.currentTrial();
         expect(trial.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs - 90);
     });
+    it("should show a welcome page telling you how many sets of tasks there are when you first start", () => {
+        dailyTasks.startTasks([], jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/about to start set 1/);
+    });
+    it("should show a progress page telling you how many sets you have completed and which one you're doing for sets > 1", () => {
+        const startTime = new Date(Date.now() - 1000 * 60 * 60 * 24);
+        const endTime = new Date(Date.now() - 1000 * 60 * 60 * 23);
+        const input = buildInput([{
+            setNum: 1,
+            setStartedTime: startTime.toISOString(),
+            setFinishedTime: endTime.toISOString(),
+            taskNames: dailyTasks.allSets[0]
+        }]);
+        dailyTasks.startTasks(input, jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/You are on set 2/);
+    });
+    it("should not show a progress page if you've done all of the tasks for today", () => {
+        const input = buildInput([{setNum: 1, setFinishedTime: new Date(), taskNames: dailyTasks.allSets[0]}]);
+        dailyTasks.startTasks(input, jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/You have done all of the daily measurements for today/);
+    });
+    it("should not show a progress page if you've done all of the tasks", () => {
+        const allNames = dailyTasks.allSets.flatMap(t => t);
+        const input = buildInput([{setNum: 6, setFinishedTime: new Date(), taskNames: allNames}]);
+        dailyTasks.startTasks(input, jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/You have done all of the daily measurements required/);
+    });
 });
 
 /**

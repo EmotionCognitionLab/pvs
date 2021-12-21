@@ -388,15 +388,26 @@ async function doAll(session) {
         // pre-fetch all results before doing browser check to avoid
         // lag after btowser check sends them to start experiments
         const allResults = await db.getAllResultsForCurrentUser();
-        await browserCheck.run(startTasks.bind(null, allResults), session);
+        await browserCheck.run(startTasks.bind(null, allResults, saveResultsCallback), session);
     } catch (err) {
         logger.error('Error in dailyTasks.doAll', err);
     }
 }
 
-function startTasks(allResults) {
+function startTasks(allResults, saveResultsCallback) {
     const setAndTasks = getSetAndTasks(allResults, saveResultsCallback);
-    runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
+    if (setAndTasks.remainingTasks.length === 1 &&
+        (setAndTasks.remainingTasks[0].taskName === allDone || setAndTasks.remainingTasks[0].taskName === doneForToday)) {
+        runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
+    } else {
+        const progressNode = setAndTasks.set === 1 ? set1ProgressMessage : generalProgressMessage(setAndTasks.set);
+        progressNode.on_finish = () => {
+            runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
+        };
+        jsPsych.init({
+            timeline: [progressNode]
+        });
+    }
 }
 
 function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
@@ -500,12 +511,24 @@ const errorHappenedMessage = {
     choices: []
 };
 
+const set1ProgressMessage = {
+    type: "html-keyboard-response",
+    stimulus: "<p>Welcome! You will be asked to do 6 sets of daily emotion and cognition tasks over 6 different days. You are about to start set 1.</p><em>Please press the space bar to continue</em>",
+    choices: [" "]
+};
+
+const generalProgressMessage = (setNum) => ({
+    type: "html-keyboard-response",
+    stimulus: `<p>Welcome back! You have completed ${setNum-1} out of 6 sets of daily tasks. You are on set ${setNum}.</p><em>Please press the space bar to continue</em>`,
+    choices: [" "]
+});
+
 
 if (window.location.href.includes("daily-tasks")) {
     init();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery };
+export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery, startTasks };
 
 
 
