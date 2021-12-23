@@ -55,9 +55,6 @@ export class NBack {
             ...this.randTrialGroup(0),  // 2
             ...this.randTrialGroup(1),
             ...this.randTrialGroup(2),
-            ...this.randTrialGroup(0),  // 3
-            ...this.randTrialGroup(1),
-            ...this.randTrialGroup(2),
         ];
         if (this.training) {
             const training_block = [
@@ -73,11 +70,11 @@ export class NBack {
                 this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
                 i(train_instruction_cue_0_html),
-                ...this.randTrialGroup(0, 15, 4, false),
+                ...this.randTrialGroup(0, 15, 5, false),
                 i(train_instruction_cue_1_html),
-                ...this.randTrialGroup(1, 15, 4, false),
+                ...this.randTrialGroup(1, 15, 5, false),
                 i(train_instruction_cue_2_html),
-                ...this.randTrialGroup(2, 15, 4, false),
+                ...this.randTrialGroup(2, 15, 5, false),
             ];
             return [
                 ...training_block,
@@ -125,7 +122,7 @@ export class NBack {
         };
     }
 
-    randTrialGroup(n, length = 15, targets = 4, isRelevant = true) {
+    randTrialGroup(n, length = 15, targets = 5, isRelevant = true) {
         const cue = (
             n === 0 ? this.constructor.cue0 :
             n === 1 ? this.constructor.cue1 :
