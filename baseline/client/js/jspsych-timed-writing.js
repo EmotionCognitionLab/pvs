@@ -33,7 +33,7 @@ jsPsych.plugins["timed-writing"] = (() => {
             let html = "";
             html += `<div id="jspsych-timed-writing-stimulus">${trial.stimulus}</div>`;
             const [r, c] = [trial.textarea_rows, trial.textarea_cols];
-            html += `<textarea id="jspsych-timed-writing-textarea" rows="${r}" cols="${c}" autocomplete="off" autocapitalize="none" spellcheck="false" autocorrect="off"></textarea>`;
+            html += `<textarea id="jspsych-timed-writing-textarea" rows="${r}" cols="${c}" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="enter" autocorrect="off"></textarea>`;
             html += `<div id="jspsych-timed-writing-timer"></div>`;
             display_element.innerHTML = html;
             document.querySelector("#jspsych-timed-writing-timer").hidden = !trial.show_timer;
