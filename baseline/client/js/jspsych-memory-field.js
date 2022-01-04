@@ -20,7 +20,7 @@ jsPsych.plugins["memory-field"] = (() => {
         {
             let html = "";
             html += `<div id="jspsych-memory-field-stimulus">${trial.stimulus}</div>`;
-            html += `<input type="text" id="jspsych-memory-field-field" autocomplete="off">`;
+            html += `<input type="text" id="jspsych-memory-field-field" autocomplete="off" autocapitalize="none" autocorrect="off">`;
             html += `<div id="jspsych-memory-field-button-wrapper">`;
             html += `<input type="button" id="jspsych-memory-field-button" class="jspsych-btn" value="${trial.button_label}">`;
             html += `</div>`;
