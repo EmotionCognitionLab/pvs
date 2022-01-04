@@ -9,6 +9,9 @@ import "./style.css";
 import cue_0_html from "./frag/cue_0.html";
 import cue_1_html from "./frag/cue_1.html";
 import cue_2_html from "./frag/cue_2.html";
+import cue_0_wrong_html from "./frag/cue_0_wrong.html";
+import cue_1_wrong_html from "./frag/cue_1_wrong.html";
+import cue_2_wrong_html from "./frag/cue_2_wrong.html";
 // training fragments
 import train_introduction_html from "./frag/train/introduction.html";
 import train_instruction_start_html from "./frag/train/instruction_start.html";
@@ -191,25 +194,33 @@ NBack.simpleInstruction = stimulus => ({
     choices: [" "],
 });
 
-NBack.cueDuration = 2000,
-NBack.cue0 = {
-    type: "html-keyboard-response",
-    stimulus: cue_0_html,
-    choices: jsPsych.NO_KEYS,
-    trial_duration: NBack.cueDuration,
-};
-NBack.cue1 = {
-    type: "html-keyboard-response",
-    stimulus: cue_1_html,
-    choices: jsPsych.NO_KEYS,
-    trial_duration: NBack.cueDuration,
-};
-NBack.cue2 = {
-    type: "html-keyboard-response",
-    stimulus: cue_2_html,
-    choices: jsPsych.NO_KEYS,
-    trial_duration: NBack.cueDuration,
-};
+NBack.cue = (targetKey, stimulus, wrongFeedback) => ({
+    timeline: [
+        {
+            type: "html-keyboard-response",
+            stimulus: stimulus,
+            choices: ["0", "1", "2"],
+        },
+        {
+            timeline: [NBack.simpleInstruction(wrongFeedback)],
+            conditional_function: () => {
+                const [cueData] = jsPsych.data.get().filter(
+                    {trial_type: "html-keyboard-response"}
+                ).values().slice(-1);
+                return cueData.response !== targetKey;
+            },
+        },
+    ],
+    loop_function: data => {
+        const [cueData] = data.filter(
+            {trial_type: "html-keyboard-response"}
+        ).values().slice(-1);
+        return cueData.response !== targetKey;
+    },
+});
+NBack.cue0 = NBack.cue("0", cue_0_html, cue_0_wrong_html);
+NBack.cue1 = NBack.cue("1", cue_1_html, cue_1_wrong_html);
+NBack.cue2 = NBack.cue("2", cue_2_html, cue_2_wrong_html);
 
 NBack.rest = {
     timeline: [{

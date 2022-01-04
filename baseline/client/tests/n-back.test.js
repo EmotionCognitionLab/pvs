@@ -1,8 +1,21 @@
 import { NBack } from "../n-back/n-back.js";
 import { pressKey, cartesianProduct } from "./utils.js";
+import cue_0_html from "../n-back/frag/cue_0.html";
+import cue_1_html from "../n-back/frag/cue_1.html";
+import cue_2_html from "../n-back/frag/cue_2.html";
+import cue_0_wrong_html from "../n-back/frag/cue_0_wrong.html";
+import cue_1_wrong_html from "../n-back/frag/cue_1_wrong.html";
+import cue_2_wrong_html from "../n-back/frag/cue_2_wrong.html";
+
+const correctCueResponse = new Map([
+    [cue_0_html, "0"],
+    [cue_1_html, "1"],
+    [cue_2_html, "2"],
+]);
 
 const completeCurrentTrial = (
-    correctly,
+    nbCorrectly,
+    cueCorrectly,
     callback = _trial => {}
 ) => {
     const trial = jsPsych.currentTrial();
@@ -11,12 +24,19 @@ const completeCurrentTrial = (
     if (trial.type === "html-keyboard-response") {
         if (typeof trial.trial_duration === "number") {
             jest.advanceTimersByTime(trial.trial_duration);
+        } else if (correctCueResponse.has(trial.stimulus)) {
+            const correctKey = correctCueResponse.get(trial.stimulus);
+            if (cueCorrectly) {
+                pressKey(correctKey);
+            } else {
+                pressKey(correctKey === "0" ? "1" : "0");
+            }
         } else {
             pressKey(trial.choices[0]);
         }
     } else if (trial.type === "n-back") {
         trial.sequence.forEach((x, i) => {
-            if (correctly && (trial.n === 0 ? x === "1" : x === trial.sequence[i - trial.n])) {
+            if (nbCorrectly && (trial.n === 0 ? x === "1" : x === trial.sequence[i - trial.n])) {
                 pressKey(" ", true);
             }
             jest.advanceTimersByTime(trial.show_duration + trial.hide_duration);
@@ -48,13 +68,68 @@ describe("n-back", () => {
         });
         for (let trials = 0; !complete; ++trials) {
             if (trials > 500) { throw new Error("too many trials"); }
-            completeCurrentTrial(true);
+            completeCurrentTrial(true, true);
         }
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
         expect(relevant.length).toBeGreaterThan(0);
     });
 
-    it("short practice loops until completed correctly", () => {
+    it("cues loop until completed correctly in isolation", () => {
+        const parseText = html => (
+            (new DOMParser()).parseFromString(html, "text/html").documentElement.textContent
+        );
+        const getKeyboardResponseText = () => (
+            document.getElementById("jspsych-html-keyboard-response-stimulus").textContent
+        );
+        jest.useFakeTimers("legacy");
+        {
+            // 0-back cue
+            let complete = false;
+            jsPsych.init({
+                timeline: [NBack.cue0],
+                on_finish: () => { complete = true; },
+            });
+            expect(complete).toBe(false);
+            expect(getKeyboardResponseText()).toBe(parseText(cue_0_html));
+            pressKey("1"); expect(getKeyboardResponseText()).toBe(parseText(cue_0_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_0_html));
+            pressKey("2"); expect(getKeyboardResponseText()).toBe(parseText(cue_0_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_0_html));
+            pressKey("0"); expect(complete).toBe(true);
+        }
+        {
+            // 1-back cue
+            let complete = false;
+            jsPsych.init({
+                timeline: [NBack.cue1],
+                on_finish: () => { complete = true; },
+            });
+            expect(complete).toBe(false);
+            expect(getKeyboardResponseText()).toBe(parseText(cue_1_html));
+            pressKey("2"); expect(getKeyboardResponseText()).toBe(parseText(cue_1_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_1_html));
+            pressKey("0"); expect(getKeyboardResponseText()).toBe(parseText(cue_1_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_1_html));
+            pressKey("1"); expect(complete).toBe(true);
+        }
+        {
+            // 2-back cue
+            let complete = false;
+            jsPsych.init({
+                timeline: [NBack.cue2],
+                on_finish: () => { complete = true; },
+            });
+            expect(complete).toBe(false);
+            expect(getKeyboardResponseText()).toBe(parseText(cue_2_html));
+            pressKey("0"); expect(getKeyboardResponseText()).toBe(parseText(cue_2_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_2_html));
+            pressKey("1"); expect(getKeyboardResponseText()).toBe(parseText(cue_2_wrong_html));
+            pressKey(" "); expect(getKeyboardResponseText()).toBe(parseText(cue_2_html));
+            pressKey("2"); expect(complete).toBe(true);
+        }
+    });
+
+    it("short practice loops until completed correctly in the task timeline", () => {
         // helper to parse timeline node ids
         const parseNodeID = id => id.split("-").map(pair => pair.split(".").map(s => parseInt(s, 10)));
         // start timeline
@@ -64,17 +139,17 @@ describe("n-back", () => {
             timeline: (new NBack(1)).getTimeline(),
             on_finish: () => { complete = true; },
         });
-        const completeNTrials = (n, correctly) => {
+        const completeNTrials = (n, nbCorrectly) => {
             for (let i = 0; i < n && !complete; ++i) {
-                completeCurrentTrial(correctly);
+                completeCurrentTrial(nbCorrectly, true);
             }
         };
-        // complete 100 trials incorrectly
+        // complete 100 trials, incorrectly handling n-back trials
         completeNTrials(500, false);
         // should be at an n-back short practice sub-timeline
         const idA = parseNodeID(jsPsych.currentTimelineNodeID());
         expect(complete).toBe(false);
-        // complete another 10 trials incorrectly
+        // complete another 10 trials, incorrectly handling n-back trials
         completeNTrials(50, false);
         // should still be at the same n-back short practice sub-timeline
         const idB = parseNodeID(jsPsych.currentTimelineNodeID());
@@ -101,8 +176,7 @@ describe("n-back", () => {
             });
             const nbTrials = [];
             while (!complete) {
-                completeCurrentTrial(
-                    true,
+                completeCurrentTrial(true, true,
                     trial => {
                         if (trial.type === "n-back") {
                             nbTrials.push(trial);
@@ -135,7 +209,7 @@ describe("n-back", () => {
             on_finish: () => { complete = true; },
         });
         while (!complete) {
-            completeCurrentTrial(true);
+            completeCurrentTrial(true, true);
         }
         expect(spy).toHaveBeenCalledTimes(2*3 + 3*3);
     });
