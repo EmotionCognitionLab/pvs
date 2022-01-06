@@ -283,3 +283,30 @@ describe("browser check if user agent info is saved", () => {
         expect(stimulus[0].innerHTML).toMatch(/cannot be done on tablets/);
     });
 });
+
+describe("browser check for returning user whose profile cannot be fetched from db", () => {
+    const mockGetSelf = jest.fn(() => null);
+    const mockUpdateSelf = jest.fn();
+    let origInitKey;
+
+    beforeAll(() => {
+        origInitKey = window.localStorage.getItem(`${browserCheck.appName}.${browserCheck.initKey}`);
+        window.localStorage.setItem(`${browserCheck.appName}.${browserCheck.initKey}`, true);
+        Db.mockImplementation(() => {
+            return {
+                getSelf: mockGetSelf,
+                updateSelf: mockUpdateSelf
+            };
+        });
+    });
+
+    afterAll(() => {
+        window.localStorage.setItem(`${browserCheck.appName}.${browserCheck.initKey}`, origInitKey);
+    });
+
+    it("should behave as though the profile were fetched and matches the current profile", async () => {
+        const callback = jest.fn();
+        await browserCheck.run(callback, null);
+        expect(callback).toHaveBeenCalled();
+    });
+});

@@ -35,7 +35,7 @@ async function run(callback, session) {
         gatherComputerProfile(callback);
     } else {
         const profile = await fetchStoredProfile();
-        if (computerProfileMatchesStoredProfile(profile)) {
+        if (!profile || computerProfileMatchesStoredProfile(profile)) { // if for some reason we don't get the profile just assume it matches
             callback();
         } else {
             // if found and different, ask them to swtich to their original browser
