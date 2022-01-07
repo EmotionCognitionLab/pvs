@@ -7,6 +7,7 @@
 
 const AWS = require('aws-sdk');
 const fs = require("fs");
+const path = require('path');
 
 const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
@@ -14,10 +15,10 @@ const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const dynamo = new AWS.DynamoDB.DocumentClient({endpoint: dynamoEndpoint, apiVersion: '2012-08-10', region: region});
 
 // filtered WordNet 3.1 words
-const adjs3 = fs.readFileSync("wn3.1-adjs3.txt", "utf8").trim().split("\n");
-const adjs4 = fs.readFileSync("wn3.1-adjs4.txt", "utf8").trim().split("\n");
-const nouns3 = fs.readFileSync("wn3.1-nouns3.txt", "utf8").trim().split("\n");
-const nouns4 = fs.readFileSync("wn3.1-nouns4.txt", "utf8").trim().split("\n");
+const adjs3 = fs.readFileSync(path.join(__dirname ,"wn3.1-adjs3.txt"), "utf8").trim().split("\n");
+const adjs4 = fs.readFileSync(path.join(__dirname ,"wn3.1-adjs4.txt"), "utf8").trim().split("\n");
+const nouns3 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns3.txt"), "utf8").trim().split("\n");
+const nouns4 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns4.txt"), "utf8").trim().split("\n");
 
 exports.handler = async (event) => {
     const userRec = buildUserRecord(event);
@@ -33,6 +34,7 @@ exports.handler = async (event) => {
 function capitalizeFirst(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
 function randomPhrase7() {
     // choose any adjective
     const i = Math.floor((adjs3.length+adjs4.length) * Math.random());
@@ -49,6 +51,7 @@ function buildUserRecord(event) {
         TableName: usersTable,
         Item: {
             userId: event.request.userAttributes["sub"],
+            humanId: randomPhrase7(),
             name: event.request.userAttributes["name"],
             email: event.request.userAttributes["email"],
             phone_number: event.request.userAttributes["phone_number"],

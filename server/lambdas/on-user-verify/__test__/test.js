@@ -34,6 +34,7 @@ describe("Testing with a valid post confirmation trigger event", () => {
         }
         expect(userRec.Item.createdAt.substring(0, 18)).toBe(new Date().toISOString().substring(0, 18));
         expect(userRec.Item.phone_number_verified).toBeFalsy();
+        expect(userRec.Item.humanId.length).toBe(7);
     });
 
     afterAll(async () => {
