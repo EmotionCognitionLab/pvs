@@ -271,7 +271,6 @@ out
 owl
 pad
 pan
-pap
 par
 pas
 pat
@@ -404,8 +403,6 @@ wig
 win
 wit
 woe
-wog
-wop
 yak
 yam
 yaw
