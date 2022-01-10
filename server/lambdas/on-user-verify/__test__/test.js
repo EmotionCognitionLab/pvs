@@ -11,16 +11,21 @@ const docClient = new AWS.DynamoDB.DocumentClient({endpoint: process.env.DYNAMO_
 const postConfirmationEventJson = readFileSync(path.join(__dirname, 'post-confirmation-event.json'));
 const postConfirmationEvent = JSON.parse(postConfirmationEventJson);
 
+const verified = require('../verified.js');
+
 describe("Testing with a valid post confirmation trigger event", () => {
+    let hIdExistsMock;
     beforeAll(async () => {
         await th.dynamo.createTable(process.env.USERS_TABLE, 
             [{AttributeName: 'userId', KeyType: 'HASH'}], 
             [{AttributeName: 'userId', AttributeType: 'S'}]
         );
+        hIdExistsMock = jest.fn(async(hId) => false);
+        verified.humanIdExists = hIdExistsMock;
     });
 
     test("should succeed", async() => {
-        const result = await runLambda();
+        const result = await verified.handler(postConfirmationEvent);
         expect(result.response).toBeDefined();
         const params = {
             TableName: process.env.USERS_TABLE,
@@ -35,6 +40,7 @@ describe("Testing with a valid post confirmation trigger event", () => {
         expect(userRec.Item.createdAt.substring(0, 18)).toBe(new Date().toISOString().substring(0, 18));
         expect(userRec.Item.phone_number_verified).toBeFalsy();
         expect(userRec.Item.humanId.length).toBe(7);
+        expect(userRec.Item.humanId).toBe(hIdExistsMock.mock.calls[0][0]);
     });
 
     afterAll(async () => {
@@ -42,12 +48,41 @@ describe("Testing with a valid post confirmation trigger event", () => {
     });
 });
 
-async function runLambda() {
-    return await lambdaLocal.execute({
-        event: postConfirmationEvent,
-        lambdaPath: path.join(__dirname, '../verified.js'),
-        lambdaHandler: 'handler',
-        environment: {USERS_TABLE: process.env.USERS_TABLE},
-        verboseLevel: 0
+describe("Testing human-readable ids", () => {
+    let hIdExistsMock;
+    beforeAll(async () => {
+        await th.dynamo.createTable(process.env.USERS_TABLE, 
+            [{AttributeName: 'userId', KeyType: 'HASH'}], 
+            [{AttributeName: 'userId', AttributeType: 'S'}]
+        );
+        hIdExistsMock = jest.fn(async() => true);
+        verified.humanIdExists = hIdExistsMock;
     });
-}
+    
+    it("should fail if three human ids are already in the database", async () => {
+        try {
+            await verified.handler(postConfirmationEvent);
+        } catch (err) {
+            expect(err.message).toMatch(/Something went wrong/);
+            expect(hIdExistsMock).toHaveBeenCalledTimes(3);
+        }
+    });
+
+    it("should succeed once it finds a human id that is not in the database", async () => {
+        try {
+            hIdExistsMock.mockReturnValue(false).mockReturnValueOnce(true);
+            await verified.handler(postConfirmationEvent);
+            expect(hIdExistsMock).toHaveBeenCalledTimes(2);
+        } catch (err) {
+            throw err; // do this to make the test fail; we don't expect to hit this
+        }
+    });
+
+    afterEach(() => {
+        hIdExistsMock.mockRestore();
+    });
+
+    afterAll(async () => {
+        await th.dynamo.deleteTable(process.env.USERS_TABLE);
+    });
+});

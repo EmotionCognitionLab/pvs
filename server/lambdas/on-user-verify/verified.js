@@ -22,13 +22,29 @@ const nouns4 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns4.txt"), "utf8")
 
 exports.handler = async (event) => {
     const userRec = buildUserRecord(event);
-    try {
-        await dynamo.put(userRec).promise();
-        return event;
-    } catch (err) {
-        console.log(err);
+    let maxTries = 3;
+    let hIdOk = false;
+    while (maxTries-- > 0 && !hIdOk) {
+        const exists = await exports.humanIdExists(userRec.Item.humanId);
+        if (!exists) {
+            hIdOk = true;
+        } else {
+            userRec.Item.humanId = randomPhrase7();
+        }
+    }
+    if (hIdOk) {
+        try {
+            await dynamo.put(userRec).promise();
+            return event;
+        } catch (err) {
+            console.log(err);
+            throw new Error('Something went wrong. Please try again later.') // NB this will be seen by the user
+        }
+    } else {
+        console.log("All the human id's were already in the db.");
         throw new Error('Something went wrong. Please try again later.') // NB this will be seen by the user
     }
+    
 };
 
 function capitalizeFirst(s) {
@@ -44,6 +60,26 @@ function randomPhrase7() {
     const j = Math.floor(validNouns.length * Math.random())
     const noun = validNouns[j];
     return capitalizeFirst(adj) + capitalizeFirst(noun);
+}
+
+exports.humanIdExists = async(hId) => { //exported for testing purposes
+    const params = {
+        TableName : usersTable,
+        FilterExpression: "#humanId = :hId",
+        ExpressionAttributeNames: {
+            "#humanId": "humanId",
+        },
+        ExpressionAttributeValues: {
+            ":hId": hId,
+        }
+    };
+    try {
+        const res = await dynamo.scan(params).promise();
+        return res.Items.length = 0;
+    } catch (err) {
+        console.log(`Unable to confirm if human id ${hId} already exists; assuming it does.`, err);
+        return true;
+    }
 }
 
 function buildUserRecord(event) {
