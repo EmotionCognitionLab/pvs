@@ -15,6 +15,8 @@ const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const dynamo = new AWS.DynamoDB.DocumentClient({endpoint: dynamoEndpoint, apiVersion: '2012-08-10', region: region});
 
 // filtered WordNet 3.1 words
+// any changes to the names/locations/number of these files
+// will require changes to ../plugins/wordnet-plugin.js
 const adjs3 = fs.readFileSync(path.join(__dirname ,"wn3.1-adjs3.txt"), "utf8").trim().split("\n");
 const adjs4 = fs.readFileSync(path.join(__dirname ,"wn3.1-adjs4.txt"), "utf8").trim().split("\n");
 const nouns3 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns3.txt"), "utf8").trim().split("\n");
