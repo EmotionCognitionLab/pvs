@@ -26,7 +26,6 @@ anil
 anna
 anoa
 ante
-anti
 apar
 apex
 apse
@@ -160,8 +159,6 @@ burl
 burn
 burr
 bush
-bust
-butt
 buzz
 byte
 cafe
@@ -324,12 +321,10 @@ disk
 dita
 dive
 dock
-dodo
 doge
 dole
 doll
 dome
-dong
 doom
 door
 dopa
@@ -410,7 +405,6 @@ fill
 film
 fils
 fine
-fink
 fire
 firm
 fisc
@@ -617,7 +611,6 @@ jati
 jazz
 jeep
 jeer
-jerk
 jest
 jiao
 jilt
@@ -647,7 +640,6 @@ kern
 khan
 kibe
 kick
-kike
 kiln
 kilt
 kina
@@ -854,9 +846,7 @@ nail
 name
 nape
 napu
-narc
 nard
-nark
 nave
 navy
 neck
@@ -872,7 +862,6 @@ niff
 nine
 nipa
 node
-noma
 none
 nook
 noon

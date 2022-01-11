@@ -140,7 +140,6 @@ tied
 toed
 torn
 true
-uric
 used
 void
 warm

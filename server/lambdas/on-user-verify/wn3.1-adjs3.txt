@@ -3,7 +3,6 @@ ago
 all
 apt
 azo
-bad
 bay
 big
 coy
@@ -18,7 +17,6 @@ few
 fey
 fit
 fly
-gay
 hep
 hot
 icy
@@ -32,7 +30,6 @@ neo
 net
 new
 nth
-odd
 off
 old
 one

@@ -141,7 +141,6 @@ gal
 gam
 gap
 gar
-gas
 gat
 gel
 gem
@@ -154,7 +153,6 @@ gnu
 gob
 gum
 guy
-gyp
 ham
 hao
 hap
@@ -177,7 +175,6 @@ hug
 hum
 hut
 ice
-imp
 ink
 ion
 ivy
@@ -294,7 +291,6 @@ poi
 pop
 pot
 pox
-pro
 psi
 pug
 pul
