@@ -99,6 +99,9 @@ export default class Db {
 
         // credentials override passed-in identity
         const identId = this.credentials ? this.credentials.identityId : identityId;
+        if (!identId) {
+            await this.refreshPermissions();
+        }
 
         try {
             let ExclusiveStartKey, dynResults
