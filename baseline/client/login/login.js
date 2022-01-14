@@ -9,6 +9,9 @@ const phoneVerificationSuccessId = 'phoneVerificationSuccess';
 const phoneCodeSendFailedId = 'phoneCodeSendFailed';
 const resendPhoneCodeNormalId = 'resendPhoneCodeNormal';
 const resendPhoneCodeErrorId = 'resendPhoneCodeError';
+const phoneConfirmFormId = 'phoneConfirm';
+const phoneConfirmFieldId = 'phoneConfirmField';
+const phoneConfirmSubmitId = 'phoneConfirmSubmit';
 let cachedSession = null;
 
 function loginSuccess(session) {
@@ -45,9 +48,10 @@ function confirmPhoneVerificationCode(successCallback, failureCallback) {
 
 function showPhoneVerificationForm() {
     document.getElementById(phoneVerificationFormId).classList.remove('hidden');
-    document.getElementById(resendPhoneCodeNormalId).addEventListener('click',
-        () => { sendPhoneCode(cachedSession); }
-    );
+    document.getElementById(resendPhoneCodeNormalId).addEventListener('click', () => {
+        document.getElementById(phoneVerificationFormId).classList.add('hidden');
+        showPhoneConfirmForm();
+    });
 }
 
 function sendingPhoneVerificationCodeFailed(err) {
@@ -74,6 +78,28 @@ function phoneVerificationSuccess() {
 
 function phoneVerificationFailure(err) {
     showError(err, 'There was a problem verifiying your phone. Please double-check that you entered the phone verification code correctly and try again.');
+}
+
+function showPhoneConfirmForm() {
+    const db = new Db({session: cachedSession});
+    db.getSelf().then(user => {
+        // get current phone number associated with user
+        console.debug(user);
+        return user.phone_number;
+    }, err => {
+        showError(err, 'There was a problem retrieving your phone number. Please reenter your phone number.');
+        return '';
+    }).then(phoneNumber => {
+        console.debug(phoneNumber);
+        document.getElementById(phoneConfirmFieldId).value = phoneNumber;
+        document.getElementById(phoneConfirmFormId).classList.remove('hidden');
+        document.getElementById(phoneConfirmSubmitId).addEventListener('click', () => {
+            document.getElementById(phoneConfirmFormId).classList.add('hidden');
+            // update phone number associated with user if different
+            ;  // to-do
+            sendPhoneCode(cachedSession);
+        });
+    });
 }
 
 function goToDailyTasks() {
