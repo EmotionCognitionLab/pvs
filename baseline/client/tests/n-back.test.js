@@ -1,5 +1,5 @@
 import { NBack } from "../n-back/n-back.js";
-import { pressKey, cartesianProduct } from "./utils.js";
+import { pressKey, cartesianProduct, flattenTimeline } from "./utils.js";
 import cue_0_html from "../n-back/frag/cue_0.html";
 import cue_1_html from "../n-back/frag/cue_1.html";
 import cue_2_html from "../n-back/frag/cue_2.html";
@@ -215,9 +215,9 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are preceded by cues", () => {
-        const timeline = (new NBack(1)).getTimeline();
+        const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
         expect(
-            timeline.every((trial, index) => {
+            flatTimeline.every((trial, index) => {
                 if (trial.type === "n-back") {
                     const expected_cue = (
                         trial.n === 0 ? NBack.cue0 :
@@ -225,7 +225,7 @@ describe("n-back", () => {
                         trial.n === 2 ? NBack.cue2 :
                         null
                     );
-                    return expected_cue !== null && timeline[index - 1] === expected_cue;
+                    return expected_cue !== null && flatTimeline[index - 1] === expected_cue;
                 } else {
                     return true;
                 }
@@ -234,11 +234,11 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are succeeded by rests", () => {
-        const timeline = (new NBack(1)).getTimeline();
+        const flatTimeline = (new NBack(1)).getTimeline();
         expect(
-            timeline.every((trial, index) => {
+            flatTimeline.every((trial, index) => {
                 if (trial.type === "n-back") {
-                    return timeline[index + 1] === NBack.rest;
+                    return flatTimeline[index + 1] === NBack.rest;
                 } else {
                     return true;
                 }
