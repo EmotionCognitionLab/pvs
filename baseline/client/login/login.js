@@ -80,32 +80,36 @@ function phoneVerificationFailure(err) {
     showError(err, 'There was a problem verifiying your phone. Please double-check that you entered the phone verification code correctly and try again.');
 }
 
-function showPhoneConfirmForm() {
+async function showPhoneConfirmForm() {
     const db = new Db({session: cachedSession});
-    db.getSelf().then(user => {
-        // get current phone number associated with user
-        return user.phone_number;
-    }, err => {
+    let oldPhoneNumber = '';
+    try {
+        oldPhoneNumber = (await db.getSelf()).phone_number;
+    } catch (err) {
         showError(err, 'There was a problem retrieving your phone number. Please reenter your phone number.');
-        return '';
-    }).then(oldPhoneNumber => {
-        document.getElementById(phoneConfirmFieldId).value = oldPhoneNumber;
-        document.getElementById(phoneConfirmFormId).classList.remove('hidden');
-        document.getElementById(phoneConfirmSubmitId).addEventListener('click', () => {
-            const phoneNumber = document.getElementById(phoneConfirmFieldId).value;
-            // validate phone number in field
-            if (false) {  // to-do: validate phone number
+    }
+    document.getElementById(phoneConfirmFieldId).value = oldPhoneNumber;
+    document.getElementById(phoneConfirmFormId).classList.remove('hidden');
+    document.getElementById(phoneConfirmSubmitId).addEventListener('click', async () => {
+        const phoneNumber = document.getElementById(phoneConfirmFieldId).value;
+        // validate phone number in field
+        if (false) {  // to-do: validate phone number
+            return;
+        }
+        document.getElementById(phoneConfirmFormId).classList.add('hidden');
+        // update phone number associated with user if different
+        if (phoneNumber != oldPhoneNumber) {
+            try {
+                await db.updateSelf({'phone_number': phoneNumber});
+            } catch (err) {
+                showError(err, 'There was a problem updating your phone number. Please try again.');
+                showPhoneConfirmForm();
                 return;
             }
-            document.getElementById(phoneConfirmFormId).classList.add('hidden');
-            // update phone number associated with user if different
-            if (phoneNumber != oldPhoneNumber) {
-                db.updateSelf({'phone_number': phoneNumber});
-            }
-            // send code to newly confirmed phone number and show verification form
-            sendPhoneCode(cachedSession);
-            showPhoneVerificationForm();
-        });
+        }
+        // send code to newly confirmed phone number and show verification form
+        sendPhoneCode(cachedSession);
+        showPhoneVerificationForm();
     });
 }
 
