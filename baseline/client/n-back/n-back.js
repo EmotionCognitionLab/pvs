@@ -73,11 +73,11 @@ export class NBack {
                 this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
                 i(train_instruction_cue_0_html),
-                ...this.randTrialGroup(0, 15, 5, false),
+                ...this.randTrialGroup(0, undefined, undefined, false),
                 i(train_instruction_cue_1_html),
-                ...this.randTrialGroup(1, 15, 5, false),
+                ...this.randTrialGroup(1, undefined, undefined, false),
                 i(train_instruction_cue_2_html),
-                ...this.randTrialGroup(2, 15, 5, false),
+                ...this.randTrialGroup(2, undefined, undefined, false),
             ];
             return [
                 ...training_block,
