@@ -219,13 +219,19 @@ describe("n-back", () => {
         expect(
             flatTimeline.every((trial, index) => {
                 if (trial.type === "n-back") {
-                    const expected_cue = (
-                        trial.n === 0 ? NBack.cue0 :
-                        trial.n === 1 ? NBack.cue1 :
-                        trial.n === 2 ? NBack.cue2 :
-                        null
-                    );
-                    return expected_cue !== null && flatTimeline[index - 1] === expected_cue;
+                    const cueStimulus = flatTimeline[index - 2].stimulus;
+                    const cueWrongStimulus = flatTimeline[index - 1].stimulus;
+                    if (trial.n === 0) {
+                        return cueStimulus === cue_0_html && cueWrongStimulus === cue_0_wrong_html;
+                    } else if (trial.n === 1) {
+                        return cueStimulus === cue_1_html && cueWrongStimulus === cue_1_wrong_html;
+                    } else if (trial.n === 2) {
+                        return cueStimulus === cue_2_html && cueWrongStimulus === cue_2_wrong_html;
+                    } else {
+                        fail("invalid n");
+                        return false;
+                    }
+                    return expected_cue !== null && flatTimeline[index - 2] === expected_cue;
                 } else {
                     return true;
                 }
