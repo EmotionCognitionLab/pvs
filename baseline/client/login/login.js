@@ -84,20 +84,27 @@ function showPhoneConfirmForm() {
     const db = new Db({session: cachedSession});
     db.getSelf().then(user => {
         // get current phone number associated with user
-        console.debug(user);
         return user.phone_number;
     }, err => {
         showError(err, 'There was a problem retrieving your phone number. Please reenter your phone number.');
         return '';
-    }).then(phoneNumber => {
-        console.debug(phoneNumber);
-        document.getElementById(phoneConfirmFieldId).value = phoneNumber;
+    }).then(oldPhoneNumber => {
+        document.getElementById(phoneConfirmFieldId).value = oldPhoneNumber;
         document.getElementById(phoneConfirmFormId).classList.remove('hidden');
         document.getElementById(phoneConfirmSubmitId).addEventListener('click', () => {
+            const phoneNumber = document.getElementById(phoneConfirmFieldId).value;
+            // validate phone number in field
+            if (false) {  // to-do: validate phone number
+                return;
+            }
             document.getElementById(phoneConfirmFormId).classList.add('hidden');
             // update phone number associated with user if different
-            ;  // to-do
+            if (phoneNumber != oldPhoneNumber) {
+                db.updateSelf({'phone_number': phoneNumber});
+            }
+            // send code to newly confirmed phone number and show verification form
             sendPhoneCode(cachedSession);
+            showPhoneVerificationForm();
         });
     });
 }
