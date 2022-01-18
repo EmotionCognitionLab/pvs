@@ -241,9 +241,18 @@ describe("n-back", () => {
 
     it("n-back plugin trials are succeeded by rests", () => {
         const flatTimeline = (new NBack(1)).getTimeline();
+        const lastNBackTrialIndex = (() => {
+            for (let i = flatTimeline.length - 1; i >= 0; --i) {
+                if (flatTimeline[i].type === "n-back") {
+                    return i;
+                }
+            }
+            return null;
+        })();
+        expect(lastNBackTrialIndex).not.toBe(null);
         expect(
             flatTimeline.every((trial, index) => {
-                if (trial.type === "n-back") {
+                if (trial.type === "n-back" && index !== lastNBackTrialIndex) {
                     return flatTimeline[index + 1] === NBack.rest;
                 } else {
                     return true;
