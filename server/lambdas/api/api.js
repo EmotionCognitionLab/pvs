@@ -48,7 +48,7 @@ updateUser = async(event) => {
             return errorResponse({statusCode: 400, message: "No updates found"});
         }
 
-        const notModifiable = ['userId', 'createdAt', 'email', 'phone_number'];
+        const notModifiable = ['userId', 'createdAt', 'email'];
         const allowedKeys = Object.keys(updates).filter(k => !notModifiable.includes(k));
         if (allowedKeys.length === 0) {
             return errorResponse({statusCode: 400, message: "No updates for allowed fields found"});
