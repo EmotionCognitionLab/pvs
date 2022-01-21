@@ -98,9 +98,13 @@ export default class Db {
         }
 
         // credentials override passed-in identity
-        const identId = this.credentials ? this.credentials.identityId : identityId;
+        let identId = this.credentials ? this.credentials.identityId : identityId;
         if (!identId) {
+            const credentialsPresent = this.credentials ? true: false;
+            this.logger.error(`Empty identity when calling getResultsForCurrentUser. Passed-in id: ${identityId} . Credentials present: ${credentialsPresent} .`);
             await this.refreshPermissions();
+            identId = this.credentials ? this.credentials.identityId : identityId;
+            this.logger.info(`identId after calling refreshPermissions: ${identId}`);
         }
 
         try {
