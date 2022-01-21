@@ -68,8 +68,21 @@ function phoneVerificationSuccess() {
     document.getElementById(phoneVerificationFormId).classList.add('hidden');
     document.getElementById(phoneVerificationSuccessId).classList.remove('hidden');
     document.getElementById('continueButton').addEventListener('click', goToDailyTasks);
-    const db = new Db({session: cachedSession});
-    db.updateSelf({"phone_number_verified": true});
+    try {
+        const db = new Db({session: cachedSession});
+        db.updateSelf({"phone_number_verified": true});
+    } catch (err) {
+        const idToken = cachedSession.getIdToken().getJwtToken();
+        let sub = 'unknown';
+        if (idToken) {
+            const payload = idToken.split('.')[1];
+            const tokenobj = JSON.parse(atob(payload));
+            sub = tokenobj.sub;
+        }
+        console.log(`Error setting phone_number_verified to true in dynamo for sub ${sub}`);
+        console.log(err);
+    }
+    
 }
 
 function phoneVerificationFailure(err) {

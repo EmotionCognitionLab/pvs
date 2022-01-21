@@ -281,6 +281,9 @@ export default class Db {
             },
             body: JSON.stringify(updates)
         });
+        if (!response.ok) {
+            throw new Error(`There was an error updating the user record: ${response.text()} (status code: ${response.status})`);
+        }
         return response;
     }
 
@@ -297,6 +300,9 @@ export default class Db {
                 "Authorization": this.idToken,
             }
         });
+        if (!response.ok) {
+            throw new Error(`There was an error getting the user record: ${response.text()} (status code: ${response.status})`);
+        }
         const userData = await response.json();
         return userData;
     }
