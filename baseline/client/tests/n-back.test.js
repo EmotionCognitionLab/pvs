@@ -1,5 +1,5 @@
 import { NBack } from "../n-back/n-back.js";
-import { pressKey, cartesianProduct } from "./utils.js";
+import { pressKey, cartesianProduct, flattenTimeline } from "./utils.js";
 import cue_0_html from "../n-back/frag/cue_0.html";
 import cue_1_html from "../n-back/frag/cue_1.html";
 import cue_2_html from "../n-back/frag/cue_2.html";
@@ -215,17 +215,23 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are preceded by cues", () => {
-        const timeline = (new NBack(1)).getTimeline();
+        const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
         expect(
-            timeline.every((trial, index) => {
+            flatTimeline.every((trial, index) => {
                 if (trial.type === "n-back") {
-                    const expected_cue = (
-                        trial.n === 0 ? NBack.cue0 :
-                        trial.n === 1 ? NBack.cue1 :
-                        trial.n === 2 ? NBack.cue2 :
-                        null
-                    );
-                    return expected_cue !== null && timeline[index - 1] === expected_cue;
+                    const cueStimulus = flatTimeline[index - 2].stimulus;
+                    const cueWrongStimulus = flatTimeline[index - 1].stimulus;
+                    if (trial.n === 0) {
+                        return cueStimulus === cue_0_html && cueWrongStimulus === cue_0_wrong_html;
+                    } else if (trial.n === 1) {
+                        return cueStimulus === cue_1_html && cueWrongStimulus === cue_1_wrong_html;
+                    } else if (trial.n === 2) {
+                        return cueStimulus === cue_2_html && cueWrongStimulus === cue_2_wrong_html;
+                    } else {
+                        fail("invalid n");
+                        return false;
+                    }
+                    return expected_cue !== null && flatTimeline[index - 2] === expected_cue;
                 } else {
                     return true;
                 }
@@ -234,11 +240,20 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are succeeded by rests", () => {
-        const timeline = (new NBack(1)).getTimeline();
+        const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
+        const lastNBackTrialIndex = (() => {
+            for (let i = flatTimeline.length - 1; i >= 0; --i) {
+                if (flatTimeline[i].type === "n-back") {
+                    return i;
+                }
+            }
+            return null;
+        })();
+        expect(lastNBackTrialIndex).not.toBe(null);
         expect(
-            timeline.every((trial, index) => {
-                if (trial.type === "n-back") {
-                    return timeline[index + 1] === NBack.rest;
+            flatTimeline.every((trial, index) => {
+                if (trial.type === "n-back" && index !== lastNBackTrialIndex) {
+                    return flatTimeline[index + 1] === NBack.rest.timeline[0];
                 } else {
                     return true;
                 }

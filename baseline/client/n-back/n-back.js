@@ -57,7 +57,7 @@ export class NBack {
             ...this.randTrialGroup(2),
             ...this.randTrialGroup(0),  // 2
             ...this.randTrialGroup(1),
-            ...this.randTrialGroup(2),
+            ...this.randTrialGroup(2, undefined, undefined, undefined, false)
         ];
         if (this.training) {
             const training_block = [
@@ -73,11 +73,11 @@ export class NBack {
                 this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
                 i(train_instruction_cue_0_html),
-                ...this.randTrialGroup(0, 15, 5, false),
+                ...this.randTrialGroup(0, undefined, undefined, false),
                 i(train_instruction_cue_1_html),
-                ...this.randTrialGroup(1, 15, 5, false),
+                ...this.randTrialGroup(1, undefined, undefined, false),
                 i(train_instruction_cue_2_html),
-                ...this.randTrialGroup(2, 15, 5, false),
+                ...this.randTrialGroup(2, undefined, undefined, false),
             ];
             return [
                 ...training_block,
@@ -125,7 +125,7 @@ export class NBack {
         };
     }
 
-    randTrialGroup(n, length = 15, targets = 5, isRelevant = true) {
+    randTrialGroup(n, length = 15, targets = 5, isRelevant = true, hasRest = true) {
         const cue = (
             n === 0 ? this.constructor.cue0 :
             n === 1 ? this.constructor.cue1 :
@@ -136,8 +136,7 @@ export class NBack {
             throw new Error("cue not implemented for n");
         }
         const trial = this.randTrial(n, length, targets, isRelevant);
-        const rest = this.constructor.rest;
-        return [cue, trial, rest];
+        return hasRest ? [cue, trial, this.constructor.rest] : [cue, trial];
     }
 
     randTrial(n, length, targets, isRelevant) {

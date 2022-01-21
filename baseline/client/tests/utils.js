@@ -31,3 +31,7 @@ export const clickIcirc = (icirc, x, y) => {
         clientY: -y + icirc.height/2 + rect.top,
     }));
 };
+
+export function flattenTimeline(timeline) {
+    return timeline.flatMap(node => node.timeline ? flattenTimeline(node.timeline) : node);
+}
