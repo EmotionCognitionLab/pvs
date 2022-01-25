@@ -4,8 +4,9 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
-        login: 'login/login.js',
-        'daily-tasks': 'daily-tasks/daily-tasks.js'
+        'admin': 'admin/admin.js',
+        'daily-tasks': 'daily-tasks/daily-tasks.js',
+        'login': 'login/login.js',
     },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
@@ -14,16 +15,21 @@ module.exports = {
             'process.env': JSON.stringify({'NODE_DEBUG': false})
         }),
         new HtmlWebpackPlugin({
-            title: 'HeartBEAM Login',
-            template: 'login/index.ejs',
-            filename: 'login/index.html',
-            chunks: ['login']
+            title: 'Admin Tool',
+            filename: 'admin/index.html',
+            chunks: ['admin']
         }),
         new HtmlWebpackPlugin({
             title: 'Daily Tasks',
             filename: 'daily-tasks/index.html',
             chunks: ['daily-tasks']
-        })
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Login',
+            template: 'login/index.ejs',
+            filename: 'login/index.html',
+            chunks: ['login']
+        }),
     ],
     optimization: {
         splitChunks: {
