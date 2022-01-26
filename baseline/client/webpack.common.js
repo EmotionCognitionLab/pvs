@@ -5,6 +5,7 @@ const webpack = require("webpack");
 module.exports = {
     entry: {
         login: 'login/login.js',
+        logout: 'logout/logout.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js'
     },
     plugins: [
@@ -23,6 +24,21 @@ module.exports = {
             title: 'Daily Tasks',
             filename: 'daily-tasks/index.html',
             chunks: ['daily-tasks']
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/index.html',
+            chunks: ['logout']
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/success/index.html',
+            chunks: ['logout']
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/error/index.html',
+            chunks: ['logout']
         })
     ],
     optimization: {
