@@ -12,10 +12,12 @@
  * ...where [target env] is most likely 'dev' or 'prod'.
  */
 const { spawnSync } = require('child_process');
+const path = require('path');
+
 const settingsFiles = {
-    'dev': '../../commmon/aws-settings.dev.json',
-    'prod': '../../common/aws-settings.prod.json',
-    'deploy': '../../common/aws-settings.json'
+    'dev': '../../../common/aws-settings.dev.json',
+    'prod': '../../../common/aws-settings.prod.json',
+    'deploy': '../../../common/aws-settings.json'
 };
 
 function getUncommittedFiles() {
@@ -28,13 +30,13 @@ function getUnpushedFiles() {
     return git.stdout.toString();
 }
 
-function checkEnvSettings(env) {
+function envSettingsOk(env) {
     const envFile = settingsFiles[env];
     if (!envFile) {
         throw new Error(`No settings file found for ${env}.`);
     }
-    const diff = spawnSync('diff', [envFile, settingsFiles['deploy']]);
-    return diff.stdout.toString();
+    const diff = spawnSync('diff', [path.join(__dirname, envFile), path.join(__dirname, settingsFiles['deploy'])]);
+    return diff.stdout.toString().length === 0 && diff.stderr.toString().length === 0;
 }
 
 function main() {
@@ -50,8 +52,7 @@ function main() {
         process.exit(2);
     }
 
-    const prodEnvErrs = checkEnvSettings(process.argv[2]);
-    if (prodEnvErrs.length !== 0) {
+    if (!envSettingsOk(process.argv[2])) {
         console.log(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
         process.exit(3);
     }
