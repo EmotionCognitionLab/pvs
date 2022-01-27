@@ -25,6 +25,7 @@ resource "aws_cognito_user_pool" "pool" {
       attribute_data_type = "String"
       name = "phone_number"
       required = true
+      mutable = true
       string_attribute_constraints {
           min_length = 12
           max_length = 12
@@ -34,6 +35,7 @@ resource "aws_cognito_user_pool" "pool" {
       attribute_data_type = "String"
       name = "name"
       required = true
+      mutable = true
       string_attribute_constraints {
           min_length = 1
           max_length = 50
