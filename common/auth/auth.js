@@ -20,12 +20,12 @@ const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({regio
  * @param {Array<string>} scopes List of OAuth2 scopes to request. If left empty, only the "openid" scope will be applied.
  * @returns {CognitoAuth} 
  */
-function getAuth(onSuccess, onFailure, state, scopes = []) {
+function getAuth(onSuccess, onFailure, state = null, scopes = []) {
     if (scopes.length > 0) {
         awsSettings.TokenScopesArray = scopes;
     }
     var auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings);
-    if (state !== undefined) {
+    if (state !== null) {
         auth.setState(state);
     }
     auth.userhandler = {

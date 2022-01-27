@@ -7,6 +7,7 @@ module.exports = {
         'admin': 'admin/admin.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
+        'logout': 'logout/logout.js',
     },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
@@ -16,8 +17,8 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             title: 'Admin Tool',
-            template: 'admin/index.ejs',
             filename: 'admin/index.html',
+            template: 'admin/index.ejs',
             chunks: ['admin'],
         }),
         new HtmlWebpackPlugin({
@@ -27,9 +28,24 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             title: 'HeartBEAM Login',
-            template: 'login/index.ejs',
             filename: 'login/index.html',
+            template: 'login/index.ejs',
             chunks: ['login'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/index.html',
+            chunks: ['logout'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/success/index.html',
+            chunks: ['logout'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Logout',
+            filename: 'logout/error/index.html',
+            chunks: ['logout'],
         }),
     ],
     optimization: {
