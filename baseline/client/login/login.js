@@ -14,6 +14,8 @@ const phoneConfirmFormId = 'phoneConfirm';
 const phoneConfirmFieldId = 'phoneConfirmField';
 const phoneConfirmSubmitId = 'phoneConfirmSubmit';
 const phoneConfirmMsgId = 'phoneConfirmMsg';
+const skipPhoneVerificationId = 'skipPhoneVerification';
+let allowSkip = false;
 
 let cachedSession = null;
 
@@ -51,6 +53,11 @@ function confirmPhoneVerificationCode(successCallback, failureCallback) {
 
 function showPhoneVerificationForm() {
     document.getElementById(phoneVerificationFormId).classList.remove('hidden');
+    if (allowSkip) {
+        document.getElementById(skipPhoneVerificationId).classList.remove('hidden');
+    } else {
+        document.getElementById(skipPhoneVerificationId).classList.add('hidden');
+    }
     document.getElementById(resendPhoneCodeNormalId).addEventListener('click', () => {
         document.getElementById(phoneVerificationFormId).classList.add('hidden');
         showPhoneConfirmForm();
@@ -134,8 +141,8 @@ async function showPhoneConfirmForm() {
             }
         }
         // send code to newly confirmed phone number and show verification form
+        allowSkip = true;
         sendPhoneCode(cachedSession);
-        showPhoneVerificationForm();
     });
 }
 
@@ -166,5 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(phoneVerificationSubmitButtonId).addEventListener('click', 
         () => { confirmPhoneVerificationCode(phoneVerificationSuccess, phoneVerificationFailure); }
     );
+    document.getElementById(skipPhoneVerificationId).addEventListener('click', goToDailyTasks);
     handleLogin();
 });
