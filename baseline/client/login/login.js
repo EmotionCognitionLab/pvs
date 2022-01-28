@@ -1,4 +1,4 @@
-import { getAuth, sendPhoneVerificationCode, verifyPhone } from "auth/auth.js";
+import { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone } from "auth/auth.js";
 import Db from "db/db.js";
 import './style.css';
 
@@ -100,7 +100,11 @@ async function showPhoneConfirmForm() {
         // update phone number associated with user if different
         if (phoneNumber != oldPhoneNumber) {
             try {
-                await db.updateSelf({'phone_number': phoneNumber});
+                const accessToken = cachedSession.getAccessToken().getJwtToken();
+                updateUserAttributes(accessToken, [{Name: 'phone_number', Value: phoneNumber}], 
+                    async () => await db.updateSelf({'phone_number': phoneNumber}),
+                    (err) => showError(err, 'There was a problem updating your phone number. Please try again.')
+                );
             } catch (err) {
                 showError(err, 'There was a problem updating your phone number. Please try again.');
                 showPhoneConfirmForm();
