@@ -13,6 +13,8 @@ const resendPhoneCodeErrorId = 'resendPhoneCodeError';
 const phoneConfirmFormId = 'phoneConfirm';
 const phoneConfirmFieldId = 'phoneConfirmField';
 const phoneConfirmSubmitId = 'phoneConfirmSubmit';
+const phoneConfirmMsgId = 'phoneConfirmMsg';
+
 let cachedSession = null;
 
 function loginSuccess(session) {
@@ -95,11 +97,14 @@ function phoneVerificationFailure(err) {
 }
 
 async function showPhoneConfirmForm() {
+    document.getElementById(phoneConfirmMsgId).classList.remove('hidden');
     const db = new Db({session: cachedSession});
     let oldPhoneNumber = '';
     try {
         oldPhoneNumber = (await db.getSelf()).phone_number;
     } catch (err) {
+        document.getElementById(phoneConfirmMsgId).classList.add('hidden');
+        document.getElementById(phoneConfirmFieldId).setAttribute('placeholder', '+12125551234');
         showError(err, 'There was a problem retrieving your phone number. Please reenter your phone number.');
     }
     document.getElementById(phoneConfirmFieldId).value = oldPhoneNumber;
