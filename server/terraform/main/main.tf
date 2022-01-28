@@ -21,6 +21,7 @@ resource "aws_cognito_user_pool" "pool" {
       attribute_data_type = "String"
       name = "phone_number"
       required = true
+      mutable = true
       string_attribute_constraints {
           min_length = 12
           max_length = 12
@@ -30,6 +31,7 @@ resource "aws_cognito_user_pool" "pool" {
       attribute_data_type = "String"
       name = "name"
       required = true
+      mutable = true
       string_attribute_constraints {
           min_length = 1
           max_length = 50
@@ -75,6 +77,8 @@ resource "aws_cognito_user_pool_client" "client" {
     default_redirect_uri = "${var.cognito-redirect-uri}"
     logout_urls = [ "${var.cognito-logout-url}" ]
     supported_identity_providers = [ "COGNITO" ]
+    read_attributes = ["email", "name", "phone_number"]
+    write_attributes = ["email", "name", "phone_number"]
 }
 output "cognito_pool_client_id" {
     value = aws_cognito_user_pool_client.client.id

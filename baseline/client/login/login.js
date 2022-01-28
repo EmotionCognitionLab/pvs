@@ -1,5 +1,6 @@
-import { getAuth, sendPhoneVerificationCode, verifyPhone } from "auth/auth.js";
+import { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone } from "auth/auth.js";
 import Db from "db/db.js";
+import { validPhoneNumber } from "js/validate.js";
 import './style.css';
 
 const phoneVerificationFormId = 'phoneVerification';
@@ -9,6 +10,9 @@ const phoneVerificationSuccessId = 'phoneVerificationSuccess';
 const phoneCodeSendFailedId = 'phoneCodeSendFailed';
 const resendPhoneCodeNormalId = 'resendPhoneCodeNormal';
 const resendPhoneCodeErrorId = 'resendPhoneCodeError';
+const phoneConfirmFormId = 'phoneConfirm';
+const phoneConfirmFieldId = 'phoneConfirmField';
+const phoneConfirmSubmitId = 'phoneConfirmSubmit';
 let cachedSession = null;
 
 function loginSuccess(session) {
@@ -45,9 +49,10 @@ function confirmPhoneVerificationCode(successCallback, failureCallback) {
 
 function showPhoneVerificationForm() {
     document.getElementById(phoneVerificationFormId).classList.remove('hidden');
-    document.getElementById(resendPhoneCodeNormalId).addEventListener('click',
-        () => { sendPhoneCode(cachedSession); }
-    );
+    document.getElementById(resendPhoneCodeNormalId).addEventListener('click', () => {
+        document.getElementById(phoneVerificationFormId).classList.add('hidden');
+        showPhoneConfirmForm();
+    });
 }
 
 function sendingPhoneVerificationCodeFailed(err) {
@@ -87,6 +92,46 @@ function phoneVerificationSuccess() {
 
 function phoneVerificationFailure(err) {
     showError(err, 'There was a problem verifiying your phone. Please double-check that you entered the phone verification code correctly and try again.');
+}
+
+async function showPhoneConfirmForm() {
+    const db = new Db({session: cachedSession});
+    let oldPhoneNumber = '';
+    try {
+        oldPhoneNumber = (await db.getSelf()).phone_number;
+    } catch (err) {
+        showError(err, 'There was a problem retrieving your phone number. Please reenter your phone number.');
+    }
+    document.getElementById(phoneConfirmFieldId).value = oldPhoneNumber;
+    document.getElementById(phoneConfirmFormId).classList.remove('hidden');
+    document.getElementById(phoneConfirmSubmitId).addEventListener('click', async () => {
+        const phoneNumber = document.getElementById(phoneConfirmFieldId).value;
+        // validate phone number in field
+        if (!validPhoneNumber(phoneNumber)) {
+            showError(null, 'Invalid phone number format. Please start your phone number with +1 and include only digit characters afterwards. Example: +11235550100.');
+            return;
+        }
+        // hide phone confirm form and any error
+        document.getElementById(phoneConfirmFormId).classList.add('hidden');
+        document.getElementById(errorMessageId).classList.add('hidden');
+        // update phone number associated with user if different
+        if (phoneNumber != oldPhoneNumber) {
+            try {
+                const accessToken = cachedSession.getAccessToken().getJwtToken();
+                updateUserAttributes(accessToken, [{Name: 'phone_number', Value: phoneNumber}], 
+                    async () => await db.updateSelf({'phone_number': phoneNumber}),
+                    (err) => showError(err, 'There was a problem updating your phone number. Please try again.')
+                );
+            } catch (err) {
+                showError(err, 'There was a problem updating your phone number. Please try again.');
+                showPhoneConfirmForm();
+                return;
+            }
+        }
+        // send code to newly confirmed phone number and show verification form
+        sendPhoneCode(cachedSession);
+        showPhoneVerificationForm();
+    });
 }
 
 function goToDailyTasks() {

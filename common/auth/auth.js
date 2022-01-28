@@ -59,6 +59,20 @@ function sendPhoneVerificationCode(accessToken, onSuccess, onFailure) {
     });
 }
 
+function updateUserAttributes(accessToken, userAttributes, onSuccess, onFailure) {
+    const params = {
+        AccessToken: accessToken,
+        UserAttributes: userAttributes
+    };
+    cognitoidentityserviceprovider.updateUserAttributes(params, (err, data) => {
+        if (err) {
+            onFailure(err);
+        } else {
+            onSuccess(data);
+        }
+    });
+}
+
 /**
  *
  * @param {string} accessToken The access token the user receives when logging in.
@@ -83,4 +97,4 @@ function verifyPhone(accessToken, verificationCode, onSuccess, onFailure) {
     });
 }
 
-export { getAuth, sendPhoneVerificationCode, verifyPhone }
+export { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone }
