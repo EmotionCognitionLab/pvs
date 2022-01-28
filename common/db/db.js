@@ -292,7 +292,7 @@ export default class Db {
     }
 
     async getSelf() {
-        if (!this.idToken) throw new Error("You must provide a session to update the current user");
+        if (!this.idToken) throw new Error("You must provide a session to fetch the current user");
 
         const url = `${this.userApiUrl}`;
         const response = await fetch(url, {
