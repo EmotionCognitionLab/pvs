@@ -1,5 +1,6 @@
 import { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone } from "auth/auth.js";
 import Db from "db/db.js";
+import { validPhoneNumber } from "js/validate.js";
 import './style.css';
 
 const phoneVerificationFormId = 'phoneVerification';
@@ -93,10 +94,13 @@ async function showPhoneConfirmForm() {
     document.getElementById(phoneConfirmSubmitId).addEventListener('click', async () => {
         const phoneNumber = document.getElementById(phoneConfirmFieldId).value;
         // validate phone number in field
-        if (false) {  // to-do: validate phone number
+        if (!validPhoneNumber(phoneNumber)) {
+            showError(null, 'Invalid phone number format. Please start your phone number with +1 and include only digit characters afterwards. Example: +11235550100.');
             return;
         }
+        // hide phone confirm form and any error
         document.getElementById(phoneConfirmFormId).classList.add('hidden');
+        document.getElementById(errorMessageId).classList.add('hidden');
         // update phone number associated with user if different
         if (phoneNumber != oldPhoneNumber) {
             try {
