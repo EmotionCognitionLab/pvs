@@ -1,3 +1,12 @@
+terraform {
+  backend "s3" {
+    bucket = "pvs-tf-state"
+    region = "us-west-2"
+    key = "main"
+    workspace_key_prefix = "workspaces"
+  }
+}
+
 provider "aws" {
     region = var.region
 }
