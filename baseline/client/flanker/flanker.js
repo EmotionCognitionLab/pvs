@@ -47,7 +47,7 @@ export class Flanker {
 
     responseTimeLimitMs() {
         const trialsPerBlock = this.constructor.mainStimuli.length;
-        const allResults = jsPsych.data.get().filterCustom(data => data.arrows).values();
+        const allResults = jsPsych.data.get().filterCustom(data => data.arrows && !data.isTraining).values();
         if (allResults.length === 0 || allResults.length % trialsPerBlock !== 0) {
             // we're in the middle of a block (or at the start of the experiment)
             // changes to the response time limit are only made at the end of a block

@@ -364,6 +364,24 @@ describe("flanker training with controlled randomization", () => {
         doTrainingTrial("ArrowRight");
         expect(randomizationSpy).toHaveBeenCalled();
     });
+
+    it("does not count the training trials in set 1 as part of the first block when adjusting the response time", () => {
+        // this test depends on the order of Flanker.training_stimuli to be right, left, right, left
+        doTrainingInstructions();
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
+        doTrainingTrial("ArrowRight");
+        doTrainingTrial("ArrowLeft");
+        // final instruction screen -> fixation 1
+        pressKey(" ");
+        // go through the first block and make sure response time doesn't change
+        for (let i = 0; i < Flanker.mainStimuli.length; i++) {
+            doMainTrial();
+            const data = jsPsych.data.get().last(1).values()[0];
+            expect(data.trial_duration).toBe(Flanker.defaultResponseTimeLimitMs);
+        }
+    });
+
 });
 
 function doTrainingInstructions() {
