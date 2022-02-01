@@ -274,7 +274,7 @@ Flanker.comprehensionNode = {
     }
 };
 
-Flanker.numMainBlocks = 18;
+Flanker.numMainBlocks = 9;
 Flanker.defaultResponseTimeLimitMs = 1050;
 
 if (window.location.href.includes(Flanker.taskName)) {

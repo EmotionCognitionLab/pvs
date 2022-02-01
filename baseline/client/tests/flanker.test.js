@@ -194,7 +194,7 @@ describe("flanker with controlled randomization", () => {
     });
 });
 
-it("displays 18 blocks of 16 trials each", () => {
+it("displays 9 blocks of 16 trials each", () => {
     const expFinishedMock = jest.fn(() => null);
     let timeline = (new Flanker(3)).getTimeline();
     // drop the preload; the test env doesn't get past it
@@ -202,14 +202,14 @@ it("displays 18 blocks of 16 trials each", () => {
 
     jsPsych.init({timeline: timeline, on_finish: expFinishedMock});
     doMainInstructions();
-    for (let i=0; i < 18 * 16; i++) {
+    for (let i=0; i < 9 * 16; i++) {
         doMainTrial();
     }
     // finished screen -> all done
     pressKey(" ");
     expect(expFinishedMock).toHaveBeenCalled();
     const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
-    expect(relevantData.length).toBe(18 * 16);
+    expect(relevantData.length).toBe(9 * 16);
 });
 
 
