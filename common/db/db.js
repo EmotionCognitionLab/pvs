@@ -199,11 +199,7 @@ export default class Db {
             this.logger.error(err);
             throw err;
         }
-        return results.sort((a, b) => (
-            a.dateTime < b.dateTime ? -1 :
-            a.dateTime > b.dateTime ? +1 :
-            0
-        ));
+        return results;
     }
 
     async getSetsForUser(userId) {
