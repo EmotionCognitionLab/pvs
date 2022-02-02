@@ -10,12 +10,12 @@ function initializeSelect() {
     experimentNames.forEach(n => {
         const option = document.createElement("option");
         option.value = n;
-        option.text = n;
+        option.label = n;
         experimentSelect.add(option);
     });
     const allOption = document.createElement("option");
     allOption.value = "";
-    allOption.text = "all";
+    allOption.label = "all";
     experimentSelect.add(allOption);
     experimentSelect.removeAttribute("disabled");
 }
@@ -24,7 +24,7 @@ function initializeButton(db) {
     experimentButton.addEventListener("click", async () => {
         prepareDownload();
         const results = await db.getResultsForExperiment(experimentSelect.value);
-        const filename = `${experimentSelect[experimentSelect.selectedIndex].text}.json`;
+        const filename = `${experimentSelect[experimentSelect.selectedIndex].label}.json`;
         enableDownload(results, filename);
     });
     experimentButton.removeAttribute("disabled");
