@@ -121,6 +121,14 @@ output "cognito_identity_pool_id" {
   value = aws_cognito_identity_pool.main.id
 }
 
+resource "aws_cognito_user_group" "admin" {
+  name = "admin"
+  user_pool_id = aws_cognito_user_pool.pool.id
+  description = "User group for study administrators"
+  precedence = 1
+  role_arn = aws_iam_role.lambda-dynamodb.arn
+}
+
 # DynamoDB setup
 resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
@@ -599,6 +607,23 @@ resource "aws_iam_role" "lambda-dynamodb" {
         Action =  [
           "sts:AssumeRole"
         ]
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRoleWithWebIdentity"
+        ]
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr": "authenticated"
+          }
+        }
       }
     ]
   })
