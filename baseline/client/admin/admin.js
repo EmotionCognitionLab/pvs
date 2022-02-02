@@ -5,13 +5,18 @@ const experimentSelect = document.getElementById("experiment-select");
 const experimentButton = document.getElementById("experiment-button");
 const experimentDownload = document.getElementById("experiment-download");
 
+const experimentNames = ["daily-stressors", "dass", "demographics", "face-name", "ffmq", "flanker", "mind-in-eyes", "mood-memory", "mood-prediction", "n-back", "panas", "pattern-separation-learning", "pattern-separation-recall", "physical-activity", "spatial-orientation", "task-switching", "verbal-fluency", "verbal-learning-learning", "verbal-learning-recall"];
 function initializeSelect() {
-    ["flanker", "n-back", "spatial-orientation"].forEach(n => {
+    experimentNames.forEach(n => {
         const option = document.createElement("option");
         option.value = n;
         option.text = n;
         experimentSelect.add(option);
     });
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.text = "all";
+    experimentSelect.add(allOption);
     experimentSelect.removeAttribute("disabled");
 }
 
