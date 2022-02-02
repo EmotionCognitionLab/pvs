@@ -129,6 +129,14 @@ resource "aws_cognito_user_group" "admin" {
   role_arn = aws_iam_role.lambda-dynamodb.arn
 }
 
+resource "aws_cognito_user_group" "researcher" {
+  name = "researcher"
+  user_pool_id = aws_cognito_user_pool.pool.id
+  description = "User group for study researchers"
+  precedence = 10
+  role_arn = aws_iam_role.lambda-dynamodb-experiment-reader.arn
+}
+
 # DynamoDB setup
 resource "aws_dynamodb_table" "experiment-data-table" {
   name           = "pvs-${var.env}-experiment-data"
@@ -393,6 +401,33 @@ resource "aws_iam_policy" "dynamodb-read-write" {
 }
 POLICY
 }
+
+# Policy to allow reading from the experiment data table
+resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
+  name = "pvs-${var.env}-dynamodb-read-all-experiment-data"
+  path = "/policy/dynamodb/experimentData/readAll/"
+  description = "Allows reading all data from Dynamodb experiment data table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow sns publishing
 resource "aws_iam_policy" "sns-publish" {
   name = "pvs-${var.env}-sns-publish"
@@ -639,6 +674,47 @@ resource "aws_ssm_parameter" "lambda-dynamodb-role" {
   description = "ARN for lambda role with dynamodb access"
   type = "SecureString"
   value = "${aws_iam_role.lambda-dynamodb.arn}"
+}
+
+resource "aws_iam_role" "lambda-dynamodb-experiment-reader" {
+  name = "pvs-${var.env}-lambda-dynamodb-experiment-reader"
+  path = "/role/lambda/dynamodb/experimentData/read/"
+  description = "Role for lambda functions needing read access to experiment data"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRoleWithWebIdentity"
+        ]
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = "${aws_cognito_identity_pool.main.id}"
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr": "authenticated"
+          }
+        }
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn, aws_iam_policy.cloudwatch-write.arn
+  ]
 }
 
 resource "aws_iam_role" "lambda-dynamodb-sns-ses" {
