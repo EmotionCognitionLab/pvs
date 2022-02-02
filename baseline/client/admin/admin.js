@@ -1,3 +1,5 @@
+import "./style.css";
+
 import { getAuth } from "auth/auth.js";
 import Db from "db/db.js";
 
@@ -34,7 +36,7 @@ function disableDownload() {
     experimentDownload.href = "";
     experimentDownload.download = "";
     experimentDownload.textContent = "...";
-    experimentDownload.classList.remove("enabled");
+    experimentDownload.setAttribute("aria-disabled", "true");
 }
 
 function prepareDownload() {
@@ -49,7 +51,7 @@ function enableDownload(results, filename) {
     ));
     experimentDownload.download = filename;
     experimentDownload.textContent = "Download";
-    experimentDownload.classList.add("enabled");
+    experimentDownload.removeAttribute("aria-disabled");
 }
 
 
