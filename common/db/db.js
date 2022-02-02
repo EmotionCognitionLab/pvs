@@ -186,11 +186,11 @@ export default class Db {
                     }
                     const [experiment, dateTime, _index] = parts;
                     results.push({
+                        ...item.results,
                         dateTime,
                         experiment,
-                        identityId: item.identityId,
                         isRelevant: item.isRelevant,
-                        results: item.results,
+                        userId: item.userId,
                     });
                 });
                 lastKey = response.LastEvaluatedKey;
