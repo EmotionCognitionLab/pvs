@@ -24,13 +24,15 @@ function initializeButton(db) {
     experimentButton.addEventListener("click", async () => {
         prepareDownload();
         const results = await db.getResultsForExperiment(experimentSelect.value);
-        enableDownload(results);
+        const filename = `${experimentSelect[experimentSelect.selectedIndex].text}.json`;
+        enableDownload(results, filename);
     });
     experimentButton.removeAttribute("disabled");
 }
 
 function disableDownload() {
     experimentDownload.href = "";
+    experimentDownload.download = "";
     experimentDownload.textContent = "...";
     experimentDownload.classList.remove("enabled");
 }
@@ -40,11 +42,12 @@ function prepareDownload() {
     experimentDownload.textContent = "Querying...";
 }
 
-function enableDownload(results) {
+function enableDownload(results, filename) {
     experimentDownload.href = URL.createObjectURL(new Blob(
         [JSON.stringify(results)],
         {type: "application/json"}
     ));
+    experimentDownload.download = filename;
     experimentDownload.textContent = "Download";
     experimentDownload.classList.add("enabled");
 }
