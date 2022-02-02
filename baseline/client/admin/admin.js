@@ -17,9 +17,9 @@ function initializeSelect() {
 
 function initializeButton(db) {
     experimentButton.addEventListener("click", async () => {
-        const experimentName = experimentSelect.value;
-        const results = await db.getResultsForExperiment(experimentName);
-        console.debug(results);
+        prepareDownload();
+        const results = await db.getResultsForExperiment(experimentSelect.value);
+        enableDownload(results);
     });
     experimentButton.removeAttribute("disabled");
 }
