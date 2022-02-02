@@ -552,6 +552,38 @@ resource "aws_iam_role" "unauthenticated" {
   }
 }
 
+resource "aws_iam_role" "lambda" {
+  name = "pvs-${var.env}-lambda"
+  path = "/role/lambda/"
+  description = "Basic role for running lambda functions"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.cloudwatch-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-role" {
+  name = "/pvs/${var.env}/role/lambda"
+  description = "ARN for lambda role"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda.arn}"
+}
+
 resource "aws_iam_role" "lambda-dynamodb" {
   name = "pvs-${var.env}-lambda-dynamodb"
   path = "/role/lambda/dynamodb/"
