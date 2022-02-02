@@ -45,6 +45,7 @@ function enableDownload(results) {
 }
 
 
+initializeSelect();
 disableDownload();
 const auth = getAuth(
     session => {
