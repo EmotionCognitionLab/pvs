@@ -416,6 +416,7 @@ resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
       "Action": [
         "dynamodb:DescribeTable",
         "dynamodb:Query",
+        "dynamodb:Scan",
         "dynamodb:GetItem",
         "dynamodb:BatchGetItem"
       ],
