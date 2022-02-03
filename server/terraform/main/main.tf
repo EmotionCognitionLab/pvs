@@ -628,6 +628,26 @@ resource "aws_ssm_parameter" "lambda-role" {
   value = "${aws_iam_role.lambda.arn}"
 }
 
+resource "aws_iam_role_policy" "lambda-role-assumption" {
+  name = "pvs-${var.env}-lambda-role-assumption-policy"
+  role = aws_iam_role.lambda.name
+  policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "sts:AssumeRole"
+          ]
+          Resource = [
+            "${aws_iam_role.lambda-dynamodb-experiment-reader.arn}",
+            "${aws_iam_role.lambda-dynamodb.arn}"
+          ]
+        }
+      ]
+    })
+}
+
 resource "aws_iam_role" "lambda-dynamodb" {
   name = "pvs-${var.env}-lambda-dynamodb"
   path = "/role/lambda/dynamodb/"
@@ -638,7 +658,7 @@ resource "aws_iam_role" "lambda-dynamodb" {
       {
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
+          AWS = "${aws_iam_role.lambda.arn}"
         }
         Action =  [
           "sts:AssumeRole"
@@ -687,7 +707,7 @@ resource "aws_iam_role" "lambda-dynamodb-experiment-reader" {
       {
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
+          AWS = "${aws_iam_role.lambda.arn}"
         }
         Action =  [
           "sts:AssumeRole"
