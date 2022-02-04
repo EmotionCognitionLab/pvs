@@ -402,6 +402,32 @@ resource "aws_iam_policy" "dynamodb-read-write" {
 POLICY
 }
 
+# policy to allow limited reading/writing of dynamo user table
+resource "aws_iam_policy" "dynamodb-user-read-write" {
+  name = "pvs-${var.env}-dynamodb-user-read-write"
+  path = "/policy/dynamodb/users/all/"
+  description = "Allows limited reading from/writing to dynamodb user table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # Policy to allow reading from the experiment data table
 resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
   name = "pvs-${var.env}-dynamodb-read-all-experiment-data"
@@ -616,7 +642,7 @@ resource "aws_iam_role" "lambda" {
   })
 
   managed_policy_arns   = [
-    aws_iam_policy.cloudwatch-write.arn
+    aws_iam_policy.dynamodb-user-read-write.arn, aws_iam_policy.cloudwatch-write.arn
   ]
 }
 
