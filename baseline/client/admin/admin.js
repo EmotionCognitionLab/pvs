@@ -15,10 +15,6 @@ function initializeSelect() {
         option.label = n;
         experimentSelect.add(option);
     });
-    const allOption = document.createElement("option");
-    allOption.value = "";
-    allOption.label = "all";
-    experimentSelect.add(allOption);
     experimentSelect.removeAttribute("disabled");
 }
 
