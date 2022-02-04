@@ -65,11 +65,11 @@ functions:
     events:
       - httpApi:
           method: GET
-          path: /user
+          path: /self
           authorizer: serviceAuthorizer
       - httpApi:
           method: PUT
-          path: /user/update
+          path: /self
           authorizer: serviceAuthorizer
     environment:
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}

@@ -274,7 +274,7 @@ export default class Db {
     async updateSelf(updates) {
         if (!this.idToken) throw new Error("You must provide a session to update the current user");
 
-        const url = `${this.userApiUrl}/update`;
+        const url = `${this.userApiUrl}`;
         const response = await fetch(url, {
             method: "PUT",
             mode: "cors",

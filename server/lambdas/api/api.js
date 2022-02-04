@@ -5,19 +5,21 @@ const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const docClient = new AWS.DynamoDB.DocumentClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region});
 
 exports.handler = async (event) => {
-    const path = event.rawPath;
-    if (path === "/user") {
-        return getUser(event);
+    const path = event.requestContext.http.path;
+    const method = event.requestContext.http.method;
+    if (path === "/self") {
+        if (method === "GET") {
+            return getSelf(event.requestContext.authorizer.jwt.claims.sub);
+        }
+        if (method === "PUT") {
+            return updateSelf(event.requestContext.authorizer.jwt.claims.sub, JSON.parse(event.body));
+        }
     }
-    if (path === "/user/update") {
-        return updateUser(event);
-    }
-    return errorResponse({statusCode: 400, message: `Unknown operation "${path}"`});
+    return errorResponse({statusCode: 400, message: `Unknown operation "${method} ${path}"`});
 }
 
-getUser = async (event) => {
+getSelf = async (userId) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub;
         const params = {
             TableName: usersTable,
             KeyConditionExpression: "userId = :idKey",
@@ -40,10 +42,8 @@ getUser = async (event) => {
     }
 }
 
-updateUser = async(event) => {
+updateSelf = async(userId, updates) => {
     try {
-        const userId = event.requestContext.authorizer.jwt.claims.sub;
-        const updates = JSON.parse(event.body);
         if (!updates) {
             return errorResponse({statusCode: 400, message: "No updates found"});
         }
