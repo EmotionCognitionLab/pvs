@@ -7,17 +7,6 @@ const experimentSelect = document.getElementById("experiment-select");
 const experimentButton = document.getElementById("experiment-button");
 const experimentDownload = document.getElementById("experiment-download");
 
-const experimentNames = ["daily-stressors", "dass", "demographics", "face-name", "ffmq", "flanker", "mind-in-eyes", "mood-memory", "mood-prediction", "n-back", "panas", "pattern-separation-learning", "pattern-separation-recall", "physical-activity", "spatial-orientation", "task-switching", "verbal-fluency", "verbal-learning-learning", "verbal-learning-recall"];
-function initializeSelect() {
-    experimentNames.forEach(n => {
-        const option = document.createElement("option");
-        option.value = n;
-        option.label = n;
-        experimentSelect.add(option);
-    });
-    experimentSelect.removeAttribute("disabled");
-}
-
 function initializeButton(db) {
     experimentButton.addEventListener("click", async () => {
         prepareDownload();
@@ -51,7 +40,6 @@ function enableDownload(results, filename) {
 }
 
 
-initializeSelect();
 disableDownload();
 const auth = getAuth(
     session => {
