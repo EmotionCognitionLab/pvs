@@ -783,8 +783,15 @@ resource "aws_iam_role" "researcher" {
             "cognito-identity.amazonaws.com:amr": "authenticated"
           }
         }
-      },
-      {
+      }
+    ]
+  })
+  inline_policy {
+    name = "datafiles-bucket-access"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
         Effect = "Allow"
         Action = [
           "s3:PutObject",
@@ -792,8 +799,9 @@ resource "aws_iam_role" "researcher" {
         ],
         Resource = "${aws_s3_bucket.datafiles-bucket.arn}/*"
       }
-    ]
-  })
+      ]
+    })
+  }
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-all-experiment-data.arn, aws_iam_policy.cloudwatch-write.arn
