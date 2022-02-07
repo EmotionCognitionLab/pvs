@@ -282,6 +282,26 @@ resource "aws_ses_receipt_rule" "save-to-s3" {
   depends_on = [aws_s3_bucket_policy.receive]
 }
 
+# S3 bucket for temporary storage of downloadable research results
+resource "aws_s3_bucket" "datafiles-bucket" {
+  bucket = "${var.datafiles-bucket}"
+  acl    = "private"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 7
+    }
+  }
+}
+
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "datafiles-bucket" {
+  name = "/pvs/${var.env}/info/lambda/datafiles/bucket"
+  description = "Bucket for temporary storage of downloadable research results"
+  type = "SecureString"
+  value = "${aws_s3_bucket.datafiles-bucket.bucket}"
+}
+
 # IAM policies
 resource "aws_iam_policy" "cloudwatch-write" {
   name = "pvs-${var.env}-cloudwatch-write"

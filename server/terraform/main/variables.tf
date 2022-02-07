@@ -26,3 +26,7 @@ variable "console-error-notification-emails" {
     description = "Space-separated list of email addresses for recipients of console errors"
     sensitive = true
 }
+
+variable "datafiles-bucket" {
+    description = "Name for S3 bucket that holds temporary data files for download by researchers"
+}
