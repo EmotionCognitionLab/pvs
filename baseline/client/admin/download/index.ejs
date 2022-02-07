@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+</head>
+<body>
+    <label for="experiment-select">Select an experiment:</label>
+    <select id="experiment-select">
+        <option value="" selected disabled>--experiment name--</option>
+        <option value="daily-stressors">daily-stressors</option>
+        <option value="dass">dass</option>
+        <option value="demographics">demographics</option>
+        <option value="face-name">face-name</option>
+        <option value="ffmq">ffmq</option>
+        <option value="flanker">flanker</option>
+        <option value="mind-in-eyes">mind-in-eyes</option>
+        <option value="mood-memory">mood-memory</option>
+        <option value="mood-prediction">mood-prediction</option>
+        <option value="n-back">n-back</option>
+        <option value="panas">panas</option>
+        <option value="pattern-separation-learning">pattern-separation-learning</option>
+        <option value="pattern-separation-recall">pattern-separation-recall</option>
+        <option value="physical-activity">physical-activity</option>
+        <option value="spatial-orientation">spatial-orientation</option>
+        <option value="task-switching">task-switching</option>
+        <option value="verbal-fluency">verbal-fluency</option>
+        <option value="verbal-learning-learning">verbal-learning-learning</option>
+        <option value="verbal-learning-recall">verbal-learning-recall</option>
+    </select>
+    <button id="experiment-button" type="button" disabled>Query</button>
+    <a id="experiment-download" href="" download="" aria-disabled="true">Download</a>
+</body>
+</html>
