@@ -168,6 +168,14 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   }
 }
 
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/experiments"
+  description = "Dynamo table holding experiment data"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.experiment-data-table.name}"
+}
+
 resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
