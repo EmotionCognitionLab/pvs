@@ -79,6 +79,22 @@ functions:
       patterns:
         - 'api/*.js'
 
+  data-download:
+    handler: data-download/data-download.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /
+          authorizer: serviceAuthorizer
+    environment:
+      EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      DATAFILES_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/datafiles/bucket}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'data-download/*.js'
+
   reminders:
     handler: reminders/reminders.handler
     events:
