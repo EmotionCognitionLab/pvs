@@ -775,6 +775,14 @@ resource "aws_iam_role" "researcher" {
             "cognito-identity.amazonaws.com:amr": "authenticated"
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+        ],
+        Resource = "${aws_s3_bucket.datafiles-bucket.arn}/*"
       }
     ]
   })
