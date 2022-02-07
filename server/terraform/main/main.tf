@@ -134,7 +134,7 @@ resource "aws_cognito_user_group" "researcher" {
   user_pool_id = aws_cognito_user_pool.pool.id
   description = "User group for study researchers"
   precedence = 10
-  role_arn = aws_iam_role.lambda-dynamodb-experiment-reader.arn
+  role_arn = aws_iam_role.researcher.arn
 }
 
 # DynamoDB setup
@@ -666,7 +666,7 @@ resource "aws_iam_role_policy" "lambda-role-assumption" {
             "sts:AssumeRole"
           ]
           Resource = [
-            "${aws_iam_role.lambda-dynamodb-experiment-reader.arn}",
+            "${aws_iam_role.researcher.arn}",
             "${aws_iam_role.lambda-dynamodb.arn}"
           ]
         }
@@ -723,8 +723,8 @@ resource "aws_ssm_parameter" "lambda-dynamodb-role" {
   value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
-resource "aws_iam_role" "lambda-dynamodb-experiment-reader" {
-  name = "pvs-${var.env}-lambda-dynamodb-experiment-reader"
+resource "aws_iam_role" "researcher" {
+  name = "pvs-${var.env}-researcher"
   path = "/role/lambda/dynamodb/experimentData/read/"
   description = "Role for lambda functions needing read access to experiment data"
   assume_role_policy = jsonencode({
