@@ -165,6 +165,43 @@ export default class Db {
         return this.getResultsForCurrentUser(expName);
     }
 
+    async getResultsForExperiment(experimentName) {
+        const results = [];
+        const baseParams = {
+            TableName: this.experimentTable,
+            FilterExpression: "begins_with(experimentDateTime, :experimentName)",
+            ExpressionAttributeValues: {":experimentName": experimentName},
+        };
+        let lastKey = null;
+        try {
+            do {
+                const response = await this.scan({
+                    ...baseParams,
+                    ...(lastKey === null ? {} : {ExclusiveStartKey: lastKey}),
+                });
+                response.Items.forEach(item => {
+                    const parts = item.experimentDateTime.split("|");
+                    if (parts.length != 3) {
+                        throw new Error(`Unexpected experimentDateTime value: ${i.experimentDateTime}. Expected three parts, but found ${parts.length}.`)
+                    }
+                    const [experiment, dateTime, _index] = parts;
+                    results.push({
+                        ...item.results,
+                        dateTime,
+                        experiment,
+                        isRelevant: item.isRelevant,
+                        userId: item.userId,
+                    });
+                });
+                lastKey = response.LastEvaluatedKey;
+            } while (lastKey)
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+        return results;
+    }
+
     async getSetsForUser(userId) {
         try {
             let ExclusiveStartKey, dynResults

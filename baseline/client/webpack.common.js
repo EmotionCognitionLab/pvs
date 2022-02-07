@@ -4,42 +4,49 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
-        login: 'login/login.js',
-        logout: 'logout/logout.js',
-        'daily-tasks': 'daily-tasks/daily-tasks.js'
+        'admin/download': 'admin/download/download.js',
+        'daily-tasks': 'daily-tasks/daily-tasks.js',
+        'login': 'login/login.js',
+        'logout': 'logout/logout.js',
     },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
         // by logger
         new webpack.DefinePlugin({
-            'process.env': JSON.stringify({'NODE_DEBUG': false})
+            'process.env': JSON.stringify({'NODE_DEBUG': false}),
         }),
         new HtmlWebpackPlugin({
-            title: 'HeartBEAM Login',
-            template: 'login/index.ejs',
-            filename: 'login/index.html',
-            chunks: ['login']
+            title: 'Admin - Download',
+            filename: 'admin/download/index.html',
+            template: 'admin/download/index.ejs',
+            chunks: ['admin/download'],
         }),
         new HtmlWebpackPlugin({
             title: 'Daily Tasks',
             filename: 'daily-tasks/index.html',
-            chunks: ['daily-tasks']
+            chunks: ['daily-tasks'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'HeartBEAM Login',
+            filename: 'login/index.html',
+            template: 'login/index.ejs',
+            chunks: ['login'],
         }),
         new HtmlWebpackPlugin({
             title: 'HeartBEAM Logout',
             filename: 'logout/index.html',
-            chunks: ['logout']
+            chunks: ['logout'],
         }),
         new HtmlWebpackPlugin({
             title: 'HeartBEAM Logout',
             filename: 'logout/success/index.html',
-            chunks: ['logout']
+            chunks: ['logout'],
         }),
         new HtmlWebpackPlugin({
             title: 'HeartBEAM Logout',
             filename: 'logout/error/index.html',
-            chunks: ['logout']
-        })
+            chunks: ['logout'],
+        }),
     ],
     optimization: {
         splitChunks: {
@@ -61,7 +68,7 @@ module.exports = {
                 type: 'asset/resource',
             },
             {
-                exclude: [path.join(__dirname, "scripts")]
+                exclude: [path.join(__dirname, "scripts")],
             }
         ],
     },
@@ -73,5 +80,5 @@ module.exports = {
             path.join(__dirname, "../..", "common/db/node_modules"),
             path.join(__dirname, "../..", "common/logger/node_modules"),
         ],
-    }
+    },
 };
