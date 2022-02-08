@@ -300,6 +300,11 @@ resource "aws_s3_bucket" "datafiles-bucket" {
       days = 7
     }
   }
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = ["https://dev.heartbeamstudy.org", "http://localhost:9000", "https://www.heartbeamstudy.org", "https://heartbeamstudy.org"]
+  }
 }
 
 # save above bucket name to SSM so serverless can reference it
