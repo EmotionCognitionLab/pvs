@@ -4,6 +4,7 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
+        'admin/dashboard': 'admin/dashboard/dashboard.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
@@ -14,6 +15,12 @@ module.exports = {
         // by logger
         new webpack.DefinePlugin({
             'process.env': JSON.stringify({'NODE_DEBUG': false}),
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Admin - Dashboard',
+            filename: 'admin/dashboard/index.html',
+            template: 'admin/dashboard/index.ejs',
+            chunks: ['admin/dashboard'],
         }),
         new HtmlWebpackPlugin({
             title: 'Admin - Download',
