@@ -9,44 +9,33 @@ const experimentDownload = document.getElementById("experiment-download");
 
 function initializeButton(db) {
     experimentButton.addEventListener("click", async () => {
-        prepareDownload();
+        startDownload();
         const results = await db.getResultsForExperiment(experimentSelect.value);
-        const filename = `${experimentSelect[experimentSelect.selectedIndex].label}.json`;
-        enableDownload(results, filename);
+        endDownload();
+        if (results.url) {
+            window.location.href = results.url;
+        } else if (results.empty) {
+            alert(`There were no results for the "${experimentSelect.value}" experiment.`);
+        }
     });
+}
+
+function endDownload() {
     experimentButton.removeAttribute("disabled");
+    experimentDownload.textContent = "";
 }
 
-function disableDownload() {
-    experimentDownload.href = "";
-    experimentDownload.download = "";
-    experimentDownload.textContent = "...";
-    experimentDownload.setAttribute("aria-disabled", "true");
-}
-
-function prepareDownload() {
-    disableDownload();
+function startDownload() {
+    experimentButton.setAttribute("disabled", true);
     experimentDownload.textContent = "Querying...";
 }
 
-function enableDownload(results, filename) {
-    experimentDownload.href = URL.createObjectURL(new Blob(
-        [JSON.stringify(results)],
-        {type: "application/json"}
-    ));
-    experimentDownload.download = filename;
-    experimentDownload.textContent = "Download";
-    experimentDownload.removeAttribute("aria-disabled");
-}
-
-
-disableDownload();
 const auth = getAuth(
     session => {
         initializeButton(new Db({session: session}));
     },
     err => {
-        console.debug("error:", err);
+        console.error("error:", err);
     }
 );
 auth.getSession();

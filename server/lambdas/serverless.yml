@@ -84,7 +84,7 @@ functions:
     events:
       - httpApi:
           method: GET
-          path: /
+          path: /experiment-data
           authorizer: serviceAuthorizer
     environment:
       EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
