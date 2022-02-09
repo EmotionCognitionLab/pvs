@@ -86,7 +86,7 @@ resource "aws_cognito_user_pool_client" "client" {
     default_redirect_uri = "${var.cognito-redirect-uri}"
     logout_urls = "${var.cognito-logout-url}"
     supported_identity_providers = [ "COGNITO" ]
-    read_attributes = ["email", "name", "phone_number"]
+    read_attributes = ["email", "name", "phone_number", "phone_number_verified", "email_verified"]
     write_attributes = ["email", "name", "phone_number"]
 }
 output "cognito_pool_client_id" {
