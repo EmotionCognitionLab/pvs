@@ -86,8 +86,13 @@ functions:
           method: GET
           path: /admin/experiment-data
           authorizer: serviceAuthorizer
+      - httpApi:
+          method: GET
+          path: /admin/participants
+          authorizer: serviceAuthorizer
     environment:
       EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       DATAFILES_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/datafiles/bucket}
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}

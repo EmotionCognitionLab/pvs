@@ -19,7 +19,7 @@ export default class Db {
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.userApiUrl = awsSettings.UserApiUrl;
-        this.experimentDataUrl = awsSettings.ExperimentDataUrl;
+        this.adminApiUrl = awsSettings.AdminApiUrl;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -176,7 +176,7 @@ export default class Db {
     async getResultsForExperiment(experimentName) {
         if (!this.idToken) throw new Error("You must provide a session to get experimental results");
 
-        const url = `${this.experimentDataUrl}?experiment=${experimentName}`;
+        const url = `${this.adminApiUrl}/experiment-data?experiment=${experimentName}`;
         const response = await fetch(url, {
             method: "GET",
             mode: "cors",
@@ -189,6 +189,26 @@ export default class Db {
         if (!response.ok) {
             const respText = await response.text();
             throw new Error(`There was an error fetching experimental results: ${respText} (status code: ${response.status})`);
+        }
+        return await response.json();
+    }
+
+    async getAllParticipants() {
+        if (!this.idToken) throw new Error("You must provide a session to get participants");
+
+        const url = `${this.adminApiUrl}/participants`;
+        const response = await fetch(url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": this.idToken,
+            },
+        });
+        if (!response.ok) {
+            const respText = await response.text();
+            throw new Error(`There was an error fetching particiapnts: ${respText} (status code: ${response.status})`);
         }
         return await response.json();
     }
