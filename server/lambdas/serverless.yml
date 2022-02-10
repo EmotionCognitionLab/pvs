@@ -79,12 +79,12 @@ functions:
       patterns:
         - 'api/*.js'
 
-  data-download:
-    handler: data-download/data-download.handler
+  admin-api:
+    handler: admin-api/admin-api.handler
     events:
       - httpApi:
           method: GET
-          path: /experiment-data
+          path: /admin/experiment-data
           authorizer: serviceAuthorizer
     environment:
       EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
@@ -93,7 +93,7 @@ functions:
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
     package:
       patterns:
-        - 'data-download/*.js'
+        - 'admin-api/*.js'
 
   reminders:
     handler: reminders/reminders.handler
