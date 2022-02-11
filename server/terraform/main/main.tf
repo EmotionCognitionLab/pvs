@@ -86,7 +86,7 @@ resource "aws_cognito_user_pool_client" "client" {
     default_redirect_uri = "${var.cognito-redirect-uri}"
     logout_urls = "${var.cognito-logout-url}"
     supported_identity_providers = [ "COGNITO" ]
-    read_attributes = ["email", "name", "phone_number"]
+    read_attributes = ["email", "name", "phone_number", "phone_number_verified", "email_verified"]
     write_attributes = ["email", "name", "phone_number"]
 }
 output "cognito_pool_client_id" {
@@ -300,6 +300,11 @@ resource "aws_s3_bucket" "datafiles-bucket" {
       days = 7
     }
   }
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = ["https://dev.heartbeamstudy.org", "http://localhost:9000", "https://www.heartbeamstudy.org", "https://heartbeamstudy.org"]
+  }
 }
 
 # save above bucket name to SSM so serverless can reference it
@@ -475,7 +480,8 @@ resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
         "dynamodb:BatchGetItem"
       ],
       "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}",
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}/index/*"
       ]
     }
   ]

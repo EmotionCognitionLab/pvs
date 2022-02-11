@@ -79,12 +79,12 @@ functions:
       patterns:
         - 'api/*.js'
 
-  data-download:
-    handler: data-download/data-download.handler
+  get-experiment-data:
+    handler: admin-api/experiments/experiments.getData
     events:
       - httpApi:
+          path: /admin/experiment/{experiment}
           method: GET
-          path: /
           authorizer: serviceAuthorizer
     environment:
       EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
@@ -93,7 +93,36 @@ functions:
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
     package:
       patterns:
-        - 'data-download/*.js'
+        - 'admin-api/experiments/*.js'
+
+  get-participants:
+    handler: admin-api/participants/participants.getAll
+    events:
+      - httpApi:
+          path: /admin/participants
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
+  
+  get-sets-for-participant:
+    handler: admin-api/participants/participants.getSets
+    events:
+      - httpApi:
+          path: /admin/participant/{id}/sets
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
 
   reminders:
     handler: reminders/reminders.handler

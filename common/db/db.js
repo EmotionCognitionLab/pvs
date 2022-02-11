@@ -19,6 +19,7 @@ export default class Db {
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.userApiUrl = awsSettings.UserApiUrl;
+        this.adminApiUrl = awsSettings.AdminApiUrl;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -165,41 +166,51 @@ export default class Db {
         return this.getResultsForCurrentUser(expName);
     }
 
+    /**
+     * 
+     * @param {string} experimentName The name of the experiment whose results you want.
+     * @returns Object with either 'url' or 'empty' field.
+     * If 'empty' is true, there were no results for the given experiment. If 'url' exists,
+     * it is set to the url of a file to be downloaded that contains the results (in JSON format).
+     */
     async getResultsForExperiment(experimentName) {
-        const results = [];
-        const baseParams = {
-            TableName: this.experimentTable,
-            FilterExpression: "begins_with(experimentDateTime, :experimentName)",
-            ExpressionAttributeValues: {":experimentName": experimentName},
-        };
-        let lastKey = null;
-        try {
-            do {
-                const response = await this.scan({
-                    ...baseParams,
-                    ...(lastKey === null ? {} : {ExclusiveStartKey: lastKey}),
-                });
-                response.Items.forEach(item => {
-                    const parts = item.experimentDateTime.split("|");
-                    if (parts.length != 3) {
-                        throw new Error(`Unexpected experimentDateTime value: ${i.experimentDateTime}. Expected three parts, but found ${parts.length}.`)
-                    }
-                    const [experiment, dateTime, _index] = parts;
-                    results.push({
-                        ...item.results,
-                        dateTime,
-                        experiment,
-                        isRelevant: item.isRelevant,
-                        userId: item.userId,
-                    });
-                });
-                lastKey = response.LastEvaluatedKey;
-            } while (lastKey)
-        } catch (err) {
-            this.logger.error(err);
-            throw err;
+        if (!this.idToken) throw new Error("You must provide a session to get experimental results");
+
+        const url = `${this.adminApiUrl}/experiment/${experimentName}`;
+        const response = await fetch(url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": this.idToken,
+            },
+        });
+        if (!response.ok) {
+            const respText = await response.text();
+            throw new Error(`There was an error fetching experimental results: ${respText} (status code: ${response.status})`);
         }
-        return results;
+        return await response.json();
+    }
+
+    async getAllParticipants() {
+        if (!this.idToken) throw new Error("You must provide a session to get participants");
+
+        const url = `${this.adminApiUrl}/participants`;
+        const response = await fetch(url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+                "Authorization": this.idToken,
+            },
+        });
+        if (!response.ok) {
+            const respText = await response.text();
+            throw new Error(`There was an error fetching particiapnts: ${respText} (status code: ${response.status})`);
+        }
+        return await response.json();
     }
 
     async getSetsForUser(userId) {
