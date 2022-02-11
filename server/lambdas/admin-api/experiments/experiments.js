@@ -6,14 +6,13 @@ import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 
 const region = process.env.REGION;
 const experimentTable = process.env.EXPERIMENT_TABLE;
-const usersTable = process.env.USERS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const datafilesBucket = process.env.DATAFILES_BUCKET;
 const stsClient = new STSClient({ region: region });
 let docClient;
 let s3Client;
 
-exports.handler = async (event) => {
+exports.getData = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
     if (!userRole) {
         return {
@@ -32,23 +31,14 @@ exports.handler = async (event) => {
     docClient = DynamoDBDocumentClient.from(dbClient);
     s3Client = new S3Client({region: region, credentials: credentials });
 
-    const path = event.requestContext.http.path;
-    if (path === "/admin/experiment-data") {
-        const experimentName = event.queryStringParameters.experiment;
-        const results = await getExperimentData(experimentName);
-        if (results.length === 0) {
-            return { empty: true }
-        }
-        const fileDetails = await saveDataToS3(JSON.stringify(results), experimentName);
-        return { url: fileDetails.url }
+    const experimentName = event.pathParameters.experiment;
+    const results = await getExperimentData(experimentName);
+    if (results.length === 0) {
+        return { empty: true }
     }
+    const fileDetails = await saveDataToS3(JSON.stringify(results), experimentName);
+    return { url: fileDetails.url }
 
-    if (path === "/admin/participants") {
-        return await getAllParticipants();
-    }
-
-    return {statusCode: 404, body: `Unknown operation "${method} ${path}"`};
-    
 }
 
 async function getExperimentData(experimentName) {
@@ -119,21 +109,4 @@ async function saveDataToS3(results, experimentName) {
         length: results.length,
         url: url
     };
-}
-
-async function getAllParticipants() {
-    try {
-        const params = {
-            TableName: usersTable,
-            FilterExpression: 'attribute_not_exists(isStaff) or isStaff = :f',
-            ExpressionAttributeValues: { ':f': false }
-        };
-        const scan = new ScanCommand(params);
-        const dynResults = await docClient.send(scan);
-        return dynResults.Items;
-        
-    } catch (err) {
-        console.error(err);
-        throw err;
-    }
 }

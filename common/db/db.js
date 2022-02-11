@@ -176,7 +176,7 @@ export default class Db {
     async getResultsForExperiment(experimentName) {
         if (!this.idToken) throw new Error("You must provide a session to get experimental results");
 
-        const url = `${this.adminApiUrl}/experiment-data?experiment=${experimentName}`;
+        const url = `${this.adminApiUrl}/experiment/${experimentName}`;
         const response = await fetch(url, {
             method: "GET",
             mode: "cors",
