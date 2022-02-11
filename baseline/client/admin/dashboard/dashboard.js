@@ -1,5 +1,8 @@
 import "./style.css";
 
+import { getAuth } from "auth/auth.js";
+import Db from "db/db.js";
+
 const dashboardBody = document.querySelector("#dashboard > tbody");
 
 function clearDashboard() {
@@ -51,7 +54,7 @@ function addDashboardRow(user, completedSetsT1, completedSetsT2) {
         return div;
     };
     // add Subject ID cell
-    row.insertCell().textContent = "NAME";
+    row.insertCell().textContent = user.name;
     // Daily Tasks T1
     row.insertCell().appendChild(createProgressDiv(6, undefined, `Set ?/6 completed`));
     // EEG T1
@@ -68,6 +71,19 @@ function addDashboardRow(user, completedSetsT1, completedSetsT2) {
     row.insertCell().appendChild(createProgressDiv(280, undefined, `Set ?/6 completed`));
 }
 
-for (let i = 0; i < 5; ++i) {
-    addDashboardRow(undefined, undefined, undefined);
+async function initializeDashboard(db) {
+    const users = await db.getAllParticipants();
+    users.forEach(u => {
+        addDashboardRow(u, undefined, undefined);
+    });
+    window.users = users;  // to-do: remove this (debug)
 }
+
+getAuth(
+    session => {
+        initializeDashboard(new Db({session: session}));
+    },
+    err => {
+        console.error("error:", err);
+    }
+).getSession();
