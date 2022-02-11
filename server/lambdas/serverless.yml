@@ -109,6 +109,20 @@ functions:
     package:
       patterns:
         - 'admin-api/participants/*.js'
+  
+  get-sets-for-participant:
+    handler: admin-api/participants/participants.getSets
+    events:
+      - httpApi:
+          path: /admin/participant/{id}/sets
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
 
   reminders:
     handler: reminders/reminders.handler

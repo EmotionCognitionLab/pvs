@@ -1,12 +1,12 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand} from "@aws-sdk/lib-dynamodb";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
+import Db from 'db/db.js';
 
+const AWS = require("aws-sdk");
 const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
-const stsClient = new STSClient({ region: region });
-let docClient;
 
 exports.getAll = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
@@ -16,20 +16,47 @@ exports.getAll = async(event) => {
             body: "You do not have permission to access this information"
         }
     }
-    const assumeRoleCmd = new AssumeRoleCommand({RoleArn: userRole, RoleSessionName: "lambdaCognitoUser"});
+    const credentials = await credentialsForRole(userRole)
+    const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
+    const docClient = DynamoDBDocumentClient.from(dbClient);
+
+    return await getAllParticipants(docClient);
+}
+
+exports.getSets = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) {
+        return {
+            statusCode: 401,
+            body: "You do not have permission to access this information"
+        }
+    }
+    const credentials = await credentialsForRole(userRole);
+    const docClient = new AWS.DynamoDB.DocumentClient({
+        endpoint: dynamoEndpoint,
+        apiVersion: "2012-08-10",
+        region: region,
+        credentials: credentials
+    });
+
+    const db = new Db();
+    db.docClient = docClient;
+    const participantId = event.pathParameters.id;
+    return await db.getSetsForUser(participantId);
+}
+
+async function credentialsForRole(roleArn) {
+    const assumeRoleCmd = new AssumeRoleCommand({RoleArn: roleArn, RoleSessionName: "lambdaCognitoUser"});
+    const stsClient = new STSClient({ region: region });
     const roleData = await stsClient.send(assumeRoleCmd);
-    const credentials = {
+    return {
         accessKeyId: roleData.Credentials.AccessKeyId,
         secretAccessKey: roleData.Credentials.SecretAccessKey,
         sessionToken: roleData.Credentials.SessionToken
     };
-    const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
-    docClient = DynamoDBDocumentClient.from(dbClient);
-
-    return await getAllParticipants();
 }
 
-async function getAllParticipants() {
+async function getAllParticipants(docClient) {
     try {
         const params = {
             TableName: usersTable,
