@@ -480,7 +480,8 @@ resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
         "dynamodb:BatchGetItem"
       ],
       "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}",
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}/index/*"
       ]
     }
   ]
