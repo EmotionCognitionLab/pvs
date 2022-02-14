@@ -8,14 +8,15 @@ const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 
+const noAccess = {
+    statusCode: 401,
+    body: "You do not have permission to access this information"
+};
+
 exports.getAll = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
-    if (!userRole) {
-        return {
-            statusCode: 401,
-            body: "You do not have permission to access this information"
-        }
-    }
+    if (!userRole) return noAccess;
+
     const credentials = await credentialsForRole(userRole)
     const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
     const docClient = DynamoDBDocumentClient.from(dbClient);
@@ -25,24 +26,25 @@ exports.getAll = async(event) => {
 
 exports.getSets = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
-    if (!userRole) {
-        return {
-            statusCode: 401,
-            body: "You do not have permission to access this information"
-        }
-    }
+    if (!userRole) return noAccess;
+    
     const credentials = await credentialsForRole(userRole);
-    const docClient = new AWS.DynamoDB.DocumentClient({
-        endpoint: dynamoEndpoint,
-        apiVersion: "2012-08-10",
-        region: region,
-        credentials: credentials
-    });
+    const db = dbWithCredentials(credentials);
 
-    const db = new Db();
-    db.docClient = docClient;
     const participantId = event.pathParameters.id;
     return await db.getSetsForUser(participantId);
+}
+
+exports.update = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) return noAccess;
+    
+    const credentials = await credentialsForRole(userRole);
+    const db = dbWithCredentials(credentials);
+
+    const participantId = event.pathParameters.id;
+    const properties = JSON.parse(event.body);
+    return await db.updateUser(participantId, properties);
 }
 
 async function credentialsForRole(roleArn) {
@@ -71,4 +73,18 @@ async function getAllParticipants(docClient) {
         console.error(err);
         throw err;
     }
+}
+
+function dbWithCredentials(credentials) {
+    const docClient = new AWS.DynamoDB.DocumentClient({
+        endpoint: dynamoEndpoint,
+        apiVersion: "2012-08-10",
+        region: region,
+        credentials: credentials
+    });
+
+    const db = new Db();
+    db.docClient = docClient;
+    db.credentials = credentials;
+    return db;
 }
