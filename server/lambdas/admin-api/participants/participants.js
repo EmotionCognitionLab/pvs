@@ -8,14 +8,15 @@ const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 
+const noAccess = {
+    statusCode: 401,
+    body: "You do not have permission to access this information"
+};
+
 exports.getAll = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
-    if (!userRole) {
-        return {
-            statusCode: 401,
-            body: "You do not have permission to access this information"
-        }
-    }
+    if (!userRole) return noAccess;
+
     const credentials = await credentialsForRole(userRole)
     const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
     const docClient = DynamoDBDocumentClient.from(dbClient);
@@ -25,12 +26,8 @@ exports.getAll = async(event) => {
 
 exports.getSets = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
-    if (!userRole) {
-        return {
-            statusCode: 401,
-            body: "You do not have permission to access this information"
-        }
-    }
+    if (!userRole) return noAccess;
+    
     const credentials = await credentialsForRole(userRole);
     const docClient = new AWS.DynamoDB.DocumentClient({
         endpoint: dynamoEndpoint,
