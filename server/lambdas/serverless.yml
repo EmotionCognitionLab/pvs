@@ -124,6 +124,20 @@ functions:
       patterns:
         - 'admin-api/participants/*.js'
 
+  update-participant:
+    handler: admin-api/participants/participants.update
+    events:
+      - httpApi:
+          path: /admin/participant/{id}
+          method: PUT
+          authorizer: serviceAuthorizer
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
+
   reminders:
     handler: reminders/reminders.handler
     events:
