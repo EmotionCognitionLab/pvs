@@ -1,6 +1,7 @@
 import "./style.css";
 
 import { getAuth } from "auth/auth.js";
+import ApiClient from "../../api/client";
 import Db from "db/db.js";
 
 const dashboardBody = document.querySelector("#dashboard > tbody");
@@ -11,7 +12,7 @@ function clearDashboard() {
     }
 }
 
-function addDashboardRow(user, completedSetsT1, completedSetsT2) {
+function addDashboardRow(user, finishedSetsT1, finishedSetsT2) {
     // insert row element
     const row = dashboardBody.insertRow();
     // helper for cells that contain progress bars
@@ -56,7 +57,7 @@ function addDashboardRow(user, completedSetsT1, completedSetsT2) {
     // add Subject ID cell
     row.insertCell().textContent = user.name;
     // Daily Tasks T1
-    row.insertCell().appendChild(createProgressDiv(6, undefined, `Set ?/6 completed`));
+    row.insertCell().appendChild(createProgressDiv(6, finishedSetsT1, `${finishedSetsT1}/6 sets completed`));
     // EEG T1
     row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
     // MRI T1
@@ -68,20 +69,22 @@ function addDashboardRow(user, completedSetsT1, completedSetsT2) {
     // MRI T2
     row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
     // Daily Tasks T2
-    row.insertCell().appendChild(createProgressDiv(280, undefined, `Set ?/6 completed`));
+    row.insertCell().appendChild(createProgressDiv(280, finishedSetsT2, `${finishedSetsT2}/6 sets completed`));
 }
 
-async function initializeDashboard(db) {
+async function initializeDashboard(db, client) {
     const users = await db.getAllParticipants();
-    users.forEach(u => {
-        addDashboardRow(u, undefined, undefined);
-    });
     window.users = users;  // to-do: remove this (debug)
+    for (const user of users) {
+        const sets = await client.getSetsForUser(user.userId);
+        const completedSetsT1 = sets.filter(s => s.experiment === "set-finished").length;
+        addDashboardRow(user, completedSetsT1, 0);
+    }
 }
 
 getAuth(
     session => {
-        initializeDashboard(new Db({session: session}));
+        initializeDashboard(new Db({session: session}), new ApiClient(session));
     },
     err => {
         console.error("error:", err);
