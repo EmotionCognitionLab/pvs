@@ -47,6 +47,26 @@ exports.update = async(event) => {
     return await db.updateUser(participantId, properties);
 }
 
+exports.get = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) return noAccess;
+    
+    const credentials = await credentialsForRole(userRole);
+    const db = dbWithCredentials(credentials);
+
+    const participantId = event.pathParameters.id;
+    const consistentRead = event.queryStringParameters && event.queryStringParameters.consistentRead === 'true';
+    const user = await db.getUser(participantId, consistentRead);
+    if (Object.keys(user).length === 0) {
+        return {
+            statusCode: 404,
+            body: `User ${participantId} not found`
+        }
+    }
+    
+    return user;
+}
+
 async function credentialsForRole(roleArn) {
     const assumeRoleCmd = new AssumeRoleCommand({RoleArn: roleArn, RoleSessionName: "lambdaCognitoUser"});
     const stsClient = new STSClient({ region: region });

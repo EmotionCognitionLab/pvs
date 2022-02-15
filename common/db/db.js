@@ -359,6 +359,23 @@ export default class Db {
         return userData;
     }
 
+    async getUser(userId, consistentRead=false) {
+        const params = {
+            TableName: this.usersTable,
+            KeyConditionExpression: "userId = :idKey",
+            ExpressionAttributeValues: { ":idKey": userId },
+            ConsistentRead: consistentRead
+        };
+        const dynResults = await this.query(params);
+        if (dynResults.Items.length === 0) {
+            return {};
+        }
+        if (dynResults.Items.length > 1) {
+            throw new Error(`Found multiple users with userId ${userId}.`);
+        }
+        return dynResults.Items[0];
+    }
+
     async dynamoOp(params, fnName) {
         let curTry = 0;
         const maxTries = 3;

@@ -11,6 +11,20 @@ export default class ApiClient {
     }
 
     /**
+     * Fetches a user record.
+     * @param {string} userId The id of the user whose record is to be fetched.
+     * @param {boolean} consistentRead Should the fetch use a consistent read?
+     * @returns {object} A user record
+     */
+    async getUser(userId, consistentRead = false) {
+        let url =  `${awsSettings.AdminApiUrl}/participant/${userId}`;
+        if (consistentRead) {
+            url += "?consistentRead=true";
+        }
+        return await this.doFetch(url, "get", "There was an error retrieving the user data");
+    }
+
+    /**
      * Updates an existing user record.
      * @param {string} userId The id of the user whose record is to be updated
      * @param {object} updates An object with the fields you want to update and the values you want to set them to
