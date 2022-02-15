@@ -7,7 +7,7 @@ export default class ApiClient {
 
     async getSetsForUser(userId) {
         const url = `${awsSettings.AdminApiUrl}/participant/${userId}/sets`;
-        return await this.doFetch(url, "get", "There was an error retrieving the sets for the user");
+        return await this.doFetch(url, "get", null, "There was an error retrieving the sets for the user");
     }
 
     /**
