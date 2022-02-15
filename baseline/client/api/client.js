@@ -18,10 +18,10 @@ export default class ApiClient {
      */
     async updateUser(userId, updates) {
         const url = `${awsSettings.AdminApiUrl}/participant/${userId}`;
-        return await this.doFetch(url, "put", updates, `There was an error updating user ${userId}`);
+        return await this.doFetch(url, "put", `There was an error updating user ${userId}`, updates);
     }
 
-    async doFetch(url, method, body = null, errPreamble = "There was an error fetching the information") {
+    async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,
             mode: "cors",
