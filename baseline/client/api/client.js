@@ -7,7 +7,21 @@ export default class ApiClient {
 
     async getSetsForUser(userId) {
         const url = `${awsSettings.AdminApiUrl}/participant/${userId}/sets`;
-        return await this.doFetch(url, "get", null, "There was an error retrieving the sets for the user");
+        return await this.doFetch(url, "get", "There was an error retrieving the sets for the user");
+    }
+
+    /**
+     * Fetches a user record.
+     * @param {string} userId The id of the user whose record is to be fetched.
+     * @param {boolean} consistentRead Should the fetch use a consistent read?
+     * @returns {object} A user record
+     */
+    async getUser(userId, consistentRead = false) {
+        let url =  `${awsSettings.AdminApiUrl}/participant/${userId}`;
+        if (consistentRead) {
+            url += "?consistentRead=true";
+        }
+        return await this.doFetch(url, "get", "There was an error retrieving the user data");
     }
 
     /**
@@ -18,10 +32,10 @@ export default class ApiClient {
      */
     async updateUser(userId, updates) {
         const url = `${awsSettings.AdminApiUrl}/participant/${userId}`;
-        return await this.doFetch(url, "put", updates, `There was an error updating user ${userId}`);
+        return await this.doFetch(url, "put", `There was an error updating user ${userId}`, updates);
     }
 
-    async doFetch(url, method, body = null, errPreamble = "There was an error fetching the information") {
+    async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,
             mode: "cors",
