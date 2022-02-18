@@ -57,31 +57,33 @@ function addDashboardRow(client, user, finishedSetsT1, finishedSetsT2, finishedS
         };
         checkbox.addEventListener("click", event => {
             event.preventDefault();
-            if (checkbox.indeterminate) {
-                return;
-            } else if (!checkbox.checked) {
-                disable();
-                (async () => {
-                    const u = await client.getUser(user.userId, true);
-                    const progress = u.progress ?? {};
-                    if (!progress[key]) {
-                        progress[key] = (new Date()).toISOString();
-                        await client.updateUser(user.userId, {progress});
-                    }
-                    set(progress[key]);
-                })();
-            } else if (window.confirm("yeah?")) {
-                disable();
-                (async () => {
-                    const u = await client.getUser(user.userId, true);
-                    const progress = u.progress ?? {};
-                    if (progress[key]) {
-                        delete progress[key];
-                        await client.updateUser(user.userId, {progress});
-                    }
-                    clear();
-                })();
-            }
+            setTimeout(() => {
+                if (checkbox.indeterminate) {
+                    return;
+                } else if (!checkbox.checked) {
+                    disable();
+                    (async () => {
+                        const u = await client.getUser(user.userId, true);
+                        const progress = u.progress ?? {};
+                        if (!progress[key]) {
+                            progress[key] = (new Date()).toISOString();
+                            await client.updateUser(user.userId, {progress});
+                        }
+                        set(progress[key]);
+                    })();
+                } else if (window.confirm("yeah?")) {
+                    disable();
+                    (async () => {
+                        const u = await client.getUser(user.userId, true);
+                        const progress = u.progress ?? {};
+                        if (progress[key]) {
+                            delete progress[key];
+                            await client.updateUser(user.userId, {progress});
+                        }
+                        clear();
+                    })();
+                }
+            });
         });
         if (user.progress?.[key]) {
             set(user.progress?.[key]);
