@@ -12,16 +12,16 @@ function clearDashboard() {
     }
 }
 
-function addDashboardRow(user, finishedSetsT1, finishedSetsT2) {
+function addDashboardRow(client, user, finishedSetsT1, finishedSetsT2, finishedSessions) {
     // insert row element
     const row = dashboardBody.insertRow();
     // helper for cells that contain progress bars
-    const createProgressDiv = (max, value, text) => {
+    const createProgress = (max, value, plural) => {
         const progress = document.createElement("progress");
         progress.setAttribute("max", String(max));
         progress.setAttribute("value", String(value));
         const label = document.createElement("label");
-        label.textContent = text;
+        label.textContent = `${value}/${max} ${plural} completed`;
         label.appendChild(progress);
         const span = document.createElement("span");
         span.textContent = `${Math.round(100*value/max)}%`;
@@ -31,54 +31,89 @@ function addDashboardRow(user, finishedSetsT1, finishedSetsT2) {
         return div;
     };
     // helper for cells that contain a markable date
-    const createMarkableDiv = (key, timestamp = null) => {
-        const button = document.createElement("button");
-        const disableButton = () => {
-            button.disabled = true;
-            button.textContent = "Done.";
+    const createMarkable = key => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        const text = document.createTextNode("");
+        const label = document.createElement("label");
+        label.appendChild(checkbox);
+        label.appendChild(text);
+        const clear = () => {
+            checkbox.disabled = false;
+            checkbox.indeterminate = false;
+            checkbox.checked = false;
+            text.textContent = "";
         };
-        if (timestamp) {
-            disableButton();
+        const set = timestamp => {
+            checkbox.disabled = false;
+            checkbox.indeterminate = false;
+            checkbox.checked = true;
+            text.textContent = timestamp;
+        };
+        const disable = () => {
+            checkbox.disabled = true;
+            checkbox.indeterminate = true;
+            text.textContent = "...";
+        };
+        checkbox.addEventListener("click", event => {
+            event.preventDefault();
+            if (checkbox.indeterminate) {
+                return;
+            } else if (!checkbox.checked) {
+                disable();
+                (async () => {
+                    const u = await client.getUser(user.userId, true);
+                    const progress = u.progress ?? {};
+                    if (!progress[key]) {
+                        progress[key] = (new Date()).toISOString();
+                        await client.updateUser(user.userId, {progress});
+                    }
+                    set(progress[key]);
+                })();
+            } else if (window.confirm("yeah?")) {
+                disable();
+                (async () => {
+                    const u = await client.getUser(user.userId, true);
+                    const progress = u.progress ?? {};
+                    if (progress[key]) {
+                        delete progress[key];
+                        await client.updateUser(user.userId, {progress});
+                    }
+                    clear();
+                })();
+            }
+        });
+        if (user.progress?.[key]) {
+            set(user.progress?.[key]);
         } else {
-            const callback = () => {
-                button.removeEventListener("click", callback);
-                disableButton();
-            };
-            button.addEventListener("click", callback);
-            button.textContent = "Done?";
+            clear();
         }
-        const span = document.createElement("span");
-        span.textContent = timestamp ?? "null";
-        const div = document.createElement("div");
-        div.appendChild(button);
-        div.appendChild(span);
-        return div;
+        return label;
     };
     // add Subject ID cell
     row.insertCell().textContent = user.name;
     // Daily Tasks T1
-    row.insertCell().appendChild(createProgressDiv(6, finishedSetsT1, `${finishedSetsT1}/6 sets completed`));
+    row.insertCell().appendChild(createProgress(6, finishedSetsT1, "sets"));
     // EEG T1
-    row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
+    row.insertCell().appendChild(createMarkable("eegT1"));
     // MRI T1
-    row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
+    row.insertCell().appendChild(createMarkable("mriT1"));
     // Biofeedback Practice
-    row.insertCell().appendChild(createProgressDiv(280, undefined, `?/280 sessions completed`));
+    row.insertCell().appendChild(createProgress(280, finishedSessions, "sessions"));
     // EEG T2
-    row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
+    row.insertCell().appendChild(createMarkable("eegT2"));
     // MRI T2
-    row.insertCell().appendChild(createMarkableDiv(undefined, undefined));
+    row.insertCell().appendChild(createMarkable("mriT2"));
     // Daily Tasks T2
-    row.insertCell().appendChild(createProgressDiv(280, finishedSetsT2, `${finishedSetsT2}/6 sets completed`));
+    row.insertCell().appendChild(createProgress(280, finishedSetsT2, "sets"));
 }
 
 async function initializeDashboard(db, client) {
     const users = await db.getAllParticipants();
-    window.users = users;  // to-do: remove this (debug)
     for (const user of users) {
         const sets = await client.getSetsForUser(user.userId);
         const completedSetsT1 = sets.filter(s => s.experiment === "set-finished").length;
-        addDashboardRow(user, completedSetsT1, 0);
+        addDashboardRow(client, user, completedSetsT1, 0, 0);
     }
 }
 
