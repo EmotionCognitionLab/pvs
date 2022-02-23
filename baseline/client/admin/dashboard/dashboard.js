@@ -41,7 +41,7 @@ class Dashboard {
                         this.records.get(userId).user.progress = progress;
                     }
                     Dashboard.setMarkable(checkbox, span, progress[key]);
-                } else if (window.confirm("yeah?")) {
+                } else if (window.confirm("Unset this timestamp?")) {
                     Dashboard.disableMarkable(checkbox, span);
                     const user = await this.refreshUser(userId);
                     const progress = user.progress ?? {};
