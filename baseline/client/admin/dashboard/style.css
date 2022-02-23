@@ -11,6 +11,11 @@ table {
     background-color: #f5f5dc;
 }
 
+thead {
+    color: #ffffff;
+    background-color: #648c96;
+}
+
 tr:nth-child(even) {
     background-color: #e8ecd4;
 }
