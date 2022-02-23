@@ -1,0 +1,41 @@
+body {
+    display: flex;
+    justify-content: center;
+    background-color: #f6f6ee;
+}
+
+table {
+    margin-top: 50px;
+    font-size: 20px;
+    color: #263a46;
+    background-color: #f5f5dc;
+}
+
+tr:nth-child(even) {
+    background-color: #e8ecd4;
+}
+
+table, th, td {
+    border: 2px solid;
+    border-color: #4b6973;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 5px;
+}
+
+progress {
+    width: 80px;
+    margin: 5px;
+}
+
+label {
+    display: inline-block;
+    width: 200px;
+    overflow: hidden;
+    /*
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    */
+}
