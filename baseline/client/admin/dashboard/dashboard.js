@@ -140,7 +140,8 @@ class Dashboard {
         // set row data attributes
         row.dataset.userId = userId;
         // add Subject ID cell
-        row.insertCell().textContent = user.name;
+        row.insertCell().textContent = `${user.name} (joined ${user.createdAt})`;
+        console.debug(user);
         // Daily Tasks T1
         row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1, "sets"));
         // EEG T1
