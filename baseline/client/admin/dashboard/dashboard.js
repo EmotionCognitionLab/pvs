@@ -154,7 +154,7 @@ class Dashboard {
         // MRI T2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
         // Daily Tasks T2
-        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSetsT2, "sets"));
+        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2, "sets"));
     }
 
     clearRows() {
