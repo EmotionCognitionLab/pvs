@@ -719,6 +719,7 @@ resource "aws_iam_role" "lambda-dynamodb" {
         Effect = "Allow"
         Principal = {
           AWS = "${aws_iam_role.lambda.arn}"
+          Service = "lambda.amazonaws.com"
         }
         Action =  [
           "sts:AssumeRole"
