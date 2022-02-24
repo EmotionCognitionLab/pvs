@@ -115,18 +115,21 @@ class Dashboard {
         checkbox.indeterminate = true;
         span.textContent = "...";
     }
+
     static clearMarkable(checkbox, span) {
         checkbox.disabled = false;
         checkbox.indeterminate = false;
         checkbox.checked = false;
         span.textContent = "";
     }
+
     static setMarkable(checkbox, span, timestamp) {
         checkbox.disabled = false;
         checkbox.indeterminate = false;
         checkbox.checked = true;
         span.textContent = timestamp.substring(0, 10);
     }
+    
     static createMarkable(progress, key) {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
