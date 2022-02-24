@@ -64,8 +64,6 @@ class Dashboard {
                         window.alert("A problem occurred. Please try again later.");
                         Dashboard.setMarkable(checkbox, span, timestamp);
                     }
-                    
-                    
                 }
             });
         });
@@ -129,7 +127,7 @@ class Dashboard {
         checkbox.disabled = false;
         checkbox.indeterminate = false;
         checkbox.checked = true;
-        span.textContent = timestamp;
+        span.textContent = timestamp.substring(0, 10);
     }
     static createMarkable(progress, key) {
         const checkbox = document.createElement("input");
@@ -155,7 +153,12 @@ class Dashboard {
         // set row data attributes
         row.dataset.userId = userId;
         // add Subject ID cell
-        row.insertCell().textContent = `${user.name} (joined ${user.createdAt})`;
+        const subjectCell = row.insertCell();
+        subjectCell.textContent = user.name;
+        const dateSpan = document.createElement("span");
+        dateSpan.textContent = user.createdAt.substring(0, 10);
+        dateSpan.classList.add("small");
+        subjectCell.appendChild(dateSpan);
         // Daily Tasks T1
         row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1, "sets"));
         // EEG T1

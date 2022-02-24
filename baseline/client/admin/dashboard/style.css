@@ -30,6 +30,18 @@ th, td {
     padding: 5px;
 }
 
+td span.small {
+    font-size: 90%;
+    display: block;
+}
+
+td label input {
+    margin-right: 10px;
+    vertical-align: bottom;
+    position: relative;
+    top: -2px;
+}
+
 progress {
     width: 80px;
     margin: 5px;
