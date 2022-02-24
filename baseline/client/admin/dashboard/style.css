@@ -1,0 +1,86 @@
+body {
+    display: flex;
+    justify-content: center;
+    background-color: #f6f6ee;
+}
+
+table {
+    margin-top: 50px;
+    font-size: 20px;
+    color: #263a46;
+    background-color: #f5f5dc;
+}
+
+thead {
+    color: #ffffff;
+    background-color: #648c96;
+}
+
+tr:nth-child(even) {
+    background-color: #e8ecd4;
+}
+
+table, th, td {
+    border: 2px solid;
+    border-color: #4b6973;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 5px;
+}
+
+td label input {
+    margin-right: 10px;
+    vertical-align: bottom;
+    position: relative;
+    top: -2px;
+}
+
+progress {
+    width: 80px;
+    margin: 5px;
+}
+
+label {
+    display: inline-block;
+    width: 200px;
+    overflow: hidden;
+    /*
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    */
+}
+
+.hidden {
+    display: none;
+}
+
+.small {
+    font-size: 90%;
+}
+
+.username {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#error {
+    color: red;
+    font-size: 125%;
+    margin: auto;
+    width: 30%;
+}
+
+#user-details {
+    position: fixed;
+    z-index: 10;
+    border: 3px solid gray;
+    background-color: white;
+    width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 50%;
+    box-shadow: 5px 5px 2px lightgray;
+}
