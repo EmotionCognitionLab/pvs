@@ -14,6 +14,8 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 
+const deployableBranches = ['prod'];
+
 const settingsFiles = {
     'dev': '../../../common/aws-settings.dev.json',
     'prod': '../../../common/aws-settings.prod.json',
@@ -28,6 +30,16 @@ function getUncommittedFiles() {
 function getUnpushedFiles() {
     const git = spawnSync('git', ['rev-list', 'HEAD', '^origin']);
     return git.stdout.toString();
+}
+
+function getBranch() {
+    const git = spawnSync('git', ['branch', '--show-current']);
+    return git.stdout.toString().trimEnd();
+}
+
+function branchOk() {
+    const branch = getBranch();
+    return deployableBranches.includes(branch);
 }
 
 function envSettingsOk(env) {
@@ -55,6 +67,12 @@ function main() {
     if (!envSettingsOk(process.argv[2])) {
         console.log(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
         process.exit(3);
+    }
+
+    if (!branchOk()) {
+        const curBranch = getBranch();
+        console.log(`You are on brawnch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
+        process.exit(4);
     }
 
     process.exit(0);
