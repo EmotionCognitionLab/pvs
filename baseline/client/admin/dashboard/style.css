@@ -30,11 +30,6 @@ th, td {
     padding: 5px;
 }
 
-td span.small {
-    font-size: 90%;
-    display: block;
-}
-
 td label input {
     margin-right: 10px;
     vertical-align: bottom;
@@ -57,9 +52,35 @@ label {
     */
 }
 
+.hidden {
+    display: none;
+}
+
+.small {
+    font-size: 90%;
+}
+
+.username {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 #error {
     color: red;
     font-size: 125%;
     margin: auto;
     width: 30%;
+}
+
+#user-details {
+    position: fixed;
+    z-index: 10;
+    border: 3px solid gray;
+    background-color: white;
+    width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 50%;
+    box-shadow: 5px 5px 2px lightgray;
 }
