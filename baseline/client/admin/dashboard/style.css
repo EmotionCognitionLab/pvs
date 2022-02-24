@@ -56,3 +56,10 @@ label {
     text-overflow: ellipsis;
     */
 }
+
+#error {
+    color: red;
+    font-size: 125%;
+    margin: auto;
+    width: 30%;
+}

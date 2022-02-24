@@ -10,6 +10,7 @@ class Dashboard {
         this.db = db;
         this.records = new Map();
         this.listen();
+        this.allUsersLoadedSuccessfully = false;
     }
 
     listen() {
@@ -72,15 +73,21 @@ class Dashboard {
     async refreshRecords() {
         // create and fill temporary new map
         const temp = [];
-        const users = await this.db.getAllParticipants();
-        await Promise.all(users.map(async (user) => {
-            const sets = await this.client.getSetsForUser(user.userId);
-            const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
-            const finishedSetsT1 = finishedSets;
-            const finishedSetsT2 = 0;  // to-do: fix this
-            const finishedSessions = 0;  // to-do: fix this
-            temp.push([user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions}]);
-        }));
+        try {
+            const users = await this.db.getAllParticipants();
+            await Promise.all(users.map(async (user) => {
+                const sets = await this.client.getSetsForUser(user.userId);
+                const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
+                const finishedSetsT1 = finishedSets;
+                const finishedSetsT2 = 0;  // to-do: fix this
+                const finishedSessions = 0;  // to-do: fix this
+                temp.push([user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions}]);
+            }));
+            this.allUsersLoadedSuccessfully = true;
+        } catch (err) {
+            console.error("Error loading all users", err);
+        }
+        
         // sort temporary and copy to records
         const sorted = temp.sort(([_userId1, user1], [_userId2, user2]) => user1.user.name.localeCompare(user2.user.name));
         this.records.clear();
@@ -129,7 +136,7 @@ class Dashboard {
         checkbox.checked = true;
         span.textContent = timestamp.substring(0, 10);
     }
-    
+
     static createMarkable(progress, key) {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -186,6 +193,10 @@ class Dashboard {
         this.clearRows();
         for (const userId of this.records.keys()) {
             this.appendRow(userId);
+        }
+        if (!this.allUsersLoadedSuccessfully) {
+            const errDiv = document.getElementById("error");
+            errDiv.textContent = "Not all users were loaded. Please reload the page.";
         }
     }
 }
