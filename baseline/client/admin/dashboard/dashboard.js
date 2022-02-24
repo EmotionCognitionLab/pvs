@@ -71,22 +71,20 @@ class Dashboard {
 
     async refreshRecords() {
         // create and fill temporary new map
-        const temp = new Map();
+        const temp = [];
         const users = await this.db.getAllParticipants();
-        for (const user of users) {
-            const [sets, sessions] = await Promise.all([
-                this.client.getSetsForUser(user.userId),
-                null,
-            ]);
+        await Promise.all(users.map(async (user) => {
+            const sets = await this.client.getSetsForUser(user.userId);
             const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
             const finishedSetsT1 = finishedSets;
             const finishedSetsT2 = 0;  // to-do: fix this
             const finishedSessions = 0;  // to-do: fix this
-            temp.set(user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions});
-        }
-        // copy from temporary
+            temp.push([user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions}]);
+        }));
+        // sort temporary and copy to records
+        const sorted = temp.sort(([_userId1, user1], [_userId2, user2]) => user1.user.name.localeCompare(user2.user.name));
         this.records.clear();
-        for (const [key, value] of temp) {
+        for (const [key, value] of sorted) {
             this.records.set(key, value);
         }
     }
