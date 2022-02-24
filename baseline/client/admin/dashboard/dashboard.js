@@ -32,25 +32,40 @@ class Dashboard {
                     return;
                 } else if (!checkbox.checked) {
                     Dashboard.disableMarkable(checkbox, span);
-                    const user = await this.refreshUser(userId);
-                    const progress = user.progress ?? {};
-                    if (!progress[key]) {
-                        // timestamp for key can be set
-                        progress[key] = (new Date()).toISOString();
-                        await this.client.updateUser(userId, {progress});
-                        this.records.get(userId).user.progress = progress;
+                    try {
+                        const user = await this.refreshUser(userId);
+                        const progress = user.progress ?? {};
+                        if (!progress[key]) {
+                            // timestamp for key can be set
+                            progress[key] = (new Date()).toISOString();
+                            await this.client.updateUser(userId, {progress});
+                            this.records.get(userId).user.progress = progress;
+                        }
+                        Dashboard.setMarkable(checkbox, span, progress[key]);
+                    } catch (err) {
+                        console.error(`Error setting date for ${key} for ${userId}`, err);
+                        window.alert("A problem occurred. Please try again later.");
+                        Dashboard.clearMarkable(checkbox, span);
                     }
-                    Dashboard.setMarkable(checkbox, span, progress[key]);
                 } else if (window.confirm("Unset this timestamp?")) {
+                    const timestamp = span.textContent;
                     Dashboard.disableMarkable(checkbox, span);
-                    const user = await this.refreshUser(userId);
-                    const progress = user.progress ?? {};
-                    if (progress[key]) {
-                        delete progress[key];
-                        await this.client.updateUser(userId, {progress});
-                        this.records.get(userId).user.progress = progress;
+                    try {
+                        const user = await this.refreshUser(userId);
+                        const progress = user.progress ?? {};
+                        if (progress[key]) {
+                            delete progress[key];
+                            await this.client.updateUser(userId, {progress});
+                            this.records.get(userId).user.progress = progress;
+                        }
+                        Dashboard.clearMarkable(checkbox, span);
+                    } catch (err) {
+                        console.error(`Error clearing date for ${key} for ${userId}`, err);
+                        window.alert("A problem occurred. Please try again later.");
+                        Dashboard.setMarkable(checkbox, span, timestamp);
                     }
-                    Dashboard.clearMarkable(checkbox, span);
+                    
+                    
                 }
             });
         });
