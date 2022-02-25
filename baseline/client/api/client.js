@@ -47,6 +47,16 @@ export default class ApiClient {
         return await this.doFetch(url, "get", `There was an error fetching results for the ${experimentName} experiment`);
     }
 
+    /**
+     * 
+     * @returns All non-staff (isStaff=false or does not exist) participants in the database
+     */
+    async getAllParticipants() {
+
+        const url = `${awsSettings.AdminApiUrl}/participants`;
+        return await this.doFetch(url, "get", "There was an error fetching particiapnts");
+    }
+
     async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,

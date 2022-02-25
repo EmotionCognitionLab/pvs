@@ -166,26 +166,6 @@ export default class Db {
         return this.getResultsForCurrentUser(expName);
     }
 
-    async getAllParticipants() {
-        if (!this.idToken) throw new Error("You must provide a session to get participants");
-
-        const url = `${this.adminApiUrl}/participants`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-        });
-        if (!response.ok) {
-            const respText = await response.text();
-            throw new Error(`There was an error fetching particiapnts: ${respText} (status code: ${response.status})`);
-        }
-        return await response.json();
-    }
-
     async getSetsForUser(userId) {
         try {
             let ExclusiveStartKey, dynResults

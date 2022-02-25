@@ -1,13 +1,11 @@
 import "./style.css";
 import { getAuth } from "auth/auth.js";
 import ApiClient from "../../api/client";
-import Db from "db/db.js";
 
 class Dashboard {
-    constructor(tbody, client, db) {
+    constructor(tbody, client) {
         this.tbody = tbody;
         this.client = client;
-        this.db = db;
         this.records = new Map();
         this.listen();
         this.allUsersLoadedSuccessfully = false;
@@ -108,7 +106,7 @@ class Dashboard {
         // create and fill temporary new map
         const temp = [];
         try {
-            const users = await this.db.getAllParticipants();
+            const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
                 const sets = await this.client.getSetsForUser(user.userId);
                 const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
@@ -254,8 +252,7 @@ getAuth(
     async session => {
         const dashboard = new Dashboard(
             document.querySelector("#dashboard > tbody"),
-            new ApiClient(session),
-            new Db({session: session}),
+            new ApiClient(session)
         );
         await dashboard.refreshRecords();
         dashboard.showActive();
