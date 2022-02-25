@@ -166,33 +166,6 @@ export default class Db {
         return this.getResultsForCurrentUser(expName);
     }
 
-    /**
-     * 
-     * @param {string} experimentName The name of the experiment whose results you want.
-     * @returns Object with either 'url' or 'empty' field.
-     * If 'empty' is true, there were no results for the given experiment. If 'url' exists,
-     * it is set to the url of a file to be downloaded that contains the results (in JSON format).
-     */
-    async getResultsForExperiment(experimentName) {
-        if (!this.idToken) throw new Error("You must provide a session to get experimental results");
-
-        const url = `${this.adminApiUrl}/experiment/${experimentName}`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-        });
-        if (!response.ok) {
-            const respText = await response.text();
-            throw new Error(`There was an error fetching experimental results: ${respText} (status code: ${response.status})`);
-        }
-        return await response.json();
-    }
-
     async getAllParticipants() {
         if (!this.idToken) throw new Error("You must provide a session to get participants");
 

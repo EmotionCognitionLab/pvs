@@ -1,16 +1,16 @@
 import "./style.css";
 
 import { getAuth } from "auth/auth.js";
-import Db from "db/db.js";
+import ApiClient from "../../api/client";
 
 const experimentSelect = document.getElementById("experiment-select");
 const experimentButton = document.getElementById("experiment-button");
 const experimentDownload = document.getElementById("experiment-download");
 
-function initializeButton(db) {
+function initializeButton(apiClient) {
     experimentButton.addEventListener("click", async () => {
         startDownload();
-        const results = await db.getResultsForExperiment(experimentSelect.value);
+        const results = await apiClient.getResultsForExperiment(experimentSelect.value);
         endDownload();
         if (results.url) {
             window.location.href = results.url;
@@ -32,7 +32,7 @@ function startDownload() {
 
 const auth = getAuth(
     session => {
-        initializeButton(new Db({session: session}));
+        initializeButton(new ApiClient(session));
     },
     err => {
         console.error("error:", err);

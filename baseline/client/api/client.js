@@ -35,6 +35,18 @@ export default class ApiClient {
         return await this.doFetch(url, "put", `There was an error updating user ${userId}`, updates);
     }
 
+    /**
+     * 
+     * @param {string} experimentName The name of the experiment whose results you want.
+     * @returns Object with either 'url' or 'empty' field.
+     * If 'empty' is true, there were no results for the given experiment. If 'url' exists,
+     * it is set to the url of a file to be downloaded that contains the results (in JSON format).
+     */
+     async getResultsForExperiment(experimentName) {
+        const url = `${awsSettings.AdminApiUrl}/experiment/${experimentName}`;
+        return await this.doFetch(url, "get", `There was an error fetching results for the ${experimentName} experiment`);
+    }
+
     async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,
