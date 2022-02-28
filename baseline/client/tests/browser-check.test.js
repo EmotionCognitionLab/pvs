@@ -1,8 +1,8 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { browserCheck, forTesting } from "../browser-check/browser-check";
 import { clickContinue } from "./utils";
-import Db from "../../../common/db/db.js";
-jest.mock("../../../common/db/db.js");
+import ApiClient from "../api/client.js";
+jest.mock("../api/client.js");
 const uaParser = require("ua-parser-js");
 
 describe("browser check if computer profile is not saved", () => {
@@ -19,7 +19,7 @@ describe("browser check if computer profile is not saved", () => {
     });
 
     afterEach(() => {
-        Db.mockClear();
+        ApiClient.mockClear();
         callback.mockClear();
         uaSpy.mockRestore();
     });
@@ -33,8 +33,8 @@ describe("browser check if computer profile is not saved", () => {
 
     it("should save the computer profile if the user says this is their permanent computer", () => {
         buttons[1].click();
-        const mockDbInstance = Db.mock.instances[0];
-        const mockUpdateSelf = mockDbInstance.updateSelf;
+        const mockApiClientInstance = ApiClient.mock.instances[0];
+        const mockUpdateSelf = mockApiClientInstance.updateSelf;
         expect(mockUpdateSelf).toHaveBeenCalled();
         expect(mockUpdateSelf.mock.calls[0][0].computer).not.toBe(null);
         const data = mockUpdateSelf.mock.calls[0][0].computer;
@@ -48,8 +48,8 @@ describe("browser check if computer profile is not saved", () => {
 
     it("should not save the computer profile if the user says this is not their permanent computer", () => {
         buttons[0].click();
-        const mockDbInstance = Db.mock.instances[0];
-        const mockUpdateSelf = mockDbInstance.updateSelf;
+        const mockApiClientInstance = ApiClient.mock.instances[0];
+        const mockUpdateSelf = mockApiClientInstance.updateSelf;
         expect(mockUpdateSelf).not.toHaveBeenCalled();
     });
 
@@ -90,7 +90,7 @@ describe("browser check if user agent info is saved", () => {
     const mockUpdateSelf = jest.fn();
 
     beforeAll(() => {
-        Db.mockImplementation(() => {
+        ApiClient.mockImplementation(() => {
             return {
                 getSelf: mockGetSelf,
                 updateSelf: mockUpdateSelf
@@ -105,7 +105,7 @@ describe("browser check if user agent info is saved", () => {
     afterEach(() => {
         mockUserData = baseMockUserData();
         uaSpy.mockRestore();
-        Db.mockClear();
+        ApiClient.mockClear();
         mockUpdateSelf.mockRestore();
     });
 
@@ -292,7 +292,7 @@ describe("browser check for returning user whose profile cannot be fetched from 
     beforeAll(() => {
         origInitKey = window.localStorage.getItem(`${browserCheck.appName}.${browserCheck.initKey}`);
         window.localStorage.setItem(`${browserCheck.appName}.${browserCheck.initKey}`, true);
-        Db.mockImplementation(() => {
+        ApiClient.mockImplementation(() => {
             return {
                 getSelf: mockGetSelf,
                 updateSelf: mockUpdateSelf

@@ -11,6 +11,15 @@ export default class ApiClient {
     }
 
     /**
+     * Fetches the user record for the logged-in user.
+     * @returns {object} A user record
+     */
+    async getSelf() {
+        const url = `${awsSettings.UserApiUrl}`;
+        return await this.doFetch(url, "get", "There was an error getting the user record");
+    }
+
+    /**
      * Fetches a user record.
      * @param {string} userId The id of the user whose record is to be fetched.
      * @param {boolean} consistentRead Should the fetch use a consistent read?
@@ -22,6 +31,16 @@ export default class ApiClient {
             url += "?consistentRead=true";
         }
         return await this.doFetch(url, "get", "There was an error retrieving the user data");
+    }
+
+    /**
+     * Updates the record of the logged-in user.
+     * @param {object} updates An object with the fields you want to update and the values you want to set them to
+     * @returns {object} DynamoDb.DocumentClient.update response. (https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#update-property)
+     */
+    async updateSelf(updates) {
+        const url = `${awsSettings.UserApiUrl}`;
+        return await this.doFetch(url, "put", "There was an error updating the user record", updates );
     }
 
     /**

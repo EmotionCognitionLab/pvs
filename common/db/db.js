@@ -18,8 +18,6 @@ export default class Db {
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
-        this.userApiUrl = awsSettings.UserApiUrl;
-        this.adminApiUrl = awsSettings.AdminApiUrl;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -270,46 +268,6 @@ export default class Db {
             this.logger.error(err);
             throw err;
         }
-    }
-
-    async updateSelf(updates) {
-        if (!this.idToken) throw new Error("You must provide a session to update the current user");
-
-        const url = `${this.userApiUrl}`;
-        const response = await fetch(url, {
-            method: "PUT",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-            body: JSON.stringify(updates)
-        });
-        if (!response.ok) {
-            throw new Error(`There was an error updating the user record: ${response.text()} (status code: ${response.status})`);
-        }
-        return response;
-    }
-
-    async getSelf() {
-        if (!this.idToken) throw new Error("You must provide a session to fetch the current user");
-
-        const url = `${this.userApiUrl}`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`There was an error getting the user record: ${response.text()} (status code: ${response.status})`);
-        }
-        const userData = await response.json();
-        return userData;
     }
 
     async getUser(userId, consistentRead=false) {

@@ -3,7 +3,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
-import Db from "db/db.js";
+import ApiClient from "../api/client";
 import introduction_html from "./frag/introduction.html";
 import different_html from "./frag/different.html";
 import permanent_change_html from "./frag/permanent-change.html";
@@ -17,11 +17,11 @@ const osNameKey = 'os.name';
 const screenSizeKey = 'screen.size';
 const platformKey = 'platform';
 const appName = 'heartBeam';
-let db;
+let client;
 
 
 async function run(callback, session) {
-    db = new Db({session: session});
+    client = new ApiClient(session);
     const uaInfo = uaParser(window.navigator.userAgent);
     if (uaInfo.device.type) { // uaParser only defines device type for non-computers
         jsPsych.init({
@@ -166,7 +166,7 @@ function fetchCurrentProfile() {
 async function saveComputerProfile() {
     try {
         const curProfile = fetchCurrentProfile();
-        await db.updateSelf({"computer": curProfile});
+        await client.updateSelf({"computer": curProfile});
         // save something to local storage for a rough, quick check
         // of whether the user is brand new or not
         const lstor = window.localStorage;
@@ -178,7 +178,7 @@ async function saveComputerProfile() {
 
 async function fetchStoredProfile() {
     try {
-        const user = await db.getSelf();
+        const user = await client.getSelf();
         if (user && user.computer) return user.computer;
         return null;
     } catch (err) {
