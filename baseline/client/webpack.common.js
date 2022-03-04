@@ -5,6 +5,7 @@ const webpack = require("webpack");
 module.exports = {
     entry: {
         'admin/dashboard': 'admin/dashboard/dashboard.js',
+        'admin/docusign': 'admin/docusign/docusign.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
@@ -21,6 +22,12 @@ module.exports = {
             filename: 'admin/dashboard/index.html',
             template: 'admin/dashboard/index.ejs',
             chunks: ['admin/dashboard'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Admin - Consent via Docusign',
+            filename: 'admin/docusign/index.html',
+            template: 'admin/docusign/index.ejs',
+            chunks: ['admin/docusign'],
         }),
         new HtmlWebpackPlugin({
             title: 'Admin - Download',
