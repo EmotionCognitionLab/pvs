@@ -193,7 +193,7 @@ function expectRowMatches(row, user, sets) {
     const finishedSetsT1 = finishedSets;  // to-do: fix this
     const finishedSetsT2 = 0;  // to-do: fix this
     const finishedSessions = 0;  // to-do: fix this
-    //expect(row.dataset["user-id"]).toBe(user.userId);  // not working?
+    expect(row.dataset.userId).toBe(user.userId);
     expect(subjectCell.querySelector(".username").textContent).toBe(user.name);
     expect(parseInt(dailyTasksT1Cell.querySelector("progress").value, 10)).toBe(finishedSetsT1);
     expect(eegT1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT1));
