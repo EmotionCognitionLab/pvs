@@ -28,6 +28,14 @@ export class MockClient {
             });
     }
 
+    async getSelf() {
+        throw new Error("mock client does not support self");
+    }
+
+    async getUser(userId, consistentRead = false) {
+        return this.users.get(userId);
+    }
+
     async updateSelf(updates) {
         throw new Error("mock client does not support self");
     }
