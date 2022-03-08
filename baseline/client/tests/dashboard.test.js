@@ -277,4 +277,26 @@ describe("dashboard", () => {
         expect(spikeRow).not.toBeNull();
         expectRowMatches(spikeRow, spike, await mc.getSetsForUser(spike.userId));
     });
+
+    it("updates backend through client on check", async () => {
+        const {wrapper, error, table, details} = getDashboardElements();
+        const mc = new MockClient(users, results);
+        const dash = new Dashboard(table, mc);
+        await dash.refreshRecords();
+        dash.showActive();
+        // Fluttershy should not have a timestamp for EEG T1
+        const fluttershyId = "597e8b3e-7907-4eae-a7da-b1abb25f5579";
+        expect(Boolean(mc.users.get(fluttershyId).progress?.eegT1)).toBe(false);
+        // check Fluttershy's EEG T1 checkbox
+        const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
+        const [_, __, dailyTasksT1Cell, ...___] = fluttershyRow.querySelectorAll("td");
+        dailyTasksT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        // click event isn't canceled quickly enough on jsdom so set checked to false manually
+        dailyTasksT1Cell.querySelector("input").checked = false;
+        // wait for setTimeout in click event handler to resolve
+        await new Promise((resolve) => setTimeout(resolve));
+        // Fluttershy should now have a timestamp for EEG T1
+        expect(dailyTasksT1Cell.querySelector("input").checked).toBe(true);
+        expect(Boolean(mc.users.get(fluttershyId).progress?.eegT1)).toBe(true);
+    });
 });
