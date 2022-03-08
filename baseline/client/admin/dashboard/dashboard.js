@@ -115,7 +115,7 @@ export class Dashboard {
         } catch (err) {
             console.error("Error loading all users", err);
         }
-        
+
         // sort temporary and copy to records
         const sorted = temp.sort(([_userId1, user1], [_userId2, user2]) => user1.user.name.localeCompare(user2.user.name));
         this.records.clear();

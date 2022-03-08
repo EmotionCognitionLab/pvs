@@ -6,7 +6,7 @@ export class MockClient {
         }
         this.results = new Map();
         for (const r of results) {
-            this.r.set();
+            this.results.set(r.experimentDateTime, r);
         }
     }
 
