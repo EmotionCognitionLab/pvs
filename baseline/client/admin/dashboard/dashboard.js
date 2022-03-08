@@ -1,8 +1,4 @@
-import "./style.css";
-import { getAuth } from "auth/auth.js";
-import ApiClient from "../../api/client";
-
-class Dashboard {
+export class Dashboard {
     constructor(tbody, client) {
         this.tbody = tbody;
         this.client = client;
@@ -247,17 +243,3 @@ class Dashboard {
         }
     }
 }
-
-getAuth(
-    async session => {
-        const dashboard = new Dashboard(
-            document.querySelector("#dashboard > tbody"),
-            new ApiClient(session)
-        );
-        await dashboard.refreshRecords();
-        dashboard.showActive();
-    },
-    err => {
-        console.error("error:", err);
-    },
-).getSession();

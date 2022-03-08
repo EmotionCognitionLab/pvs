@@ -4,7 +4,7 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
-        'admin/dashboard': 'admin/dashboard/dashboard.js',
+        'admin/dashboard': 'admin/dashboard/index.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
