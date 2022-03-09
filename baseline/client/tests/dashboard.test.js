@@ -189,19 +189,19 @@ function expectRowMatches(row, user, sets) {
         mriT2Cell,
         dailyTasksT2Cell,
     ] = row.querySelectorAll("td");
-    const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
-    const finishedSetsT1 = finishedSets;  // to-do: fix this
-    const finishedSetsT2 = 0;  // to-do: fix this
-    const finishedSessions = 0;  // to-do: fix this
+    const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
+    const finishedSetsT1Count = finishedSetsCount;  // to-do: fix this
+    const finishedSetsT2Count = 0;  // to-do: fix this
+    const finishedSessionsCount = 0;  // to-do: fix this
     expect(row.dataset.userId).toBe(user.userId);
     expect(subjectCell.querySelector(".username").textContent).toBe(user.name);
-    expect(parseInt(dailyTasksT1Cell.querySelector("progress").value, 10)).toBe(finishedSetsT1);
+    expect(parseInt(dailyTasksT1Cell.querySelector("progress").value, 10)).toBe(finishedSetsT1Count);
     expect(eegT1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT1));
     expect(mriT1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.mriT1));
-    expect(parseInt(sessionsCell.querySelector("progress").value, 10)).toBe(finishedSessions);
+    expect(parseInt(sessionsCell.querySelector("progress").value, 10)).toBe(finishedSessionsCount);
     expect(eegT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT2));
     expect(mriT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.mriT2));
-    expect(parseInt(dailyTasksT2Cell.querySelector("progress").value, 10)).toBe(finishedSetsT2);
+    expect(parseInt(dailyTasksT2Cell.querySelector("progress").value, 10)).toBe(finishedSetsT2Count);
 }
 
 describe("dashboard", () => {

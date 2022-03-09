@@ -99,17 +99,25 @@ export class Dashboard {
     }
 
     async refreshRecords() {
-        // create and fill temporary new map
+        // create and fill temporary array
         const temp = [];
         try {
             const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
                 const sets = await this.client.getSetsForUser(user.userId);
-                const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
-                const finishedSetsT1 = finishedSets;
-                const finishedSetsT2 = 0;  // to-do: fix this
-                const finishedSessions = 0;  // to-do: fix this
-                temp.push([user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions}]);
+                const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
+                const finishedSetsT1Count = finishedSetsCount;
+                const finishedSetsT2Count = 0;  // to-do: fix this
+                const finishedSessionsCount = 0;  // to-do: fix this
+                temp.push([
+                    user.userId,
+                    {
+                        user,
+                        finishedSetsT1Count,
+                        finishedSetsT2Count,
+                        finishedSessionsCount,
+                    },
+                ]);
             }));
             this.allUsersLoadedSuccessfully = true;
         } catch (err) {
@@ -187,7 +195,12 @@ export class Dashboard {
 
     appendRow(userId) {
         // prepare data
-        const {user, finishedSetsT1, finishedSetsT2, finishedSessions} = this.records.get(userId);
+        const {
+            user,
+            finishedSetsT1Count,
+            finishedSetsT2Count,
+            finishedSessionsCount,
+        } = this.records.get(userId);
         // insert row element
         const row = this.tbody.insertRow();
         // set row data attributes
@@ -203,19 +216,19 @@ export class Dashboard {
         dateDiv.classList.add("small");
         subjectCell.appendChild(dateDiv);
         // Daily Tasks T1
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1, "sets"));
+        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1Count, "sets"));
         // EEG T1
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT1"));
         // MRI T1
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT1"));
         // Biofeedback Practice
-        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSessions, "sessions"));
+        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSessionsCount, "sessions"));
         // EEG T2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT2"));
         // MRI T2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
         // Daily Tasks T2
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2, "sets"));
+        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2Count, "sets"));
     }
 
     showUserDetails(userId) {
