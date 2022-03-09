@@ -218,6 +218,27 @@ resource "aws_ssm_parameter" "dynamo-consent-table" {
   value = "${aws_dynamodb_table.consent-table.name}"
 }
 
+resource "aws_dynamodb_table" "ds-table" {
+  name           = "pvs-${var.env}-ds"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-ds-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/ds"
+  description = "Dynamo table holding user docusign details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.ds-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
