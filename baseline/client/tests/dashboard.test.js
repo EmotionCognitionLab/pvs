@@ -255,7 +255,7 @@ describe("dashboard", () => {
                 ua: "Mozilla/5.0 (Dragon; rv:97.0) Gecko/20100101 Dragonfire/97.0",
             },
             createdAt: "2022-03-04T00:00:00.000Z",
-            email: "bestassistant@canterlot.gov",
+            email: "bestassistant@example.com",
             humanId: "SmolDog",
             name: "Spike",
             phone_number: "+19990000006",
