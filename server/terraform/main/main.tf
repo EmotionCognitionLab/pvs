@@ -492,7 +492,9 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
         "dynamodb:UpdateItem",
         "dynamodb:DescribeTable",
         "dynamodb:Query",
-        "dynamodb:GetItem"
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:PutItem"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
@@ -790,14 +792,6 @@ resource "aws_iam_role" "lambda-dynamodb" {
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
   ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-dynamodb-role" {
-  name = "/pvs/${var.env}/role/lambda/dynamodb"
-  description = "ARN for lambda role with dynamodb access"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
 resource "aws_iam_role" "researcher" {
