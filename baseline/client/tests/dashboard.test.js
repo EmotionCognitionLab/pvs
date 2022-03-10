@@ -291,8 +291,6 @@ describe("dashboard", () => {
         const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
         const [_, __, dailyTasksT1Cell, ...___] = fluttershyRow.querySelectorAll("td");
         dailyTasksT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
-        // click event isn't canceled quickly enough on jsdom so set checked to false manually
-        dailyTasksT1Cell.querySelector("input").checked = false;
         // wait for setTimeout in click event handler to resolve
         await new Promise((resolve) => setTimeout(resolve));
         // Fluttershy should now have a timestamp for EEG T1
