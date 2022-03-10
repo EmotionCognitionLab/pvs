@@ -126,7 +126,7 @@ resource "aws_cognito_user_group" "admin" {
   user_pool_id = aws_cognito_user_pool.pool.id
   description = "User group for study administrators"
   precedence = 1
-  role_arn = aws_iam_role.lambda-dynamodb.arn
+  role_arn = aws_iam_role.study-admin.arn
 }
 
 resource "aws_cognito_user_group" "researcher" {
@@ -745,17 +745,17 @@ resource "aws_iam_role_policy" "lambda-role-assumption" {
           ]
           Resource = [
             "${aws_iam_role.researcher.arn}",
-            "${aws_iam_role.lambda-dynamodb.arn}"
+            "${aws_iam_role.study-admin.arn}"
           ]
         }
       ]
     })
 }
 
-resource "aws_iam_role" "lambda-dynamodb" {
-  name = "pvs-${var.env}-lambda-dynamodb"
-  path = "/role/lambda/dynamodb/"
-  description = "Role for lambda functions needing read/write dynamodb access"
+resource "aws_iam_role" "study-admin" {
+  name = "pvs-${var.env}-study-admin"
+  path = "/role/admin/"
+  description = "Role for study administrators"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
