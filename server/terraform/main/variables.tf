@@ -30,3 +30,7 @@ variable "console-error-notification-emails" {
 variable "datafiles-bucket" {
     description = "Name for S3 bucket that holds temporary data files for download by researchers"
 }
+
+variable "ds-bucket" {
+    description = "Name for S3 bucket that holds files related to Docusign"
+}

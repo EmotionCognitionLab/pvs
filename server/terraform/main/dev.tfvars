@@ -7,3 +7,4 @@ cognito-redirect-uri = "https://dev.heartbeamstudy.org/login/index.html"
 
 ses-emailed-reports-bucket = "pvs-dev-lumosity-reports"
 datafiles-bucket = "pvs-dev-datafiles"
+ds-bucket = "pvs-dev-docusign"
