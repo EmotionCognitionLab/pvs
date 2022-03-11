@@ -76,6 +76,11 @@ export default class ApiClient {
         return await this.doFetch(url, "get", "There was an error fetching particiapnts");
     }
 
+    async doDocusignCallback(code) {
+        const url = `${awsSettings.DsTokenUri}?code=${code}`;
+        return await this.doFetch(url, "get", "There was an error completing the Docusign authentication process");
+    }
+
     async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,
