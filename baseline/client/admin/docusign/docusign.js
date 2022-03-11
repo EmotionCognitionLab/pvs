@@ -6,12 +6,19 @@ class Consent {
     constructor(session) {
         this.client = new ApiClient(session);
         this.client.getSelf().then(user => {
-            if (!user.dsAuthed) {
+            if (!user.hasDs) {
                 // do the OAuth dance to get the Docusign info
                 const oauthUri = Consent.getOAuthUrl(["extended", "signature"]);
                 window.location.href = oauthUri;
             }
         });
+
+        const queryParams = new URLSearchParams(window.location.search.substring(1));
+        const code = queryParams.get("code");
+        if (code !== null) {
+            // then we've gotten a callback from the docusign oauth dance
+            this.client.doDocusignCallback(code);
+        }
     }
 
     handleFormSubmission(event) {
