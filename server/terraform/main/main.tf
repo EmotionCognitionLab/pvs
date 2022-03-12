@@ -126,7 +126,7 @@ resource "aws_cognito_user_group" "admin" {
   user_pool_id = aws_cognito_user_pool.pool.id
   description = "User group for study administrators"
   precedence = 1
-  role_arn = aws_iam_role.lambda-dynamodb.arn
+  role_arn = aws_iam_role.study-admin.arn
 }
 
 resource "aws_cognito_user_group" "researcher" {
@@ -195,6 +195,48 @@ resource "aws_ssm_parameter" "dynamo-users-table" {
   description = "Dynamo table holding user information"
   type = "SecureString"
   value = "${aws_dynamodb_table.users-table.name}"
+}
+
+resource "aws_dynamodb_table" "consent-table" {
+  name           = "pvs-${var.env}-consent"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "envelopeId"
+
+  attribute {
+    name = "envelopeId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-consent-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/consent"
+  description = "Dynamo table holding user consent details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.consent-table.name}"
+}
+
+resource "aws_dynamodb_table" "ds-table" {
+  name           = "pvs-${var.env}-ds"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-ds-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/ds"
+  description = "Dynamo table holding user docusign details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.ds-table.name}"
 }
 
 # SES setup, including relevant S3 buckets and IAM settings
@@ -313,6 +355,20 @@ resource "aws_ssm_parameter" "datafiles-bucket" {
   description = "Bucket for temporary storage of downloadable research results"
   type = "SecureString"
   value = "${aws_s3_bucket.datafiles-bucket.bucket}"
+}
+
+# S3 bucket for docusign
+resource "aws_s3_bucket" "ds-bucket" {
+  bucket = "${var.ds-bucket}"
+  acl = "private"
+}
+
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "ds-bucket" {
+  name = "/pvs/${var.env}/info/lambda/ds/bucket"
+  description = "Bucket for files related to Docusign"
+  type = "SecureString"
+  value = "${aws_s3_bucket.ds-bucket.bucket}"
 }
 
 # IAM policies
@@ -450,7 +506,9 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
         "dynamodb:UpdateItem",
         "dynamodb:DescribeTable",
         "dynamodb:Query",
-        "dynamodb:GetItem"
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:PutItem"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
@@ -701,17 +759,17 @@ resource "aws_iam_role_policy" "lambda-role-assumption" {
           ]
           Resource = [
             "${aws_iam_role.researcher.arn}",
-            "${aws_iam_role.lambda-dynamodb.arn}"
+            "${aws_iam_role.study-admin.arn}"
           ]
         }
       ]
     })
 }
 
-resource "aws_iam_role" "lambda-dynamodb" {
-  name = "pvs-${var.env}-lambda-dynamodb"
-  path = "/role/lambda/dynamodb/"
-  description = "Role for lambda functions needing read/write dynamodb access"
+resource "aws_iam_role" "study-admin" {
+  name = "pvs-${var.env}-study-admin"
+  path = "/role/admin/"
+  description = "Role for study administrators"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -745,17 +803,27 @@ resource "aws_iam_role" "lambda-dynamodb" {
     ]
   })
 
+  inline_policy {
+    name = "pvs-${var.env}-ds-bucket-read"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ds-bucket.arn}/*"
+          ]
+        }
+      ]
+    })
+  }
+
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
   ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-dynamodb-role" {
-  name = "/pvs/${var.env}/role/lambda/dynamodb"
-  description = "ARN for lambda role with dynamodb access"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
 resource "aws_iam_role" "researcher" {

@@ -1,0 +1,6 @@
+# TODO
+
+1. Write tests for existing code
+2. Add code to check access token expiration and use refresh token if access token is expired
+3. Add code that, given a name and email address from the admin UI, creates an envelope definition and an envelope and saves the envelope id, name, email and some sort of ID for the name/email (to be used as the DS clientUserId) to dynamo. (Note that a new dynamo table will need to be created for this.) See steps 2 and 3 at https://developers.docusign.com/docs/esign-rest-api/how-to/request-signature-in-app-embedded/ .
+4. Add code that, given an envelope id, creates the recipient view definition and recipient view and begins the signing ceremony. (See steps 4 and 5 at https://developers.docusign.com/docs/esign-rest-api/how-to/request-signature-in-app-embedded/ .) This will be initiated when a user clicks on the consent form link they get in an email. The reeturn URL (a parameter of the recipient view definition) should send the user to the study registration page and will need to include the client id or envelope id so that we can tie the Cognito account to the DS info.

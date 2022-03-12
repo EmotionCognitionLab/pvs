@@ -18,6 +18,7 @@ export default class Db {
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
+        this.dsTable = options.dsTable || awsSettings.DsTable;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -310,6 +311,9 @@ export default class Db {
                 }
             } catch (err) {
                 curTry++;
+                if (err.code === 'ValidationException' ) {
+                    this.logger.error(err);
+                }
                 if (err.code === 'CredentialsError' || err.code === 'ValidationException') { // ValidationException is usually a sign that this.credentials.identityId is empty
                     await this.refreshPermissions();
                 } else {
@@ -320,6 +324,32 @@ export default class Db {
             }
         }
         this.logger.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
+    }
+
+    async saveDsOAuthCreds(userId, accessToken, refreshToken, expiresAt) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { userId: userId },
+            UpdateExpression: "set #accessToken = :accessToken, #refreshToken = :refreshToken, #expiresAt = :expiresAt",
+            ExpressionAttributeNames: {
+                "#accessToken": "accessToken",
+                "#refreshToken": "refreshToken",
+                "#expiresAt": "expiresAt"
+            },
+            ExpressionAttributeValues: {
+                ":accessToken": accessToken,
+                ":refreshToken": refreshToken,
+                ":expiresAt": expiresAt
+            }
+        };
+        console.log(params);
+        try {
+            const dynResults = await this.update(params);
+            return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
     }
 
     async query(params) {
