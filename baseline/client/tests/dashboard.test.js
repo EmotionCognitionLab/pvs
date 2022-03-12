@@ -206,6 +206,7 @@ function expectRowMatches(row, user, sets) {
 
 describe("dashboard", () => {
     beforeEach(() => {
+        jest.useFakeTimers("legacy");
         const dashboardWrapper = document.createElement("div");
         const dashboardError = document.createElement("div");
         const dashboardTable = document.createElement("table");
@@ -262,9 +263,9 @@ describe("dashboard", () => {
             phone_number_verified: false,
             userId: "ea1623c7-834e-47d7-bdda-6c665978128b",
         };
-        const {wrapper, error, table, details} = getDashboardElements();
-        const mc = new MockClient(users, results);
         // create dashboard without Spike
+        const mc = new MockClient(users, results);
+        const {wrapper, error, table, details} = getDashboardElements();
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
         dash.showActive();
@@ -279,22 +280,61 @@ describe("dashboard", () => {
     });
 
     it("updates backend through client on check", async () => {
-        const {wrapper, error, table, details} = getDashboardElements();
+        // current date
+        const date = new Date(2010, 9, 10);
+        const dateSpy = jest.spyOn(global, "Date").mockImplementation(() => date);
+        // create dashboard
         const mc = new MockClient(users, results);
+        const {wrapper, error, table, details} = getDashboardElements();
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
         dash.showActive();
         // Fluttershy should not have a timestamp for EEG T1
         const fluttershyId = "597e8b3e-7907-4eae-a7da-b1abb25f5579";
-        expect(Boolean(mc.users.get(fluttershyId).progress?.eegT1)).toBe(false);
-        // check Fluttershy's EEG T1 checkbox
         const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
-        const [_, __, dailyTasksT1Cell, ...___] = fluttershyRow.querySelectorAll("td");
-        dailyTasksT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
-        // wait for setTimeout in click event handler to resolve
-        await new Promise((resolve) => setTimeout(resolve));
+        const [_, __, eegT1Cell, ...___] = fluttershyRow.querySelectorAll("td");
+        expect(mc.users.get(fluttershyId).progress?.eegT1).toBeFalsy();
+        expect(eegT1Cell.querySelector("input").checked).toBe(false);
+        expect(eegT1Cell.querySelector("span").textContent).toBeFalsy();
+        // check Fluttershy's EEG T1 checkbox
+        eegT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        // wait for the async click event handler to resolve
+        await new Promise(process.nextTick);
         // Fluttershy should now have a timestamp for EEG T1
-        expect(dailyTasksT1Cell.querySelector("input").checked).toBe(true);
-        expect(Boolean(mc.users.get(fluttershyId).progress?.eegT1)).toBe(true);
+        expect(mc.users.get(fluttershyId).progress?.eegT1).toBeTruthy();  // backend is updated
+        expect(eegT1Cell.querySelector("input").checked).toBe(true);  // checkbox is checked
+        expect(eegT1Cell.querySelector("span").textContent).toBe("2010-10-10");  // timestamp is displayed
+        expect(dateSpy).toHaveBeenCalledTimes(1);
+        // restore mocks
+        dateSpy.mockRestore();
+    });
+
+    it("updates backend through client on uncheck", async () => {
+        // mock window.confirm
+        const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
+        // create dashboard
+        const mc = new MockClient(users, results);
+        const {wrapper, error, table, details} = getDashboardElements();
+        const dash = new Dashboard(table, mc);
+        await dash.refreshRecords();
+        dash.showActive();
+        // Twilight Sparkle should have a timestamp for MRI T1
+        const twiId = "95240257-42f9-4ae6-b989-0126f595e547";
+        const twiRow = document.querySelector(`[data-user-id="${twiId}"]`);
+        const [_, __, ___, mriT1Cell, ...____] = twiRow.querySelectorAll("td");
+        expect(mc.users.get(twiId).progress?.mriT1).toBeTruthy();
+        expect(mriT1Cell.querySelector("input").checked).toBe(true);
+        expect(mriT1Cell.querySelector("span").textContent).toBeTruthy();
+        // uncheck Twilight Sparkle's MRI T1 checkbox
+        mriT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        // wait for the async click event handler to resolve
+        await new Promise(process.nextTick);
+        // Twilight Sparkle should now have a timestamp for MRI T1
+        expect(mc.users.get(twiId).progress?.mriT1).toBeFalsy();  // backend is updated
+        expect(mriT1Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
+        expect(mriT1Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
+        // restore mocks
+        confirmSpy.mockRestore();
     });
 });
