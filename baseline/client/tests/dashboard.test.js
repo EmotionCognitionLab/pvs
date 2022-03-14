@@ -329,7 +329,7 @@ describe("dashboard", () => {
         mriT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
         // wait for the async click event handler to resolve
         await new Promise(process.nextTick);
-        // Twilight Sparkle should now have a timestamp for MRI T1
+        // Twilight Sparkle should no longer have a timestamp for MRI T1
         expect(mc.users.get(twiId).progress?.mriT1).toBeFalsy();  // backend is updated
         expect(mriT1Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
         expect(mriT1Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
