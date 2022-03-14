@@ -1,8 +1,4 @@
-import "./style.css";
-import { getAuth } from "auth/auth.js";
-import ApiClient from "../../api/client";
-
-class Dashboard {
+export class Dashboard {
     constructor(tbody, client) {
         this.tbody = tbody;
         this.client = client;
@@ -11,55 +7,56 @@ class Dashboard {
         this.allUsersLoadedSuccessfully = false;
     }
 
-    handleCheckboxEvent(event) {
+    async handleCheckboxEvent(event) {
+        // determine if the click is trying to check or uncheck
         const checkbox = event.target;
+        const checking = checkbox.checked;
+        // prevent the click from changing the checkbox state automatically
         event.preventDefault();
+        // handle the check/uncheck
         const span = checkbox.labels[0]?.querySelector("span");
         const key = checkbox.dataset.key;
         const userId = checkbox.closest("tr")?.dataset.userId;
         if (!span || !key || !userId) {
             throw new Error("malformed dashboard table body");
         }
-        // run logic after event is fully canceled (to make checkbox state reasonable)
-        setTimeout(async () => {
-            if (checkbox.indeterminate) {
-                return;
-            } else if (!checkbox.checked) {
-                Dashboard.disableMarkable(checkbox, span);
-                try {
-                    const user = await this.refreshUser(userId);
-                    const progress = user.progress ?? {};
-                    if (!progress[key]) {
-                        // timestamp for key can be set
-                        progress[key] = (new Date()).toISOString();
-                        await this.client.updateUser(userId, {progress});
-                        this.records.get(userId).user.progress = progress;
-                    }
-                    Dashboard.setMarkable(checkbox, span, progress[key]);
-                } catch (err) {
-                    console.error(`Error setting date for ${key} for ${userId}`, err);
-                    window.alert("A problem occurred. Please try again later.");
-                    Dashboard.clearMarkable(checkbox, span);
+        if (checkbox.indeterminate) {
+            return;
+        } else if (checking) {
+            Dashboard.disableMarkable(checkbox, span);
+            try {
+                const user = await this.refreshUser(userId);
+                const progress = user.progress ?? {};
+                if (!progress[key]) {
+                    // timestamp for key can be set
+                    progress[key] = (new Date()).toISOString();
+                    await this.client.updateUser(userId, {progress});
+                    this.records.get(userId).user.progress = progress;
                 }
-            } else if (window.confirm("Unset this timestamp?")) {
-                const timestamp = span.textContent;
-                Dashboard.disableMarkable(checkbox, span);
-                try {
-                    const user = await this.refreshUser(userId);
-                    const progress = user.progress ?? {};
-                    if (progress[key]) {
-                        delete progress[key];
-                        await this.client.updateUser(userId, {progress});
-                        this.records.get(userId).user.progress = progress;
-                    }
-                    Dashboard.clearMarkable(checkbox, span);
-                } catch (err) {
-                    console.error(`Error clearing date for ${key} for ${userId}`, err);
-                    window.alert("A problem occurred. Please try again later.");
-                    Dashboard.setMarkable(checkbox, span, timestamp);
-                }
+                Dashboard.setMarkable(checkbox, span, progress[key]);
+            } catch (err) {
+                console.error(`Error setting date for ${key} for ${userId}`, err);
+                window.alert("A problem occurred. Please try again later.");
+                Dashboard.clearMarkable(checkbox, span);
             }
-        });
+        } else if (window.confirm("Unset this timestamp?")) {
+            const timestamp = span.textContent;
+            Dashboard.disableMarkable(checkbox, span);
+            try {
+                const user = await this.refreshUser(userId);
+                const progress = user.progress ?? {};
+                if (progress[key]) {
+                    delete progress[key];
+                    await this.client.updateUser(userId, {progress});
+                    this.records.get(userId).user.progress = progress;
+                }
+                Dashboard.clearMarkable(checkbox, span);
+            } catch (err) {
+                console.error(`Error clearing date for ${key} for ${userId}`, err);
+                window.alert("A problem occurred. Please try again later.");
+                Dashboard.setMarkable(checkbox, span, timestamp);
+            }
+        }
     }
 
     handleUserEvent(event) {
@@ -103,23 +100,31 @@ class Dashboard {
     }
 
     async refreshRecords() {
-        // create and fill temporary new map
+        // create and fill temporary array
         const temp = [];
         try {
             const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
                 const sets = await this.client.getSetsForUser(user.userId);
-                const finishedSets = sets.filter(s => s.experiment === "set-finished").length;
-                const finishedSetsT1 = finishedSets;
-                const finishedSetsT2 = 0;  // to-do: fix this
-                const finishedSessions = 0;  // to-do: fix this
-                temp.push([user.userId, {user, finishedSetsT1, finishedSetsT2, finishedSessions}]);
+                const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
+                const finishedSetsT1Count = finishedSetsCount;
+                const finishedSetsT2Count = 0;  // to-do: fix this
+                const finishedSessionsCount = 0;  // to-do: fix this
+                temp.push([
+                    user.userId,
+                    {
+                        user,
+                        finishedSetsT1Count,
+                        finishedSetsT2Count,
+                        finishedSessionsCount,
+                    },
+                ]);
             }));
             this.allUsersLoadedSuccessfully = true;
         } catch (err) {
             console.error("Error loading all users", err);
         }
-        
+
         // sort temporary and copy to records
         const sorted = temp.sort(([_userId1, user1], [_userId2, user2]) => user1.user.name.localeCompare(user2.user.name));
         this.records.clear();
@@ -191,7 +196,12 @@ class Dashboard {
 
     appendRow(userId) {
         // prepare data
-        const {user, finishedSetsT1, finishedSetsT2, finishedSessions} = this.records.get(userId);
+        const {
+            user,
+            finishedSetsT1Count,
+            finishedSetsT2Count,
+            finishedSessionsCount,
+        } = this.records.get(userId);
         // insert row element
         const row = this.tbody.insertRow();
         // set row data attributes
@@ -207,19 +217,19 @@ class Dashboard {
         dateDiv.classList.add("small");
         subjectCell.appendChild(dateDiv);
         // Daily Tasks T1
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1, "sets"));
+        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1Count, "sets"));
         // EEG T1
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT1"));
         // MRI T1
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT1"));
         // Biofeedback Practice
-        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSessions, "sessions"));
+        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSessionsCount, "sessions"));
         // EEG T2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT2"));
         // MRI T2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
         // Daily Tasks T2
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2, "sets"));
+        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2Count, "sets"));
     }
 
     showUserDetails(userId) {
@@ -247,17 +257,3 @@ class Dashboard {
         }
     }
 }
-
-getAuth(
-    async session => {
-        const dashboard = new Dashboard(
-            document.querySelector("#dashboard > tbody"),
-            new ApiClient(session)
-        );
-        await dashboard.refreshRecords();
-        dashboard.showActive();
-    },
-    err => {
-        console.error("error:", err);
-    },
-).getSession();
