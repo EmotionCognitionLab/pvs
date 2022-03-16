@@ -1,5 +1,5 @@
 <template>
-    <div v-if="currentlyLoggedIn"><subject-number-component></subject-number-component></div>
+    <div v-if="currentlyLoggedIn"><condition-assignment-component></condition-assignment-component></div>
     <div v-else>
         <br/>
         <LoginComponent></LoginComponent>
@@ -9,11 +9,12 @@
 import { ref, toRefs } from '@vue/runtime-core';
 import { ipcRenderer } from 'electron'
 import LoginComponent from './LoginComponent.vue'
-import SubjectNumberComponent from './SubjectNumberComponent.vue'
+import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
+// import SubjectNumberComponent from './SubjectNumberComponent.vue'
 
 export default {
     name: 'SetupComponent',
-    components: { LoginComponent, SubjectNumberComponent },
+    components: { LoginComponent, ConditionAssignmentComponent },
     props: {
         loggedIn: {
             type: Boolean,
