@@ -37,6 +37,7 @@
 </template>
 <script setup>
 import { ref } from '@vue/runtime-core';
+import { defineEmits } from 'vue';
 import { reactive } from 'vue';
 
 let sex = ref('')
@@ -45,6 +46,7 @@ let sexDescription = ref('')
 const errors = reactive({});
 const sexOptions = reactive(['Male', 'Female', 'Intersex'])
 const sexDescriptionOptions = reactive(['Man', 'Woman', 'Other'])
+const emit = defineEmits(['complete'])
 
 // eslint-disable-next-line no-unused-vars
 function assignToCondition() {
@@ -53,13 +55,14 @@ function assignToCondition() {
         console.log(errors);
     } else {
         console.log(`TODO: save ${yob.value}, ${sex.value} and ${sexDescription.value} to dynamo and assign to condition`)
+        emit('complete')
     }
 }
 
 function validate() {
-    errors['yob'] = null
-    errors['sex'] = null
-    errors['sexDescription'] = null
+    delete(errors['yob'])
+    delete(errors['sex'])
+    delete(['sexDescription'])
 
     if (!yobIsValid()) {
         errors['yob'] = 'Please enter a valid year (between 1952 and 1977).'
