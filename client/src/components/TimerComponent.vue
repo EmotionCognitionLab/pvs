@@ -13,7 +13,7 @@ export default {
             required: true
         }
     },
-    emits: ['timerStarted', 'timerStopped'],
+    emits: ['timer-started', 'timer-stopped', 'timer-finished'],
     computed: {
         timeLeft() {
             const minutes = Math.floor(this.secondsRemaining / 60)
@@ -28,18 +28,19 @@ export default {
 
         const startTimer = () => {
             interval = setInterval(() => updateSecondsRemaining(), 1000)
-            emit('timerStarted')
+            emit('timer-started')
         }
 
         const stopTimer = () => {
             clearInterval(interval)
-            emit('timerStopped')
+            emit('timer-stopped')
         }
 
         const updateSecondsRemaining = () => {
             secondsRemaining.value -= 1
             if (secondsRemaining.value <= 0) {
                 clearInterval(interval)
+                emit('timer-finished')
             }
         }
 
