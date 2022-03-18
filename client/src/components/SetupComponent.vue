@@ -1,13 +1,23 @@
 <template>
     <div>
-        <div>
-            
-            <PacerComponent></PacerComponent>
-        </div>
-        <div v-if="currentlyLoggedIn"><ConditionAssignmentComponent /></div>
-        <div v-else>
+
+        <div v-if="step==1">
+            Welcome! This app will guide you through your heart rate biofeedback sessions.
+            The first step is to log in, using the same email address and password that you registered
+            with when you signed up for the study.
             <br/>
-            <LoginComponent />
+            <button @click="login">Continue</button>
+        </div>
+        <div v-else-if="step==2">
+            <ConditionAssignmentComponent @complete="nextStep" />
+        </div>
+        <div v-else-if="step==3">
+            Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
+            Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
+            Click "Start" when you're ready to begin.
+            <br/>
+           <TimerComponent :secondsDuration=300 @timer-started="timerStarted" @timerStopped="timerStopped" @timer-finished="timerStopped"/>
+           <EmWaveListener />
         </div>
     </div>
 </template>
@@ -15,13 +25,30 @@
 <script setup>
     import { ref } from '@vue/runtime-core';
     import { ipcRenderer } from 'electron'
-    import LoginComponent from './LoginComponent.vue'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
-    import PacerComponent from './PacerComponent.vue'
+    import TimerComponent from './TimerComponent.vue'
+    import EmWaveListener from './EmWaveListener.vue'
 
-    const loggedIn = ref(true)
-    let currentlyLoggedIn = ref(loggedIn.value)
+    let step = ref(1)
+
+    function login() {
+        ipcRenderer.send('show-login-window')
+    }
+    
+    function nextStep() {
+        step.value += 1
+    }
+
+    function timerStarted() {
+        console.log('got timer started')
+        ipcRenderer.send('pulse-start')
+    }
+
+    function timerStopped() {
+        ipcRenderer.send('pulse-stop')
+    }
+
     ipcRenderer.on('login-succeeded', () => {
-        currentlyLoggedIn.value = true
+        nextStep()
     })
 </script>

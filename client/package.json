@@ -42,7 +42,8 @@
       "eslint:recommended"
     ],
     "globals": {
-      "defineProps": "readonly"
+      "defineProps": "readonly",
+      "defineEmits": "readonly"
     },
     "parserOptions": {
       "parser": "babel-eslint"
