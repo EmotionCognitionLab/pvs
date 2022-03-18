@@ -15,7 +15,7 @@
   "dependencies": {
     "amazon-cognito-auth-js": "^1.3.3",
     "core-js": "^3.6.5",
-    "pvs-breath-pacer": "github:EmotionCognitionLab/pvs-breath-pacer",
+    "pvs-breath-pacer": "https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#commonjs",
     "vue": "^3.0.0",
     "vue-router": "4"
   },
@@ -26,6 +26,7 @@
     "@vue/compiler-sfc": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "electron": "^12.0.0",
+    "electron-builder": "^22.14.13",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^7.0.0",
@@ -40,6 +41,9 @@
       "plugin:vue/vue3-essential",
       "eslint:recommended"
     ],
+    "globals": {
+      "defineProps": "readonly"
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     },
