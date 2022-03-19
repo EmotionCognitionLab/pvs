@@ -15,7 +15,7 @@
   "dependencies": {
     "amazon-cognito-auth-js": "^1.3.3",
     "core-js": "^3.6.5",
-    "pvs-breath-pacer": "https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#commonjs",
+    "pvs-breath-pacer": "https://github.com/EmotionCognitionLab/pvs-breath-pacer.git",
     "vue": "^3.0.0",
     "vue-router": "4"
   },
