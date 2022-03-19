@@ -45,10 +45,13 @@ export default {
     },
 
     startEmWave() {
+        // must set stdio: 'ignore' on spawn options
+        // otherwise the stdout buffer will overflow after ~30s of pulse sensor data
+        // and emWave will hang
         if (process.platform === 'darwin') {
-            emWaveProc = spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac')
+            emWaveProc = spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})
         } else if (process.platform === 'win32') {
-            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe')
+            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})
         } else {
             throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`
         }
