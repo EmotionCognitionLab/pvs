@@ -40,7 +40,6 @@
     }
 
     function timerStarted() {
-        console.log('got timer started')
         ipcRenderer.send('pulse-start')
     }
 
