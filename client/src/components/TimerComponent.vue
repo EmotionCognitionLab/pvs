@@ -3,50 +3,38 @@
     <button class="timer-button" id="startTimer" @click="startTimer">Start</button>
     <button class="timer-button" id="stopTimer" @click="stopTimer">Stop</button>
 </template>
-<script>
-import { ref, toRefs } from '@vue/runtime-core';
-export default {
-    name: 'TimerComponent',
-    props: {
-        secondsDuration: {
-            type: Number,
-            required: true
-        }
-    },
-    emits: ['timer-started', 'timer-stopped', 'timer-finished'],
-    computed: {
-        timeLeft() {
-            const minutes = Math.floor(this.secondsRemaining / 60)
-            const seconds = this.secondsRemaining % 60
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        }
-    },
-    setup(props, { emit }) {
-        const { secondsDuration } = toRefs(props)
-        let secondsRemaining = ref(secondsDuration.value)
-        let interval = null
+<script setup>
+    import { ref, computed } from 'vue'
 
-        const startTimer = () => {
-            interval = setInterval(() => updateSecondsRemaining(), 1000)
-            emit('timer-started')
-        }
+    const props = defineProps(['secondsDuration'])
+    const emit = defineEmits(['timer-started', 'timer-stopped', 'timer-finished'])
 
-        const stopTimer = () => {
-            clearInterval(interval)
-            emit('timer-stopped')
-        }
+    let secondsRemaining = ref(props.secondsDuration)
+    let interval = null
 
-        const updateSecondsRemaining = () => {
-            secondsRemaining.value -= 1
-            if (secondsRemaining.value <= 0) {
-                clearInterval(interval)
-                emit('timer-finished')
-            }
-        }
+    const timeLeft = computed(() => {
+        const minutes = Math.floor(secondsRemaining.value / 60)
+        const seconds = secondsRemaining.value % 60
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    })
 
-        return { secondsRemaining, startTimer, stopTimer }
+    function startTimer() {
+        interval = setInterval(() => updateSecondsRemaining(), 1000)
+        emit('timer-started')
     }
-}
+
+    function stopTimer() {
+        clearInterval(interval)
+        emit('timer-stopped')
+    }
+
+    function updateSecondsRemaining() {
+        secondsRemaining.value -= 1
+        if (secondsRemaining.value <= 0) {
+            clearInterval(interval)
+            emit('timer-finished')
+        }
+    }
 </script>
 <style scoped>
     #timer {
