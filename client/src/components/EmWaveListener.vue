@@ -1,30 +1,26 @@
 <template>
     <div id="ibi">{{ ibi }}</div>
 </template>
-<script>
-import { ipcRenderer } from 'electron'
-import { ref } from '@vue/runtime-core'
-export default {
-    name: 'EmWaveListener',
-    setup() {
-        let ibi = ref(0)
+<script setup>
+    import { ipcRenderer } from 'electron'
+    import { ref } from '@vue/runtime-core'
 
-        ipcRenderer.on('emwave-ibi', (event, message) => {
-            ibi.value = Number(message)
-        });
+    let ibi = ref(0)
 
-        const startPulseSensor = () => {
-            ipcRenderer.send('pulse-start')
-        }
+    ipcRenderer.on('emwave-ibi', (event, message) => {
+        ibi.value = Number(message)
+    });
 
-        const stopPulseSensor = () => {
-            ipcRenderer.send('pulse-stop')
-        }
+    // eslint-disable-next-line no-unused-vars
+    function startPulseSensor() {
+        ipcRenderer.send('pulse-start')
+    }
+    
+    // eslint-disable-next-line no-unused-vars
+    function stopPulseSensor() {
+        ipcRenderer.send('pulse-stop')
+    }
 
-        return { ibi, startPulseSensor, stopPulseSensor }
-    },
-
-}
 </script>
 <style scoped>
     #ibi {
