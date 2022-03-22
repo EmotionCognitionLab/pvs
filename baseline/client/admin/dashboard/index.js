@@ -1,7 +1,7 @@
 import "./style.css";
 import { Dashboard } from "./dashboard.js";
 import { getAuth } from "auth/auth.js";
-import ApiClient from "api/client";
+import ApiClient from "../../../../common/api/client.js";
 
 getAuth(
     async session => {
