@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="!calibrated && running">
+        <div v-if="!calibrated && running && !sensorError">
             Waiting for pulse signal..
         </div>
         <div v-if="sensorError">
@@ -15,7 +15,7 @@
 </template>
 <script setup>
     import { ipcRenderer } from 'electron'
-    import { ref } from '@vue/runtime-core'
+    import { ref, watch } from '@vue/runtime-core'
 
     defineProps(['showIbi'])
     const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-stopped'])
@@ -23,14 +23,27 @@
     let calibrated = ref(false)
     let running = ref(false)
     let sensorError = ref(false)
+    let errInterval = null
+    const errTimeout = () => !calibrated.value ? 30000 : 10000 // allows longer time for signal acquisition at start of session
+
+    watch(running, (isRunning) => {
+        if (isRunning) {
+            startErrorTimer()
+        } else {
+            stopErrorTimer()
+        }
+    })
 
     ipcRenderer.on('emwave-ibi', (event, message) => {
         ibi.value = Number(message)
-        if (!calibrated.value && ibi.value > 0) {
+        if (ibi.value <= 0) return
+
+        if (!calibrated.value) {
             calibrated.value = true
             emit('pulse-sensor-calibrated')
         }
-    });
+        resetErrorTimer()
+    })
 
     // eslint-disable-next-line no-unused-vars
     function startPulseSensor() {
@@ -44,6 +57,20 @@
         emit('pulse-sensor-stopped')
         running.value = false
         calibrated.value = false
+    }
+
+    function startErrorTimer() {
+        errInterval = setTimeout(() => sensorError.value = true, errTimeout())
+    }
+
+    function stopErrorTimer() {
+        clearTimeout(errInterval)
+        sensorError.value = false
+    }
+
+    function resetErrorTimer() {
+        stopErrorTimer()
+        startErrorTimer()
     }
 
 </script>
