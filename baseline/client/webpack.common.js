@@ -10,6 +10,7 @@ module.exports = {
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
         'logout': 'logout/logout.js',
+        'pay-info': 'pay-info/index.js',
     },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
@@ -60,6 +61,12 @@ module.exports = {
             title: 'HeartBEAM Logout',
             filename: 'logout/error/index.html',
             chunks: ['logout'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Payment Info',
+            filename: 'pay-info/index.html',
+            template: 'pay-info/index.ejs',
+            chunks: ['pay-info'],
         }),
     ],
     optimization: {
