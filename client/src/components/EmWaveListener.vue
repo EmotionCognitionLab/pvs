@@ -24,6 +24,9 @@
     let running = ref(false)
     let sensorError = ref(false)
     let errInterval = null
+    let stopSensor = ref(false)
+    defineExpose({stopSensor})
+
     const errTimeout = () => !calibrated.value ? 30000 : 10000 // allows longer time for signal acquisition at start of session
 
     watch(running, (isRunning) => {
@@ -31,6 +34,12 @@
             startErrorTimer()
         } else {
             stopErrorTimer()
+        }
+    })
+
+    watch(stopSensor, (shouldStopSensor) => {
+        if (shouldStopSensor) {
+            stopPulseSensor()
         }
     })
 
@@ -49,6 +58,7 @@
     function startPulseSensor() {
         ipcRenderer.send('pulse-start')
         running.value = true
+        stopSensor.value = false
     }
     
     // eslint-disable-next-line no-unused-vars
