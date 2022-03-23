@@ -16,8 +16,8 @@
             Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
             Click "Start" when you're ready to begin.
             <br/>
-           <TimerComponent :secondsDuration=300 @timer-started="timerStarted" @timerStopped="timerStopped" @timer-finished="timerStopped"/>
-           <EmWaveListener />
+           <TimerComponent :secondsDuration=300 :showButtons=false :running=false ref="timer" />
+           <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" />
         </div>
     </div>
 </template>
@@ -30,6 +30,7 @@
     import EmWaveListener from './EmWaveListener.vue'
 
     let step = ref(1)
+    const timer = ref(null)
 
     function login() {
         ipcRenderer.send('show-login-window')
@@ -39,12 +40,12 @@
         step.value += 1
     }
 
-    function timerStarted() {
-        ipcRenderer.send('pulse-start')
+    function startTimer() {
+        timer.value.running = true
     }
 
-    function timerStopped() {
-        ipcRenderer.send('pulse-stop')
+    function stopTimer() {
+        timer.value.running = false
     }
 
     ipcRenderer.on('login-succeeded', () => {
