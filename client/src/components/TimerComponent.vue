@@ -1,16 +1,30 @@
 <template>
-    <div id="timer">{{ timeLeft }}</div>
-    <button class="timer-button" id="startTimer" @click="startTimer">Start</button>
-    <button class="timer-button" id="stopTimer" @click="stopTimer">Stop</button>
+    <div>
+        <div id="timer">{{ timeLeft }}</div>
+        <div v-if="showButtons">
+            <button class="timer-button" id="startTimer" @click="startTimer">Start</button>
+            <button class="timer-button" id="stopTimer" @click="stopTimer">Stop</button>
+        </div>
+    </div>
 </template>
 <script setup>
-    import { ref, computed } from 'vue'
+    import { ref, computed, watch } from 'vue'
 
-    const props = defineProps(['secondsDuration'])
+    const props = defineProps(['secondsDuration', 'showButtons'])
     const emit = defineEmits(['timer-started', 'timer-stopped', 'timer-finished'])
+    let running = ref(false)
+    defineExpose({running})
 
     let secondsRemaining = ref(props.secondsDuration)
     let interval = null
+
+    watch(running, (isRunning) => {
+        if (isRunning) {
+            startTimer()
+        } else {
+            stopTimer()
+        }
+    })
 
     const timeLeft = computed(() => {
         const minutes = Math.floor(secondsRemaining.value / 60)

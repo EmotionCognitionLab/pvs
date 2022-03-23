@@ -43,7 +43,8 @@
     ],
     "globals": {
       "defineProps": "readonly",
-      "defineEmits": "readonly"
+      "defineEmits": "readonly",
+      "defineExpose": "readonly"
     },
     "parserOptions": {
       "parser": "babel-eslint"
