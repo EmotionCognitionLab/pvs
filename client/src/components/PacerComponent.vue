@@ -5,21 +5,27 @@
 </template>
 <script setup>
     import { BreathPacer } from 'pvs-breath-pacer'
-    import { onMounted, ref } from '@vue/runtime-core';
+    import { onMounted, ref, watch } from '@vue/runtime-core';
 
-    // const props = defineProps(['canvasElem'])
+    const props = defineProps(['msPerBreath', 'totalMs', 'holdMs'])
     const pacer = ref(null)
+    let running = ref(false)
+    defineExpose({running})
+    let bp = null
 
-    const DEFAULT_INSTRUCTIONS = [
-        {duration: 4000, breathe: "in"},
-        {duration: 4000, breathe: "hold"},
-        {duration: 4000, breathe: "out"},
-        {duration: 4000, breathe: "hold"},
-    ]
-
-    onMounted(() => {
-        const bp = new BreathPacer(pacer.value, DEFAULT_INSTRUCTIONS)
-        bp.start()
+    watch(running, (shouldRun) => {
+        if (shouldRun) {
+            bp.start()
+        }
     })
 
+    onMounted(() => {
+        bp = new BreathPacer(pacer.value, [])
+        bp.setPaceAndDuration(props.msPerBreath, props.totalMs, props.holdMs)
+    })
 </script>
+<style scoped>
+    canvas {
+        background-color: white;
+    }
+</style>
