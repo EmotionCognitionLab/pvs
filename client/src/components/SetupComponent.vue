@@ -16,15 +16,15 @@
             Click "Start" when you're ready to begin.
             <br/>
            <TimerComponent :secondsDuration=300 :showButtons=false :running=false @timerFinished="timerFinished" ref="timer" />
-           <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" ref="emwave" />
+           <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" ref="timerEmwave" />
         </div>
         <div v-else-if="step=4">
             We have one remaining task for you with this app today.
             We now will ask you to pace your breathing following the ball you will see on the screen.
             Please breathe in while the ball is moving up and breathe out while the ball is moving down.
             Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
-            <PacerComponent :msPerBreath=4000 :totalMs=210000 :holdMs=0 ref="pacer" />
-            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" />
+            <PacerComponent :msPerBreath=4000 :totalMs=210000 :holdMs=0 @pacerFinished="pacerFinished" ref="pacer" />
+            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" ref="pacerEmwave"/>
         </div>
     </div>
 </template>
@@ -39,8 +39,9 @@
 
     let step = ref(1)
     const timer = ref(null)
-    const emwave = ref(null)
+    const timerEmwave = ref(null)
     const pacer = ref(null)
+    const pacerEmwave = ref(null)
 
     function login() {
         ipcRenderer.send('show-login-window')
@@ -53,14 +54,18 @@
     function startTimer() {
         timer.value.running = true
     }
-
+    
     function stopTimer() {
         timer.value.running = false
     }
 
     function timerFinished() {
-        emwave.value.stopSensor = true
+        timerEmwave.value.stopSensor = true
         nextStep()
+    }
+
+    function pacerFinished() {
+        pacerEmwave.value.stopSensor = true
     }
 
     function startPacer() {

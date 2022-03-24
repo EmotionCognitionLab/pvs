@@ -11,11 +11,15 @@
     const pacer = ref(null)
     let running = ref(false)
     defineExpose({running})
+    const emit = defineEmits(['pacer-finished'])
     let bp = null
 
     watch(running, (shouldRun) => {
         if (shouldRun) {
             bp.start()
+            .then(() => {
+                emit('pacer-finished')
+            })
         }
     })
 
