@@ -8,7 +8,7 @@
             (If it is cold, try rubbing it between your thumb and forefinger to warm it up and get blood flowing to it.)
         </div>
         <button class="pulse-sensor-button" id="startSensor" @click="startPulseSensor">Start</button>
-        <button class="pulse-sensor-button" id="stopSensor" @click="stopPulseSensor">Stop</button>
+        <button class="pulse-sensor-button" id="stopSensor" @click="stopPulseSensor">Pause</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
     </div>
    
