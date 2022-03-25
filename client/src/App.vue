@@ -6,7 +6,7 @@
   <br/>
   <web-page-component source="https://wikipedia.org"></web-page-component>
   -->
-  <router-view></router-view>
+    <router-view></router-view>
 </template>
 
 <script>
@@ -46,5 +46,10 @@ body {
   background-color: beige;
   height: 100%;
   width: 100%;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 </style>

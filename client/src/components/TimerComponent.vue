@@ -53,6 +53,7 @@
 <style scoped>
     #timer {
         font-size: 64px;
+        margin: 5px 5px 15px 5px;
     }
     .timer-button {
         padding: 8px;

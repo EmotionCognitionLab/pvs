@@ -1,6 +1,6 @@
 <template>
     <div>
-        <canvas ref="pacer" width="1200" height="600" ></canvas>
+        <canvas ref="pacer"></canvas>
     </div>
 </template>
 <script setup>
@@ -30,6 +30,8 @@
 </script>
 <style scoped>
     canvas {
-        background-color: white;
+        background-color: mintcream;
+        width: 1200px;
+        height: 400px;
     }
 </style>
