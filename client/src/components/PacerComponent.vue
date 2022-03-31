@@ -1,13 +1,13 @@
 <template>
     <div>
-        <canvas ref="pacer"></canvas>
+        <canvas ref="pacer" width="1200" height="400"></canvas>
     </div>
 </template>
 <script setup>
     import { BreathPacer } from 'pvs-breath-pacer'
     import { onMounted, ref, watch } from '@vue/runtime-core';
 
-    const props = defineProps(['msPerBreath', 'totalMs', 'holdMs'])
+    const props = defineProps(['msPerBreath', 'totalMs', 'holdMs', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
     let running = ref(false)
     defineExpose({running})
@@ -24,7 +24,13 @@
     })
 
     onMounted(() => {
-        bp = new BreathPacer(pacer.value, [])
+        const pacerConfig = {
+            scaleH: props.scaleH,
+            scaleT: props.scaleT,
+            offsetProportionX: props.offsetProportionX,
+            offsetProportionY: props.offsetProportionY
+        }
+        bp = new BreathPacer(pacer.value, [], pacerConfig)
         bp.setPaceAndDuration(props.msPerBreath, props.totalMs, props.holdMs)
     })
 </script>

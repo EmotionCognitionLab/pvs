@@ -26,7 +26,15 @@
             Please breathe in while the ball is moving up and breathe out while the ball is moving down.
             Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
             </div>
-            <PacerComponent :msPerBreath=4000 :totalMs=210000 :holdMs=0 @pacerFinished="pacerFinished" ref="pacer" />
+            <PacerComponent 
+                :msPerBreath=4000 
+                :totalMs=210000 
+                :holdMs=0 
+                :scaleH=290
+                :scaleT=0.1 
+                :offsetProportionX=0.25
+                :offsetProportionY=0.8
+                @pacerFinished="pacerFinished" ref="pacer" />
             <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" ref="pacerEmwave"/>
         </div>
     </div>
