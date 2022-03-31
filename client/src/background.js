@@ -5,6 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
+import { SessionStore } from './session-store.js'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
@@ -112,10 +113,11 @@ ipcMain.on('show-login-window', () => {
   try {
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.userhandler = {
-      onSuccess: () => { 
+      onSuccess: (session) => { 
         console.log('successful login ') 
         authWindow.close()
-        mainWin.webContents.send('login-succeeded')
+        SessionStore.session = session
+        mainWin.webContents.send('login-succeeded', session)
       },
       onFailure: (err) => { console.log(err) }
     }
