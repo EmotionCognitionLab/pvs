@@ -17,7 +17,7 @@ function handleError(err) {
 }
 
 getAuth(
-    async session => {
+    session => {
         try {
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
@@ -25,13 +25,11 @@ getAuth(
             window.stuff = {targetId, idToken};
             // determine what kind of access (admin/self/invalid)
             if (isAdmin(idToken)) {
-                const payboard = new Payboard(payboardDiv, new ApiClient(session), true);
-                await payboard.refresh();
-                payboard.show();
+                const payboard = new Payboard(payboardDiv, new ApiClient(session), targetId, true);
+                payboard.refresh();
             } else if (targetId = idToken.sub) {
-                const payboard = new Payboard(payboardDiv, new ApiClient(session), false);
-                await payboard.refresh();
-                payboard.show();
+                const payboard = new Payboard(payboardDiv, new ApiClient(session), targetId, false);
+                payboard.refresh();
             } else {
                 throw new Error("can't access user");
             }
