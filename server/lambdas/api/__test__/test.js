@@ -29,6 +29,19 @@ describe("API call for user", () => {
 
     test("GET should succeed", async() => {
         const result = await runLambda('/self', 'GET', {requestContext: {authorizer: {jwt: {claims: {sub: user.userId}}}}});
+        for (const field in ['email', 'name', 'phone_number', 'sub']) {
+            expect(result[field]).toBe(user[field]);
+        }
+    });
+
+    test("PUT should succeed", async() => {
+        const update = {name: 'Tom'};
+        const updateJson = JSON.stringify(update);
+        const result = await runLambda('/self', 'PUT', {
+            body: updateJson,
+            requestContext: {authorizer: {jwt: {claims: {sub: user.userId}}}}
+        });
+        expect(result.statusCode).toBe(200);
         const params = {
             TableName: process.env.USERS_TABLE,
             Key: {
@@ -36,9 +49,7 @@ describe("API call for user", () => {
             }
         };
         const userRec = await docClient.get(params).promise();
-        for (const field in ['email', 'name', 'phone_number', 'sub']) {
-            expect(userRec.Item[field]).toBe(user[field]);
-        }
+        expect(userRec.Item['name']).toBe(update.name);
     });
 
     afterAll(async () => {
