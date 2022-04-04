@@ -3,13 +3,6 @@
         <br/>
         <div id="conditionAssignmentForm">
             <div>
-                <label for="yob">What year were you born?</label>
-                <input v-model="yob" type="text" name="yob" id="yob">
-                <span v-if="errors['yob']" class="error">
-                    {{ errors.yob }}
-                </span>
-            </div>
-            <div>
                 <label for="sex">Were you born male or female?</label>
                 <select v-model="sex" name="sex" id="sex">
                     <option disabled value="">Please select one</option>
@@ -41,7 +34,6 @@ import { defineEmits } from 'vue';
 import { reactive } from 'vue';
 
 let sex = ref('')
-let yob = ref('')
 let sexDescription = ref('')
 const errors = reactive({});
 const sexOptions = reactive(['Male', 'Female', 'Intersex'])
@@ -54,19 +46,14 @@ function assignToCondition() {
     if (Object.keys(errors).length) {
         console.log(errors);
     } else {
-        console.log(`TODO: save ${yob.value}, ${sex.value} and ${sexDescription.value} to dynamo and assign to condition`)
+        console.log(`TODO: save ${sex.value} and ${sexDescription.value} to dynamo and assign to condition`)
         emit('complete')
     }
 }
 
 function validate() {
-    delete(errors['yob'])
     delete(errors['sex'])
-    delete(['sexDescription'])
-
-    if (!yobIsValid()) {
-        errors['yob'] = 'Please enter a valid year (between 1952 and 1977).'
-    }
+    delete(errors['sexDescription'])
 
     if (!sexOptions.includes(sex.value)) {
         errors['sex'] = 'Please select an option'
@@ -77,26 +64,10 @@ function validate() {
     }
 }
 
-function textToNum(text) {
-    return parseInt(text.trim());
-}
-
-function yobIsValid() {
-    let yobNum;
-    try {
-        yobNum = textToNum(yob.value);
-        return yobNum >= 1952 && yobNum <= 1977;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
-}
-
 </script>
 <style scoped>
     div { text-align: left; padding-bottom: 15px; }
     label {padding: 12px;}
     #conditionAssignmentForm { padding: 12px 10px; width: 700px}
-    #yob { width: 40px; }
     .error { color: red; font-size: 90%; padding-left: 20px; }
 </style>
