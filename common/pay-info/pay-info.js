@@ -1,18 +1,19 @@
 const StudyActivityStatus = Object.freeze({
-    NOT_STARTED: 0,
-    IN_PROGRESS: 1,
-    COMPLETED: 2,
-    DROPPED_OUT: 3,
+    NOT_STARTED: "0",
+    IN_PROGRESS: "1",
+    COMPLETED: "2",
+    DROPPED_OUT: "3",
 });
 
-const PaymentStatus = Object.freeze({
-    NOT_YET_PROCESSED: 0,
-    PROCESSED: 1,
+export const PaymentStatus = Object.freeze({
+    NOT_YET_PROCESSED: "0",
+    PROCESSED: "1",
 });
 
 export class Payboard {
-    constructor(div, client, userId, admin = false) {
-        this.div = div;
+    constructor(rootDiv, errorDiv, client, userId, admin = false) {
+        this.rootDiv = rootDiv;
+        this.errorDiv = errorDiv;
         this.client = client;
         this.userId = userId;
         this.admin = admin;
@@ -22,10 +23,10 @@ export class Payboard {
 
     initializeElements() {
         // add class to root div
-        this.div.classList.add("pay-info");
+        this.rootDiv.classList.add("pay-info");
         // add table to root div
         const table = document.createElement("table");
-        this.div.appendChild(table);
+        this.rootDiv.appendChild(table);
         // add header to table
         const theadRow = table.createTHead().insertRow();
         const addTH = text => {
@@ -39,6 +40,7 @@ export class Payboard {
         addTH("Payment Status");
         // add body to table
         const tbody = table.createTBody();
+        // add dividers and rows
         const addDivider = dividerText => {
             const row = tbody.insertRow();
             const cell = row.insertCell();
@@ -59,7 +61,6 @@ export class Payboard {
                     [StudyActivityStatus.DROPPED_OUT]: "Dropped out",
                 }[studyActivityStatus];
                 window.sasCell = studyActivityStatusCell;
-                console.debug("INSIDE", window.sasCell.textContent);
             };
             const totalEarnedCell = row.insertCell();
             const setTotalEarned = totalEarnedDollars => {
@@ -78,34 +79,67 @@ export class Payboard {
         [this.setMRIT2Status, this.setMRIT2Earned] = addRow("Lab visit #4 ($65)");
         addDivider("Post-intervention activities (Part 2 - $25 Total)");
         [this.setDailyTasksT2Status, this.setDailyTasksT2Earned] = addRow("Daily tasks ($25)");
+        // add payment status
+        const addPaymentStatus = (cell, progressKey) => {
+            const span = document.createElement("span");
+            cell.appendChild(span);
+            // add select if admin
+            let select = null;
+            if (this.admin) {
+                select = document.createElement("select");
+                cell.appendChild(select);
+                const addOption = (value, label) => {
+                    const option = document.createElement("option");
+                    select.appendChild(option);
+                    option.value = new String(value);
+                    option.label = label;
+                    return option;
+                };
+                addOption("", "--Update the status--").disabled = true;
+                addOption(new String(PaymentStatus.NOT_YET_PROCESSED), "Not yet processed");
+                addOption(new String(PaymentStatus.PROCESSED), "Processed");
+            }
+            // create setter
+            let currentValue = null;
+            const setPaymentStatus = paymentStatus => {
+                currentValue = paymentStatus;
+                span.textContent = {
+                    [PaymentStatus.NOT_YET_PROCESSED]: "Not yet processed",
+                    [PaymentStatus.PROCESSED]: "Processed",
+                }[paymentStatus];
+                if (this.admin) {
+                    select.value = new String(paymentStatus);
+                    select.disabled = false;
+                }
+            };
+            // add listener if admin
+            if (this.admin) {
+                select.addEventListener("change", async event => {
+                    if (select.value !== currentValue) {
+                        const value = select.value;
+                        select.disabled = true;
+                        try {
+                            const progress = (await this.client.getUser(this.userId, true)).progress ?? {};
+                            if (progress[progressKey]?.value !== value) {
+                                progress[progressKey] = {
+                                    value,
+                                    timestamp: (new Date()).toISOString(),
+                                };
+                                await this.client.updateUser(this.userId, {progress});
+                            }
+                            setPaymentStatus(value);
+                        } catch (err) {
+                            this.handleError(err);
+                            setPaymentStatus(currentValue);
+                        }
+                    }
+                });
+            }
+            return setPaymentStatus;
+        };
         const paymentStatusCell = tbody.rows[0].insertCell();
         paymentStatusCell.setAttribute("rowspan", "11");
-        const paymentStatusCellSpan = document.createElement("span");
-        paymentStatusCell.appendChild(paymentStatusCellSpan);
-        let paymentStatusCellSelect = null;
-        if (this.admin) {
-            paymentStatusCellSelect = document.createElement("select");
-            paymentStatusCell.appendChild(paymentStatusCellSelect);
-            const addOption = (value, label) => {
-                const option = document.createElement("option");
-                paymentStatusCellSelect.appendChild(option);
-                option.value = value;
-                option.label = label;
-                return option;
-            };
-            addOption("", "--Update the status--").disabled = true;
-            addOption(new String(PaymentStatus.NOT_YET_PROCESSED), "Not yet processed");
-            addOption(new String(PaymentStatus.PROCESSED), "Processed");
-        }
-        this.setPaymentStatus = paymentStatus => {
-            paymentStatusCellSpan.textContent = {
-                [PaymentStatus.NOT_YET_PROCESSED]: "Not yet processed",
-                [PaymentStatus.PROCESSED]: "Processed",
-            }[paymentStatus];
-            if (paymentStatusCellSelect) {
-                paymentStatusCellSelect.value = new String(paymentStatus);
-            }
-        };
+        this.setPaymentStatus = addPaymentStatus(paymentStatusCell, "paymentStatus");
     }
 
     async refresh() {
@@ -116,6 +150,7 @@ export class Payboard {
                 this.client.getSetsForUser(this.userId),
                 null,  // to-do
             ]);
+            window.eck = () => this.client.getUser(this.userId, true);
             const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
             const finishedSetsT1Count = finishedSetsCount;
             const finishedSetsT2Count = 0;  // to-do
@@ -145,12 +180,17 @@ export class Payboard {
             );
             this.setDailyTasksT2Earned(finishedSetsT2Count >= 6 ? 25 : 0);
             this.setPaymentStatus(
-                !user.progress?.processed ? PaymentStatus.PROCESSED :
+                user.progress?.paymentStatus?.value === PaymentStatus.PROCESSED ? PaymentStatus.PROCESSED :
                 PaymentStatus.NOT_YET_PROCESSED
             );
         } catch (err) {
-            console.error(`error loading user: ${err}`);
+            this.handleError(err);
         }
+    }
+
+    handleError(err) {
+        console.error(`error loading user: ${err}`);
+        this.errorDiv.textContent = `error loading user: ${err}`;
     }
 }
 

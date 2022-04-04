@@ -1,4 +1,5 @@
 import "./style.css";
+import "../../../common/pay-info/style.css";
 import { getIdToken, isAdmin, Payboard } from "node_modules/pay-info";
 import { getAuth } from "auth/auth";
 import ApiClient from "api/client";
@@ -25,10 +26,10 @@ getAuth(
             window.stuff = {targetId, idToken};
             // determine what kind of access (admin/self/invalid)
             if (isAdmin(idToken)) {
-                const payboard = new Payboard(payboardDiv, new ApiClient(session), targetId, true);
+                const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, true);
                 payboard.refresh();
             } else if (targetId = idToken.sub) {
-                const payboard = new Payboard(payboardDiv, new ApiClient(session), targetId, false);
+                const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, false);
                 payboard.refresh();
             } else {
                 throw new Error("can't access user");
