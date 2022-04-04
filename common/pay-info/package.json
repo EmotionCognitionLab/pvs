@@ -13,6 +13,7 @@
       "<rootDir>",
       "node_modules"
     ],
+    "testEnvironment": "jsdom",
     "transform": {
       "^.+\\.(js|jsx|mjs)$": "babel-jest"
     }
