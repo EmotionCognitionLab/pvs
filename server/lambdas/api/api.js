@@ -18,7 +18,7 @@ exports.handler = async (event) => {
     return errorResponse({statusCode: 400, message: `Unknown operation "${method} ${path}"`});
 }
 
-getSelf = async (userId) => {
+const getSelf = async (userId) => {
     try {
         const params = {
             TableName: usersTable,
@@ -42,7 +42,7 @@ getSelf = async (userId) => {
     }
 }
 
-updateSelf = async(userId, updates) => {
+const updateSelf = async(userId, updates) => {
     try {
         if (!updates) {
             return errorResponse({statusCode: 400, message: "No updates found"});

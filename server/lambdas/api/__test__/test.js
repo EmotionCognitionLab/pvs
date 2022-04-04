@@ -28,7 +28,7 @@ describe("API call for user", () => {
     });
 
     test("GET should succeed", async() => {
-        const result = await runLambda('getUser', {requestContext: {authorizer: {jwt: {claims: {sub: user.userId}}}}});
+        const result = await runLambda('/self', 'GET', {requestContext: {authorizer: {jwt: {claims: {sub: user.userId}}}}});
         const params = {
             TableName: process.env.USERS_TABLE,
             Key: {
@@ -46,11 +46,12 @@ describe("API call for user", () => {
     });
 });
 
-async function runLambda(handlerName, event) {
+async function runLambda(httpPath, method, event) {
+    Object.assign(event.requestContext,{ http: { path: httpPath, method: method } });
     return await lambdaLocal.execute({
         event: event,
         lambdaPath: path.join(__dirname, '../api.js'),
-        lambdaHandler: handlerName,
+        lambdaHandler: 'handler',
         environment: {USERS_TABLE: process.env.USERS_TABLE},
         verboseLevel: 0
     });
