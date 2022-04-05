@@ -71,6 +71,10 @@ functions:
           method: PUT
           path: /self
           authorizer: serviceAuthorizer
+      - httpApi:
+          method: POST
+          path: /condition
+          authorizer: serviceAuthorizer
     environment:
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
