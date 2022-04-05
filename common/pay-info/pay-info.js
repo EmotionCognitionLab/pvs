@@ -188,8 +188,8 @@ export class Payboard {
     }
 
     handleError(err) {
-        console.error(`error loading user: ${err}`);
-        this.errorDiv.textContent = `error loading user: ${err}`;
+        console.error(`error: ${err}`);
+        this.errorDiv.textContent = `error: ${err}`;
     }
 }
 
