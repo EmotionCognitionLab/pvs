@@ -13,7 +13,7 @@
                 </span>
             </div>
             <div  v-if="sex === 'Intersex'">
-                <label for="sexDescription">Do you describe yourself as a man, a woman, or in some other way?</label>
+                <label for="sexDescription">Do you describe yourself as male, female, or in some other way?</label>
                 <span v-if="errors.sexDescription" class="error">
                     {{ errors.sexDescription }}
                 </span>
@@ -37,7 +37,7 @@ let sex = ref('')
 let sexDescription = ref('')
 const errors = reactive({});
 const sexOptions = reactive(['Male', 'Female', 'Intersex'])
-const sexDescriptionOptions = reactive(['Man', 'Woman', 'Other'])
+const sexDescriptionOptions = reactive(['Male', 'Female', 'Other'])
 const emit = defineEmits(['complete'])
 
 // eslint-disable-next-line no-unused-vars
