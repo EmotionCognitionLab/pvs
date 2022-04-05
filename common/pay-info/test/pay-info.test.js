@@ -149,4 +149,40 @@ describe("Payboard", () => {
         await payboard.refresh();
         expectPayboardMatches(payboard, mc.users.get(twiId), await mc.getSetsForUser(twiId));
     });
+
+    it("dropdown select doesn't appear without admin privileges", async () => {
+        const mc = new MockClient(users, results);
+        const payboard = new Payboard(root, error, mc, users[0].userId, false);
+        await payboard.refresh();
+        expect(document.querySelector("select")).toBeNull();
+    });
+
+    it("dropdown select appears with admin privileges", async () => {
+        const mc = new MockClient(users, results);
+        const payboard = new Payboard(root, error, mc, users[0].userId, true);
+        await payboard.refresh();
+        expect(document.querySelector("select")).not.toBeNull();
+    });
+
+    it("changing dropdown select updates backend through client", async () => {
+        const twiId = users[0].userId;
+        const mc = new MockClient(users, results);
+        const payboard = new Payboard(root, error, mc, twiId, true);
+        await payboard.refresh();
+        const select = document.querySelector("select");
+        // set Twi's paymentStatus from not yet processed to processed
+        expect(select.value).toBe(PaymentStatus.NOT_YET_PROCESSED);
+        select.value = PaymentStatus.PROCESSED;
+        select.dispatchEvent(new Event("change"));
+        await new Promise(process.nextTick);
+        expect(mc.users.get(twiId).progress.paymentStatus.value).toBe(PaymentStatus.PROCESSED);
+        // set Twi's paymentStatus from processed to not yet processed
+        expect(select.value).toBe(PaymentStatus.PROCESSED);
+        select.value = PaymentStatus.NOT_YET_PROCESSED;
+        select.dispatchEvent(new Event("change"));
+        await new Promise(process.nextTick);
+        expect(
+            mc.users.get(twiId).progress?.paymentStatus?.value !== PaymentStatus.PROCESSED
+        ).toBe(true);
+    });
 });
