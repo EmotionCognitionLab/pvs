@@ -3,6 +3,7 @@ import { MockClient } from "../../../baseline/client/tests/mock-client.js";
 import { fakeUsers as users, fakeResults as results } from "../../../baseline/client/tests/fakes.js";
 
 function expectPayboardMatches(payboard, user, sets) {
+    const nameSpan = payboard.rootDiv.querySelector(".pay-info-name");
     const [
         dividerA,
         dailyTasksT1Row,
@@ -26,6 +27,7 @@ function expectPayboardMatches(payboard, user, sets) {
     const [dailyTasksT2StatusCell, dailyTasksT2EarnedCell] = dailyTasksT2Row.querySelectorAll("td:not(:first-child)");
     // table elements should be generated
     expect([
+        nameSpan,
         paymentStatusCell,
         dailyTasksT1StatusCell, dailyTasksT1EarnedCell,
         eegT1StatusCell, eegT1EarnedCell,
@@ -40,6 +42,8 @@ function expectPayboardMatches(payboard, user, sets) {
     const finishedSetsT1Count = finishedSetsCount;  // to-do: fix this
     const finishedSetsT2Count = 0;  // to-do: fix this
     const finishedSessionsCount = 0;  // to-do: fix this
+    // header should contain user info
+    expect(nameSpan.textContent).toContain(user.name);
     // row cells should contain correct text
     if (finishedSetsT1Count <= 0) {
         expect(dailyTasksT1StatusCell.textContent).toContain("Not started");

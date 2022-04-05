@@ -28,16 +28,33 @@ export class Payboard {
         const table = document.createElement("table");
         this.rootDiv.appendChild(table);
         // add header to table
-        const theadRow = table.createTHead().insertRow();
-        const addTH = text => {
+        const thead = table.createTHead();
+        // add top row of header
+        const theadTop = thead.insertRow();
+        const topTh = document.createElement("th");
+        topTh.setAttribute("colspan", "4");
+        const titleSpan = document.createElement("span");
+        titleSpan.textContent = "Payment Info: ";
+        titleSpan.classList.add("pay-info-title");
+        topTh.appendChild(titleSpan);
+        const nameSpan = document.createElement("span");
+        nameSpan.classList.add("pay-info-name");
+        topTh.appendChild(nameSpan);
+        theadTop.appendChild(topTh);
+        this.setName = name => {
+            nameSpan.textContent = name;
+        };
+        // add bottom row of header
+        const theadBottom = thead.insertRow();
+        const addBottomTh = text => {
             const th = document.createElement("th");
             th.textContent = text;
-            theadRow.appendChild(th);
+            theadBottom.appendChild(th);
         };
-        addTH("Study Activity");
-        addTH("Study Activity Status");
-        addTH("Total Earned");
-        addTH("Payment Status");
+        addBottomTh("Study Activity");
+        addBottomTh("Study Activity Status");
+        addBottomTh("Total Earned");
+        addBottomTh("Payment Status");
         // add body to table
         const tbody = table.createTBody();
         // add dividers and rows
@@ -155,6 +172,7 @@ export class Payboard {
             const finishedSetsT2Count = 0;  // to-do
             const finishedSessionsCount = 0;  // to-do
             // call setters
+            this.setName(user.name);
             const SAS = StudyActivityStatus;
             this.setDailyTasksT1Status(
                 finishedSetsT1Count <= 0 ? SAS.NOT_STARTED :
