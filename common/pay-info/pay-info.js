@@ -150,7 +150,6 @@ export class Payboard {
                 this.client.getSetsForUser(this.userId),
                 null,  // to-do
             ]);
-            window.eck = () => this.client.getUser(this.userId, true);
             const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
             const finishedSetsT1Count = finishedSetsCount;
             const finishedSetsT2Count = 0;  // to-do
