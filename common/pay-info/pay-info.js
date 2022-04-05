@@ -1,13 +1,13 @@
 const StudyActivityStatus = Object.freeze({
-    NOT_STARTED: "0",
-    IN_PROGRESS: "1",
-    COMPLETED: "2",
-    DROPPED_OUT: "3",
+    NOT_STARTED: "not-started",
+    IN_PROGRESS: "in-progress",
+    COMPLETED: "completed",
+    DROPPED_OUT: "dropped-out",
 });
 
 export const PaymentStatus = Object.freeze({
-    NOT_YET_PROCESSED: "0",
-    PROCESSED: "1",
+    NOT_YET_PROCESSED: "unprocessed",
+    PROCESSED: "processed",
 });
 
 export class Payboard {
