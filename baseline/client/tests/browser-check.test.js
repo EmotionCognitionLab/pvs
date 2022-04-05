@@ -1,8 +1,8 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { browserCheck, forTesting } from "../browser-check/browser-check";
 import { clickContinue } from "./utils";
-import ApiClient from "../api/client.js";
-jest.mock("../api/client.js");
+import ApiClient from "../../../common/api/client.js";
+jest.mock("../../../common/api/client.js");
 const uaParser = require("ua-parser-js");
 
 describe("browser check if computer profile is not saved", () => {

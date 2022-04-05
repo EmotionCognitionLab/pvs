@@ -6,7 +6,7 @@
   <br/>
   <web-page-component source="https://wikipedia.org"></web-page-component>
   -->
-  <router-view></router-view>
+    <router-view></router-view>
 </template>
 
 <script>
@@ -35,12 +35,21 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+body {
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1.6em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  background-color: beige;
+  height: 100%;
+  width: 100%;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 </style>

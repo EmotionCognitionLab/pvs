@@ -1,25 +1,43 @@
 <template>
     <div>
-        <canvas ref="pacer" width="1200" height="600" ></canvas>
+        <canvas ref="pacer" width="1200" height="400"></canvas>
     </div>
 </template>
 <script setup>
     import { BreathPacer } from 'pvs-breath-pacer'
-    import { onMounted, ref } from '@vue/runtime-core';
+    import { onMounted, ref, watch } from '@vue/runtime-core';
 
-    // const props = defineProps(['canvasElem'])
+    const props = defineProps(['msPerBreath', 'totalMs', 'holdMs', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
+    let running = ref(false)
+    defineExpose({running})
+    const emit = defineEmits(['pacer-finished'])
+    let bp = null
 
-    const DEFAULT_INSTRUCTIONS = [
-        {duration: 4000, breathe: "in"},
-        {duration: 4000, breathe: "hold"},
-        {duration: 4000, breathe: "out"},
-        {duration: 4000, breathe: "hold"},
-    ]
-
-    onMounted(() => {
-        const bp = new BreathPacer(pacer.value, DEFAULT_INSTRUCTIONS)
-        bp.start()
+    watch(running, (shouldRun) => {
+        if (shouldRun) {
+            bp.start()
+            .then(() => {
+                emit('pacer-finished')
+            })
+        }
     })
 
+    onMounted(() => {
+        const pacerConfig = {
+            scaleH: props.scaleH,
+            scaleT: props.scaleT,
+            offsetProportionX: props.offsetProportionX,
+            offsetProportionY: props.offsetProportionY
+        }
+        bp = new BreathPacer(pacer.value, [], pacerConfig)
+        bp.setPaceAndDuration(props.msPerBreath, props.totalMs, props.holdMs)
+    })
 </script>
+<style scoped>
+    canvas {
+        background-color: mintcream;
+        width: 1200px;
+        height: 400px;
+    }
+</style>

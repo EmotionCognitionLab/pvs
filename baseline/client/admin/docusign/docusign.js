@@ -1,5 +1,5 @@
 import { getAuth } from "auth/auth.js";
-import ApiClient from "../../api/client";
+import ApiClient from "../../../../common/api/client.js";
 import awsSettings from '../../../../common/aws-settings.json';
 
 class Consent {

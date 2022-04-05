@@ -34,3 +34,7 @@ variable "datafiles-bucket" {
 variable "ds-bucket" {
     description = "Name for S3 bucket that holds files related to Docusign"
 }
+
+variable "data-bucket" {
+    description =  "S3 bucket for participant data"
+}

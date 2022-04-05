@@ -3,7 +3,7 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-call-function.js";
-import ApiClient from "../api/client";
+import ApiClient from "../../../common/api/client.js";
 import introduction_html from "./frag/introduction.html";
 import different_html from "./frag/different.html";
 import permanent_change_html from "./frag/permanent-change.html";

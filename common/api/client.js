@@ -1,4 +1,4 @@
-import awsSettings from '../../../common/aws-settings.json';
+import awsSettings from '../aws-settings.json';
 
 export default class ApiClient {
     constructor(session) {
