@@ -141,6 +141,7 @@ describe("Payboard", () => {
         const twiId = users[0].userId;
         // create payboard without changes
         const mc = new MockClient(users, results);
+        const {root, error} = getPayboardElements();
         const payboard = new Payboard(root, error, mc, twiId, true);
         await payboard.refresh();
         expectPayboardMatches(payboard, mc.users.get(twiId), await mc.getSetsForUser(twiId));
@@ -152,6 +153,7 @@ describe("Payboard", () => {
 
     it("dropdown select doesn't appear without admin privileges", async () => {
         const mc = new MockClient(users, results);
+        const {root, error} = getPayboardElements();
         const payboard = new Payboard(root, error, mc, users[0].userId, false);
         await payboard.refresh();
         expect(document.querySelector("select")).toBeNull();
@@ -159,6 +161,7 @@ describe("Payboard", () => {
 
     it("dropdown select appears with admin privileges", async () => {
         const mc = new MockClient(users, results);
+        const {root, error} = getPayboardElements();
         const payboard = new Payboard(root, error, mc, users[0].userId, true);
         await payboard.refresh();
         expect(document.querySelector("select")).not.toBeNull();
@@ -167,6 +170,7 @@ describe("Payboard", () => {
     it("changing dropdown select updates backend through client", async () => {
         const twiId = users[0].userId;
         const mc = new MockClient(users, results);
+        const {root, error} = getPayboardElements();
         const payboard = new Payboard(root, error, mc, twiId, true);
         await payboard.refresh();
         const select = document.querySelector("select");
@@ -184,5 +188,26 @@ describe("Payboard", () => {
         expect(
             mc.users.get(twiId).progress?.paymentStatus?.value !== PaymentStatus.PROCESSED
         ).toBe(true);
+    });
+
+    it("error thrown on select change reverts select state", async () => {
+        const twiId = users[0].userId;
+        // make mock client throw on update
+        const mc = new MockClient(users, results);
+        mc.updateUser = () => {
+            throw new Error("oops");
+        };
+        const {root, error} = getPayboardElements();
+        const payboard = new Payboard(root, error, mc, twiId, true);
+        await payboard.refresh();
+        const select = document.querySelector("select");
+        expect(select.value).toBe(PaymentStatus.NOT_YET_PROCESSED);
+        select.value = PaymentStatus.PROCESSED;
+        // attempt to change select
+        select.dispatchEvent(new Event("change"));
+        await new Promise(process.nextTick);
+        // error should be handled
+        expect(select.value).toBe(PaymentStatus.NOT_YET_PROCESSED);
+        expect(error.textContent).toContain("oops");
     });
 });
