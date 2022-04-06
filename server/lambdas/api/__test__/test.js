@@ -100,6 +100,17 @@ describe("Assign to condition", () => {
         expect(conditions).toContain(userRec.condition.assigned);
     });
 
+    test("should fail if the user has already been assigned to condition", async () => {
+        const result = await runLambda('/condition', 'POST', buildConditionAssignmentEvent('Male', null, user.userId));
+        expect(result.statusCode).toBe(200);
+        const userRec1 = await fetchUser(user.userId);
+        const secondTry = await runLambda('/condition', 'POST', buildConditionAssignmentEvent('Female', null, user.userId));
+        expect(secondTry.statusCode).toBe(500);
+        const userRec2 = await fetchUser(user.userId);
+        expect(userRec2.condition.bornSex).toBe(userRec1.condition.bornSex);
+        expect(userRec2.condition.assigned).toBe(userRec1.condition.assigned);
+    });
+
     test("should assign participants born Intersex the sex they identify as (if it's not Other)", async () => {
         const bornSex = 'Intersex';
         const sexDesc = 'Female';

@@ -32,19 +32,7 @@ exports.handler = async (event) => {
 
 const getSelf = async (userId) => {
     try {
-        const params = {
-            TableName: usersTable,
-            KeyConditionExpression: "userId = :idKey",
-            ExpressionAttributeValues: { ":idKey": userId }
-        };
-        const dynResults = await docClient.query(params).promise();
-        if (dynResults.Items.length === 0) {
-            return {};
-        }
-        if (dynResults.Items.length > 1) {
-            throw new HttpError(`Found multiple users with userId ${userId}.`, 409);
-        }
-        return dynResults.Items[0];
+       return await getUserById(userId);
     } catch (err) {
         console.error(err);
         if (!(err instanceof HttpError)) {
@@ -107,6 +95,14 @@ const assignToCondition = async(userId, data) => {
         return errorResponse({
             message: `${sexDesc} is not a valid option.`,
             statusCode: 400
+        });
+    }
+
+    const user = await getUserById(userId);
+    if (user.condition) {
+        return errorResponse({
+            message: `User ${userId} has already been assigned to condition`,
+            statusCode: 500
         });
     }
     
@@ -186,6 +182,22 @@ const assignToCondition = async(userId, data) => {
         }
         return errorResponse(err);
     }
+}
+
+async function getUserById(userId) {
+    const params = {
+        TableName: usersTable,
+        KeyConditionExpression: "userId = :idKey",
+        ExpressionAttributeValues: { ":idKey": userId }
+    };
+    const dynResults = await docClient.query(params).promise();
+    if (dynResults.Items.length === 0) {
+        return {};
+    }
+    if (dynResults.Items.length > 1) {
+        throw new HttpError(`Found multiple users with userId ${userId}.`, 409);
+    }
+    return dynResults.Items[0];
 }
 
 function successResponse(data) {
