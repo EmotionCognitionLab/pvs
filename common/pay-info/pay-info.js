@@ -217,7 +217,7 @@ export function getIdToken(session) {
         const payload = jwt.split(".")[1];
         return JSON.parse(atob(payload));
     } else {
-        throw new Error("bad JWT ${jwt}");
+        throw new Error("bad JWT token");
     }
 }
 
