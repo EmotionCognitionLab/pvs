@@ -24,15 +24,14 @@ getAuth(
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
             // determine what kind of access (admin/self/invalid)
-            if (hasPreferredRole(idToken, "pvs-dev-study-admin")) {
-                const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, true);
-                payboard.refresh();
-            } else if (targetId = idToken.sub) {
-                const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, false);
-                payboard.refresh();
-            } else {
-                throw new Error("can't access user");
-            }
+            const payboard = new Payboard(
+                payboardDiv,
+                errorDiv,
+                new ApiClient(session),
+                targetId,
+                hasPreferredRole(idToken, "pvs-dev-study-admin"),
+            );
+            payboard.refresh();
         } catch (err) {
             handleError(err);
         }
