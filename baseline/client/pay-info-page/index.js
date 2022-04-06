@@ -1,6 +1,6 @@
 import "./style.css";
 import "../../../common/pay-info/style.css";
-import { Payboard } from "node_modules/pay-info";
+import { Payboard } from "pay-info";
 import { getAuth, getIdToken, hasPreferredRole } from "auth/auth";
 import ApiClient from "api/client";
 
