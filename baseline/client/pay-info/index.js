@@ -23,7 +23,6 @@ getAuth(
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
-            window.stuff = {targetId, idToken};
             // determine what kind of access (admin/self/invalid)
             if (isAdmin(idToken)) {
                 const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, true);
