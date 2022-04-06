@@ -13,7 +13,7 @@ const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider({regio
 'use strict';
 
 /**
- * 
+ *
  * @param {*} onSuccess Success handler function. Receives a [CognitoAuthSession](https://github.com/amazon-archives/amazon-cognito-auth-js/blob/master/src/CognitoAuthSession.js) parameter. 
  * @param {*} onFailure Error handler function. Receives an error parameter.
  * @param {string} state Optional state parameter that will be returned as part of the redirect url after successful authentication.
@@ -35,6 +35,32 @@ function getAuth(onSuccess, onFailure, state = null, scopes = []) {
     // The default response_type is "token", uncomment the next line will make it be "code".
     auth.useCodeGrantFlow();
     return auth;
+}
+
+/**
+ *
+ * @param {CognitoAuthSession}
+ * @returns {Object} ID token object
+ */
+function getIdToken(session) {
+    const jwt = session.getIdToken().getJwtToken();
+    if (jwt) {
+        const payload = jwt.split(".")[1];
+        return JSON.parse(atob(payload));
+    } else {
+        throw new Error("bad JWT token");
+    }
+}
+
+/**
+ * 
+ * @param {Object} ID token object
+ * @param {string} preferred role
+ * @returns {boolean} true if the ID token object has the given preferred role
+ */
+function hasPreferredRole(idToken, role) {
+    const preferredRole = idToken["cognito:preferred_role"];
+    return preferredRole.split("/").slice(-1)[0] === role;
 }
 
 /**
@@ -97,4 +123,11 @@ function verifyPhone(accessToken, verificationCode, onSuccess, onFailure) {
     });
 }
 
-export { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone }
+export {
+    getAuth,
+    getIdToken,
+    hasPreferredRole,
+    sendPhoneVerificationCode,
+    updateUserAttributes,
+    verifyPhone,
+};

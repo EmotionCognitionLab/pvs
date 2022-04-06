@@ -210,18 +210,3 @@ export class Payboard {
         this.errorDiv.textContent = `error: ${err}`;
     }
 }
-
-export function getIdToken(session) {
-    const jwt = session.getIdToken().getJwtToken();
-    if (jwt) {
-        const payload = jwt.split(".")[1];
-        return JSON.parse(atob(payload));
-    } else {
-        throw new Error("bad JWT token");
-    }
-}
-
-export function isAdmin(idToken) {
-    const preferredRole = idToken["cognito:preferred_role"];
-    return preferredRole.split("/").slice(-1)[0] === "pvs-dev-study-admin";
-}

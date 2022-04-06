@@ -1,7 +1,7 @@
 import "./style.css";
 import "../../../common/pay-info/style.css";
-import { getIdToken, isAdmin, Payboard } from "node_modules/pay-info";
-import { getAuth } from "auth/auth";
+import { Payboard } from "node_modules/pay-info";
+import { getAuth, getIdToken, hasPreferredRole } from "auth/auth";
 import ApiClient from "api/client";
 
 const payboardDiv = document.getElementById("payboard");
@@ -24,7 +24,7 @@ getAuth(
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
             // determine what kind of access (admin/self/invalid)
-            if (isAdmin(idToken)) {
+            if (hasPreferredRole(idToken, "pvs-dev-study-admin")) {
                 const payboard = new Payboard(payboardDiv, errorDiv, new ApiClient(session), targetId, true);
                 payboard.refresh();
             } else if (targetId = idToken.sub) {
