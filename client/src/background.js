@@ -93,6 +93,8 @@ ipcMain.on('pulse-stop', () => {
   emwave.stopPulseSensor()
 })
 
+ipcMain.handle('get-session', () => SessionStore.getMainSession());
+
 // btoa and atob are defined in global browser contexts,
 // but not node. Define them here b/c amazon-cognito-auth-js
 // expects them to exist
@@ -119,7 +121,6 @@ ipcMain.on('show-login-window', () => {
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.userhandler = {
       onSuccess: (session) => { 
-        console.log('successful login ') 
         authWindow.close()
         SessionStore.session = session
         mainWin.webContents.send('login-succeeded', session)
