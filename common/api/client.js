@@ -20,6 +20,16 @@ export default class ApiClient {
     }
 
     /**
+     * Assigns the user to one of two experimental conditions: Random-paced or resonance-frequency-paced breathing.
+     * @param {object} conditionData {bornSex: value, sexDesc: value}
+     * @returns JSON object with "condition" field
+     */
+     async assignToCondition(conditionData) {
+        const url = `${awsSettings.ConditionApiUrl}`;
+        return await this.doFetch(url, "post", "There was an error assigning the user to condition", conditionData);
+    }
+
+    /**
      * Fetches a user record.
      * @param {string} userId The id of the user whose record is to be fetched.
      * @param {boolean} consistentRead Should the fetch use a consistent read?
