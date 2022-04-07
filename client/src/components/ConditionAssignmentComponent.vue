@@ -1,5 +1,11 @@
 <template>
-    <div>Great! You're all logged in. Next we need to know a little bit more about you:
+    <div>
+        <div v-if="errors.general" class="error">
+            An error ocurred. Please contact the study administrators and tell them you received the following error during assignment to condition:
+            <br/>
+            {{ errors.general }}
+        </div>
+        Great! You're all logged in. Next we need to know a little bit more about you:
         <br/>
         <div id="conditionAssignmentForm">
             <div>
@@ -32,6 +38,9 @@
 import { ref } from '@vue/runtime-core';
 import { defineEmits } from 'vue';
 import { reactive } from 'vue';
+import ApiClient from '../../../common/api/client.js'
+import { SessionStore } from '../session-store.js'
+
 
 let sex = ref('')
 let sexDescription = ref('')
@@ -41,19 +50,26 @@ const sexDescriptionOptions = reactive(['Male', 'Female', 'Other'])
 const emit = defineEmits(['complete'])
 
 // eslint-disable-next-line no-unused-vars
-function assignToCondition() {
+async function assignToCondition() {
     validate();
-    if (Object.keys(errors).length) {
-        console.log(errors);
-    } else {
-        console.log(`TODO: save ${sex.value} and ${sexDescription.value} to dynamo and assign to condition`)
-        emit('complete')
+    if (!Object.keys(errors).length) {
+        try {
+            const session = await SessionStore.getRendererSession()
+            const apiClient = new ApiClient(session)
+            await apiClient.assignToCondition({bornSex: sex.value, sexDesc: sexDescription.value})
+            window.localStorage.setItem('HeartBeam.isConfigured', 'true')
+            emit('complete')
+        } catch (err) {
+            console.error(err)
+            errors['general'] = `${err.message}`
+        }
     }
 }
 
 function validate() {
     delete(errors['sex'])
     delete(errors['sexDescription'])
+    delete(errors['general'])
 
     if (!sexOptions.includes(sex.value)) {
         errors['sex'] = 'Please select an option'

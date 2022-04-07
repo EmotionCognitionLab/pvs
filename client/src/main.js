@@ -19,8 +19,7 @@ const router = createRouter({
 const app = createApp(App)
 app.use(router)
 
-const isConfigured = window.localStorage.getItem('pvs.isConfigured')
-console.log(`pvs.isConfigured: ${isConfigured}`);
+const isConfigured = window.localStorage.getItem('HeartBeam.isConfigured')
 if (isConfigured === 'true') {
     const secondsDuration = 300
     router.push({ name: 'timer', params: { secondsDuration } })
