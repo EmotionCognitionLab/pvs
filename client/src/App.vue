@@ -3,6 +3,9 @@
 </template>
 
 <script setup>
+import { Logger } from '../../common/logger/logger.js'
+
+new Logger()
 </script>
 
 <style>

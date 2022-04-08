@@ -10,6 +10,7 @@ import dataUpload from './data-upload.js'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
+import { Logger } from '../../common/logger/logger.js'
 import fetch from 'node-fetch'
 // fetch is defined in browsers, but not node
 // substitute node-fetch here
@@ -79,6 +80,7 @@ app.on('ready', async () => {
   emwave.startEmWave()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
+  new Logger()
 })
 
 app.on('before-quit', () => {
