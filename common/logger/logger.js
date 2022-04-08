@@ -113,7 +113,7 @@ export class Logger {
         origLogFn(...args);
     }
 
-    buildLogFn = (origLogFn, level) =>  {
+    buildLogFn(origLogFn, level)  {
         this[level] = (...args) => this.storeLogMsg(origLogFn, level, ...args); // creates this.log, this.info, etc.
         return this[level];
     }
