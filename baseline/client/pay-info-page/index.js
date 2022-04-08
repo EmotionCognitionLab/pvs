@@ -23,7 +23,6 @@ getAuth(
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
-            // determine what kind of access (admin/self/invalid)
             const payboard = new Payboard(
                 payboardDiv,
                 errorDiv,
