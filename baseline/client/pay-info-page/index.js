@@ -1,8 +1,9 @@
 import "./style.css";
 import "../../../common/pay-info/style.css";
 import { Payboard } from "pay-info";
-import { getAuth, getIdToken, hasPreferredRole } from "auth/auth";
 import ApiClient from "api/client";
+import { getAuth, getIdToken, hasPreferredRole } from "auth/auth";
+import awsSettings from '../../../common/aws-settings.json';
 
 const payboardDiv = document.getElementById("payboard");
 const errorDiv = document.getElementById("error");
@@ -28,7 +29,7 @@ getAuth(
                 errorDiv,
                 new ApiClient(session),
                 targetId,
-                hasPreferredRole(idToken, "pvs-dev-study-admin"),
+                hasPreferredRole(idToken, awsSettings.AdminRole),
             );
             payboard.refresh();
         } catch (err) {
