@@ -1,37 +1,8 @@
 <template>
- <!-- 
-  <TimerComponent v-bind:secondsDuration=300 @timerStarted="handleTimerStart" @timerStopped="handleTimerStop"></TimerComponent>
-  <br/>
- <em-wave-listener ref="emWaveListener"></em-wave-listener> 
-  <br/>
-  <web-page-component source="https://wikipedia.org"></web-page-component>
-  -->
     <router-view></router-view>
 </template>
 
-<script>
-// import TimerComponent from './components/TimerComponent.vue'
-// import EmWaveListener from './components/EmWaveListener.vue'
-// import { ref } from '@vue/runtime-core'
-
-export default {
-  name: 'App',
-  components: {
-    // EmWaveListener,
-    // TimerComponent
-  },
-  setup() {
-    // const emWaveListener = ref(null)
-    // const handleTimerStart = () => {
-    //   emWaveListener.value.startPulseSensor()
-    // }
-    // const handleTimerStop = () => {
-    //   emWaveListener.value.stopPulseSensor()
-    // }
-
-    // return {emWaveListener, handleTimerStart, handleTimerStop}
-  }
-}
+<script setup>
 </script>
 
 <style>
