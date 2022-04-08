@@ -175,6 +175,6 @@ export class Payboard {
 
     handleError(err) {
         console.error(`error: ${err}`);
-        this.errorDiv.textContent = `error: ${err}`;
+        this.errorDiv.textContent = `error: ${err.message}`;
     }
 }
