@@ -14,7 +14,7 @@ function parseTargetId(searchQueryString) {
 
 function handleError(err) {
     console.error("error:", err);
-    errorDiv.textContent = `error: ${err.message}`;
+    errorDiv.textContent = `error: ${err.message ?? err}`;
 }
 
 getAuth(
