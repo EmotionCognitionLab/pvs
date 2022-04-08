@@ -39,7 +39,7 @@
     font-weight: bold;
 }
 
-.pay-info-divider {
+.pay-info-divider td[colspan="3"] {
     color: #ffffff;
     background-color: #648c96;
 }

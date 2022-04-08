@@ -1,3 +1,5 @@
+import payboardHTML from "./payboard.html";
+
 const StudyActivityStatus = Object.freeze({
     NOT_STARTED: "not-started",
     IN_PROGRESS: "in-progress",
@@ -22,54 +24,18 @@ export class Payboard {
     }
 
     initializeElements() {
-        // add class to root div
+        // set class of root div
         this.rootDiv.classList.add("pay-info");
-        // add table to root div
-        const table = document.createElement("table");
-        this.rootDiv.appendChild(table);
-        // add header to table
-        const thead = table.createTHead();
-        // add top row of header
-        const theadTop = thead.insertRow();
-        const topTh = document.createElement("th");
-        topTh.setAttribute("colspan", "4");
-        const titleSpan = document.createElement("span");
-        titleSpan.textContent = "Payment Info: ";
-        titleSpan.classList.add("pay-info-title");
-        topTh.appendChild(titleSpan);
-        const nameSpan = document.createElement("span");
-        nameSpan.classList.add("pay-info-name");
-        topTh.appendChild(nameSpan);
-        theadTop.appendChild(topTh);
+        // set inner HTML of root div
+        this.rootDiv.innerHTML = payboardHTML;
+        // add setter for name
+        const nameSpan = this.rootDiv.querySelector(".pay-info-name");
         this.setName = name => {
             nameSpan.textContent = name;
         };
-        // add bottom row of header
-        const theadBottom = thead.insertRow();
-        const addBottomTh = text => {
-            const th = document.createElement("th");
-            th.textContent = text;
-            theadBottom.appendChild(th);
-        };
-        addBottomTh("Study Activity");
-        addBottomTh("Study Activity Status");
-        addBottomTh("Total Earned");
-        addBottomTh("Payment Status");
-        // add body to table
-        const tbody = table.createTBody();
-        // add dividers and rows
-        const addDivider = dividerText => {
-            const row = tbody.insertRow();
-            const cell = row.insertCell();
-            cell.setAttribute("colspan", "3");
-            cell.textContent = dividerText;
-            cell.classList.add("pay-info-divider");
-        };
-        const addRow = studyActivityText => {
-            const row = tbody.insertRow();
-            const studyActivityCell = row.insertCell();
-            studyActivityCell.textContent = studyActivityText;
-            const studyActivityStatusCell = row.insertCell();
+        // add setters for rows
+        const rowSetters = row => {
+            const studyActivityStatusCell = row.querySelector(".pay-info-study-activity-status");
             const setStudyActivityStatus = studyActivityStatus => {
                 studyActivityStatusCell.textContent = {
                     [StudyActivityStatus.NOT_STARTED]: "Not started",
@@ -77,29 +43,32 @@ export class Payboard {
                     [StudyActivityStatus.COMPLETED]: "Completed",
                     [StudyActivityStatus.DROPPED_OUT]: "Dropped out",
                 }[studyActivityStatus];
-                window.sasCell = studyActivityStatusCell;
             };
-            const totalEarnedCell = row.insertCell();
+            const totalEarnedCell = row.querySelector(".pay-info-total-earned");
             const setTotalEarned = totalEarnedDollars => {
                 totalEarnedCell.textContent = `$${totalEarnedDollars}`;
             };
             return [setStudyActivityStatus, setTotalEarned];
         };
-        addDivider("Pre-intervention activities ($155 Total)");
-        [this.setDailyTasksT1Status, this.setDailyTasksT1Earned] = addRow("Daily tasks ($25)");
-        [this.setEEGT1Status, this.setEEGT1Earned] = addRow("Lab visit #1 ($65)");
-        [this.setMRIT1Status, this.setMRIT1Earned] = addRow("Lab visit #2 ($65)");
-        addDivider("Intervention activity (up to $220 for daily practice plus bonus if earned)");
-        [this.setSessionsStatus, this.setSessionsEarned] = addRow("Biofeedback practice");
-        addDivider("Post-intervention activities (Part 1 - $130 Total)");
-        [this.setEEGT2Status, this.setEEGT2Earned] = addRow("Lab visit #3 ($65)");
-        [this.setMRIT2Status, this.setMRIT2Earned] = addRow("Lab visit #4 ($65)");
-        addDivider("Post-intervention activities (Part 2 - $25 Total)");
-        [this.setDailyTasksT2Status, this.setDailyTasksT2Earned] = addRow("Daily tasks ($25)");
+        const [
+            dailyTasksT1Row,
+            eegT1Row,
+            mriT1Row,
+            sessionsRow,
+            eegT2Row,
+            mriT2Row,
+            dailyTasksT2Row,
+        ] = this.rootDiv.querySelectorAll(".pay-info-row");
+        [this.setDailyTasksT1Status, this.setDailyTasksT1Earned] = rowSetters(dailyTasksT1Row);
+        [this.setEEGT1Status, this.setEEGT1Earned] = rowSetters(eegT1Row);
+        [this.setMRIT1Status, this.setMRIT1Earned] = rowSetters(mriT1Row);
+        [this.setSessionsStatus, this.setSessionsEarned] = rowSetters(sessionsRow);
+        [this.setEEGT2Status, this.setEEGT2Earned] = rowSetters(eegT2Row);
+        [this.setMRIT2Status, this.setMRIT2Earned] = rowSetters(mriT2Row);
+        [this.setDailyTasksT2Status, this.setDailyTasksT2Earned] = rowSetters(dailyTasksT2Row);
         // add payment status
         const addPaymentStatus = (cell, progressKey) => {
-            const span = document.createElement("span");
-            cell.appendChild(span);
+            const span = cell.querySelector("span");
             // add select if admin
             let select = null;
             if (this.admin) {
@@ -154,8 +123,7 @@ export class Payboard {
             }
             return setPaymentStatus;
         };
-        const paymentStatusCell = tbody.rows[0].insertCell();
-        paymentStatusCell.setAttribute("rowspan", "11");
+        const paymentStatusCell = this.rootDiv.querySelector(".pay-info-payment-status");
         this.setPaymentStatus = addPaymentStatus(paymentStatusCell, "paymentStatus");
     }
 

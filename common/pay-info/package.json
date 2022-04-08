@@ -15,7 +15,8 @@
     ],
     "testEnvironment": "jsdom",
     "transform": {
-      "^.+\\.(js|jsx|mjs)$": "babel-jest"
+      "^.+\\.(js|jsx|mjs)$": "babel-jest",
+      "\\.html$": "jest-raw-loader"
     }
   },
   "repository": {
@@ -30,6 +31,7 @@
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "devDependencies": {
     "@babel/preset-env": "^7.15.8",
-    "jest": "^27.2.5"
+    "jest": "^27.2.5",
+    "jest-raw-loader": "^1.0.1"
   }
 }
