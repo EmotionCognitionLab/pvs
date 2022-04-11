@@ -1,0 +1,12 @@
+body {
+    display: flex;
+    justify-content: center;
+    background-color: #f6f6ee;
+}
+
+#error {
+    color: red;
+    font-size: 125%;
+    margin: auto;
+    width: 30%;
+}

@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@adp-psych/jspsych": "^6.3.1",
+    "api": "file:../../common/api",
     "auth": "file:../../common/auth",
     "db": "file:../../common/db",
     "logger": "file:../../common/logger",
+    "pay-info": "file:../../common/pay-info",
     "ua-parser-js": "0.7.28"
   },
   "jest": {
@@ -55,8 +57,8 @@
     "regenerator-runtime": "^0.13.9",
     "style-loader": "^2.0.0",
     "webpack": "^5.40.0",
-    "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^3.11.2",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4",
     "webpack-merge": "^5.8.0"
   }
 }
