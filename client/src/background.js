@@ -134,9 +134,9 @@ ipcMain.on('show-login-window', () => {
   } 
 })
 
-ipcMain.on('upload-emwave-data', async () => {
+ipcMain.on('upload-emwave-data', async (event, session) => {
   emwave.stopEmWave()
-  await dataUpload.uploadEmWaveDb()
+  await dataUpload.uploadEmWaveDb(session)
 })
 
 // Exit cleanly on request from parent process in development mode.
