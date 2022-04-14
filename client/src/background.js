@@ -5,7 +5,6 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
-import { SessionStore } from './session-store.js'
 import dataUpload from './data-upload.js'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -95,8 +94,6 @@ ipcMain.on('pulse-stop', () => {
   emwave.stopPulseSensor()
 })
 
-ipcMain.handle('get-session', () => SessionStore.getMainSession());
-
 // btoa and atob are defined in global browser contexts,
 // but not node. Define them here b/c amazon-cognito-auth-js
 // expects them to exist
@@ -121,19 +118,15 @@ ipcMain.on('show-login-window', () => {
   })
   try {
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
-    auth.userhandler = {
-      onSuccess: (session) => { 
-        authWindow.close()
-        SessionStore.session = session
-        mainWin.webContents.send('login-succeeded', session)
-      },
-      onFailure: (err) => { console.log(err) }
-    }
+    auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
     authWindow.loadURL(url)
     authWindow.show()
     authWindow.webContents.on('will-redirect', (event, newUrl) => {
-      auth.parseCognitoWebResponse(newUrl)
+      // we want the renderer (main) window to load the redirect from the oauth server
+      // so that it gets the session and can store it
+      mainWin.loadURL(newUrl)
+      authWindow.close()
     })
     authWindow.on('closed', () => { authWindow = null })
   } catch (err) {

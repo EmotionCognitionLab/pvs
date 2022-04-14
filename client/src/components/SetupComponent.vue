@@ -1,11 +1,14 @@
 <template>
     <div class="wrapper">
         <div class="instruction" v-if="step==1">
-            Welcome! This app will guide you through your heart rate biofeedback sessions.
-            The first step is to log in, using the same email address and password that you registered
-            with when you signed up for the study.
-            <br/>
-            <button @click="login">Continue</button>
+           <LoginComponent post-login-path="/setup">
+               <template #bodyText>
+                Welcome! This app will guide you through your heart rate biofeedback sessions.
+                The first step is to log in, using the same email address and password that you registered
+                with when you signed up for the study.<br/>
+               </template>
+               <template #btnText>Get Started</template>
+           </LoginComponent>
         </div>
         <div class="instruction" v-else-if="step==2">
             <ConditionAssignmentComponent @complete="nextStep" />
@@ -42,21 +45,18 @@
 
 <script setup>
     import { ref } from '@vue/runtime-core';
-    import { ipcRenderer } from 'electron'
+    import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
+    import LoginComponent from './LoginComponent.vue'
     import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
     import PacerComponent from './PacerComponent.vue'
 
-    let step = ref(1)
+    let step = isAuthenticated() ? ref(2) : ref(1)
     const timer = ref(null)
     const timerEmwave = ref(null)
     const pacer = ref(null)
     const pacerEmwave = ref(null)
-
-    function login() {
-        ipcRenderer.send('show-login-window')
-    }
     
     function nextStep() {
         step.value += 1
@@ -83,9 +83,6 @@
         pacer.value.running = true
     }
 
-    ipcRenderer.on('login-succeeded', () => {
-        nextStep()
-    })
 </script>
 <style scoped>
     .instruction {
