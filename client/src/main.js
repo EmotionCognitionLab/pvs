@@ -1,30 +1,46 @@
 import { createApp } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 
 import SetupComponent from './components/SetupComponent.vue'
 import TimerComponent from './components/TimerComponent.vue'
 import UploadComponent from './components/UploadComponent.vue'
+import LoginComponent from './components/LoginComponent.vue'
+
+import { isAuthenticated } from '../../common/auth/auth'
 
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
     { path: '/timer/:secondsDuration', component: TimerComponent, props: true, name: 'timer' },
-    { path: '/upload', component: UploadComponent }
+    { path: '/upload', component: UploadComponent },
+    { path: '/signin', component: LoginComponent },
+    { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
+    { path: '/', component: UploadComponent }
 ]
+
+const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
+
 const router = createRouter({
-    history: createWebHashHistory(),
+    history: createWebHistory(),
     routes: routes
+})
+
+// use navigation guards to handle 
+// setup and authentication
+router.beforeEach((to) => {
+    const isConfigured = window.localStorage.getItem('HeartBeam.isConfigured')
+    if (isConfigured !== 'true' && !noAuthRoutes.includes(to.path)) {
+        return { path: '/setup' }
+    }
+
+    if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
+        return { path: '/signin' }
+    }
+
+    return true
 })
 
 const app = createApp(App)
 app.use(router)
-
-const isConfigured = window.localStorage.getItem('HeartBeam.isConfigured')
-if (isConfigured === 'true') {
-    const secondsDuration = 300
-    router.push({ name: 'timer', params: { secondsDuration } })
-} else {
-    router.push('/setup')
-}
 
 app.mount('#app')
