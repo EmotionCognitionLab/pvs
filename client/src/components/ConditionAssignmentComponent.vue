@@ -54,7 +54,7 @@ async function assignToCondition() {
     validate();
     if (!Object.keys(errors).length) {
         try {
-            const session = SessionStore.session
+            const session = await SessionStore.getRendererSession()
             const apiClient = new ApiClient(session)
             await apiClient.assignToCondition({bornSex: sex.value, sexDesc: sexDescription.value})
             window.localStorage.setItem('HeartBeam.isConfigured', 'true')
