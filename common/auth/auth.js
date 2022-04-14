@@ -38,6 +38,15 @@ function getAuth(onSuccess, onFailure, state = null, scopes = []) {
 }
 
 /**
+ * 
+ * @returns true if the user has a valid cached or authenticated session; false otherwise
+ */
+function isAuthenticated() {
+    var auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings);
+    return auth.isUserSignedIn();
+}
+
+/**
  *
  * @param {CognitoAuthSession}
  * @returns {Object} ID token object
@@ -125,6 +134,7 @@ function verifyPhone(accessToken, verificationCode, onSuccess, onFailure) {
 
 export {
     getAuth,
+    isAuthenticated,
     getIdToken,
     hasPreferredRole,
     sendPhoneVerificationCode,
