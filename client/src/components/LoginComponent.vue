@@ -1,14 +1,42 @@
 <template>
     <div>
-        To set up the HeartBEAM application, you'll first need to log in to your HeartBEAM account. Click the "Get Started" button when you're ready to begin.
-        <br/>
-        <button id="startSetup" @click="login">Get Started</button>
+        <slot name="bodyText"></slot>
+        <button id="startSetup" @click="login">
+            <slot name="btnText">Login</slot>
+        </button>
     </div>
 </template>
 <script setup>
     import { ipcRenderer } from 'electron'
+    import { defineEmits } from 'vue';
+    import { useRouter } from "vue-router";
+    import { getAuth } from '../../../common/auth/auth.js'
+    import { SessionStore } from '../session-store.js'
+
+    const router = useRouter();
+    const props = defineProps(['postLoginPath'])
+    const emit = defineEmits(['login-succeeded'])
+    const cognitoAuth = getAuth()
+    cognitoAuth.userhandler = {
+        onSuccess: (session) => {
+            SessionStore.session = session
+            emit('login-succeeded')
+            const dest = window.sessionStorage.getItem('HeartBeam.postLoginPath')
+            if (dest) {
+                window.sessionStorage.removeItem('HeartBeam.postLoginPath')
+                router.push({path: dest})
+            }
+        },
+        onFailure: err => console.error(err)
+    }
+    const curUrl = window.location.href;
+    if (curUrl.indexOf('?') > -1) {
+        // we're handling a redirect from the oauth server
+        cognitoAuth.parseCognitoWebResponse(curUrl);
+    }
 
     const login = () => {
+        window.sessionStorage.setItem('HeartBeam.postLoginPath', props.postLoginPath)
         ipcRenderer.send('show-login-window')
     }
 
