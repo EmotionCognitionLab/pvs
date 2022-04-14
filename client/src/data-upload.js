@@ -6,7 +6,7 @@ import awsSettings from '../../common/aws-settings.json'
 import { SessionStore } from './session-store.js'
 import ApiClient from '../../common/api/client.js'
 
-let emWaveDbPath
+let emWaveDbPath;
 const userHome = app.getPath('home')
 if (process.platform === 'darwin') {
     emWaveDbPath = userHome +  '/Documents/emWave/emWave.emdb';
@@ -16,14 +16,15 @@ if (process.platform === 'darwin') {
     throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`;
 }
 
+let session;
+
 function getS3Dest(subId, humanId) {
     const userDataBucket = awsSettings.UserDataBucket;
     return { bucket: userDataBucket, key: `${humanId}/${subId}/emWave.emdb`}
 }
 
 function getIdToken() {
-    if (SessionStore.session) return SessionStore.session.getIdToken().getJwtToken();
-    throw new Error('You must log in to upload your data.');
+    return session.getIdToken().getJwtToken();
 }
 
 async function getIdentityId(idToken) {
@@ -48,7 +49,7 @@ async function getIdentityId(idToken) {
 async function getUserIds() {
     const idToken = getIdToken();
     const identityId = await getIdentityId(idToken);
-    const apiClient = new ApiClient(SessionStore.session);
+    const apiClient = new ApiClient(session);
     const self = await apiClient.getSelf();
     const humanId = self.humanId;
 
@@ -96,7 +97,8 @@ async function getS3Client() {
 }
 
 export default {
-    async uploadEmWaveDb() {
+    async uploadEmWaveDb(serializedSession) {
+        session = SessionStore.buildSession(serializedSession);
         const {identityId, humanId} = await getUserIds();
         const {bucket, key} = getS3Dest(identityId, humanId);
         const s3Client = await getS3Client();
