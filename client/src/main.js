@@ -7,7 +7,8 @@ import TimerComponent from './components/TimerComponent.vue'
 import UploadComponent from './components/UploadComponent.vue'
 import LoginComponent from './components/LoginComponent.vue'
 
-import { isAuthenticated } from '../../common/auth/auth'
+import { isAuthenticated, getAuth } from '../../common/auth/auth'
+import { SessionStore } from './session-store'
 
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
@@ -39,6 +40,15 @@ router.beforeEach((to) => {
 
     return true
 })
+
+if (isAuthenticated() && !SessionStore.getRendererSession()) {
+    const cognitoAuth = getAuth()
+    cognitoAuth.userhandler = {
+        onSuccess: session => SessionStore.session = session,
+        onFailure: err => console.error(err)
+    }
+    cognitoAuth.getSession()
+}
 
 const app = createApp(App)
 app.use(router)
