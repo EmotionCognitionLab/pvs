@@ -5,6 +5,7 @@ import { app } from 'electron'
 import awsSettings from '../../common/aws-settings.json'
 import { SessionStore } from './session-store.js'
 import ApiClient from '../../common/api/client.js'
+import Database from 'better-sqlite3'
 
 let emWaveDbPath;
 const userHome = app.getPath('home')
@@ -96,9 +97,21 @@ async function getS3Client() {
     return s3Client;
 }
 
+function deleteShortSessions() {
+    const db = new Database(emWaveDbPath, {fileMustExist: true }) //nativeBinding: '../client/node_modules/better-sqlite3/build/Release/better_sqlite3.node'});
+    try {
+        const shortSessionLength = 4 * 60; // we delete all sessions less than or equal to 4 minutes long
+        const stmt = db.prepare(`delete from Session where IBIEndTime - IBIStartTime <= ${shortSessionLength}`);
+        stmt.run();
+    } finally {
+        db.close();
+    }
+}
+
 export default {
     async uploadEmWaveDb(serializedSession) {
         session = SessionStore.buildSession(serializedSession);
+        deleteShortSessions();
         const {identityId, humanId} = await getUserIds();
         const {bucket, key} = getS3Dest(identityId, humanId);
         const s3Client = await getS3Client();

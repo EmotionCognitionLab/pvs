@@ -134,10 +134,15 @@ ipcMain.on('show-login-window', () => {
   } 
 })
 
-ipcMain.on('upload-emwave-data', async (event, session) => {
-  emwave.stopEmWave()
-  await dataUpload.uploadEmWaveDb(session)
-})
+ipcMain.handle('upload-emwave-data', async (event, session) => {
+    emwave.stopEmWave();
+    await dataUpload.uploadEmWaveDb(session)
+    .catch(err => {
+      console.error(err);
+      return (err.message);
+    });
+  return null;
+});
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {

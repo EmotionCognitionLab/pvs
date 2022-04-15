@@ -15,7 +15,7 @@
          ipcRenderer.send('show-login-window')
     }
 
-    function upload() {
-        ipcRenderer.send('upload-emwave-data', SessionStore.getRendererSession())
+    async function upload() {
+        await ipcRenderer.invoke('upload-emwave-data', SessionStore.getRendererSession())
     }
 </script>
