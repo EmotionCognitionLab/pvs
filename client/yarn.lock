@@ -2987,6 +2987,11 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
+CBuffer@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/CBuffer/-/CBuffer-2.2.0.tgz#cc83a68444aa346694eea57fa03409debadc4f54"
+  integrity sha512-dbfGsL/kaEA07tNX4NdUPwToq/elfc+4IbDnq5INOl+LmYlaAqfTXqwnDCfvUeYtO78Ts2WhaCOUn3bSZgDwZA==
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"

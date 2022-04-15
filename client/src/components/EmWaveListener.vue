@@ -22,7 +22,7 @@
     let ibi = ref(0)
     let calibrated = ref(false)
     let running = ref(false)
-    let sensorError = ref(false)
+    let sensorError = ref(false) // set to true if we fail to get a signal at session start or if we get too many signal artifacts
     let errInterval = null
     let stopSensor = ref(false)
     defineExpose({stopSensor})
@@ -52,6 +52,13 @@
             emit('pulse-sensor-calibrated')
         }
         resetErrorTimer()
+    })
+
+    ipcRenderer.on('emwave-status', (event, message) => {
+        if (message === 'SensorError') {
+            stopPulseSensor()
+            sensorError.value = true
+        }
     })
 
     // eslint-disable-next-line no-unused-vars

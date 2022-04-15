@@ -1,14 +1,20 @@
 const net = require('net');
 const { spawn } = require('child_process');
+const CBuffer = require('CBuffer');
 
 let emWaveProc = null;
 const client = net.Socket();
+const artifactLimit = 60; // we alert if there are more than this many artifacts in 60s
+const artifactsToTrack = 120; // we get data every 500ms, so this holds 60s of data
+let artifacts = new CBuffer(artifactsToTrack);
 
+// sample data string
+// <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
 function parseIBIData(data) {
-    const ibiRegex = /.*IBI="([0-9]+).*"/;
+    const ibiRegex = /<D01.* STIME="([0-9]+)" .*IBI="([0-9]+)" ART="(TRUE|FALSE)"/;
     const match = data.match(ibiRegex);
-    if (match) {
-        return match[1];
+    if (match && match[1] !== "0") { // STIME of 0 means that the there isn't actually an emWave session; ignore those data
+        return {ibi: match[2], artifact: match[3]};
     } else {
         return null;
     }
@@ -31,9 +37,17 @@ export default {
         });
     
         client.on('data', function(data) {
-            const ibiStr = parseIBIData(new Buffer.from(data).toString());
-            if (ibiStr !== null) {
-                win.webContents.send('emwave-ibi', ibiStr);
+            const hrData = parseIBIData(new Buffer.from(data).toString());
+            if (hrData !== null) {
+                win.webContents.send('emwave-ibi', hrData.ibi);
+                artifacts.push(hrData.artifact);
+                let artCount = 0;
+                artifacts.forEach(a => {
+                    if (a === 'TRUE') artCount++;
+                });
+                if (artCount > artifactLimit) {
+                    win.webContents.send('emwave-status', 'SensorError')
+                }
             }
         });
     
@@ -63,6 +77,7 @@ export default {
 
     startPulseSensor() {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
+        artifacts = new CBuffer(artifactsToTrack);
     },
 
     stopPulseSensor() {
