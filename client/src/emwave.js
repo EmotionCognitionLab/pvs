@@ -19,11 +19,11 @@ export default {
         let retries = 0;
     
         client.on('error', async function() {
-            console.log('network error')
+            if (retries > 0) console.log('network error') // we always get error on 1st try; don't log unless we are past that
             retries++;
             if (retries < 4) {
                 await new Promise(r => setTimeout(r, 2000));
-                console.log(`doing retry #${retries}`);
+                if (retries > 1) console.log(`doing retry #${retries}`);
                 client.connect(20480, '127.0.0.1', function() {
                     win.webContents.send('emwave-status', 'Connected');
                 });	
