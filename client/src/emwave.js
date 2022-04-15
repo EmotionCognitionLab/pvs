@@ -72,9 +72,7 @@ export default {
     stopEmWave() {
         client.destroy();
         if (emWaveProc !== null) {
-            console.log('emwaveProc is not null');
             if (emWaveProc.kill()) {
-                console.log('killed emwave');
                 emWaveProc = null;
             } else {
                 // TODO put in some wait/retry logic?
