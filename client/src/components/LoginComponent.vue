@@ -22,9 +22,12 @@
             SessionStore.session = session
             emit('login-succeeded')
             const dest = window.sessionStorage.getItem('HeartBeam.postLoginPath')
-            if (dest) {
+            if (dest !== null) { 
                 window.sessionStorage.removeItem('HeartBeam.postLoginPath')
                 router.push({path: dest})
+            } else {
+                // default dest is /
+                router.push({path: '/'})
             }
         },
         onFailure: err => console.error(err)
@@ -36,7 +39,9 @@
     }
 
     const login = () => {
-        window.sessionStorage.setItem('HeartBeam.postLoginPath', props.postLoginPath)
+        if (props.postLoginPath !== undefined) {
+            window.sessionStorage.setItem('HeartBeam.postLoginPath', props.postLoginPath)
+        }
         ipcRenderer.send('show-login-window')
     }
 
