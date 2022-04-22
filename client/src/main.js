@@ -6,6 +6,7 @@ import SetupComponent from './components/SetupComponent.vue'
 import TimerComponent from './components/TimerComponent.vue'
 import UploadComponent from './components/UploadComponent.vue'
 import LoginComponent from './components/LoginComponent.vue'
+import LumosityComponent from './components/LumosityComponent.vue'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
@@ -16,7 +17,8 @@ const routes = [
     { path: '/upload', component: UploadComponent },
     { path: '/signin', component: LoginComponent },
     { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
-    { path: '/', component: UploadComponent }
+    { path: '/', component: UploadComponent },
+    { path: '/lumos', component: LumosityComponent }
 ]
 
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
