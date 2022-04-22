@@ -20,7 +20,7 @@
     "better-sqlite3": "^7.5.1",
     "core-js": "^3.6.5",
     "node-fetch": "2",
-    "pvs-breath-pacer": "https://github.com/EmotionCognitionLab/pvs-breath-pacer.git",
+    "pvs-breath-pacer": "git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git",
     "vue": "^3.0.0",
     "vue-router": "4"
   },
