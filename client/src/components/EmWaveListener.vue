@@ -77,7 +77,13 @@
     }
 
     function startErrorTimer() {
-        errInterval = setTimeout(() => sensorError.value = true, errTimeout())
+        errInterval = setTimeout(
+            () => { 
+                sensorError.value = true
+                emit('pulse-sensor-stopped')
+            }, 
+            errTimeout()
+        )
     }
 
     function stopErrorTimer() {

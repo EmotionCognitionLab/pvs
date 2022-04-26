@@ -38,7 +38,7 @@
                 :offsetProportionX=0.25
                 :offsetProportionY=0.8
                 @pacerFinished="pacerFinished" ref="pacer" />
-            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" ref="pacerEmwave"/>
+            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" ref="pacerEmwave"/>
         </div>
     </div>
 </template>
@@ -82,6 +82,10 @@
     function startPacer() {
         pacer.value.running = true
     }
+
+    function stopPacer() {
+        pacer.value.running = false
+    }   
 
 </script>
 <style scoped>
