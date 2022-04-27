@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
 import { CognitoIdentityClient, GetIdCommand, GetCredentialsForIdentityCommand } from "@aws-sdk/client-cognito-identity"
 import { createReadStream } from 'fs'
 import { app } from 'electron'
@@ -106,6 +106,67 @@ function deleteShortSessions() {
     } finally {
         db.close();
     }
+}
+
+/**
+ * Returns the emWave SessionUuid, LiveIBI and EntrainmentParameter values for all sessions
+ * since sinceDateTime. Excludes deleted and invalid sessions.
+ * TODO: Break the data into five minute segements.
+ * @param {Number} sinceDateTime date/time (in ms since the epoch) value for the earliest session to extract
+ */
+ function extractSessionData(sinceDateTime) {
+    const db = new Database(emWaveDbPath, {fileMustExist: true })
+    const results = [];
+    try {
+        const stmt = db.prepare(`select SessionUuid, LiveIBI, EntrainmentParameter from Session s where s.IBIStartTime >= ? and s.ValidStatus = 1 and s.DeleteFlag is null`);
+        const sessions = stmt.all(sinceDateTime);
+        for (let s of sessions) {
+            const r = {sessionId: s.SessionUuid};
+
+            const coherence = [];
+            for (let i = 0; i<s.EntrainmentParameter.length; i+=4) {
+                const b = new ArrayBuffer(4);
+                const bytes = new Uint8Array(b);
+                for (let j = 0; j<4; j++) {
+                    bytes[j] = s.EntrainmentParameter[i+j];
+                }
+                const floatView = new Float32Array(b);
+                coherence.push(Math.log(1 + floatView[0])); // coherence is ln(1 + entrainment param)
+            }
+            r['coherence'] = coherence;
+
+            const liveIBI = [];
+            for (let i = 0; i<s.LiveIBI.length; i+=2) {
+                const b = new ArrayBuffer(2);
+                const bytes = new Uint8Array(b);
+                bytes[0] = s.LiveIBI[i];
+                bytes[1] = s.LiveIBI[i+1];
+                const intView = new Int16Array(b);
+                liveIBI.push(intView[0]);
+            }
+            r['liveIBI'] = liveIBI;
+
+            results.push(r);
+        }
+    } finally {
+        db.close();
+    }
+    return results;
+}
+
+// returns the last modified date (in ms since start of epoch) of the object at the given bucket/ket
+// returns 0 if the object isn't found
+async function getLastUploadDate(s3Client, bucket, key) {
+    const cmd = new HeadObjectCommand({Bucket: bucket, Key: key});
+    const resp = await s3Client.send(cmd);
+    if (resp.$metadata.httpStatusCode !== 200) {
+        if (resp.$metadata.httpStatusCode === 404) {
+            return 0;
+        }
+        throw new Error(`Getting last upload date failed with status code ${resp.$metadata.httpStatusCode}`);
+    }
+    const d = new Date(resp.LastModified);
+    return d.getTime();
 }
 
 export default {
