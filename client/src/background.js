@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -133,6 +133,28 @@ ipcMain.on('show-login-window', () => {
     console.log(err)
   } 
 })
+
+let lumosityView = null;
+
+ipcMain.on('create-lumosity-view', () => {
+    if (!mainWin || lumosityView) {
+        return;
+    }
+    lumosityView = new BrowserView();
+    mainWin.setBrowserView(lumosityView);
+    lumosityView.setAutoResize({width: true, height: true, vertical: true});
+    lumosityView.setBounds({x: 0, y: 50, width: 1300, height: 800});  // hardcoded!!!
+    lumosityView.webContents.loadURL("https://www.lumosity.com/login");
+    lumosityView.webContents.executeJavaScript(`document.getElementById("user_login").value="asdf";`);
+});
+
+ipcMain.on('close-lumosity-view', () => {
+    if (!mainWin || !lumosityView) {
+        return;
+    }
+    mainWin.removeBrowserView(lumosityView);
+    lumosityView = null;
+});
 
 ipcMain.handle('upload-emwave-data', async (event, session) => {
     emwave.stopEmWave();

@@ -3,18 +3,23 @@
         <header>
             After completing the Lumosity segment, please click <span @click="leave">here</span>.
         </header>
-        <iframe src="https://example.com/" width="1200" height="800"></iframe>
     </div>
 </template>
+
 <script setup>
+    import { ipcRenderer } from "electron";
     import { useRouter } from "vue-router";
     const router = useRouter();
     function leave() {
+        ipcRenderer.send("close-lumosity-view");
         router.push({path: "/"});
     }
+    ipcRenderer.send("create-lumosity-view");
 </script>
+
 <style scoped>
     header {
+        height: 40px;
         margin: 5px auto 5px;
     }
     header span {
