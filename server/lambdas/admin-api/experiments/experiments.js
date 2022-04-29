@@ -1,11 +1,12 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand, ScanCommand} from "@aws-sdk/lib-dynamodb";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 
 const region = process.env.REGION;
 const experimentTable = process.env.EXPERIMENT_TABLE;
+const usersTable = process.env.USERS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const datafilesBucket = process.env.DATAFILES_BUCKET;
 const stsClient = new STSClient({ region: region });
@@ -32,21 +33,27 @@ exports.getData = async(event) => {
     s3Client = new S3Client({region: region, credentials: credentials });
 
     const experimentName = event.pathParameters.experiment;
-    const results = await getExperimentData(experimentName);
-    if (results.length === 0) {
+    const identityIds = await getAllUsers();
+    const allResults = [];
+    for (let id of identityIds) {
+        if (id === null || Object.keys(id).length === 0) continue;
+        const results = await getExperimentData(experimentName, id);
+        if (results.length > 0) allResults.push(...results);
+    }
+    
+    if (allResults.length === 0) {
         return { empty: true }
     }
-    const fileDetails = await saveDataToS3(JSON.stringify(results), experimentName);
+    const fileDetails = await saveDataToS3(JSON.stringify(allResults), experimentName);
     return { url: fileDetails.url }
 
 }
 
-async function getExperimentData(experimentName) {
+async function getAllUsers() {
     const results = [];
     const baseParams = {
-        TableName: experimentTable,
-        FilterExpression: "begins_with(experimentDateTime, :experimentName)",
-        ExpressionAttributeValues: {":experimentName": experimentName},
+        TableName: usersTable,
+        ProjectionExpression: 'userId'
     };
     const scan = new ScanCommand(baseParams);
     let lastKey = null;
@@ -54,6 +61,49 @@ async function getExperimentData(experimentName) {
         do {
             scan.ExclusiveStartKey = lastKey === null ? {} : lastKey;
             const response = await docClient.send(scan);
+            if (response.Items.length > 0) results.push(...response.Items);
+            lastKey = response.LastEvaluatedKey;
+        } while (lastKey)
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+    const identityIds = [];
+    for (let r of results) {
+        const identityId = await getIdentityIdForUserId(r.userId);
+        if (identityId !== null) identityIds.push(identityId);
+    }
+    return identityIds;
+}
+
+async function getIdentityIdForUserId(userId) {
+    const baseParams = {
+        TableName: experimentTable,
+        IndexName: 'userId-experimentDateTime-index',
+        KeyConditionExpression: "userId = :userId",
+        ExpressionAttributeValues: {":userId": userId},
+        Limit: 1,
+        ProjectionExpression: 'identityId'
+    };
+    const query = new QueryCommand(baseParams);
+    const result = await docClient.send(query);
+    if (result.Items.length === 0) return null;
+    return result.Items[0].identityId;
+}
+
+async function getExperimentData(experimentName, identityId) {
+    const results = [];
+    const baseParams = {
+        TableName: experimentTable,
+        KeyConditionExpression: "identityId = :identityId AND begins_with(experimentDateTime, :experimentName)",
+        ExpressionAttributeValues: {":identityId": identityId, ":experimentName": experimentName},
+    };
+    const query = new QueryCommand(baseParams);
+    let lastKey = null;
+    try {
+        do {
+            query.ExclusiveStartKey = lastKey === null ? {} : lastKey;
+            const response = await docClient.send(query);
             response.Items.forEach(item => {
                 const parts = item.experimentDateTime.split("|");
                 if (parts.length != 3) {
