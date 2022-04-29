@@ -570,6 +570,40 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
 POLICY
 }
 
+# policy to allow fetching user ids from dynamo user table
+# TODO remove this after refactoring experiment data table to allow query by experiment name
+resource "aws_iam_policy" "dynamodb-userid-read" {
+  name = "pvs-${var.env}-dynamodb-userid-read"
+  path = "/policy/dynamodb/users/ids/"
+  description = "Allows very limited reading from dynamodb user table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:Attributes": [
+            "userId"
+          ]
+        },
+        "StringEqualsIfExists": {
+          "dynamodb:Select": "SPECIFIC_ATTRIBUTES"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 # Policy to allow reading from the experiment data table
 resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
   name = "pvs-${var.env}-dynamodb-read-all-experiment-data"
@@ -932,7 +966,9 @@ resource "aws_iam_role" "researcher" {
   }
 
   managed_policy_arns   = [
-    aws_iam_policy.dynamodb-read-all-experiment-data.arn, aws_iam_policy.cloudwatch-write.arn
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
+    aws_iam_policy.cloudwatch-write.arn,
+    aws_iam_policy.dynamodb-userid-read.arn
   ]
 }
 
