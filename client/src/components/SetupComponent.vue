@@ -80,12 +80,12 @@
     }
 
     function startPacer() {
-        pacer.value.running = true
+        pacer.value.start = true
     }
 
     function stopPacer() {
-        pacer.value.running = false
-    }   
+        pacer.value.pause = true
+    }
 
 </script>
 <style scoped>

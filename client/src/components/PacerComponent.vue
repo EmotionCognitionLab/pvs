@@ -9,19 +9,35 @@
 
     const props = defineProps(['msPerBreath', 'totalMs', 'holdMs', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
-    let running = ref(false)
-    defineExpose({running})
+    let start = ref(false)
+    let pause = ref(false)
+    let resume = ref(false)
+    defineExpose({start, pause, resume})
     const emit = defineEmits(['pacer-finished'])
     let bp = null
 
-    watch(running, (shouldRun) => {
-        if (shouldRun) {
+    watch(start, (shouldStart) => {
+        if (shouldStart) {
             bp.start()
             .then(() => {
                 emit('pacer-finished')
             })
-        } else {
+            pause.value = false
+        }
+    })
+
+    watch(pause, (shouldPause) => {
+        if (shouldPause) {
             bp.pause()
+            start.value = false
+            resume.value = false
+        }
+    })
+
+    watch(resume, (shouldResume) => {
+        if (shouldResume) {
+            bp.resume()
+            pause.value = false
         }
     })
 
