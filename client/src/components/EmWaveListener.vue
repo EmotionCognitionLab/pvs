@@ -23,17 +23,19 @@
     let calibrated = ref(false)
     let running = ref(false)
     let sensorError = ref(false) // set to true if we fail to get a signal at session start or if we get too many signal artifacts
-    let errInterval = null
+    let signalLossInterval = null
     let stopSensor = ref(false)
     defineExpose({stopSensor})
 
-    const errTimeout = () => !calibrated.value ? 30000 : 10000 // allows longer time for signal acquisition at start of session
+    // TODO per Mara, if we go a full minute without signal we should force the user to restart the session
+    // If we go 10s without signal we should tell them to mess with their sensor/earlobe.
+    const signalLossTimeout = () => !calibrated.value ? 30000 : 10000 // allows longer time for signal acquisition at start of session
 
     watch(running, (isRunning) => {
         if (isRunning) {
-            startErrorTimer()
+            startSignalLossTimer()
         } else {
-            stopErrorTimer()
+            stopSignalLossTimer()
         }
     })
 
@@ -51,7 +53,8 @@
             calibrated.value = true
             emit('pulse-sensor-calibrated')
         }
-        resetErrorTimer()
+        resetSignalLossTimer
+()
     })
 
     ipcRenderer.on('emwave-status', (event, message) => {
@@ -76,24 +79,24 @@
         calibrated.value = false
     }
 
-    function startErrorTimer() {
-        errInterval = setTimeout(
+    function startSignalLossTimer() {
+        signalLossInterval = setTimeout(
             () => { 
                 sensorError.value = true
                 emit('pulse-sensor-stopped')
             }, 
-            errTimeout()
+            signalLossTimeout()
         )
     }
 
-    function stopErrorTimer() {
-        clearTimeout(errInterval)
+    function stopSignalLossTimer() {
+        clearTimeout(signalLossInterval)
         sensorError.value = false
     }
 
-    function resetErrorTimer() {
-        stopErrorTimer()
-        startErrorTimer()
+    function resetSignalLossTimer() {
+        stopSignalLossTimer()
+        startSignalLossTimer()
     }
 
 </script>
