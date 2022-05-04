@@ -10,11 +10,15 @@ let artifacts = new CBuffer(artifactsToTrack);
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
+// sample session ended string
+// <CMD ID="3" FROM="::ffff:127.0.0.1:APP" />
 function parseIBIData(data) {
     const ibiRegex = /<D01.* STIME="([0-9]+)" .*IBI="([0-9]+)" ART="(TRUE|FALSE)"/;
     const match = data.match(ibiRegex);
     if (match && match[1] !== "0") { // STIME of 0 means that the there isn't actually an emWave session; ignore those data
         return {ibi: match[2], artifact: match[3]};
+    } else if (data.match(/<CMD ID="3" FROM="::ffff:127.0.0.1:APP"/)) {
+        return 'SessionEnded';
     } else {
         return null;
     }
@@ -38,7 +42,9 @@ export default {
     
         client.on('data', function(data) {
             const hrData = parseIBIData(new Buffer.from(data).toString());
-            if (hrData !== null) {
+            if (hrData === 'SessionEnded' ) {
+                win.webContents.send('emwave-status', 'SessionEnded');
+            } else if (hrData !== null) {
                 win.webContents.send('emwave-ibi', hrData.ibi);
                 artifacts.push(hrData.artifact);
                 let artCount = 0;
@@ -46,7 +52,7 @@ export default {
                     if (a === 'TRUE') artCount++;
                 });
                 if (artCount > artifactLimit) {
-                    win.webContents.send('emwave-status', 'SensorError')
+                    win.webContents.send('emwave-status', 'SensorError');
                 }
             }
         });
