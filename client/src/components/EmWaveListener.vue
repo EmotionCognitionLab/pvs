@@ -7,6 +7,10 @@
             No or poor signal detected. Please make sure the device is connected properly and your earlobe is warm.
             (If it is cold, try rubbing it between your thumb and forefinger to warm it up and get blood flowing to it.)
         </div>
+        <div v-if="sessionEnded">
+            The session has ended because it has been a long time since the device detected a pulse signal.
+            Please press the start button when you are ready to start over.
+        </div>
         <button class="pulse-sensor-button" id="startSensor" @click="startPulseSensor">Start</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
     </div>
@@ -22,13 +26,16 @@
     let calibrated = ref(false)
     let running = ref(false)
     let sensorError = ref(false) // set to true if we fail to get a signal at session start or if we get too many signal artifacts
+    let sessionEnded = ref(false) // set to true if emwave ends the session, usually due to prolonged signal loss
     let signalLossInterval = null
+    let forcedRestartInterval = null
     let stopSensor = ref(false)
     defineExpose({stopSensor})
 
-    // TODO per Mara, if we go a full minute without signal we should force the user to restart the session
+    // per Mara, if we go a full minute without signal we should force the user to restart the session
     // If we go 10s without signal we should tell them to mess with their sensor/earlobe.
     const signalLossTimeout = () => !calibrated.value ? 30000 : 10000 // allows longer time for signal acquisition at start of session
+    const forcedRestartTimeout = () => 60000 - signalLossTimeout() // this timer doesn't start until after the signal loss timer has fired
 
     watch(running, (isRunning) => {
         if (isRunning) {
@@ -56,12 +63,18 @@
             emit('pulse-sensor-signal-restored')
         }
         resetSignalLossTimer()
+        resetForcedRestartTimer()
     })
 
     ipcRenderer.on('emwave-status', (event, message) => {
         if (message === 'SensorError') {
             stopPulseSensor()
             sensorError.value = true
+        } else if (message === 'SessionEnded') {
+            emit('pulse-sensor-stopped')
+            running.value = false
+            calibrated.value = false
+            sessionEnded.value = true
         }
     })
 
@@ -70,6 +83,7 @@
         ipcRenderer.send('pulse-start')
         running.value = true
         stopSensor.value = false
+        sessionEnded.value = false
     }
     
     // eslint-disable-next-line no-unused-vars
@@ -85,9 +99,23 @@
             () => { 
                 sensorError.value = true
                 emit('pulse-sensor-signal-lost')
+                startForcedRestartTimer()
             }, 
             signalLossTimeout()
         )
+    }
+
+    function startForcedRestartTimer() {
+        forcedRestartInterval = setTimeout(() => {
+            stopPulseSensor()
+            sessionEnded.value = true
+        },
+        forcedRestartTimeout()
+       )
+    }
+
+    function resetForcedRestartTimer() {
+        clearTimeout(forcedRestartInterval)
     }
 
     function stopSignalLossTimer() {
