@@ -11,7 +11,7 @@
             The session has ended because it has been a long time since the device detected a pulse signal.
             Please press the start button when you are ready to start over.
         </div>
-        <button class="pulse-sensor-button" id="startSensor" @click="startPulseSensor">Start</button>
+        <button class="pulse-sensor-button" id="startSensor" :disabled="running" @click="startPulseSensor">Start</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
     </div>
    
