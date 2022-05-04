@@ -51,8 +51,8 @@
         }
     })
 
-    ipcRenderer.on('emwave-ibi', (event, message) => {
-        ibi.value = Number(message)
+    ipcRenderer.on('emwave-ibi', (event, hrData) => {
+        ibi.value = Number(hrData.ibi)
         if (ibi.value <= 0) return
 
         if (!calibrated.value) {
