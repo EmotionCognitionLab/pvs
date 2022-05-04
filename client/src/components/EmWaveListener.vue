@@ -18,7 +18,7 @@
     import { ref, watch } from '@vue/runtime-core'
 
     defineProps(['showIbi'])
-    const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-stopped'])
+    const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-signal-lost', 'pulse-sensor-signal-restored', 'pulse-sensor-stopped'])
     let ibi = ref(0)
     let calibrated = ref(false)
     let running = ref(false)
@@ -53,8 +53,10 @@
             calibrated.value = true
             emit('pulse-sensor-calibrated')
         }
-        resetSignalLossTimer
-()
+        if (sensorError.value) {
+            emit('pulse-sensor-signal-restored')
+        }
+        resetSignalLossTimer()
     })
 
     ipcRenderer.on('emwave-status', (event, message) => {
@@ -83,7 +85,7 @@
         signalLossInterval = setTimeout(
             () => { 
                 sensorError.value = true
-                emit('pulse-sensor-stopped')
+                emit('pulse-sensor-signal-lost')
             }, 
             signalLossTimeout()
         )
