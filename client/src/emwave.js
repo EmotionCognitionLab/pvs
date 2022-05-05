@@ -7,6 +7,7 @@ const client = net.Socket();
 const artifactLimit = 60; // we alert if there are more than this many artifacts in 60s
 const artifactsToTrack = 120; // we get data every 500ms, so this holds 60s of data
 let artifacts = new CBuffer(artifactsToTrack);
+let reportSessionEnd = true;
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
@@ -28,7 +29,12 @@ function parseIBIData(data) {
     }
 
     if (data.match(/<CMD ID="3" FROM="::ffff:127.0.0.1:APP"/)) {
-        return 'SessionEnded';
+        if (reportSessionEnd) {
+            return 'SessionEnded';
+        } else {
+            reportSessionEnd = true;
+            return null;
+        }
     }
         
     return null;
@@ -99,6 +105,7 @@ export default {
     },
 
     stopPulseSensor() {
+        reportSessionEnd = false; // we're ending the session, not emWave, so don't tell our listeners about it
         client.write('<CMD ID=3 />'); // tells emWave to stop getting data from heartbeat sensor
     },
 
