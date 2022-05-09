@@ -5,6 +5,7 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
 </head>
 <body>
+    <div id="error"></div>
     <label for="experiment-select">Select an experiment:</label>
     <select id="experiment-select">
         <option value="" selected disabled>--experiment name--</option>
@@ -29,6 +30,6 @@
         <option value="verbal-learning-recall">verbal-learning-recall</option>
     </select>
     <button id="experiment-button" type="button">Query</button>
-    <p id="experiment-download"></a>
+    <p id="download-status"></a>
 </body>
 </html>
