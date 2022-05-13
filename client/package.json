@@ -21,6 +21,7 @@
     "core-js": "^3.6.5",
     "node-fetch": "2",
     "pvs-breath-pacer": "git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#semver:^1.0.0",
+    "uuid": "^8.3.2",
     "vue": "^3.0.0",
     "vue-router": "4"
   },

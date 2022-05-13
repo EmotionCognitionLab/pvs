@@ -5,6 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
+import heartData from './heart-data.js'
 import dataUpload from './data-upload.js'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -84,6 +85,7 @@ app.on('ready', async () => {
 
 app.on('before-quit', () => {
   emwave.stopEmWave()
+  heartData.close()
 })
 
 ipcMain.on('pulse-start', () => {
