@@ -6,6 +6,7 @@
 <script setup>
     import { BreathPacer } from 'pvs-breath-pacer'
     import { onMounted, ref, watch } from '@vue/runtime-core';
+    import { ipcRenderer } from 'electron';
 
     const props = defineProps(['regimes', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
@@ -13,7 +14,7 @@
     let pause = ref(false)
     let resume = ref(false)
     defineExpose({start, pause, resume})
-    const emit = defineEmits(['pacer-finished'])
+    const emit = defineEmits(['pacer-finished', 'pacer-regime-changed'])
     let bp = null
 
     watch(start, (shouldStart) => {
@@ -41,6 +42,11 @@
         }
     })
 
+    async function regimeChanged(startTime, regime) {
+        await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
+        emit('pacer-regime-changed', startTime, regime);
+    }
+
     onMounted(() => {
         const pacerConfig = {
             scaleH: props.scaleH,
@@ -49,6 +55,7 @@
             offsetProportionY: props.offsetProportionY
         }
         bp = new BreathPacer(pacer.value, [], pacerConfig)
+        bp.subscribeToRegimeChanges(regimeChanged)
         bp.setInstructions(props.regimes)
     })
 </script>
