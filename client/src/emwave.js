@@ -8,6 +8,7 @@ const artifactLimit = 60; // we alert if there are more than this many artifacts
 const artifactsToTrack = 120; // we get data every 500ms, so this holds 60s of data
 let artifacts = new CBuffer(artifactsToTrack);
 let reportSessionEnd = true;
+const subscribers = [];
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
@@ -62,6 +63,7 @@ export default {
                 win.webContents.send('emwave-status', 'SessionEnded');
             } else if (hrData !== null) {
                 win.webContents.send('emwave-ibi', hrData);
+                subscribers.forEach(callback => callback(hrData));
                 if (hrData.hasOwnProperty('artifact')) {
                     artifacts.push(hrData.artifact);
                     let artCount = 0;
@@ -119,6 +121,10 @@ export default {
                 console.log('killing emwave returned false');
             }
         }
+    },
+
+    subscribe(callback) {
+        subscribers.push(callback);
     }
 }
 
