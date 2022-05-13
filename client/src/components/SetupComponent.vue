@@ -30,9 +30,7 @@
             Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
             </div>
             <PacerComponent 
-                :msPerBreath=4000 
-                :totalMs=210000 
-                :holdMs=0 
+                :regimes="[{durationMs: 210000, breathsPerMinute: 15, randomize: false}]"
                 :scaleH=290
                 :scaleT=0.1 
                 :offsetProportionX=0.25

@@ -10261,9 +10261,9 @@ pupa@^2.1.1:
   dependencies:
     escape-goat "^2.0.0"
 
-"pvs-breath-pacer@git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#semver:^0.6.0":
-  version "0.6.0"
-  resolved "git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#4147192b11940c599c18fda88837973648c74567"
+"pvs-breath-pacer@git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#semver:^1.0.0":
+  version "1.0.0"
+  resolved "git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#e4cef06dab930f9fac80b87be1fd62c6b2f21ba9"
   optionalDependencies:
     css-loader "^6.5.1"
     html-webpack-plugin "^5.5.0"

@@ -7,7 +7,7 @@
     import { BreathPacer } from 'pvs-breath-pacer'
     import { onMounted, ref, watch } from '@vue/runtime-core';
 
-    const props = defineProps(['msPerBreath', 'totalMs', 'holdMs', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
+    const props = defineProps(['regimes', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
     let start = ref(false)
     let pause = ref(false)
@@ -49,7 +49,7 @@
             offsetProportionY: props.offsetProportionY
         }
         bp = new BreathPacer(pacer.value, [], pacerConfig)
-        bp.setPaceAndDuration(props.msPerBreath, props.totalMs, props.holdMs)
+        bp.setInstructions(props.regimes)
     })
 </script>
 <style scoped>
