@@ -5,18 +5,18 @@ import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
 
 
-function heartDbPath() {
-    let heartDbPath;
+function breathDbPath() {
+    let breathDbPath;
     const userHome = app.getPath('home');
     if (process.platform === 'darwin') {
-        heartDbPath = userHome +  '/Documents/HeartBeam/heartBeam.sql';
+        breathDbPath = userHome +  '/Documents/HeartBeam/heartBeam.sqlite';
     } else if (process.platform === 'win32') {
-        heartDbPath = userHome + '\\Documents\\HeartBeam\\heartBeam.sql';
+        breathDbPath = userHome + '\\Documents\\HeartBeam\\heartBeam.sqlite';
     } else {
         throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`;
     }
 
-    return heartDbPath;
+    return breathDbPath;
 }
 
 
@@ -56,7 +56,7 @@ function insertIbiData(data) {
 }
 
 try {
-    statSync(heartDbPath());
+    statSync(breathDbPath());
 } catch (err) {
     if (err.code === 'ENOENT') {
         downloadDatabase();
@@ -70,7 +70,7 @@ try {
 // lost all their data :-(
 // either way, we can let sqlite create the database
 // if necessary
-const db = new Database(heartDbPath());
+const db = new Database(breathDbPath());
 const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL)');
 createRegimeTableStmt.run();
 const createIbiTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS ibi_data(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, segment_guid TEXT, date_time INTEGER NOT NULL, stime INTEGER NOT NULL, ibi INTEGER NOT NULL, ep INTEGER NOT NULL, coherence FLOAT NOT NULL, artifact BOOLEAN NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
@@ -94,11 +94,11 @@ ipcMain.handle('pacer-regime-changed', (_event, startTime, regime) => {
 });
 emwave.subscribe(insertIbiData);
 
-function closeHeartDb() {
+function closeBreathDb() {
     curRegimeId = null;
     curRegimeStartTime = null;
     curSegmentUuid = null;
     db.close();
 }
 
-export { closeHeartDb, heartDbPath }
+export { closeBreathDb, breathDbPath }

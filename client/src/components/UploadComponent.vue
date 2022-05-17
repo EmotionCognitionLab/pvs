@@ -17,6 +17,6 @@
 
     async function upload() {
         await ipcRenderer.invoke('upload-emwave-data', SessionStore.getRendererSession())
-        await ipcRenderer.invoke('upload-heart-data', SessionStore.getRendererSession())
+        await ipcRenderer.invoke('upload-breath-data', SessionStore.getRendererSession())
     }
 </script>

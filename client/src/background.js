@@ -5,10 +5,9 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
-import heartData from './heart-data.js'
 import dataUpload from './data-upload.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { heartDbPath, closeHeartDb } from './heart-data'
+import { breathDbPath, closeBreathDb } from './breath-data'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
@@ -88,7 +87,7 @@ app.on('ready', async () => {
 
 app.on('before-quit', () => {
   emwave.stopEmWave()
-  closeHeartDb()
+  closeBreathDb()
 })
 
 ipcMain.on('pulse-start', () => {
@@ -152,11 +151,11 @@ ipcMain.handle('upload-emwave-data', async (event, session) => {
   return null;
 });
 
-ipcMain.handle('upload-heart-data', async (event, session) => {
-  closeHeartDb();
-  const heartDb = heartDbPath();
+ipcMain.handle('upload-breath-data', async (event, session) => {
+  closeBreathDb();
+  const breathDb = breathDbPath();
   const fullSession = SessionStore.buildSession(session);
-  await dataUpload.uploadFile(fullSession, heartDb)
+  await dataUpload.uploadFile(fullSession, breathDb)
   .catch(err => {
     console.error(err);
     return (err.message);
