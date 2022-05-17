@@ -40,13 +40,21 @@ function getRegimeId(regime) {
     return newRegime.lastInsertRowid;
 }
 
+function createSegment(startTime) {
+    const newSegment = insertSegmentStmt.run(startTime);
+    if (newSegment.changes !== 1) {
+        throw new Error(`Error adding segment with start time ${startTime}`);
+    }
+    return newSegment.lastInsertRowid;
+}
+
 function insertIbiData(data) {
     if (data.ibiType !== 'interpolated') return;
 
     insertIbiStmt.run(
         curRegimeId,
         Math.round((new Date).getTime() / 1000),
-        curSegmentUuid,
+        curSegmentId,
         data.stime,
         data.ibi,
         data.ep,
@@ -73,10 +81,20 @@ try {
 const db = new Database(breathDbPath());
 const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL)');
 createRegimeTableStmt.run();
-const createIbiTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS ibi_data(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, segment_guid TEXT, date_time INTEGER NOT NULL, stime INTEGER NOT NULL, ibi INTEGER NOT NULL, ep INTEGER NOT NULL, coherence FLOAT NOT NULL, artifact BOOLEAN NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
+
+// a segment is portion (usually five minutes) of a longer emwave session (usually fifteen minutes) 
+// during which breathing happens under a given regime
+// a segment is eseentially an instance of a regime - while participants may breathe
+// following a particular regime many different times, each time they do so will be
+// a unique segment
+const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, start_time INTEGER NOT NULL)');
+createSegmentTableStmt.run();
+const insertSegmentStmt = db.prepare('INSERT INTO segments(start_time) VALUES(?)');
+
+const createIbiTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS ibi_data(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, segment_id INTEGER NOT NULL, date_time INTEGER NOT NULL, stime INTEGER NOT NULL, ibi INTEGER NOT NULL, ep INTEGER NOT NULL, coherence FLOAT NOT NULL, artifact BOOLEAN NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id), FOREIGN KEY(segment_id) REFERENCES segments(id))');
 createIbiTableStmt.run();
 
-const insertIbiStmt = db.prepare('INSERT INTO ibi_data(regime_id, date_time, segment_guid, stime, ibi, ep, coherence, artifact) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+const insertIbiStmt = db.prepare('INSERT INTO ibi_data(regime_id, date_time, segment_id, stime, ibi, ep, coherence, artifact) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
 
 const findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
 const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
@@ -85,19 +103,16 @@ const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_pe
 // accidentally not get reset before the first ibi data from the second session needs to be written?
 // (i.e. a race condition between the start regime notification and the ibi data notification)
 let curRegimeId;
-let curRegimeStartTime;
-let curSegmentUuid;
+let curSegmentId;
 ipcMain.handle('pacer-regime-changed', (_event, startTime, regime) => {
-    curRegimeStartTime = startTime;
     curRegimeId = getRegimeId(regime);
-    curSegmentUuid = uuidv4();
+    curSegmentId = createSegment(startTime);
 });
 emwave.subscribe(insertIbiData);
 
 function closeBreathDb() {
     curRegimeId = null;
-    curRegimeStartTime = null;
-    curSegmentUuid = null;
+    curSegmentId = null;
     db.close();
 }
 
