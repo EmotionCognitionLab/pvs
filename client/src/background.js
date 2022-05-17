@@ -7,10 +7,13 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import heartData from './heart-data.js'
 import dataUpload from './data-upload.js'
+import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
+import { heartDbPath, closeHeartDb } from './heart-data'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
 import { Logger } from '../../common/logger/logger.js'
+import { SessionStore } from './session-store.js'
 import fetch from 'node-fetch'
 // fetch is defined in browsers, but not node
 // substitute node-fetch here
@@ -85,7 +88,7 @@ app.on('ready', async () => {
 
 app.on('before-quit', () => {
   emwave.stopEmWave()
-  heartData.close()
+  closeHeartDb()
 })
 
 ipcMain.on('pulse-start', () => {
@@ -137,12 +140,27 @@ ipcMain.on('show-login-window', () => {
 })
 
 ipcMain.handle('upload-emwave-data', async (event, session) => {
-    emwave.stopEmWave();
-    await dataUpload.uploadEmWaveDb(session)
-    .catch(err => {
-      console.error(err);
-      return (err.message);
-    });
+  emwave.stopEmWave();
+  deleteShortEmwaveSessions();
+  const emWaveDb = emWaveDbPath();
+  const fullSession = SessionStore.buildSession(session);
+  await dataUpload.uploadFile(fullSession, emWaveDb)
+  .catch(err => {
+    console.error(err);
+    return (err.message);
+  });
+  return null;
+});
+
+ipcMain.handle('upload-heart-data', async (event, session) => {
+  closeHeartDb();
+  const heartDb = heartDbPath();
+  const fullSession = SessionStore.buildSession(session);
+  await dataUpload.uploadFile(fullSession, heartDb)
+  .catch(err => {
+    console.error(err);
+    return (err.message);
+  });
   return null;
 });
 
