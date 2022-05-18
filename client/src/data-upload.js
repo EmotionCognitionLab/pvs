@@ -1,13 +1,13 @@
-import { S3Client, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, HeadObjectCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { CognitoIdentityClient, GetIdCommand, GetCredentialsForIdentityCommand } from "@aws-sdk/client-cognito-identity"
-import { createReadStream } from 'fs'
+import { createReadStream, createWriteStream } from 'fs'
 import { parse } from 'path'
 import awsSettings from '../../common/aws-settings.json'
 import ApiClient from '../../common/api/client.js'
 
 let session;
 
-function getS3Dest(subId, humanId, fileName) {
+function getDefaultS3Target(subId, humanId, fileName) {
     const userDataBucket = awsSettings.UserDataBucket;
     return { bucket: userDataBucket, key: `${humanId}/${subId}/${fileName}`}
 }
@@ -102,7 +102,7 @@ async function getLastUploadDate(s3Client, bucket, key) {
 
 export default {
     /**
-     * 
+     * Uploads a file from the local file system to s3.
      * @param {Object} authSession CognitoAuthSession
      * @param {string} localFileSrc path on local file system to file to upload 
      * @param {Object} s3Dest Object with bucket and key members. If not provided will default to the UserDataBucket for the application and the key will be the user's own S3 path combined with the name of the local file.
@@ -113,7 +113,7 @@ export default {
         let bucket, key;
         if (!s3Dest || !s3Dest.hasOwnProperty('bucket') || !s3Dest.hasOwnProperty('key')) {
             const pathParts = parse(localFileSrc);
-            ({bucket, key} = getS3Dest(identityId, humanId, pathParts.base));
+            ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
         } else {
             bucket = s3Dest.bucket;
             key = s3Dest.key;
@@ -125,6 +125,48 @@ export default {
         if (resp.$metadata.httpStatusCode !== 200) {
             throw new Error(`Upload failed with status code ${resp.$metadata.httpStatusCode}`);
         }
+    },
+
+    /**
+     * Downloads a file from s3 to the local file system. Returns an object with status and msg fields describing the download result.
+     * @param {Object} authSession CognitoAuthSession
+     * @param {string} localFileDest path on the local file system where the downloaded file should be saved
+     * @param {Object} s3Src Object with bucket and key members. If not provided will default to the UserDataBucket for the application and the key will be the user's own S3 path combined with the name of the local file.
+     */
+    async downloadFile(authSession, localFileDest, s3Src) {
+        session = authSession;
+        const {identityId, humanId} = await getUserIds();
+        let bucket, key;
+        if (!s3Src || !s3Src.hasOwnProperty('bucket') || !s3Src.hasOwnProperty('key')) {
+            const pathParts = parse(localFileDest);
+            ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
+        } else {
+            bucket = s3Src.bucket;
+            key = s3Src.key;
+        }
+        const s3Client = await getS3Client();
+        const cmd = new GetObjectCommand({Bucket: bucket, Key: key});
+        const resp = await s3Client.send(cmd);
+        if (resp.$metadata.httpStatusCode === 404) {
+            // TODO check documentation to see if we can get 404 in any other circumstances
+            // besides the file missing (e.g. an auth problem)
+            return {status: 'Not found', msg: null };
+        }
+        if (resp.$metadata.httpStatusCode !== 200) {
+            return {status: 'Error', msg: `Download attempt failed with http status code ${resp.$metadata.httpStatusCode}.`};
+        }
+        resp.Body.on('error', (err) => {
+            console.error(`Error trying to download ${bucket}://${key}`, err);
+            writeStream.close();
+            throw err;
+        });
+        const writeStream = createWriteStream(localFileDest);
+        resp.Body.pipe(writeStream);
+        return await new Promise(resolve => {
+            writeStream.on('end', () => {
+                resolve({ status: 'Complete', msg: 'Download successful'});
+            });
+        });
     }
 }
 
