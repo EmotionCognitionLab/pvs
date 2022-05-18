@@ -1,5 +1,6 @@
 const net = require('net');
 const { spawn } = require('child_process');
+const { ipcMain } = require('electron');
 const CBuffer = require('CBuffer');
 
 let emWaveProc = null;
@@ -9,6 +10,9 @@ const artifactsToTrack = 120; // we get data every 500ms, so this holds 60s of d
 let artifacts = new CBuffer(artifactsToTrack);
 let reportSessionEnd = true;
 const subscribers = [];
+let coherenceValues = [];
+let curRegime;
+let curSessionStartTime;
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
@@ -41,6 +45,41 @@ function parseIBIData(data) {
     return null;
 }
 
+ipcMain.handle('pacer-regime-changed', (_event, sessionStartTime, regime) => {
+    if (sessionStartTime === 0) {
+        curRegime = regime;
+        curSessionStartTime = sessionStartTime;
+        return;
+    }
+
+    notifyAvgCoherence();
+    curRegime = regime;
+    curSessionStartTime = sessionStartTime;
+});
+
+function notifyAvgCoherence() {
+    try {
+        // we only want to use the final four minutes of data
+        // we get ~ 2 ep values/sec, so four minutes is 2 * 60 * 4
+        const min_values = 2 * 60 * 4;
+        if (coherenceValues.length < min_values) {
+            console.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
+            return;
+        }
+
+        const relevantVals = coherenceValues.slice(-1 * min_values);
+        const coherenceSum = relevantVals.reduce((cur, prev) => cur + prev, 0);
+        const coherenceAvg = coherenceSum / relevantVals.length;
+        subscribers.forEach(callback => callback({sessionStartTime: curSessionStartTime, regime: curRegime, avgCoherence: coherenceAvg}));
+    } finally {
+        // TODO if there's an error in one of the subscribers (or too little data) are we 100% sure we want to wipe these out?
+        coherenceValues = [];
+        curRegime = null;
+        curSessionStartTime = null;
+    }
+    
+}
+
 export default {
     async createClient(win) {
         let retries = 0;
@@ -61,9 +100,9 @@ export default {
             const hrData = parseIBIData(new Buffer.from(data).toString());
             if (hrData === 'SessionEnded' ) {
                 win.webContents.send('emwave-status', 'SessionEnded');
+                notifyAvgCoherence();
             } else if (hrData !== null) {
                 win.webContents.send('emwave-ibi', hrData);
-                subscribers.forEach(callback => callback(hrData));
                 if (hrData.hasOwnProperty('artifact')) {
                     artifacts.push(hrData.artifact);
                     let artCount = 0;
@@ -73,6 +112,9 @@ export default {
                     if (artCount > artifactLimit) {
                         win.webContents.send('emwave-status', 'SensorError');
                     }
+                }
+                if (hrData.hasOwnProperty('ep')) {
+                    coherenceValues.push(Math.log((hrData.ep / 10) + 1)); // this converts EP value from emWave to coherence value
                 }
             }
         });
@@ -109,9 +151,11 @@ export default {
     stopPulseSensor() {
         reportSessionEnd = false; // we're ending the session, not emWave, so don't tell our listeners about it
         client.write('<CMD ID=3 />'); // tells emWave to stop getting data from heartbeat sensor
+        notifyAvgCoherence();
     },
 
     stopEmWave() {
+        // TODO should we call notifyAvgCoherence here? (Or just stopPulseSensor()?)
         client.destroy();
         if (emWaveProc !== null) {
             if (emWaveProc.kill()) {

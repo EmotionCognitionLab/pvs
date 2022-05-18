@@ -40,27 +40,18 @@ function getRegimeId(regime) {
     return newRegime.lastInsertRowid;
 }
 
-function createSegment(startTime) {
-    const newSegment = insertSegmentStmt.run(startTime);
+function createSegment(regimeData) {
+    const regimeId = getRegimeId(regimeData.regime);
+    const newSegment = insertSegmentStmt.run(
+        regimeId,
+        regimeData.sessionStartTime,
+        Math.round((new Date).getTime() / 1000),
+        regimeData.avgCoherence
+    );
     if (newSegment.changes !== 1) {
-        throw new Error(`Error adding segment with start time ${startTime}`);
+        throw new Error(`Error adding segment with start time ${sessionStartTime}`);
     }
     return newSegment.lastInsertRowid;
-}
-
-function insertIbiData(data) {
-    if (data.ibiType !== 'interpolated') return;
-
-    insertIbiStmt.run(
-        curRegimeId,
-        Math.round((new Date).getTime() / 1000),
-        curSegmentId,
-        data.stime,
-        data.ibi,
-        data.ep,
-        Math.log((data.ep / 10) + 1),
-        data.artifact ? 1 : 0
-    ); 
 }
 
 try {
@@ -87,32 +78,16 @@ createRegimeTableStmt.run();
 // a segment is eseentially an instance of a regime - while participants may breathe
 // following a particular regime many different times, each time they do so will be
 // a unique segment
-const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, start_time INTEGER NOT NULL)');
+const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, session_start_time INTEGER NOT NULL, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
 createSegmentTableStmt.run();
-const insertSegmentStmt = db.prepare('INSERT INTO segments(start_time) VALUES(?)');
-
-const createIbiTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS ibi_data(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, segment_id INTEGER NOT NULL, date_time INTEGER NOT NULL, stime INTEGER NOT NULL, ibi INTEGER NOT NULL, ep INTEGER NOT NULL, coherence FLOAT NOT NULL, artifact BOOLEAN NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id), FOREIGN KEY(segment_id) REFERENCES segments(id))');
-createIbiTableStmt.run();
-
-const insertIbiStmt = db.prepare('INSERT INTO ibi_data(regime_id, date_time, segment_id, stime, ibi, ep, coherence, artifact) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+const insertSegmentStmt = db.prepare('INSERT INTO segments(regime_id, session_start_time, end_date_time, avg_coherence) VALUES(?, ?, ?, ?)');
 
 const findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
 const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
 
-// TODO if I leave the app open between sessions, is there a chance that one of these could
-// accidentally not get reset before the first ibi data from the second session needs to be written?
-// (i.e. a race condition between the start regime notification and the ibi data notification)
-let curRegimeId;
-let curSegmentId;
-ipcMain.handle('pacer-regime-changed', (_event, startTime, regime) => {
-    curRegimeId = getRegimeId(regime);
-    curSegmentId = createSegment(startTime);
-});
-emwave.subscribe(insertIbiData);
+emwave.subscribe(createSegment);
 
 function closeBreathDb() {
-    curRegimeId = null;
-    curSegmentId = null;
     db.close();
 }
 
