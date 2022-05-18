@@ -444,6 +444,31 @@ resource "aws_iam_policy" "s3-write-experiment-data" {
 POLICY
 }
 
+# Policy to allow authenticated users to read data from
+# their own folder
+resource "aws_iam_policy" "s3-read-experiment-data" {
+  name = "pvs-${var.env}-s3-read-experiment-data"
+  path = "/policy/s3/experimentData/read/"
+  description = "Allows writing data to participant's own s3 folder"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}",
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}/*"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # Policy to allow authenticated cognito users to write
 # to the experiment data table, but only rows where
 # the hash key is their cognito identity id.
@@ -751,7 +776,8 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn,
       aws_iam_policy.dynamodb-read-experiment-data.arn,
-      aws_iam_policy.s3-write-experiment-data.arn
+      aws_iam_policy.s3-write-experiment-data.arn,
+      aws_iam_policy.s3-read-experiment-data.arn
   ]
 }
 
