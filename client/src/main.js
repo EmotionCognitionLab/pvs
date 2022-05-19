@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
@@ -46,7 +47,10 @@ router.beforeEach((to) => {
 if (isAuthenticated() && !SessionStore.getRendererSession()) {
     const cognitoAuth = getAuth()
     cognitoAuth.userhandler = {
-        onSuccess: session => SessionStore.session = session,
+        onSuccess: session => {
+            ipcRenderer.invoke('login-succeeded', session)
+            SessionStore.session = session
+        },
         onFailure: err => console.error(err)
     }
     cognitoAuth.getSession()
