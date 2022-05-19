@@ -3,7 +3,7 @@ import { statSync } from 'fs';
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
-import dataUpload from './data-upload.js'
+import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
 
 let db;
@@ -25,7 +25,7 @@ function breathDbPath() {
 
 
 async function downloadDatabase(dest, session) {
-    const resp = await dataUpload.downloadFile(session, dest);
+    const resp = await s3utils.downloadFile(session, dest);
     if (resp.status === 'Error') {
         console.error('Failed to download breath database from s3.');
         throw new Error(resp.msg);

@@ -5,7 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
-import dataUpload from './data-upload.js'
+import s3Utils from './s3utils.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
 import { breathDbPath, closeBreathDb } from './breath-data'
 import path from 'path'
@@ -143,7 +143,7 @@ ipcMain.handle('upload-emwave-data', async (event, session) => {
   deleteShortEmwaveSessions();
   const emWaveDb = emWaveDbPath();
   const fullSession = SessionStore.buildSession(session);
-  await dataUpload.uploadFile(fullSession, emWaveDb)
+  await s3Utils.uploadFile(fullSession, emWaveDb)
   .catch(err => {
     console.error(err);
     return (err.message);
@@ -155,7 +155,7 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
   closeBreathDb();
   const breathDb = breathDbPath();
   const fullSession = SessionStore.buildSession(session);
-  await dataUpload.uploadFile(fullSession, breathDb)
+  await s3Utils.uploadFile(fullSession, breathDb)
   .catch(err => {
     console.error(err);
     return (err.message);
