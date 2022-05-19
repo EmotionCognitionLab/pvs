@@ -135,38 +135,48 @@ export default {
      */
     async downloadFile(authSession, localFileDest, s3Src) {
         session = authSession;
-        const {identityId, humanId} = await getUserIds();
-        let bucket, key;
-        if (!s3Src || !s3Src.hasOwnProperty('bucket') || !s3Src.hasOwnProperty('key')) {
-            const pathParts = parse(localFileDest);
-            ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
-        } else {
-            bucket = s3Src.bucket;
-            key = s3Src.key;
-        }
-        const s3Client = await getS3Client();
-        const cmd = new GetObjectCommand({Bucket: bucket, Key: key});
-        const resp = await s3Client.send(cmd);
-        if (resp.$metadata.httpStatusCode === 404) {
-            // TODO check documentation to see if we can get 404 in any other circumstances
-            // besides the file missing (e.g. an auth problem)
-            return {status: 'Not found', msg: null };
-        }
-        if (resp.$metadata.httpStatusCode !== 200) {
-            return {status: 'Error', msg: `Download attempt failed with http status code ${resp.$metadata.httpStatusCode}.`};
-        }
-        resp.Body.on('error', (err) => {
-            console.error(`Error trying to download ${bucket}://${key}`, err);
-            writeStream.close();
-            throw err;
-        });
-        const writeStream = createWriteStream(localFileDest);
-        resp.Body.pipe(writeStream);
-        return await new Promise(resolve => {
-            writeStream.on('end', () => {
-                resolve({ status: 'Complete', msg: 'Download successful'});
+        try {
+            const {identityId, humanId} = await getUserIds();
+            let bucket, key;
+            if (!s3Src || !s3Src.hasOwnProperty('bucket') || !s3Src.hasOwnProperty('key')) {
+                const pathParts = parse(localFileDest);
+                ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
+            } else {
+                bucket = s3Src.bucket;
+                key = s3Src.key;
+            }
+            const s3Client = await getS3Client();
+            const cmd = new GetObjectCommand({Bucket: bucket, Key: key});
+            const resp = await s3Client.send(cmd);
+            if (resp.$metadata.httpStatusCode === 404 || resp.$metadata.httpStatusCode === 403) {
+                // because we don't grant ListBucket perms we can expect to get 403 instead of 404
+                return {status: 'Not found', msg: null };
+            }
+            if (resp.$metadata.httpStatusCode !== 200) {
+                return {status: 'Error', msg: `Download attempt failed with http status code ${resp.$metadata.httpStatusCode}.`};
+            }
+            resp.Body.on('error', (err) => {
+                console.error(`Error trying to download ${bucket}://${key}`, err);
+                writeStream.close();
+                throw err;
             });
-        });
+            const writeStream = createWriteStream(localFileDest);
+            resp.Body.pipe(writeStream);
+            return await new Promise(resolve => {
+                writeStream.on('end', () => {
+                    resolve({ status: 'Complete', msg: 'Download successful'});
+                });
+            });
+        } catch (err) {
+            if (err.name === 'AccessDenied' && err.hasOwnProperty('$metadata') && err.$metadata.httpStatusCode && err.$metadata.httpStatusCode === 403) {
+                // Since we don't grant ListBucket perms we get a 403 instead of a 404 
+                // when the file doesn't exist
+                return {status: 'Not found', msg: null };
+            } else {
+                throw(err);
+            }
+        }
+        
     }
 }
 
