@@ -3,7 +3,11 @@ import { statSync } from 'fs';
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
+import dataUpload from './data-upload.js'
+import { SessionStore } from './session-store.js'
 
+let db;
+let insertSegmentStmt, findRegimeStmt, insertRegimeStmt;
 
 function breathDbPath() {
     let breathDbPath;
@@ -20,11 +24,12 @@ function breathDbPath() {
 }
 
 
-function downloadDatabase(srcUrl, destPath) {
-    // TODO make sure this throws if we encounter a download
-    // error. We don't want to silently fail to downlaod
-    // an existing db and inadvertently create a new one
-
+async function downloadDatabase(dest, session) {
+    const resp = await dataUpload.downloadFile(session, dest);
+    if (resp.status === 'Error') {
+        console.error('Failed to download breath database from s3.');
+        throw new Error(resp.msg);
+    }
 }
 
 function getRegimeId(regime) {
@@ -54,41 +59,52 @@ function createSegment(regimeData) {
     return newSegment.lastInsertRowid;
 }
 
-try {
-    statSync(breathDbPath());
-} catch (err) {
-    if (err.code === 'ENOENT') {
-        downloadDatabase();
-    } else {
+async function initBreathDb(serializedSession) {
+    try {
+        statSync(breathDbPath());
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw(err);
+        // we have no local db file; try downloading it
+        const session = SessionStore.buildSession(serializedSession);
+        await downloadDatabase(breathDbPath(), session);
+    }
+
+    try {
+        // at this point if we don't have a db
+        // then either it's a new user or we've
+        // lost all their data :-(
+        // either way, we can let sqlite create the database
+        // if necessary
+        db = new Database(breathDbPath());
+        const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL)');
+        createRegimeTableStmt.run();
+
+        // a segment is a portion (usually five minutes) of a longer emwave session (usually fifteen minutes) 
+        // during which breathing happens under a given regime
+        // a segment is eseentially an instance of a regime - while participants may breathe
+        // following a particular regime many different times, each time they do so will be
+        // a unique segment
+        const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, session_start_time INTEGER NOT NULL, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
+        createSegmentTableStmt.run();
+        insertSegmentStmt = db.prepare('INSERT INTO segments(regime_id, session_start_time, end_date_time, avg_coherence) VALUES(?, ?, ?, ?)');
+
+        findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
+        insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
+
+        emwave.subscribe(createSegment);
+    } catch (err) {
+        console.log('Error initializing breath database', err);
         throw(err);
     }
 }
 
-// at this point if we don't have a db
-// then either it's a new user or we've
-// lost all their data :-(
-// either way, we can let sqlite create the database
-// if necessary
-const db = new Database(breathDbPath());
-const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL)');
-createRegimeTableStmt.run();
+ipcMain.handle('login-succeeded', async (_event, session) => {
+    if (!db) await initBreathDb(session);
+});
 
-// a segment is portion (usually five minutes) of a longer emwave session (usually fifteen minutes) 
-// during which breathing happens under a given regime
-// a segment is eseentially an instance of a regime - while participants may breathe
-// following a particular regime many different times, each time they do so will be
-// a unique segment
-const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, session_start_time INTEGER NOT NULL, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
-createSegmentTableStmt.run();
-const insertSegmentStmt = db.prepare('INSERT INTO segments(regime_id, session_start_time, end_date_time, avg_coherence) VALUES(?, ?, ?, ?)');
-
-const findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
-const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
-
-emwave.subscribe(createSegment);
 
 function closeBreathDb() {
-    db.close();
+    if (db) db.close();
 }
 
 export { closeBreathDb, breathDbPath }
