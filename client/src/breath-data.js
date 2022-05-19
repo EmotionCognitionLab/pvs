@@ -2,7 +2,6 @@ import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
-import { v4 as uuidv4 } from 'uuid';
 import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
 
