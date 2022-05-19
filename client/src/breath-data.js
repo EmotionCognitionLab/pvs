@@ -1,5 +1,6 @@
 import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
+import { mean, std } from 'mathjs';
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
@@ -56,6 +57,20 @@ function createSegment(regimeData) {
         throw new Error(`Error adding segment with start time ${sessionStartTime}`);
     }
     return newSegment.lastInsertRowid;
+}
+
+function getAvgCoherenceValues(regimeId) {
+    const stmt = db.prepare('SELECT avg_coherence from segments where regime_id = ?');
+    const res = stmt.all(regimeId);
+    return res.map(r => r.avg_coherence);
+}
+
+function getRegimeStats(regimeId) {
+    const avgCohVals = getAvgCoherenceValues(regimeId);
+    const stdDev = std(avgCohVals);
+    const interval = 1.96 * stdDev;
+    const meanAvgCoh = mean(avgCohVals);
+    return { mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
 }
 
 async function initBreathDb(serializedSession) {
