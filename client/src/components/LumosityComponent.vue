@@ -15,12 +15,14 @@
         router.push({path: "/"});
     }
     ipcRenderer.send("create-lumosity-view");
+
 </script>
 
 <style scoped>
     header {
         height: 40px;
-        margin: 5px auto 5px;
+        padding: 5px auto 5px;
+        margin: 0 auto auto 0;
     }
     header span {
         cursor: pointer;
