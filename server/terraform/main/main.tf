@@ -176,11 +176,13 @@ resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
   value = "${aws_dynamodb_table.experiment-data-table.name}"
 }
 
-resource "aws_dynamodb_table" "breathing-data-table" {
-  name           = "pvs-${var.env}-breathing-data"
-  billing_mode   = "PAY_PER_REQUEST"
+resource "aws_dynamodb_table" "daily-regimes-table" {
+  name           = "pvs-${var.env}-daily-regimes"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "identityId"
-  range_key      = "typePaceCadenceDateTime"
+  range_key      = "date"
 
   attribute {
     name = "identityId"
@@ -188,7 +190,7 @@ resource "aws_dynamodb_table" "breathing-data-table" {
   }
 
   attribute {
-    name = "typePaceCadenceDateTime"
+    name = "date"
     type = "S"
   }
 }
