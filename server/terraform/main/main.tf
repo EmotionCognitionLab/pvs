@@ -539,6 +539,43 @@ resource "aws_iam_policy" "dynamodb-read-experiment-data" {
 POLICY
 }
 
+# Policy to allow authenticated cognito users to read/write
+# from/to the daily regimes table, but only rows where
+# the hash key is their cognito identity id.
+resource "aws_iam_policy" "dynamodb-read-write-daily-regimes" {
+  name = "pvs-${var.env}-dynamodb-read-write-daily-regimes"
+  path = "/policy/dynamodb/regimes/readwrite/"
+  description = "Allows authenticated users to read/write their own data from/to dynamodb daily regimes table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.daily-regimes-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow reading/writing to dynamo
 resource "aws_iam_policy" "dynamodb-read-write" {
   name = "pvs-${var.env}-dynamodb-read-write"
@@ -755,7 +792,7 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
 resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   name = "pvs-${var.env}-dynamo-reader-writer"
   path = "/role/user/dynamodb/readwrite/"
-  description = "Allows cognito-auth'd users to read and write their own data from/to experiment data table."
+  description = "Allows cognito-auth'd users to read and write their own data from/to certain dynamo tables and s3 buckets."
   assume_role_policy    = jsonencode(
       {
           Statement = [
@@ -778,6 +815,7 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn,
       aws_iam_policy.dynamodb-read-experiment-data.arn,
+      aws_iam_policy.dynamodb-read-write-daily-regimes.arn,
       aws_iam_policy.s3-write-experiment-data.arn,
       aws_iam_policy.s3-read-experiment-data.arn
   ]
