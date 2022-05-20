@@ -136,16 +136,76 @@ ipcMain.on('show-login-window', () => {
 
 let lumosityView = null;
 
+// handles login page, returns true if login successfully attempted
+function lumosityLogin(email, password) {
+    const emailInput = document.getElementById("user_login");
+    const passwordInput = document.getElementById("user_password");
+    const formSubmit = document.querySelector('input[type="submit"][value="Log In"]');
+    if (emailInput && passwordInput && formSubmit) {
+        emailInput.value = email;
+        passwordInput.value = password;
+        formSubmit.click();
+        return true;
+    } else {
+        return false;
+    }
+}
+function lumosityLoginJS(email, password) {
+    return `(${lumosityLogin})("${email}", "${password}")`;
+}
+
+// checks page to see if Lumosity training completed
+function lumosityHasComplete() {
+    return document.querySelector(".complete") !== null;
+}
+function lumosityHasCompleteJS() {
+    return `(${lumosityHasComplete})()`;
+}
+
+const lumosityCSS = `
+.masthead-wrapper,
+#unsupported-platform-or-browser-warning,
+#actions,
+#sidebar,
+footer.ftr
+{
+    display: none;
+}
+`;
+
 ipcMain.on('create-lumosity-view', () => {
     if (!mainWin || lumosityView) {
         return;
     }
     lumosityView = new BrowserView();
-    mainWin.setBrowserView(lumosityView);
+    mainWin.addBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
-    lumosityView.setBounds({x: 0, y: 50, width: 1300, height: 800});  // hardcoded!!!
+    lumosityView.setBounds({x: 0, y: 50, width: 1300, height: 650});  // hardcoded!!!
+    const email = "demobeam002@hcp.lumoslabs.com";
+    const password = "attentioncognitionbrain";
+    lumosityView.webContents.openDevTools();  // debug
+    // inject CSS (did-start-loading is finicky)
+    lumosityView.webContents.on("did-finish-load", () => {
+        console.debug("injecting CSS");
+        lumosityView.webContents.insertCSS(lumosityCSS);
+    });
+    // handle Lumosity completion (nothing yet)
+    lumosityView.webContents.on("did-finish-load", () => {
+        lumosityView.webContents
+            .executeJavaScript(lumosityHasCompleteJS())
+            .then(completed => {
+                console.debug("Lumosity complete detected");
+            });
+    });
+    // handle first login page load
+    lumosityView.webContents.once("did-finish-load", () => {
+        lumosityView.webContents
+            .executeJavaScript(lumosityLoginJS(email, password))
+            .then(success => {
+                console.debug("Lumosity login page encountered:", success);
+            });
+    });
     lumosityView.webContents.loadURL("https://www.lumosity.com/login");
-    lumosityView.webContents.executeJavaScript(`document.getElementById("user_login").value="asdf";`);
 });
 
 ipcMain.on('close-lumosity-view', () => {
