@@ -162,32 +162,42 @@ function lumosityHasCompleteJS() {
     return `(${lumosityHasComplete})()`;
 }
 
-const lumosityCSS = `
-.masthead-wrapper,
-#unsupported-platform-or-browser-warning,
-#actions,
-#sidebar,
-footer.ftr
-{
-    display: none;
+// scroll page to vertical coordinate
+function lumosityScroll(top) {
+    window.scroll({top, behavior: "smooth"});
 }
-`;
+function lumosityScrollJS(top) {
+    return `(${lumosityScroll})(${top})`;
+}
+
+const lumosityScrollMap = new Map([
+    ["https://www.lumosity.com/app/v4/research/dashboard", 200],
+    ["https://www.lumosity.com/train/turbo/current/1/start", 150],
+    ["https://www.lumosity.com/train/turbo/current/2/start", 150],
+    ["https://www.lumosity.com/train/turbo/current/3/start", 150],
+    ["https://www.lumosity.com/train/turbo/current/4/start", 150],
+    ["https://www.lumosity.com/train/turbo/current/5/start", 150],
+    ["https://www.lumosity.com/train/turbo/current/6/start", 150],
+]);
 
 ipcMain.on('create-lumosity-view', () => {
     if (!mainWin || lumosityView) {
         return;
     }
     lumosityView = new BrowserView();
-    mainWin.addBrowserView(lumosityView);
+    mainWin.setBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
-    lumosityView.setBounds({x: 0, y: 50, width: 1300, height: 650});  // hardcoded!!!
+    lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
     const email = "demobeam002@hcp.lumoslabs.com";
     const password = "attentioncognitionbrain";
     lumosityView.webContents.openDevTools();  // debug
-    // inject CSS (did-start-loading is finicky)
+    // auto scroll
     lumosityView.webContents.on("did-finish-load", () => {
-        console.debug("injecting CSS");
-        lumosityView.webContents.insertCSS(lumosityCSS);
+        const url = lumosityView.webContents.getURL();
+        const top = lumosityScrollMap.get(url);
+        if (top !== undefined) {
+            lumosityView.webContents.executeJavaScript(lumosityScrollJS(top));
+        }
     });
     // handle Lumosity completion (nothing yet)
     lumosityView.webContents.on("did-finish-load", () => {
