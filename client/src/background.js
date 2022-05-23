@@ -154,32 +154,6 @@ function lumosityLoginJS(email, password) {
     return `(${lumosityLogin})("${email}", "${password}")`;
 }
 
-// checks page to see if Lumosity training completed
-function lumosityHasComplete() {
-    return document.querySelector(".complete") !== null;
-}
-function lumosityHasCompleteJS() {
-    return `(${lumosityHasComplete})()`;
-}
-
-// scroll page to vertical coordinate
-function lumosityScroll(top) {
-    window.scroll({top, behavior: "smooth"});
-}
-function lumosityScrollJS(top) {
-    return `(${lumosityScroll})(${top})`;
-}
-
-const lumosityScrollMap = new Map([
-    ["https://www.lumosity.com/app/v4/research/dashboard", 200],
-    ["https://www.lumosity.com/train/turbo/current/1/start", 150],
-    ["https://www.lumosity.com/train/turbo/current/2/start", 150],
-    ["https://www.lumosity.com/train/turbo/current/3/start", 150],
-    ["https://www.lumosity.com/train/turbo/current/4/start", 150],
-    ["https://www.lumosity.com/train/turbo/current/5/start", 150],
-    ["https://www.lumosity.com/train/turbo/current/6/start", 150],
-]);
-
 ipcMain.on('create-lumosity-view', () => {
     if (!mainWin || lumosityView) {
         return;
@@ -191,22 +165,6 @@ ipcMain.on('create-lumosity-view', () => {
     const email = "demobeam002@hcp.lumoslabs.com";
     const password = "attentioncognitionbrain";
     lumosityView.webContents.openDevTools();  // debug
-    // auto scroll
-    lumosityView.webContents.on("did-finish-load", () => {
-        const url = lumosityView.webContents.getURL();
-        const top = lumosityScrollMap.get(url);
-        if (top !== undefined) {
-            lumosityView.webContents.executeJavaScript(lumosityScrollJS(top));
-        }
-    });
-    // handle Lumosity completion (nothing yet)
-    lumosityView.webContents.on("did-finish-load", () => {
-        lumosityView.webContents
-            .executeJavaScript(lumosityHasCompleteJS())
-            .then(completed => {
-                console.debug("Lumosity complete detected");
-            });
-    });
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents
