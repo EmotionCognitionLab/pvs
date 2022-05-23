@@ -164,14 +164,9 @@ ipcMain.on('create-lumosity-view', () => {
     lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
     const email = "demobeam002@hcp.lumoslabs.com";
     const password = "attentioncognitionbrain";
-    lumosityView.webContents.openDevTools();  // debug
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
-        lumosityView.webContents
-            .executeJavaScript(lumosityLoginJS(email, password))
-            .then(success => {
-                console.debug("Lumosity login page encountered:", success);
-            });
+        lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
     });
     lumosityView.webContents.loadURL("https://www.lumosity.com/login");
 });
