@@ -162,8 +162,8 @@ ipcMain.on('create-lumosity-view', () => {
     mainWin.setBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
     lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
-    const email = "demobeam002@hcp.lumoslabs.com";
-    const password = "attentioncognitionbrain";
+    const email = awsSettings.LumosityEmail;
+    const password = awsSettings.LumosityPassword;
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
