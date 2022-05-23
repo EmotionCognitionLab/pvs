@@ -90,7 +90,7 @@ async function initBreathDb(serializedSession) {
         // either way, we can let sqlite create the database
         // if necessary
         db = new Database(breathDbPath());
-        const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL)');
+        const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL, is_best_cnt INTEGER NOT NULL DEFAULT 0)');
         createRegimeTableStmt.run();
 
         // a segment is a portion (usually five minutes) of a longer emwave session (usually fifteen minutes) 
