@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -137,6 +137,51 @@ ipcMain.on('show-login-window', () => {
     console.log(err)
   } 
 })
+
+let lumosityView = null;
+
+// handles login page, returns true if login successfully attempted
+function lumosityLogin(email, password) {
+    const emailInput = document.getElementById("user_login");
+    const passwordInput = document.getElementById("user_password");
+    const formSubmit = document.querySelector('input[type="submit"][value="Log In"]');
+    if (emailInput && passwordInput && formSubmit) {
+        emailInput.value = email;
+        passwordInput.value = password;
+        formSubmit.click();
+        return true;
+    } else {
+        return false;
+    }
+}
+function lumosityLoginJS(email, password) {
+    return `(${lumosityLogin})("${email}", "${password}")`;
+}
+
+ipcMain.on('create-lumosity-view', () => {
+    if (!mainWin || lumosityView) {
+        return;
+    }
+    lumosityView = new BrowserView();
+    mainWin.setBrowserView(lumosityView);
+    lumosityView.setAutoResize({width: true, height: true, vertical: true});
+    lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
+    const email = awsSettings.LumosityEmail;
+    const password = awsSettings.LumosityPassword;
+    // handle first login page load
+    lumosityView.webContents.once("did-finish-load", () => {
+        lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+    });
+    lumosityView.webContents.loadURL("https://www.lumosity.com/login");
+});
+
+ipcMain.on('close-lumosity-view', () => {
+    if (!mainWin || !lumosityView) {
+        return;
+    }
+    mainWin.removeBrowserView(lumosityView);
+    lumosityView = null;
+});
 
 ipcMain.handle('upload-emwave-data', async (event, session) => {
   emwave.stopEmWave();
