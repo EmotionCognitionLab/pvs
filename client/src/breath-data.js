@@ -7,7 +7,7 @@ import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
 
 let db;
-let insertSegmentStmt, findRegimeStmt, insertRegimeStmt;
+let insertSegmentStmt, findRegimeStmt, insertRegimeStmt, regimeByIdStmt;
 
 function breathDbPath() {
     let breathDbPath;
@@ -45,6 +45,18 @@ function getRegimeId(regime) {
     return newRegime.lastInsertRowid;
 }
 
+function lookupRegime(regimeId) {
+    const res = regimeByIdStmt.get(regimeId);
+    if (!res) return;
+
+    if (res.randomize === 0) {
+        res.randomize = false;
+    } else {
+        res.randomize = true;
+    }
+    return res;
+}
+
 function createSegment(regimeData) {
     const regimeId = getRegimeId(regimeData.regime);
     const newSegment = insertSegmentStmt.run(
@@ -70,7 +82,27 @@ function getRegimeStats(regimeId) {
     const stdDev = std(avgCohVals);
     const interval = 1.96 * stdDev;
     const meanAvgCoh = mean(avgCohVals);
-    return { mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
+    return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
+}
+
+function getAllRegimeIds() {
+    const allRegimesStmt = db.prepare('SELECT id from regimes');
+    const allRegimes = allRegimesStmt.all();
+    return allRegimes.map(r => r.id);
+}
+
+function getAvgRestCoherence() {
+    const stmt = db.prepare('SELECT avg_coherence from rest_segments');
+    const res = stmt.all();
+    return mean(res.map(r => r.avg_coherence));
+}
+
+function setRegimeBestCnt(regimeId, count) {
+    const updateStmt = db.prepare('UPDATE regimes set is_best_cnt = ? where id = ?');
+    const res = updateStmt.run(count, regimeId);
+    if (res.changes != 1) {
+        throw new Error(`Error updating is_best_cnt for regime ${regimeId}. Expected it to update one row, but it updated ${newRegime.changes}.`);
+    }
 }
 
 async function initBreathDb(serializedSession) {
@@ -109,6 +141,7 @@ async function initBreathDb(serializedSession) {
 
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
+        regimeByIdStmt = db.prepare('SELECT * from regimes where id = ?');
 
         emwave.subscribe(createSegment);
     } catch (err) {
@@ -126,4 +159,4 @@ function closeBreathDb() {
     if (db) db.close();
 }
 
-export { closeBreathDb, breathDbPath }
+export { closeBreathDb, breathDbPath, getRegimeId, getAllRegimeIds, getRegimeStats, getAvgRestCoherence, lookupRegime, setRegimeBestCnt }
