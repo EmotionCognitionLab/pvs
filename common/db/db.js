@@ -97,15 +97,7 @@ export default class Db {
             throw new Error("You must provide either session or identityId to get results for the current user");
         }
 
-        // credentials override passed-in identity
-        let identId = this.credentials ? this.credentials.identityId : identityId;
-        if (!identId) {
-            const credentialsPresent = this.credentials ? true: false;
-            this.logger.error(`Empty identity when calling getResultsForCurrentUser. Passed-in id: ${identityId} . Credentials present: ${credentialsPresent} .`);
-            await this.refreshPermissions();
-            identId = this.credentials ? this.credentials.identityId : identityId;
-            this.logger.info(`identId after calling refreshPermissions: ${identId}`);
-        }
+        const identId = await this.getValidCreds(identityId);
 
         try {
             let ExclusiveStartKey, dynResults
@@ -286,6 +278,16 @@ export default class Db {
             throw new Error(`Found multiple users with userId ${userId}.`);
         }
         return dynResults.Items[0];
+    }
+
+    async getValidCreds(identityId=null) {
+        // credentials override passed-in identity
+        let identId = this.credentials ? this.credentials.identityId : identityId;
+        if (!identId) {
+            await this.refreshPermissions();
+            identId = this.credentials ? this.credentials.identityId : identityId;
+        }
+        return identId;
     }
 
     async dynamoOp(params, fnName) {
