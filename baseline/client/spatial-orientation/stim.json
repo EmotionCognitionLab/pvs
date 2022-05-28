@@ -52,46 +52,6 @@
                     "center": "drum",
                     "facing": "bell",
                     "target": "wheel"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "tree",
-                    "target": "barrel"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "bell",
-                    "target": "wheel"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "trash can",
-                    "target": "bell"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "bell",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "traffic light",
-                    "target": "tree"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "drum",
-                    "target": "wheel"
-                },
-                {
-                    "center": "tree",
-                    "facing": "bell",
-                    "target": "trash can"
-                },
-                {
-                    "center": "drum",
-                    "facing": "trash can",
-                    "target": "barrel"
                 }
             ]
         },
@@ -99,64 +59,24 @@
             "order": "random",
             "trials": [
                 {
-                    "center": "bell",
+                    "center": "traffic light",
                     "facing": "tree",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "drum",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "tree",
-                    "facing": "traffic light",
-                    "target": "bell"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "drum",
-                    "target": "trash can"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "barrel",
-                    "target": "tree"
+                    "target": "barrel"
                 },
                 {
                     "center": "traffic light",
+                    "facing": "bell",
+                    "target": "wheel"
+                },
+                {
+                    "center": "barrel",
                     "facing": "trash can",
                     "target": "bell"
                 },
                 {
-                    "center": "tree",
-                    "facing": "trash can",
-                    "target": "barrel"
-                },
-                {
                     "center": "trash can",
-                    "facing": "drum",
-                    "target": "barrel"
-                },
-                {
-                    "center": "bell",
-                    "facing": "drum",
-                    "target": "trash can"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "trash can",
+                    "facing": "bell",
                     "target": "traffic light"
-                },
-                {
-                    "center": "tree",
-                    "facing": "drum",
-                    "target": "trash can"
-                },
-                {
-                    "center": "bell",
-                    "facing": "traffic light",
-                    "target": "drum"
                 }
             ]
         },
@@ -166,62 +86,22 @@
                 {
                     "center": "wheel",
                     "facing": "traffic light",
-                    "target": "drum"
-                },
-                {
-                    "center": "drum",
-                    "facing": "wheel",
-                    "target": "bell"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "barrel",
-                    "target": "trash can"
+                    "target": "tree"
                 },
                 {
                     "center": "barrel",
-                    "facing": "traffic light",
-                    "target": "tree"
-                },
-                {
-                    "center": "drum",
-                    "facing": "wheel",
-                    "target": "tree"
-                },
-                {
-                    "center": "drum",
-                    "facing": "barrel",
+                    "facing": "drum",
                     "target": "wheel"
                 },
                 {
-                    "center": "traffic light",
+                    "center": "tree",
                     "facing": "bell",
-                    "target": "barrel"
+                    "target": "trash can"
                 },
                 {
                     "center": "drum",
-                    "facing": "barrel",
-                    "target": "bell"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "drum",
-                    "target": "tree"
-                },
-                {
-                    "center": "bell",
                     "facing": "trash can",
-                    "target": "tree"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "traffic light",
-                    "target": "bell"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "wheel",
-                    "target": "bell"
+                    "target": "barrel"
                 }
             ]
         },
@@ -230,128 +110,23 @@
             "trials": [
                 {
                     "center": "bell",
-                    "facing": "traffic light",
-                    "target": "barrel"
+                    "facing": "tree",
+                    "target": "traffic light"
                 },
                 {
-                    "center": "bell",
-                    "facing": "wheel",
-                    "target": "trash can"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "bell",
-                    "target": "trash can"
-                },
-                {
-                    "center": "wheel",
+                    "center": "trash can",
                     "facing": "drum",
+                    "target": "traffic light"
+                },
+                {
+                    "center": "tree",
+                    "facing": "traffic light",
                     "target": "bell"
                 },
                 {
-                    "center": "drum",
-                    "facing": "tree",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "tree",
-                    "target": "drum"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "traffic light",
-                    "target": "tree"
-                },
-                {
                     "center": "barrel",
-                    "facing": "traffic light",
-                    "target": "drum"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "trash can",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "bell",
                     "facing": "drum",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "drum",
-                    "facing": "traffic light",
-                    "target": "tree"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "bell",
-                    "target": "barrel"
-                }
-            ]
-        },
-        "5": {
-            "order": "random",
-            "trials": [
-                {
-                    "center": "traffic light",
-                    "facing": "bell",
-                    "target": "tree"
-                },
-                {
-                    "center": "bell",
-                    "facing": "tree",
                     "target": "trash can"
-                },
-                {
-                    "center": "drum",
-                    "facing": "bell",
-                    "target": "tree"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "bell",
-                    "target": "wheel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "tree",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "tree",
-                    "facing": "bell",
-                    "target": "barrel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "bell",
-                    "target": "tree"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "trash can",
-                    "target": "drum"
-                },
-                {
-                    "center": "tree",
-                    "facing": "bell",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "bell",
-                    "facing": "drum",
-                    "target": "tree"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "bell",
-                    "target": "drum"
-                },
-                {
-                    "center": "drum",
-                    "facing": "bell",
-                    "target": "traffic light"
                 }
             ]
         },
@@ -359,64 +134,24 @@
             "order": "random",
             "trials": [
                 {
-                    "center": "bell",
+                    "center": "wheel",
                     "facing": "barrel",
-                    "target": "trash can"
+                    "target": "tree"
                 },
                 {
                     "center": "traffic light",
-                    "facing": "tree",
-                    "target": "wheel"
-                },
-                {
-                    "center": "tree",
-                    "facing": "wheel",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "barrel",
-                    "target": "drum"
-                },
-                {
-                    "center": "tree",
-                    "facing": "drum",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "drum",
                     "facing": "trash can",
                     "target": "bell"
                 },
                 {
-                    "center": "trash can",
-                    "facing": "bell",
-                    "target": "wheel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "tree",
-                    "target": "bell"
-                },
-                {
                     "center": "tree",
-                    "facing": "drum",
+                    "facing": "trash can",
                     "target": "barrel"
                 },
                 {
-                    "center": "tree",
-                    "facing": "barrel",
-                    "target": "bell"
-                },
-                {
                     "center": "trash can",
-                    "facing": "wheel",
-                    "target": "drum"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "trash can",
-                    "target": "drum"
+                    "facing": "drum",
+                    "target": "barrel"
                 }
             ]
         },
@@ -442,46 +177,6 @@
                     "center": "trash can",
                     "facing": "traffic light",
                     "target": "wheel"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "barrel",
-                    "target": "drum"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "drum",
-                    "target": "wheel"
-                },
-                {
-                    "center": "bell",
-                    "facing": "trash can",
-                    "target": "wheel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "traffic light",
-                    "target": "trash can"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "tree",
-                    "target": "bell"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "wheel",
-                    "target": "bell"
-                },
-                {
-                    "center": "drum",
-                    "facing": "trash can",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "bell",
-                    "facing": "trash can",
-                    "target": "drum"
                 }
             ]
         },
@@ -490,62 +185,22 @@
             "trials": [
                 {
                     "center": "traffic light",
-                    "facing": "wheel",
-                    "target": "tree"
-                },
-                {
-                    "center": "bell",
-                    "facing": "trash can",
-                    "target": "barrel"
-                },
-                {
-                    "center": "drum",
-                    "facing": "tree",
-                    "target": "barrel"
-                },
-                {
-                    "center": "wheel",
                     "facing": "barrel",
-                    "target": "bell"
-                },
-                {
-                    "center": "tree",
-                    "facing": "wheel",
-                    "target": "trash can"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "bell",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "bell",
-                    "target": "tree"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "barrel",
-                    "target": "wheel"
-                },
-                {
-                    "center": "drum",
-                    "facing": "traffic light",
-                    "target": "barrel"
+                    "target": "drum"
                 },
                 {
                     "center": "traffic light",
                     "facing": "drum",
-                    "target": "bell"
-                },
-                {
-                    "center": "bell",
-                    "facing": "barrel",
                     "target": "wheel"
                 },
                 {
-                    "center": "traffic light",
-                    "facing": "barrel",
+                    "center": "bell",
+                    "facing": "trash can",
+                    "target": "wheel"
+                },
+                {
+                    "center": "wheel",
+                    "facing": "traffic light",
                     "target": "trash can"
                 }
             ]
@@ -554,64 +209,24 @@
             "order": "random",
             "trials": [
                 {
-                    "center": "bell",
-                    "facing": "traffic light",
-                    "target": "trash can"
-                },
-                {
                     "center": "traffic light",
                     "facing": "tree",
-                    "target": "trash can"
+                    "target": "bell"
                 },
                 {
-                    "center": "drum",
+                    "center": "trash can",
                     "facing": "wheel",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "wheel",
-                    "target": "barrel"
-                },
-                {
-                    "center": "bell",
-                    "facing": "drum",
-                    "target": "wheel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "drum",
-                    "target": "trash can"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "traffic light",
                     "target": "bell"
                 },
                 {
                     "center": "drum",
-                    "facing": "barrel",
-                    "target": "tree"
-                },
-                {
-                    "center": "tree",
-                    "facing": "wheel",
-                    "target": "barrel"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "traffic light",
-                    "target": "wheel"
+                    "facing": "trash can",
+                    "target": "traffic light"
                 },
                 {
                     "center": "bell",
-                    "facing": "barrel",
-                    "target": "tree"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "tree",
-                    "target": "wheel"
+                    "facing": "trash can",
+                    "target": "drum"
                 }
             ]
         },
@@ -619,129 +234,24 @@
             "order": "random",
             "trials": [
                 {
-                    "center": "tree",
-                    "facing": "traffic light",
-                    "target": "drum"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "tree",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "tree",
-                    "facing": "traffic light",
-                    "target": "trash can"
-                },
-                {
                     "center": "traffic light",
-                    "facing": "barrel",
-                    "target": "tree"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "traffic light",
-                    "target": "barrel"
-                },
-                {
-                    "center": "barrel",
                     "facing": "wheel",
-                    "target": "trash can"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "traffic light",
-                    "target": "trash can"
-                },
-                {
-                    "center": "tree",
-                    "facing": "trash can",
-                    "target": "wheel"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "tree",
-                    "target": "bell"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "tree",
-                    "target": "wheel"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "bell",
                     "target": "tree"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "barrel",
-                    "target": "bell"
-                }
-            ]
-        },
-        "11": {
-            "order": "random",
-            "trials": [
-                {
-                    "center": "drum",
-                    "facing": "tree",
-                    "target": "bell"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "drum",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "drum",
-                    "target": "bell"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "barrel",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "tree",
-                    "facing": "drum",
-                    "target": "wheel"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "wheel",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "barrel",
-                    "target": "wheel"
-                },
-                {
-                    "center": "tree",
-                    "facing": "bell",
-                    "target": "wheel"
                 },
                 {
                     "center": "bell",
-                    "facing": "wheel",
-                    "target": "traffic light"
-                },
-                {
-                    "center": "drum",
-                    "facing": "bell",
+                    "facing": "trash can",
                     "target": "barrel"
                 },
                 {
-                    "center": "tree",
-                    "facing": "bell",
-                    "target": "drum"
+                    "center": "drum",
+                    "facing": "tree",
+                    "target": "barrel"
                 },
                 {
                     "center": "wheel",
-                    "facing": "tree",
-                    "target": "drum"
+                    "facing": "barrel",
+                    "target": "bell"
                 }
             ]
         },
@@ -749,64 +259,24 @@
             "order": "random",
             "trials": [
                 {
-                    "center": "trash can",
-                    "facing": "tree",
-                    "target": "barrel"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "drum",
-                    "target": "tree"
-                },
-                {
-                    "center": "trash can",
-                    "facing": "barrel",
-                    "target": "drum"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "tree",
-                    "target": "drum"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "bell",
-                    "target": "barrel"
-                },
-                {
                     "center": "tree",
-                    "facing": "barrel",
-                    "target": "wheel"
-                },
-                {
-                    "center": "barrel",
-                    "facing": "trash can",
-                    "target": "tree"
-                },
-                {
-                    "center": "traffic light",
-                    "facing": "drum",
-                    "target": "barrel"
-                },
-                {
-                    "center": "drum",
-                    "facing": "bell",
+                    "facing": "wheel",
                     "target": "trash can"
                 },
                 {
                     "center": "wheel",
-                    "facing": "drum",
+                    "facing": "bell",
+                    "target": "traffic light"
+                },
+                {
+                    "center": "barrel",
+                    "facing": "bell",
                     "target": "tree"
                 },
                 {
                     "center": "trash can",
-                    "facing": "wheel",
-                    "target": "barrel"
-                },
-                {
-                    "center": "wheel",
-                    "facing": "trash can",
-                    "target": "barrel"
+                    "facing": "barrel",
+                    "target": "wheel"
                 }
             ]
         }

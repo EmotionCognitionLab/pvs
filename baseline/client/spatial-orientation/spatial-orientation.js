@@ -20,7 +20,9 @@ import test_instruction_html from "./frag/test_instruction.html";
 
 export class SpatialOrientation {
     constructor(setNum) {
-        if (Number.isInteger(setNum) && setNum > 0) {
+        if (setNum === 5 || setNum === 11) {
+            throw new Error("invalid setNum");
+        } else if (Number.isInteger(setNum) && setNum > 0) {
             this.setNum = setNum
         } else {
             throw new Error("setNum must be a strictly positive integer");
@@ -59,7 +61,7 @@ export class SpatialOrientation {
             i(test_instruction_html),
             {
                 type: "call-function",
-                func: () => { endTime = Date.now() + 5 * 60 * 1000; }  // 5 minutes after instruction shown
+                func: () => { endTime = Date.now() + 100 * 1000; }  // 100 seconds after instruction shown
             },
             ...testStim.map(s => t(s.center, s.facing, s.target, "test", null, () => endTime)),
         ];
