@@ -105,14 +105,18 @@ function setRegimeBestCnt(regimeId, count) {
     }
 }
 
+// import this module into itself so that we can mock
+// certain calls in test
+// https://stackoverflow.com/questions/51269431/jest-mock-inner-function
+import * as testable from "./breath-data.js";
 async function initBreathDb(serializedSession) {
     try {
-        statSync(breathDbPath());
+        statSync(testable.breathDbPath());
     } catch (err) {
         if (err.code !== 'ENOENT') throw(err);
         // we have no local db file; try downloading it
         const session = SessionStore.buildSession(serializedSession);
-        await downloadDatabase(breathDbPath(), session);
+        await testable.forTesting.downloadDatabase(testable.breathDbPath(), session);
     }
 
     try {
@@ -121,7 +125,7 @@ async function initBreathDb(serializedSession) {
         // lost all their data :-(
         // either way, we can let sqlite create the database
         // if necessary
-        db = new Database(breathDbPath());
+        db = new Database(testable.breathDbPath());
         const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL, is_best_cnt INTEGER NOT NULL DEFAULT 0)');
         createRegimeTableStmt.run();
 
@@ -144,6 +148,8 @@ async function initBreathDb(serializedSession) {
         regimeByIdStmt = db.prepare('SELECT * from regimes where id = ?');
 
         emwave.subscribe(createSegment);
+
+        return db;
     } catch (err) {
         console.log('Error initializing breath database', err);
         throw(err);
@@ -160,3 +166,4 @@ function closeBreathDb() {
 }
 
 export { closeBreathDb, breathDbPath, getRegimeId, getAllRegimeIds, getRegimeStats, getAvgRestCoherence, lookupRegime, setRegimeBestCnt }
+export const forTesting = { initBreathDb, downloadDatabase, createSegment }
