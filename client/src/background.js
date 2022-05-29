@@ -154,20 +154,35 @@ function lumosityLogin(email, password) {
         return false;
     }
 }
+
 function lumosityLoginJS(email, password) {
     return `(${lumosityLogin})("${email}", "${password}")`;
 }
 
-ipcMain.on('create-lumosity-view', () => {
+function lumosityEmailValid(email) {
+  if (email.match(/heart|demobeam[0-9]{3}@hcp.lumoslabs.com/)) return true;
+  return false;
+}
+
+function lumosityPasswordValid(pw) {
+  if (pw.match(/[a-z]+/)) return true;
+  return false;
+}
+
+ipcMain.on('create-lumosity-view', (_event, email, password) => {
     if (!mainWin || lumosityView) {
         return;
+    }
+    if (!lumosityEmailValid(email)) {
+      throw new Error('You must provide a valid Lumosity email address.');
+    }
+    if (!lumosityPasswordValid(password)) {
+      throw new Error("You must provide a valid Lumosity password.");
     }
     lumosityView = new BrowserView();
     mainWin.setBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
     lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
-    const email = awsSettings.LumosityEmail;
-    const password = awsSettings.LumosityPassword;
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));

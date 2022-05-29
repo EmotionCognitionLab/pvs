@@ -14,7 +14,10 @@
         ipcRenderer.send("close-lumosity-view");
         router.push({path: "/"});
     }
-    ipcRenderer.send("create-lumosity-view");
+    const email = window.localStorage.getItem('HeartBeam.lumos.e')
+    const pw = window.localStorage.getItem('HeartBeam.lumos.p')
+    // TODO check that email and pw are really set (and fetch from dynamo if not)
+    ipcRenderer.send("create-lumosity-view", email, pw);
 
 </script>
 
