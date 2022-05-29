@@ -57,11 +57,18 @@ async function assignToCondition() {
             const session = await SessionStore.getRendererSession()
             const apiClient = new ApiClient(session)
             await apiClient.assignToCondition({bornSex: sex.value, sexDesc: sexDescription.value})
+
+            // we'll also assign them their lumosity info here
+            const lumosCreds = await apiClient.getLumosCredsForSelf()
+
+            window.localStorage.setItem('HeartBeam.lumos.e', lumosCreds.email)
+            window.localStorage.setItem('HeartBeam.lumos.p', lumosCreds.pw)
             window.localStorage.setItem('HeartBeam.isConfigured', 'true')
             emit('complete')
         } catch (err) {
             console.error(err)
             errors['general'] = `${err.message}`
+            throw(err)
         }
     }
 }
