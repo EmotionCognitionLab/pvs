@@ -129,6 +129,9 @@ async function initBreathDb(serializedSession) {
         const createRegimeTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS regimes(id INTEGER PRIMARY KEY, duration_ms INTEGER NOT NULL, breaths_per_minute INTEGER NOT NULL, hold_pos TEXT, randomize BOOLEAN NOT NULL, is_best_cnt INTEGER NOT NULL DEFAULT 0)');
         createRegimeTableStmt.run();
 
+        const createDailyRegimesTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS daily_regimes(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, date INTEGER NOT NULL, day_order INTEGER NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
+        createDailyRegimesTableStmt.run();
+
         // a segment is a portion (usually five minutes) of a longer emwave session (usually fifteen minutes) 
         // during which breathing happens under a given regime
         // a segment is eseentially an instance of a regime - while participants may breathe
