@@ -934,6 +934,7 @@ resource "aws_iam_role" "lambda" {
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-user-read-write.arn,
     aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
 }
