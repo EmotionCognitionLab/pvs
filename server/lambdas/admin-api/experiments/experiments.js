@@ -76,6 +76,7 @@ async function getAllUsers() {
     return identityIds;
 }
 
+// TODO this is now in common/db; use it from there
 async function getIdentityIdForUserId(userId) {
     const baseParams = {
         TableName: experimentTable,

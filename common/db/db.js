@@ -280,6 +280,19 @@ export default class Db {
         return dynResults.Items[0];
     }
 
+    async getIdentityIdForUserId(userId) {
+        const baseParams = {
+            TableName: this.experimentTable,
+            IndexName: 'userId-experimentDateTime-index',
+            KeyConditionExpression: "userId = :userId",
+            ExpressionAttributeValues: {":userId": userId},
+            ProjectionExpression: 'identityId'
+        };
+        const result = await this.query(baseParams);
+        if (result.Items.length === 0) return null;
+        return result.Items[0].identityId;
+    }
+
     async getValidCreds(identityId=null) {
         // credentials override passed-in identity
         let identId = this.credentials ? this.credentials.identityId : identityId;
