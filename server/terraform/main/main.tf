@@ -258,6 +258,27 @@ resource "aws_ssm_parameter" "dynamo-ds-table" {
   value = "${aws_dynamodb_table.ds-table.name}"
 }
 
+resource "aws_dynamodb_table" "lumos-acct-table" {
+  name           = "pvs-${var.env}-lumos-acct"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "email"
+
+  attribute {
+    name = "email"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lumos-acct-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/lumosacct"
+  description = "Dynamo table holding lumosity account info"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.lumos-acct-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
@@ -634,6 +655,30 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
 POLICY
 }
 
+# policy to allow limited reading/writing of dynamo lumosity account table
+resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
+  name = "pvs-${var.env}-dynamodb-lumos-acct-read-write"
+  path = "/policy/dynamodb/lumos/all/"
+  description = "Allows limited reading from/writing of dynamodb lumosity account table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem",
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-acct-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow fetching user ids from dynamo user table
 # TODO remove this after refactoring experiment data table to allow query by experiment name
 resource "aws_iam_policy" "dynamodb-userid-read" {
@@ -887,7 +932,9 @@ resource "aws_iam_role" "lambda" {
   })
 
   managed_policy_arns   = [
-    aws_iam_policy.dynamodb-user-read-write.arn, aws_iam_policy.cloudwatch-write.arn
+    aws_iam_policy.dynamodb-user-read-write.arn,
+    aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
+    aws_iam_policy.cloudwatch-write.arn
   ]
 }
 
