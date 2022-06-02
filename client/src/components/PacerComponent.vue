@@ -6,6 +6,7 @@
 <script setup>
     import { BreathPacer } from 'pvs-breath-pacer'
     import { onMounted, ref, watch } from '@vue/runtime-core';
+    import { isProxy, toRaw } from 'vue'
     import { ipcRenderer } from 'electron';
 
     const props = defineProps(['regimes', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
@@ -56,7 +57,11 @@
         }
         bp = new BreathPacer(pacer.value, [], pacerConfig)
         bp.subscribeToRegimeChanges(regimeChanged)
-        bp.setInstructions(props.regimes)
+        // if we don't do this we'll fail to emit regime-changed
+        // events b/c Object.clone (used by electron's ipc event system)
+        // doesn't work on vue proxies
+        const rawRegimes = isProxy(props.regimes) ? toRaw(props.regimes) : props.regimes
+        bp.setInstructions(rawRegimes)
     })
 </script>
 <style scoped>
