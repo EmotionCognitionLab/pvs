@@ -134,4 +134,44 @@ describe("Breathing data functions", () => {
         expect(stats.low95CI).toBeCloseTo(expectedAvg - interval);
         expect(stats.high95CI).toBeCloseTo(expectedAvg + interval);
     });
+
+    it("getTrainingDayCount should return 0 when the user has done no training", () => {
+        expect(bd.getTrainingDayCount()).toBe(0);
+    });
+
+    it("getTrainingDayCount should return 0 when the only training the user has done is today", () => {
+        const segment = {
+            regime: { durationMs: 300000, breathsPerMinute: 12, randomize: false },
+            sessionStartTime: 0,
+            avgCoherence: 2.3
+        };
+        bd.forTesting.createSegment(segment);
+        expect(rowCount('segments')).toBe(1);
+        expect(bd.getTrainingDayCount()).toBe(0);
+    });
+
+    it("getTrainingDayCount should coalesce multiple sessions in one day so that that day is counted only once", () => {
+        const regime = { durationMs: 300000, breathsPerMinute: 12, randomize: false };
+        const coherences = [1.2, 2.7, 2.2, 1.9];
+        coherences.forEach(avgCoh => {
+            const seg = {regime: regime, avgCoherence: avgCoh, sessionStartTime: Math.floor(Math.random() * 1000)};
+            bd.forTesting.createSegment(seg);
+        });
+        
+        const stmt = db.prepare('SELECT id from segments');
+        const segIds = stmt.all().map(s => s['id']);
+        expect(segIds.length).toBe(coherences.length);
+
+        const updateStmt = db.prepare('UPDATE segments set end_date_time = ? where id = ?');
+        const d1 = new Date(2022, 3, 2, 19, 27, 2);
+        const d2 = new Date(d1); d2.setSeconds(54);
+        const d3 = new Date(2022, 4, 17, 8, 13, 43);
+        const d4 = new Date(d3); d3.setMinutes(34);
+        const dates = [d1, d2, d3, d4];
+        dates.forEach((d, idx) => updateStmt.run(d.getTime() / 1000, segIds[idx]));
+        const datesAsDays = dates.map(theDate => `${theDate.getFullYear()}${(theDate.getMonth() + 1).toString().padStart(2,0)}${theDate.getDate().toString().padStart(2, 0)}`);
+        const expectedDays = new Set(datesAsDays).size;
+
+        expect(bd.getTrainingDayCount()).toBe(expectedDays);
+    });
 });

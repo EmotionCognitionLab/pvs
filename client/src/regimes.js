@@ -1,5 +1,16 @@
-import { ipcMain } from 'electron';
-import { getRegimeStats, getRegimeId, getAllRegimeIds, lookupRegime, getAvgRestCoherence, setRegimeBestCnt } from "./breath-data";
+import { pullAt } from 'lodash';
+import { 
+    getRegimeStats,
+    getRegimeId,
+    getAllRegimeIds,
+    getRegimesForDay,
+    lookupRegime,
+    getAvgRestCoherence,
+    setRegimeBestCnt,
+    getSegmentsAfterDate,
+    getTrainingDayCount,
+    saveRegimesForDay
+} from "./breath-data";
 
 /**
  * Handles regime selection and generation.
@@ -181,14 +192,70 @@ function generateRegimesForDay(subjCondition, dayCount) {
             }
         }
     }
+    saveRegimesForDay(regimes, new Date());
     return regimes;
 }
 
-ipcMain.handle('calculate-regimes', (_event, subjCondition, dayCount) => {
-    return generateRegimesForDay(subjCondition, dayCount);
-});
+const maxSessionDuration = 15 * 60 * 1000; // we should never have a session longer than 15 minutes
 
-export { generateRegimesForDay }
+function filterRegimesByAvailableSessionTime(regimes) {
+    const regimesForSession = [];
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(23); midnight.setMinutes(59); midnight.setSeconds(59);
+    const msRemainingToday = midnight - now;
+    const availableMs = Math.min(msRemainingToday, maxSessionDuration);
+    let totalDurationMs = 0;
+    for (let i = 0; i < regimes.length; i++) {
+        const r = regimes[i];
+        if ((totalDurationMs + r.durationMs) <= availableMs) {
+            regimesForSession.push(r);
+            totalDurationMs += r.durationMs;
+        } else {
+            break;
+        }
+    }
+    return regimesForSession;
+}
+
+function getRegimesForSession(subjCondition) {
+    // first, check to see if we've already generated regimes for today    
+    const regimesForToday = getRegimesForDay(new Date());
+    if (regimesForToday.length > 0 && regimesForToday.length !== 6) {
+        throw new Error(`Expected to have six regimes for ${today} but found ${regimesForToday.length}`);
+    }
+
+    let regimesForSession;
+
+    // if we do have generated regimes for today, figure out which ones haven't been done
+    if (regimesForToday.length > 0) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
+        const regimesDoneToday = getSegmentsAfterDate(startOfDay).map(s => s.regimeId);
+        const regimesForTodayIds = regimesForToday.map(r => r.id);
+        // from the list of regimes to be done today, remove the regimes
+        // that have already been done, keeping in mind that the same
+        // regime may be assigned multiple times in a day and only one occurrence should be removed each time it is done
+        // IMPORTANT: assumes that regimes are always done in order, that is,
+        // that the order of regimes in regimesDoneToday will match the order
+        // of regimes in todayRegimes
+        const doneIndices = regimesDoneToday.map((r, idx) => r === regimesForTodayIds[idx] ? idx : -1).filter(i => i != -1);
+        pullAt(regimesForToday, doneIndices);
+        // now check to see how many we can do
+        regimesForSession = filterRegimesByAvailableSessionTime(regimesForToday);
+    } else {
+        // we have no regimes; generate some
+        const trainingDay = getTrainingDayCount() + 1;
+        const newRegimes = generateRegimesForDay(subjCondition, trainingDay);
+        newRegimes.forEach(r => r.id = getRegimeId(r));
+        regimesForSession = filterRegimesByAvailableSessionTime(newRegimes);
+    }
+
+    return regimesForSession;
+    
+}
+
+export { generateRegimesForDay, getRegimesForSession }
 
 export const forTesting = { 
     condA,
@@ -198,5 +265,6 @@ export const forTesting = {
     day2ARegimes,
     day2BRegimes,
     day3And4ARegimes,
-    day3And4BRegimes
+    day3And4BRegimes,
+    maxSessionDuration
 }

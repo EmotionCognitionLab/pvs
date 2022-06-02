@@ -1,4 +1,4 @@
-import { generateRegimesForDay, forTesting } from "../src/regimes.js";
+import { generateRegimesForDay, getRegimesForSession, forTesting } from "../src/regimes.js";
 
 function regimesEqual(r1, r2) {
     if (Object.entries(r1).length !== Object.entries(r2).length) return false;
@@ -15,6 +15,7 @@ function regimesEqual(r1, r2) {
     return true;
 }
 
+// TODO re-write all tests for generateRegimesForDay as calls to getRegimesForSession
 describe("Generating regimes for a given day and experimental condition", () => {
     it("should throw an error if day is < 1", () => {
         expect(() => {
@@ -59,10 +60,14 @@ jest.mock('../src/breath-data.js', () => ({
     getAllRegimeIds: jest.fn(() => [1,2,3]),
     lookupRegime: jest.fn(id => ( {id: id} )),
     setRegimeBestCnt: jest.fn(() => {}),
-    getRegimeId: jest.fn(() =>  Math.floor(Math.random() * 100) + 5)
+    getRegimeId: jest.fn(() =>  Math.floor(Math.random() * 100) + 5),
+    getRegimesForDay: jest.fn(() => []),
+    getSegmentsAfterDate: jest.fn(() => []),
+    getTrainingDayCount: jest.fn(() => -1),
+    saveRegimesForDay: jest.fn(() => {})
 }));
 
-import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getAllRegimeIds } from '../src/breath-data';
+import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getAllRegimeIds, saveRegimesForDay } from '../src/breath-data';
 
 describe("Generating regimes for days 5+", () => {
     it("should throw an error when the condition is a and no regimes have confidence intervals overlapping the highest mean coherence", () => {
@@ -267,5 +272,149 @@ describe("Generating regimes for days 5+", () => {
                 expect(Object.values(idCount).every(v => v === 6 / Object.keys(idCount).length)).toBeTruthy();
             }
         });
+    });
+});
+
+import { getRegimesForDay, getSegmentsAfterDate, getTrainingDayCount } from '../src/breath-data';
+
+/**
+ * Given a list of regimes, return those that can be completed within durationMs.
+ * @param {*} regimes 
+ * @param {*} durationMs 
+ */
+function getRegimesForDuration(regimes, durationMs) {
+    const regimeTimeRunningSum = regimes.reduce((prev, cur) => {
+        prev.push(cur.durationMs + prev[prev.length - 1]);
+        return prev;
+     }, [0]).slice(1);
+    return regimes.map((r, idx) => regimeTimeRunningSum[idx] <= durationMs ? r : -1).filter(i => i != -1);
+}
+
+describe("getRegimesForSession", () => {
+
+    const makeRegime = (id) => ({id: id, durationMs: 300000});
+
+    beforeAll(() => {
+        // so that tests don't inadvertently break if run too close to midnight,
+        // causing filterRegimesByAvailableSessionTime to filter out some regimes
+        // that should be in
+        const date = new Date();
+        date.setHours(0); date.setMinutes(0); date.setSeconds(0);
+        jest.useFakeTimers("modern");
+        jest.setSystemTime(date);
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("should throw if the number of regimes for the day is > 0 and !== 6", () => {
+        const regimeSets = [[3,5], [1,2,3,4,5,6,7]]
+        regimeSets.forEach(rs => {
+            const regimes = rs.map(makeRegime);
+            getRegimesForDay.mockImplementation(() => regimes);
+            expect(() => {
+                getRegimesForSession('a');
+            }).toThrow();   
+        }); 
+    });
+
+    it("should filter out regimes already done today", () => {
+        const regimeIds = [1,2,3,4,5,6];
+        const regimes = regimeIds.map(makeRegime);
+        getRegimesForDay.mockImplementation(() => regimes);
+        
+        
+        const doneSegments = regimeIds.slice(0,3).map(id => ({regimeId: id}));
+        getSegmentsAfterDate.mockImplementation(() => doneSegments);
+
+        const expectedRegimes = [];
+        regimes.forEach((r, idx) => {
+            if (idx > doneSegments.length - 1 || r.id !== doneSegments[idx].regimeId) {
+                expectedRegimes.push(r);
+            }
+        });
+
+        const forSession = getRegimesForSession('b');
+        const today = new Date();
+        today.setHours(0); today.setMinutes(0); today.setSeconds(0);
+        expect(getSegmentsAfterDate).toHaveBeenCalledWith(today);
+        expect(forSession).toEqual(expectedRegimes);
+    });
+
+    it("should filter out a regime already done today only the number of times it has been done", () => {
+        const regimeIds = [1,1,1,1,2,3];
+        const regimes = regimeIds.map(makeRegime);
+        getRegimesForDay.mockImplementation(() => regimes);
+
+        const doneSegments = regimeIds.slice(0, 3).map(id => ({regimeId: id}));
+        getSegmentsAfterDate.mockImplementation(() => doneSegments);
+
+        const expectedRegimes = [];
+        regimes.forEach((r, idx) => {
+            if (idx > doneSegments.length - 1 || r.id !== doneSegments[idx].regimeId) {
+                expectedRegimes.push(r);
+            }
+        });
+        const forSession = getRegimesForSession('a');
+        expect(forSession).toEqual(expectedRegimes);
+    });
+
+    it("should never return more than 15 minutes worth of regimes", () => {
+        const regimeIds = [3,4,5,6];
+        const regimes = [{id: 1, durationMs: 800000}, {id: 2, durationMs: 100000}];
+        regimes.push(...regimeIds.map(makeRegime));
+        getRegimesForDay.mockImplementation(() => regimes);
+        getSegmentsAfterDate.mockImplementation(() => []);
+        
+        const expectedRegimes = getRegimesForDuration(regimes,  15 * 60 * 1000);
+        
+        const forSession = getRegimesForSession('b');
+        expect(forSession).toEqual(expectedRegimes);
+    });
+
+    it("should never return a session that can't be completed by midnight", () => {
+        const regimeIds = [1,2,3,4,5,6];
+        const regimes = regimeIds.map(makeRegime);
+        getRegimesForDay.mockImplementation(() => regimes);
+
+        const date = new Date();
+        date.setHours(23); date.setMinutes(54); date.setSeconds(0);
+        jest.setSystemTime(date);
+
+        const midnight = new Date();
+        midnight.setHours(23); midnight.setMinutes(59); midnight.setSeconds(59);
+        const msRemainingToday = midnight.getTime() - date.getTime();
+        const expectedRegimes = getRegimesForDuration(regimes, msRemainingToday);
+       
+        getSegmentsAfterDate.mockImplementation(() => []);
+        const forSession = getRegimesForSession('b');
+        expect(forSession).toEqual(expectedRegimes);
+    });
+
+    it("should not return a session that can't be completed by midnight even for the first session of the day", () => {
+        getRegimesForDay.mockImplementation(() => []);
+        getSegmentsAfterDate.mockImplementation(() => []);
+        getTrainingDayCount.mockImplementation(() => 0);
+
+        const date = new Date();
+        date.setHours(23); date.setMinutes(54); date.setSeconds(0);
+        jest.setSystemTime(date);
+
+        const midnight = new Date();
+        midnight.setHours(23); midnight.setMinutes(59); midnight.setSeconds(59);
+        const msRemainingToday = midnight.getTime() - date.getTime();
+        
+        const forSession = getRegimesForSession('a');
+        const sessionDuration = forSession.reduce((prev, cur) => prev.durationMs + cur.durationMs, {durationMs: 0});
+        expect(sessionDuration).toBeLessThanOrEqual(msRemainingToday);
+    });
+
+    it("should call saveRegimesForDay", () => {
+        getRegimesForDay.mockImplementation(() => []);
+        getSegmentsAfterDate.mockImplementation(() => []);
+        getTrainingDayCount.mockImplementation(() => 0);
+        const forSession = getRegimesForSession('a');
+        expect(saveRegimesForDay).toHaveBeenCalled();
     });
 });

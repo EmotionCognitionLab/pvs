@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
 import { mean, std } from 'mathjs';
+import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
@@ -71,6 +72,31 @@ function createSegment(regimeData) {
     return newSegment.lastInsertRowid;
 }
 
+function getSegmentsAfterDate(date) {
+    const stmt = db.prepare('SELECT * FROM segments where end_date_time >= ? ORDER BY end_date_time asc');
+    const res = stmt.all(date.getTime() / 1000);
+    return res.map(rowToObject);
+}
+
+/**
+ * Returns the number of days, not including today, that a user
+ * has done at least one breathing segment.
+ */
+function getTrainingDayCount() {
+    const startOfDay = new Date();
+    startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
+    const stmt = db.prepare('SELECT end_date_time FROM segments where end_date_time < ?');
+    const segEndTimes = stmt.all(startOfDay.getTime() / 1000);
+    
+    const epochSecToDate = (epochSec) => {
+        const theDate = new Date(epochSec * 1000);
+        return `${theDate.getFullYear()}${(theDate.getMonth() + 1).toString().padStart(2,0)}${theDate.getDate().toString().padStart(2, 0)}`
+    }
+
+    const uniqDays = new Set(segEndTimes.map(s => epochSecToDate(s.end_date_time)));
+    return uniqDays.size;
+}
+
 function getAvgCoherenceValues(regimeId) {
     const stmt = db.prepare('SELECT avg_coherence from segments where regime_id = ?');
     const res = stmt.all(regimeId);
@@ -103,6 +129,49 @@ function setRegimeBestCnt(regimeId, count) {
     if (res.changes != 1) {
         throw new Error(`Error updating is_best_cnt for regime ${regimeId}. Expected it to update one row, but it updated ${newRegime.changes}.`);
     }
+}
+
+function rowToObject(result) {
+    const rowProps = Object.keys(result).map(camelCase);
+    const rowVals = Object.values(result);
+    return zipObject(rowProps, rowVals);
+}
+
+function regimeDataToRegime(rd) {
+    const resObj = rowToObject(rd);
+    resObj.randomize = rd.randomize === 0 ? false : true;
+    return resObj;
+}
+
+function yyyymmddNumber(date) {
+    return Number.parseInt(`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`);
+}
+
+/**
+ * Returns the regimes the user is supposed to follow for a given day, or
+ * an empty list if none are found.
+ * @param {Date} date
+ */
+function getRegimesForDay(date) {
+    const regimesForDayStmt = db.prepare('SELECT regimes.* FROM regimes JOIN daily_regimes ON regimes.id = daily_regimes.regime_id WHERE daily_regimes.date = ? ORDER BY daily_regimes.day_order ASC');
+    const yyyymmdd = yyyymmddNumber(date);
+    const res = regimesForDayStmt.all(yyyymmdd);
+    return res.map(regimeDataToRegime);
+}
+
+/**
+ * Saves the given regimes as the ones to use for the given day.
+ * When retrieved they will always be returned in the order they had here.
+ * @param {array} regimes 
+ * @param {Date} date 
+ */
+function saveRegimesForDay(regimes, date) {
+    const stmt = db.prepare('INSERT INTO daily_regimes(regime_id, date, day_order) VALUES(?, ?, ?)');
+    const yyyymmdd = yyyymmddNumber(date);
+    regimes.forEach((r, idx) => {
+        if (!r.id) r.id = getRegimeId(r);
+        stmt.run(r.id, yyyymmdd, idx);
+    });
 }
 
 // import this module into itself so that we can mock
@@ -168,5 +237,18 @@ function closeBreathDb() {
     if (db) db.close();
 }
 
-export { closeBreathDb, breathDbPath, getRegimeId, getAllRegimeIds, getRegimeStats, getAvgRestCoherence, lookupRegime, setRegimeBestCnt }
+export {
+    closeBreathDb,
+    breathDbPath,
+    getRegimeId,
+    getAllRegimeIds,
+    getRegimeStats,
+    getRegimesForDay,
+    getAvgRestCoherence,
+    lookupRegime,
+    setRegimeBestCnt,
+    getSegmentsAfterDate,
+    getTrainingDayCount,
+    saveRegimesForDay
+}
 export const forTesting = { initBreathDb, downloadDatabase, createSegment }
