@@ -7,7 +7,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb } from './breath-data'
+import { forTesting, breathDbPath, closeBreathDb } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -81,6 +81,7 @@ app.on('ready', async () => {
     }
   }
   emwave.startEmWave()
+  forTesting.initBreathDb()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
   new Logger()

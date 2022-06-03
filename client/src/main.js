@@ -23,7 +23,7 @@ const routes = [
     { path: '/lumos', component: LumosityComponent }
 ]
 
-const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
+// const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
 
 const router = createRouter({
     history: createWebHistory(),
@@ -32,18 +32,18 @@ const router = createRouter({
 
 // use navigation guards to handle 
 // setup and authentication
-router.beforeEach((to) => {
-    const isConfigured = window.localStorage.getItem('HeartBeam.isConfigured')
-    if (isConfigured !== 'true' && !noAuthRoutes.includes(to.path)) {
-        return { path: '/setup' }
-    }
+// router.beforeEach((to) => {
+//     const isConfigured = window.localStorage.getItem('HeartBeam.isConfigured')
+//     if (isConfigured !== 'true' && !noAuthRoutes.includes(to.path)) {
+//         return { path: '/setup' }
+//     }
 
-    if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
-        return { path: '/signin' }
-    }
+//     if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
+//         return { path: '/signin' }
+//     }
 
-    return true
-})
+//     return true
+// })
 
 if (isAuthenticated() && !SessionStore.getRendererSession()) {
     const cognitoAuth = getAuth()
