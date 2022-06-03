@@ -1,6 +1,6 @@
 body {
     display: flex;
-    justify-content: center;
+    justify-content: safe center;
     background-color: #f6f6ee;
 }
 
