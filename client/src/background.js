@@ -8,6 +8,7 @@ import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
 import { breathDbPath, closeBreathDb } from './breath-data'
+import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
@@ -221,6 +222,10 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
     return (err.message);
   });
   return null;
+});
+
+ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
+  return getRegimesForSession(subjCondition);
 });
 
 // Exit cleanly on request from parent process in development mode.
