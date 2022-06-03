@@ -11,8 +11,6 @@ export class Dashboard {
         // determine if the click is trying to check or uncheck
         const checkbox = event.target;
         const checking = checkbox.checked;
-        // prevent the click from changing the checkbox state automatically
-        event.preventDefault();
         // handle the check/uncheck
         const span = checkbox.labels[0]?.querySelector("span");
         const key = checkbox.dataset.key;
