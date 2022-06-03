@@ -21,6 +21,7 @@
         onSuccess: (session) => {
             SessionStore.session = session
             emit('login-succeeded')
+            ipcRenderer.invoke('login-succeeded', session)
             const dest = window.sessionStorage.getItem('HeartBeam.postLoginPath')
             if (dest !== null) { 
                 window.sessionStorage.removeItem('HeartBeam.postLoginPath')
