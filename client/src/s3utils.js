@@ -1,4 +1,5 @@
-import { S3Client, HeadObjectCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+// import { HeadObjectCommand } from "@aws-sdk/client-s3"
 import { CognitoIdentityClient, GetIdCommand, GetCredentialsForIdentityCommand } from "@aws-sdk/client-cognito-identity"
 import { createReadStream, createWriteStream } from 'fs'
 import { parse } from 'path'
@@ -87,18 +88,18 @@ async function getS3Client() {
 
 // returns the last modified date (in ms since start of epoch) of the object at the given bucket/ket
 // returns 0 if the object isn't found
-async function getLastUploadDate(s3Client, bucket, key) {
-    const cmd = new HeadObjectCommand({Bucket: bucket, Key: key});
-    const resp = await s3Client.send(cmd);
-    if (resp.$metadata.httpStatusCode !== 200) {
-        if (resp.$metadata.httpStatusCode === 404) {
-            return 0;
-        }
-        throw new Error(`Getting last upload date failed with status code ${resp.$metadata.httpStatusCode}`);
-    }
-    const d = new Date(resp.LastModified);
-    return d.getTime();
-}
+// async function getLastUploadDate(s3Client, bucket, key) {
+//     const cmd = new HeadObjectCommand({Bucket: bucket, Key: key});
+//     const resp = await s3Client.send(cmd);
+//     if (resp.$metadata.httpStatusCode !== 200) {
+//         if (resp.$metadata.httpStatusCode === 404) {
+//             return 0;
+//         }
+//         throw new Error(`Getting last upload date failed with status code ${resp.$metadata.httpStatusCode}`);
+//     }
+//     const d = new Date(resp.LastModified);
+//     return d.getTime();
+// }
 
 export default {
     /**
@@ -111,7 +112,7 @@ export default {
         session = authSession;
         const {identityId, humanId} = await getUserIds();
         let bucket, key;
-        if (!s3Dest || !s3Dest.hasOwnProperty('bucket') || !s3Dest.hasOwnProperty('key')) {
+        if (!s3Dest || !s3Dest.hasOwn('bucket') || !s3Dest.hasOwn('key')) {
             const pathParts = parse(localFileSrc);
             ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
         } else {
@@ -138,7 +139,7 @@ export default {
         try {
             const {identityId, humanId} = await getUserIds();
             let bucket, key;
-            if (!s3Src || !s3Src.hasOwnProperty('bucket') || !s3Src.hasOwnProperty('key')) {
+            if (!s3Src || !s3Src.hasOwn('bucket') || !s3Src.hasOwn('key')) {
                 const pathParts = parse(localFileDest);
                 ({bucket, key} = getDefaultS3Target(identityId, humanId, pathParts.base));
             } else {
@@ -168,7 +169,7 @@ export default {
                 });
             });
         } catch (err) {
-            if (err.name === 'AccessDenied' && err.hasOwnProperty('$metadata') && err.$metadata.httpStatusCode && err.$metadata.httpStatusCode === 403) {
+            if (err.name === 'AccessDenied' && err.hasOwn('$metadata') && err.$metadata.httpStatusCode && err.$metadata.httpStatusCode === 403) {
                 // Since we don't grant ListBucket perms we get a 403 instead of a 404 
                 // when the file doesn't exist
                 return {status: 'Not found', msg: null };
