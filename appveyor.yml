@@ -4,9 +4,11 @@ branches:
   - main
 build_script:
 - sh: >-
-    cd client
+    cd C:\project\pvs\client
 
-    echo `pwd`
+    echo foo
+
+    echo $pwd
 
     yarn electron:build
 test: off
