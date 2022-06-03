@@ -1,0 +1,12 @@
+version: 1.0.{build}
+branches:
+  only:
+  - main
+build_script:
+- sh: >-
+    cd client
+
+    pwd
+
+    yarn electron:build
+test: off
