@@ -6,7 +6,7 @@ build_script:
 - sh: >-
     cd client
 
-    pwd
+    echo `pwd`
 
     yarn electron:build
 test: off
