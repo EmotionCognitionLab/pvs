@@ -14,8 +14,12 @@ install:
   - ps: Install-Product node 14 x64
   - yarn
 
+branches:
+  only:
+  - main
 build_script:
-  - cmd: cd client
-  - yarn electron:build
-
-test: off
+- sh: >-
+    cd client
+    
+    yarn electron:build
+    
