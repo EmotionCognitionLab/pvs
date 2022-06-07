@@ -184,8 +184,8 @@ async function initBreathDb(serializedSession) {
     } catch (err) {
         if (err.code !== 'ENOENT') throw(err);
         // we have no local db file; try downloading it
-        const session = SessionStore.buildSession(serializedSession);
-        await testable.forTesting.downloadDatabase(testable.breathDbPath(), session);
+        // const session = SessionStore.buildSession(serializedSession);
+        // await testable.forTesting.downloadDatabase(testable.breathDbPath(), session);
     }
 
     try {
