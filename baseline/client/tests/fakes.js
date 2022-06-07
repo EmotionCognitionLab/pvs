@@ -82,6 +82,9 @@ export const fakeUsers = [
         name: "Rarity",
         phone_number: "+19990000004",
         phone_number_verified: true,
+        progress: {
+            dropped: "2022-03-04T00:00:00.000Z",
+        },
         userId: "d24dc34b-2c74-4d52-a7a1-1ec9577a9d00",
     },
     {

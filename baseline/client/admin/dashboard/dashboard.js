@@ -169,6 +169,7 @@ export class Dashboard {
         checkbox.disabled = false;
         checkbox.indeterminate = false;
         checkbox.checked = true;
+
         span.textContent = timestamp.substring(0, 10);
     }
 
@@ -228,6 +229,8 @@ export class Dashboard {
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
         // Daily Tasks T2
         row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2Count, "sets"));
+        // dropped
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "dropped"));
     }
 
     showUserDetails(userId) {

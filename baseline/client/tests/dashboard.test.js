@@ -12,6 +12,7 @@ function expectRowMatches(row, user, sets) {
         eegT2Cell,
         mriT2Cell,
         dailyTasksT2Cell,
+        droppedCell,
     ] = row.querySelectorAll("td");
     const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
     const finishedSetsT1Count = finishedSetsCount;  // to-do: fix this
@@ -26,6 +27,7 @@ function expectRowMatches(row, user, sets) {
     expect(eegT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT2));
     expect(mriT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.mriT2));
     expect(parseInt(dailyTasksT2Cell.querySelector("progress").value, 10)).toBe(finishedSetsT2Count);
+    expect(droppedCell.querySelector("input").checked).toBe(Boolean(user.progress?.dropped));
 }
 
 describe("dashboard", () => {
