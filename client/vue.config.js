@@ -6,6 +6,13 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      builderOptions: {
+        appId: "heartbeam",
+        productName: "HeartBEAM",
+        win: {
+          icon: "HeartBEAM-icon.png"
+        }
+      },
       nodeIntegration: true,
       preload: 'src/preload.js',
       externals: [ 'better-sqlite3' ]

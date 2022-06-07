@@ -1,6 +1,6 @@
 body {
     display: flex;
-    justify-content: center;
+    justify-content: safe center;
     background-color: #f6f6ee;
 }
 
@@ -44,7 +44,7 @@ progress {
 
 label {
     display: inline-block;
-    width: 200px;
+    width: 150px;
     overflow: hidden;
     /*
     white-space: nowrap;

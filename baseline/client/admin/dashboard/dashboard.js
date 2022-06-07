@@ -11,8 +11,6 @@ export class Dashboard {
         // determine if the click is trying to check or uncheck
         const checkbox = event.target;
         const checking = checkbox.checked;
-        // prevent the click from changing the checkbox state automatically
-        event.preventDefault();
         // handle the check/uncheck
         const span = checkbox.labels[0]?.querySelector("span");
         const key = checkbox.dataset.key;
@@ -171,6 +169,7 @@ export class Dashboard {
         checkbox.disabled = false;
         checkbox.indeterminate = false;
         checkbox.checked = true;
+
         span.textContent = timestamp.substring(0, 10);
     }
 
@@ -230,6 +229,8 @@ export class Dashboard {
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
         // Daily Tasks T2
         row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2Count, "sets"));
+        // dropped
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "dropped"));
     }
 
     showUserDetails(userId) {
