@@ -4,11 +4,13 @@ const webpack = require("webpack");
 
 module.exports = {
     entry: {
-        'admin/dashboard': 'admin/dashboard/dashboard.js',
+        'admin/dashboard': 'admin/dashboard/index.js',
+        'admin/docusign': 'admin/docusign/docusign.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
         'login': 'login/login.js',
         'logout': 'logout/logout.js',
+        'pay-info': 'pay-info-page/index.js',
     },
     plugins: [
         // here to quiet complaint about process.env not existing when util lib is loaded
@@ -21,6 +23,12 @@ module.exports = {
             filename: 'admin/dashboard/index.html',
             template: 'admin/dashboard/index.ejs',
             chunks: ['admin/dashboard'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Admin - Consent via Docusign',
+            filename: 'admin/docusign/index.html',
+            template: 'admin/docusign/index.ejs',
+            chunks: ['admin/docusign'],
         }),
         new HtmlWebpackPlugin({
             title: 'Admin - Download',
@@ -54,6 +62,12 @@ module.exports = {
             filename: 'logout/error/index.html',
             chunks: ['logout'],
         }),
+        new HtmlWebpackPlugin({
+            title: 'Payment Info',
+            filename: 'pay-info/index.html',  // intentionally not pay-info-page!
+            template: 'pay-info-page/index.ejs',
+            chunks: ['pay-info'],
+        }),
     ],
     optimization: {
         splitChunks: {
@@ -83,9 +97,11 @@ module.exports = {
         modules: [
             __dirname,
             path.join(__dirname, "node_modules"),
+            path.join(__dirname, "../..", "common/api/node_modules"),
             path.join(__dirname, "../..", "common/auth/node_modules"),
             path.join(__dirname, "../..", "common/db/node_modules"),
             path.join(__dirname, "../..", "common/logger/node_modules"),
+            path.join(__dirname, "../..", "common/pay-info/node_modules"),
         ],
     },
 };

@@ -1,13 +1,23 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
+import s3Utils from './s3utils.js'
+import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
+import { breathDbPath, closeBreathDb } from './breath-data'
+import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
+import { Logger } from '../../common/logger/logger.js'
+import { SessionStore } from './session-store.js'
+import fetch from 'node-fetch'
+// fetch is defined in browsers, but not node
+// substitute node-fetch here
+globalThis.fetch = fetch
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -19,8 +29,8 @@ let mainWin = null
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1300,
+    height: 700,
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -73,10 +83,12 @@ app.on('ready', async () => {
   emwave.startEmWave()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
+  new Logger()
 })
 
 app.on('before-quit', () => {
   emwave.stopEmWave()
+  closeBreathDb()
 })
 
 ipcMain.on('pulse-start', () => {
@@ -111,25 +123,110 @@ ipcMain.on('show-login-window', () => {
   })
   try {
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
-    auth.userhandler = {
-      onSuccess: () => { 
-        console.log('successful login ') 
-        authWindow.close()
-        mainWin.webContents.send('login-succeeded')
-      },
-      onFailure: (err) => { console.log(err) }
-    }
+    auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
     authWindow.loadURL(url)
     authWindow.show()
     authWindow.webContents.on('will-redirect', (event, newUrl) => {
-      auth.parseCognitoWebResponse(newUrl)
+      // we want the renderer (main) window to load the redirect from the oauth server
+      // so that it gets the session and can store it
+      mainWin.loadURL(newUrl)
+      authWindow.close()
     })
     authWindow.on('closed', () => { authWindow = null })
   } catch (err) {
     console.log(err)
   } 
 })
+
+let lumosityView = null;
+
+// handles login page, returns true if login successfully attempted
+function lumosityLogin(email, password) {
+    const emailInput = document.getElementById("user_login");
+    const passwordInput = document.getElementById("user_password");
+    const formSubmit = document.querySelector('input[type="submit"][value="Log In"]');
+    if (emailInput && passwordInput && formSubmit) {
+        emailInput.value = email;
+        passwordInput.value = password;
+        formSubmit.click();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function lumosityLoginJS(email, password) {
+    return `(${lumosityLogin})("${email}", "${password}")`;
+}
+
+function lumosityEmailValid(email) {
+  if (email.match(/heart|demobeam[0-9]{3}@hcp.lumoslabs.com/)) return true;
+  return false;
+}
+
+function lumosityPasswordValid(pw) {
+  if (pw.match(/[a-z]+/)) return true;
+  return false;
+}
+
+ipcMain.on('create-lumosity-view', (_event, email, password) => {
+    if (!mainWin || lumosityView) {
+        return;
+    }
+    if (!lumosityEmailValid(email)) {
+      throw new Error('You must provide a valid Lumosity email address.');
+    }
+    if (!lumosityPasswordValid(password)) {
+      throw new Error("You must provide a valid Lumosity password.");
+    }
+    lumosityView = new BrowserView();
+    mainWin.setBrowserView(lumosityView);
+    lumosityView.setAutoResize({width: true, height: true, vertical: true});
+    lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
+    // handle first login page load
+    lumosityView.webContents.once("did-finish-load", () => {
+        lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+    });
+    lumosityView.webContents.loadURL("https://www.lumosity.com/login");
+});
+
+ipcMain.on('close-lumosity-view', () => {
+    if (!mainWin || !lumosityView) {
+        return;
+    }
+    mainWin.removeBrowserView(lumosityView);
+    lumosityView = null;
+});
+
+ipcMain.handle('upload-emwave-data', async (event, session) => {
+  emwave.stopEmWave();
+  deleteShortEmwaveSessions();
+  const emWaveDb = emWaveDbPath();
+  const fullSession = SessionStore.buildSession(session);
+  await s3Utils.uploadFile(fullSession, emWaveDb)
+  .catch(err => {
+    console.error(err);
+    return (err.message);
+  });
+  return null;
+});
+
+ipcMain.handle('upload-breath-data', async (event, session) => {
+  closeBreathDb();
+  const breathDb = breathDbPath();
+  const fullSession = SessionStore.buildSession(session);
+  await s3Utils.uploadFile(fullSession, breathDb)
+  .catch(err => {
+    console.error(err);
+    return (err.message);
+  });
+  return null;
+});
+
+ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
+  return getRegimesForSession(subjCondition);
+});
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {

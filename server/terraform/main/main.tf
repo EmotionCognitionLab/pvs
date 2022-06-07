@@ -126,7 +126,7 @@ resource "aws_cognito_user_group" "admin" {
   user_pool_id = aws_cognito_user_pool.pool.id
   description = "User group for study administrators"
   precedence = 1
-  role_arn = aws_iam_role.lambda-dynamodb.arn
+  role_arn = aws_iam_role.study-admin.arn
 }
 
 resource "aws_cognito_user_group" "researcher" {
@@ -176,6 +176,25 @@ resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
   value = "${aws_dynamodb_table.experiment-data-table.name}"
 }
 
+resource "aws_dynamodb_table" "daily-regimes-table" {
+  name           = "pvs-${var.env}-daily-regimes"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "identityId"
+  range_key      = "date"
+
+  attribute {
+    name = "identityId"
+    type = "S"
+  }
+
+  attribute {
+    name = "date"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
@@ -195,6 +214,69 @@ resource "aws_ssm_parameter" "dynamo-users-table" {
   description = "Dynamo table holding user information"
   type = "SecureString"
   value = "${aws_dynamodb_table.users-table.name}"
+}
+
+resource "aws_dynamodb_table" "consent-table" {
+  name           = "pvs-${var.env}-consent"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "envelopeId"
+
+  attribute {
+    name = "envelopeId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-consent-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/consent"
+  description = "Dynamo table holding user consent details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.consent-table.name}"
+}
+
+resource "aws_dynamodb_table" "ds-table" {
+  name           = "pvs-${var.env}-ds"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-ds-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/ds"
+  description = "Dynamo table holding user docusign details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.ds-table.name}"
+}
+
+resource "aws_dynamodb_table" "lumos-acct-table" {
+  name           = "pvs-${var.env}-lumos-acct"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "email"
+
+  attribute {
+    name = "email"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lumos-acct-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/lumosacct"
+  description = "Dynamo table holding lumosity account info"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.lumos-acct-table.name}"
 }
 
 # SES setup, including relevant S3 buckets and IAM settings
@@ -315,6 +397,29 @@ resource "aws_ssm_parameter" "datafiles-bucket" {
   value = "${aws_s3_bucket.datafiles-bucket.bucket}"
 }
 
+# S3 bucket for docusign
+resource "aws_s3_bucket" "ds-bucket" {
+  bucket = "${var.ds-bucket}"
+  acl = "private"
+}
+
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "ds-bucket" {
+  name = "/pvs/${var.env}/info/lambda/ds/bucket"
+  description = "Bucket for files related to Docusign"
+  type = "SecureString"
+  value = "${aws_s3_bucket.ds-bucket.bucket}"
+}
+
+# S3 bucket for participant data
+resource "aws_s3_bucket" "data-bucket" {
+  bucket = "${var.data-bucket}"
+  versioning {
+    enabled = true
+  }
+  acl = "private"
+}
+
 # IAM policies
 resource "aws_iam_policy" "cloudwatch-write" {
   name = "pvs-${var.env}-cloudwatch-write"
@@ -335,6 +440,56 @@ resource "aws_iam_policy" "cloudwatch-write" {
       }
     ]
   })
+}
+
+# Policy to allow authenticated users to write data to
+# their own folder
+resource "aws_iam_policy" "s3-write-experiment-data" {
+  name = "pvs-${var.env}-s3-write-experiement-data"
+  path = "/policy/s3/experimentData/write/"
+  description = "Allows writing data to participant's own s3 folder"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}",
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}/*"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# Policy to allow authenticated users to read data from
+# their own folder
+resource "aws_iam_policy" "s3-read-experiment-data" {
+  name = "pvs-${var.env}-s3-read-experiment-data"
+  path = "/policy/s3/experimentData/read/"
+  description = "Allows writing data to participant's own s3 folder"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}",
+        "arn:aws:s3:::${var.data-bucket}/*/$${cognito-identity.amazonaws.com:sub}/*"
+      ]
+    }
+  ]
+}
+POLICY
 }
 
 # Policy to allow authenticated cognito users to write
@@ -405,6 +560,43 @@ resource "aws_iam_policy" "dynamodb-read-experiment-data" {
 POLICY
 }
 
+# Policy to allow authenticated cognito users to read/write
+# from/to the daily regimes table, but only rows where
+# the hash key is their cognito identity id.
+resource "aws_iam_policy" "dynamodb-read-write-daily-regimes" {
+  name = "pvs-${var.env}-dynamodb-read-write-daily-regimes"
+  path = "/policy/dynamodb/regimes/readwrite/"
+  description = "Allows authenticated users to read/write their own data from/to dynamodb daily regimes table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.daily-regimes-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow reading/writing to dynamo
 resource "aws_iam_policy" "dynamodb-read-write" {
   name = "pvs-${var.env}-dynamodb-read-write"
@@ -450,11 +642,71 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
         "dynamodb:UpdateItem",
         "dynamodb:DescribeTable",
         "dynamodb:Query",
-        "dynamodb:GetItem"
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:PutItem"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
       ]
+    }
+  ]
+}
+POLICY
+}
+
+# policy to allow limited reading/writing of dynamo lumosity account table
+resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
+  name = "pvs-${var.env}-dynamodb-lumos-acct-read-write"
+  path = "/policy/dynamodb/lumos/all/"
+  description = "Allows limited reading from/writing of dynamodb lumosity account table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem",
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-acct-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# policy to allow fetching user ids from dynamo user table
+# TODO remove this after refactoring experiment data table to allow query by experiment name
+resource "aws_iam_policy" "dynamodb-userid-read" {
+  name = "pvs-${var.env}-dynamodb-userid-read"
+  path = "/policy/dynamodb/users/ids/"
+  description = "Allows very limited reading from dynamodb user table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:Attributes": [
+            "userId"
+          ]
+        },
+        "StringEqualsIfExists": {
+          "dynamodb:Select": "SPECIFIC_ATTRIBUTES"
+        }
+      }
     }
   ]
 }
@@ -585,7 +837,7 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
 resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   name = "pvs-${var.env}-dynamo-reader-writer"
   path = "/role/user/dynamodb/readwrite/"
-  description = "Allows cognito-auth'd users to read and write their own data from/to experiment data table."
+  description = "Allows cognito-auth'd users to read and write their own data from/to certain dynamo tables and s3 buckets."
   assume_role_policy    = jsonencode(
       {
           Statement = [
@@ -606,7 +858,11 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
       }
   )
   managed_policy_arns   = [
-      aws_iam_policy.dynamodb-write-experiment-data.arn, aws_iam_policy.dynamodb-read-experiment-data.arn
+      aws_iam_policy.dynamodb-write-experiment-data.arn,
+      aws_iam_policy.dynamodb-read-experiment-data.arn,
+      aws_iam_policy.dynamodb-read-write-daily-regimes.arn,
+      aws_iam_policy.s3-write-experiment-data.arn,
+      aws_iam_policy.s3-read-experiment-data.arn
   ]
 }
 
@@ -676,7 +932,10 @@ resource "aws_iam_role" "lambda" {
   })
 
   managed_policy_arns   = [
-    aws_iam_policy.dynamodb-user-read-write.arn, aws_iam_policy.cloudwatch-write.arn
+    aws_iam_policy.dynamodb-user-read-write.arn,
+    aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
+    aws_iam_policy.cloudwatch-write.arn
   ]
 }
 
@@ -701,17 +960,17 @@ resource "aws_iam_role_policy" "lambda-role-assumption" {
           ]
           Resource = [
             "${aws_iam_role.researcher.arn}",
-            "${aws_iam_role.lambda-dynamodb.arn}"
+            "${aws_iam_role.study-admin.arn}"
           ]
         }
       ]
     })
 }
 
-resource "aws_iam_role" "lambda-dynamodb" {
-  name = "pvs-${var.env}-lambda-dynamodb"
-  path = "/role/lambda/dynamodb/"
-  description = "Role for lambda functions needing read/write dynamodb access"
+resource "aws_iam_role" "study-admin" {
+  name = "pvs-${var.env}-study-admin"
+  path = "/role/admin/"
+  description = "Role for study administrators"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -745,17 +1004,27 @@ resource "aws_iam_role" "lambda-dynamodb" {
     ]
   })
 
+  inline_policy {
+    name = "pvs-${var.env}-ds-bucket-read"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ds-bucket.arn}/*"
+          ]
+        }
+      ]
+    })
+  }
+
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
   ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-dynamodb-role" {
-  name = "/pvs/${var.env}/role/lambda/dynamodb"
-  description = "ARN for lambda role with dynamodb access"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-dynamodb.arn}"
 }
 
 resource "aws_iam_role" "researcher" {
@@ -811,7 +1080,9 @@ resource "aws_iam_role" "researcher" {
   }
 
   managed_policy_arns   = [
-    aws_iam_policy.dynamodb-read-all-experiment-data.arn, aws_iam_policy.cloudwatch-write.arn
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
+    aws_iam_policy.cloudwatch-write.arn,
+    aws_iam_policy.dynamodb-userid-read.arn
   ]
 }
 

@@ -16,8 +16,11 @@ yarn electron:serve
 
 ### Compiles and minifies for production
 TODO: Replace with electron-forge documentation
+
+As of 3/22/22, builds have to be done [with node 15 or lower](https://github.com/electron-userland/electron-builder/issues/5858). Since node 14 is LTS, we'll use that for now - that's why the `n 14.19.1` command appears below. (See the [n NPM package](https://www.npmjs.com/package/n) for details on controlling node versions.)
 ```
-yarn build
+n 14.19.1
+yarn run electron:build
 ```
 
 ### Lints and fixes files

@@ -47,13 +47,13 @@ describe("spatial-orientation", () => {
         }
         // expect test trials to NOT be completed at first
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
-        // expect test trials to still NOT be completed after 4 minutes and 55 seconds
-        advanceDateNowThenTimers(4*60*1000 + 55*1000);  // 4 minutes and 55 seconds
+        // expect test trials to still NOT be completed after 95 seconds
+        advanceDateNowThenTimers(95*1000);  // 95 seconds
         expect(jsPsych.data.get().filter({isRelevant: true}).values().length).toBe(0);
-        // expect test trials to be completed after 5 minutes and 5 seconds
+        // expect test trials to be completed after 105 seconds
         advanceDateNowThenTimers(10*1000);  // 10 seconds more
         const relevant = jsPsych.data.get().filter({isRelevant: true}).values();
-        expect(relevant.length).toBe(12);
+        expect(relevant.length).toBe(4);
         expect(relevant[0].completionReason).toBe("timedout");
         relevant.slice(1).forEach(t => {
              expect(t.completionReason).toBe("skipped");
@@ -84,11 +84,14 @@ describe("spatial-orientation", () => {
         expect(sotTrials.every(t => t.completionReason === "responded")).toBe(true);
     });
 
-    it("has 12 relevant test trials per set", () => {
+    it("has 4 relevant test trials per set", () => {
         for (let i = 1; i <= 12; ++i) {
+            if (i === 5 || i === 11) {
+                continue;
+            }
             const timeline = (new SpatialOrientation(i)).getTimeline();
             const sots = timeline.filter(trial => trial.data?.isRelevant);
-            expect(sots.length).toBe(12);
+            expect(sots.length).toBe(4);
             expect(sots.every(trial => trial.mode === "test")).toBe(true);
         }
     });
@@ -102,6 +105,9 @@ describe("spatial-orientation", () => {
             expect(sots1.slice(4).every(trial => trial.mode === "test")).toBe(true);
         }
         for (let i = 2; i <= 12; ++i) {
+            if (i === 5 || i === 11) {
+                continue;
+            }
             const timelineI = (new SpatialOrientation(i)).getTimeline();
             const sotsI = timelineI.filter(trial => trial.type === "spatial-orientation");
             // all trials should be test trials

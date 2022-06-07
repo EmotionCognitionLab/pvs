@@ -18,8 +18,7 @@ export default class Db {
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
-        this.userApiUrl = awsSettings.UserApiUrl;
-        this.adminApiUrl = awsSettings.AdminApiUrl;
+        this.dsTable = options.dsTable || awsSettings.DsTable;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -98,15 +97,7 @@ export default class Db {
             throw new Error("You must provide either session or identityId to get results for the current user");
         }
 
-        // credentials override passed-in identity
-        let identId = this.credentials ? this.credentials.identityId : identityId;
-        if (!identId) {
-            const credentialsPresent = this.credentials ? true: false;
-            this.logger.error(`Empty identity when calling getResultsForCurrentUser. Passed-in id: ${identityId} . Credentials present: ${credentialsPresent} .`);
-            await this.refreshPermissions();
-            identId = this.credentials ? this.credentials.identityId : identityId;
-            this.logger.info(`identId after calling refreshPermissions: ${identId}`);
-        }
+        const identId = await this.getValidCreds(identityId);
 
         try {
             let ExclusiveStartKey, dynResults
@@ -164,53 +155,6 @@ export default class Db {
     
     async getExperimentResultsForCurrentUser(expName) {
         return this.getResultsForCurrentUser(expName);
-    }
-
-    /**
-     * 
-     * @param {string} experimentName The name of the experiment whose results you want.
-     * @returns Object with either 'url' or 'empty' field.
-     * If 'empty' is true, there were no results for the given experiment. If 'url' exists,
-     * it is set to the url of a file to be downloaded that contains the results (in JSON format).
-     */
-    async getResultsForExperiment(experimentName) {
-        if (!this.idToken) throw new Error("You must provide a session to get experimental results");
-
-        const url = `${this.adminApiUrl}/experiment/${experimentName}`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-        });
-        if (!response.ok) {
-            const respText = await response.text();
-            throw new Error(`There was an error fetching experimental results: ${respText} (status code: ${response.status})`);
-        }
-        return await response.json();
-    }
-
-    async getAllParticipants() {
-        if (!this.idToken) throw new Error("You must provide a session to get participants");
-
-        const url = `${this.adminApiUrl}/participants`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-        });
-        if (!response.ok) {
-            const respText = await response.text();
-            throw new Error(`There was an error fetching particiapnts: ${respText} (status code: ${response.status})`);
-        }
-        return await response.json();
     }
 
     async getSetsForUser(userId) {
@@ -319,46 +263,6 @@ export default class Db {
         }
     }
 
-    async updateSelf(updates) {
-        if (!this.idToken) throw new Error("You must provide a session to update the current user");
-
-        const url = `${this.userApiUrl}`;
-        const response = await fetch(url, {
-            method: "PUT",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            },
-            body: JSON.stringify(updates)
-        });
-        if (!response.ok) {
-            throw new Error(`There was an error updating the user record: ${response.text()} (status code: ${response.status})`);
-        }
-        return response;
-    }
-
-    async getSelf() {
-        if (!this.idToken) throw new Error("You must provide a session to fetch the current user");
-
-        const url = `${this.userApiUrl}`;
-        const response = await fetch(url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-cache",
-            headers: {
-                "Content-type": "application/json",
-                "Authorization": this.idToken,
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`There was an error getting the user record: ${response.text()} (status code: ${response.status})`);
-        }
-        const userData = await response.json();
-        return userData;
-    }
-
     async getUser(userId, consistentRead=false) {
         const params = {
             TableName: this.usersTable,
@@ -374,6 +278,29 @@ export default class Db {
             throw new Error(`Found multiple users with userId ${userId}.`);
         }
         return dynResults.Items[0];
+    }
+
+    async getIdentityIdForUserId(userId) {
+        const baseParams = {
+            TableName: this.experimentTable,
+            IndexName: 'userId-experimentDateTime-index',
+            KeyConditionExpression: "userId = :userId",
+            ExpressionAttributeValues: {":userId": userId},
+            ProjectionExpression: 'identityId'
+        };
+        const result = await this.query(baseParams);
+        if (result.Items.length === 0) return null;
+        return result.Items[0].identityId;
+    }
+
+    async getValidCreds(identityId=null) {
+        // credentials override passed-in identity
+        let identId = this.credentials ? this.credentials.identityId : identityId;
+        if (!identId) {
+            await this.refreshPermissions();
+            identId = this.credentials ? this.credentials.identityId : identityId;
+        }
+        return identId;
     }
 
     async dynamoOp(params, fnName) {
@@ -399,6 +326,9 @@ export default class Db {
                 }
             } catch (err) {
                 curTry++;
+                if (err.code === 'ValidationException' ) {
+                    this.logger.error(err);
+                }
                 if (err.code === 'CredentialsError' || err.code === 'ValidationException') { // ValidationException is usually a sign that this.credentials.identityId is empty
                     await this.refreshPermissions();
                 } else {
@@ -409,6 +339,32 @@ export default class Db {
             }
         }
         this.logger.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
+    }
+
+    async saveDsOAuthCreds(userId, accessToken, refreshToken, expiresAt) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { userId: userId },
+            UpdateExpression: "set #accessToken = :accessToken, #refreshToken = :refreshToken, #expiresAt = :expiresAt",
+            ExpressionAttributeNames: {
+                "#accessToken": "accessToken",
+                "#refreshToken": "refreshToken",
+                "#expiresAt": "expiresAt"
+            },
+            ExpressionAttributeValues: {
+                ":accessToken": accessToken,
+                ":refreshToken": refreshToken,
+                ":expiresAt": expiresAt
+            }
+        };
+        console.log(params);
+        try {
+            const dynResults = await this.update(params);
+            return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
     }
 
     async query(params) {

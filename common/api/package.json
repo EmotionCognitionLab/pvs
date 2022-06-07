@@ -1,0 +1,22 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "API client to make calls to various lambda functions",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "devDependencies": {
+    "@babel/runtime": "^7.17.8"
+  }
+}

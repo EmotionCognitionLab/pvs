@@ -55,7 +55,7 @@ functions:
     environment:
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
-    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
     package:
       patterns:
         - 'on-user-verify/*.js'
@@ -71,8 +71,18 @@ functions:
           method: PUT
           path: /self
           authorizer: serviceAuthorizer
+      - httpApi:
+          method: POST
+          path: /condition
+          authorizer: serviceAuthorizer
+      - httpApi:
+          method: GET
+          path: /self/lumos
+          authorizer: serviceAuthorizer
     environment:
+      EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
+      LUMOS_ACCT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/lumosacct}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
     package:
@@ -88,6 +98,7 @@ functions:
           authorizer: serviceAuthorizer
     environment:
       EXPERIMENT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/experiments}
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       DATAFILES_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/datafiles/bucket}
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
@@ -178,6 +189,25 @@ functions:
       patterns:
         - 'reminders/*.js'
 
+  ds-oauth-callback:
+    handler: admin-api/docusign/docusign.callback
+    events:
+      - httpApi:
+          path: /admin/docusign/callback
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      DS_BASE_PATH: ${self:custom.dsBasePath.${self:provider.stage}}
+      DS_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ds/bucket}
+      DS_CLIENT_ID: ${env:DS_CLIENT_ID}
+      DS_CLIENT_SECRET: ${env:DS_CLIENT_SECRET}
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      REGION: ${self:provider.region}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/docusign/*.js'
+
 resources:
   Resources:
     PostConfirmationTriggerInvokePermission:
@@ -206,4 +236,7 @@ custom:
     includeModules:
       forceExclude:
         - aws-sdk
+  dsBasePath:
+    dev: 'https://demo.docusign.net/restapi'
+    prod: 'https://www.docusign.net/restapi'
 

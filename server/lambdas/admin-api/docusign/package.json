@@ -1,0 +1,23 @@
+{
+  "name": "docusign",
+  "version": "1.0.0",
+  "description": "Handles docusign integration",
+  "main": "docusign.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "db": "file:../../../../common/db",
+    "docusign-esign": "^5.15.0"
+  }
+}

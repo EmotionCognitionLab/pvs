@@ -505,11 +505,11 @@ describe("doing the tasks", () => {
         const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2);
         jest.useFakeTimers("legacy");
         dailyTasks.runTask(tasksToRun, 0, saveResultsMock);
-
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
         // spatial-orientation
+        expect(tasksToRun[0].taskName).toBe("spatial-orientation");
         for (let i = 1; i < tasksToRun[0].timeline.length; i++) {
             const task = tasksToRun[0].timeline[i];
             if (task.type === "html-keyboard-response") {
@@ -519,7 +519,11 @@ describe("doing the tasks", () => {
                 jest.advanceTimersByTime(task.lingerDuration);
             }
         }
-        expect(saveResultsMock.mock.calls.length).toBe(25);
+        expect(saveResultsMock.mock.calls.length).toBe(
+            1  // fullscreen
+            + tasksToRun[0].timeline.length  // spatial-orientation trials (no weird control flow)
+            + 2  // browser check and set finished
+        );
         // check experiment name
         const lastRes = saveResultsMock.mock.calls.slice(-1)[0];
         expect(lastRes[0]).toBe(dailyTasks.setFinished);
