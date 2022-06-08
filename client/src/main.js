@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { createApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 
 import SetupComponent from './components/SetupComponent.vue'
@@ -13,22 +13,20 @@ import BreathComponent from './components/BreathComponent.vue'
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
 
-import './assets/css/main.css'
-
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
     { path: '/timer/:secondsDuration', component: TimerComponent, props: true, name: 'timer' },
     { path: '/upload', component: UploadComponent },
     { path: '/signin', component: LoginComponent },
     { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
-    { path: '/', component: BreathComponent },
+    { path: '/', component: BreathComponent, name: 'breath' },
     { path: '/lumos', component: LumosityComponent }
 ]
 
 // const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(),
     routes: routes
 })
 
@@ -63,3 +61,5 @@ const app = createApp(App)
 app.use(router)
 
 app.mount('#app')
+router.push({name: 'breath'})
+
