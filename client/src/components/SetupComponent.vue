@@ -91,11 +91,6 @@
 
 </script>
 <style scoped>
-    .instruction {
-    max-width: 40em;
-    padding: 2.5%;
-    margin: auto;
-    }
     .wrapper {
     display: flex;
     margin: auto;
