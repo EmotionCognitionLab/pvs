@@ -67,7 +67,7 @@ function createSegment(regimeData) {
         regimeData.avgCoherence
     );
     if (newSegment.changes !== 1) {
-        throw new Error(`Error adding segment with start time ${sessionStartTime}`);
+        throw new Error(`Error adding segment with start time ${regimeData.sessionStartTime}`);
     }
     return newSegment.lastInsertRowid;
 }
@@ -127,7 +127,7 @@ function setRegimeBestCnt(regimeId, count) {
     const updateStmt = db.prepare('UPDATE regimes set is_best_cnt = ? where id = ?');
     const res = updateStmt.run(count, regimeId);
     if (res.changes != 1) {
-        throw new Error(`Error updating is_best_cnt for regime ${regimeId}. Expected it to update one row, but it updated ${newRegime.changes}.`);
+        throw new Error(`Error updating is_best_cnt for regime ${regimeId}. Expected it to update one row, but it updated ${res.changes}.`);
     }
 }
 

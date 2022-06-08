@@ -103,7 +103,7 @@ export default {
                 notifyAvgCoherence();
             } else if (hrData !== null) {
                 win.webContents.send('emwave-ibi', hrData);
-                if (hrData.hasOwnProperty('artifact')) {
+                if (Object.prototype.hasOwnProperty.call(hrData, 'artifact')) {
                     artifacts.push(hrData.artifact);
                     let artCount = 0;
                     artifacts.forEach(isArtifact => {
@@ -113,7 +113,7 @@ export default {
                         win.webContents.send('emwave-status', 'SensorError');
                     }
                 }
-                if (hrData.hasOwnProperty('ep')) {
+                if (Object.prototype.hasOwnProperty.call(hrData, 'ep')) {
                     coherenceValues.push(Math.log((hrData.ep / 10) + 1)); // this converts EP value from emWave to coherence value
                 }
             }

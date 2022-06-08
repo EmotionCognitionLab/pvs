@@ -222,7 +222,7 @@ function getRegimesForSession(subjCondition) {
     // first, check to see if we've already generated regimes for today    
     const regimesForToday = getRegimesForDay(new Date());
     if (regimesForToday.length > 0 && regimesForToday.length !== 6) {
-        throw new Error(`Expected to have six regimes for ${today} but found ${regimesForToday.length}`);
+        throw new Error(`Expected to have six regimes but found ${regimesForToday.length}`);
     }
 
     let regimesForSession;
