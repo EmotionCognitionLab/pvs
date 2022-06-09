@@ -1,5 +1,6 @@
 import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
+import { mkdir } from 'fs/promises';
 import { mean, std } from 'mathjs';
 import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
@@ -11,17 +12,23 @@ let db;
 let insertSegmentStmt, findRegimeStmt, insertRegimeStmt, regimeByIdStmt;
 
 function breathDbPath() {
-    let breathDbPath;
+   return breathDbDir() + 'HeartBEAM.sqlite';
+}
+
+function breathDbDir() {
+    let breathDbDir;
+
     const userHome = app.getPath('home');
     if (process.platform === 'darwin') {
-        breathDbPath = userHome +  '/Documents/HeartBeam/heartBeam.sqlite';
+        breathDbDir = userHome +  '/Documents/HeartBEAM/';
     } else if (process.platform === 'win32') {
-        breathDbPath = userHome + '\\Documents\\HeartBeam\\heartBeam.sqlite';
+        breathDbDir = userHome + '\\Documents\\HeartBEAM';
     } else {
         throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`;
     }
 
-    return breathDbPath;
+    return breathDbDir;
+
 }
 
 
@@ -183,6 +190,9 @@ async function initBreathDb(serializedSession) {
         statSync(testable.breathDbPath());
     } catch (err) {
         if (err.code !== 'ENOENT') throw(err);
+        // create directory (call is ok if dir already exists)
+        await mkdir(testable.breathDbDir(), { recursive: true });
+
         // we have no local db file; try downloading it
         const session = SessionStore.buildSession(serializedSession);
         await testable.forTesting.downloadDatabase(testable.breathDbPath(), session);
@@ -239,6 +249,7 @@ function closeBreathDb() {
 
 export {
     closeBreathDb,
+    breathDbDir,
     breathDbPath,
     getRegimeId,
     getAllRegimeIds,
