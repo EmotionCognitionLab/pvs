@@ -13,8 +13,6 @@ import BreathComponent from './components/BreathComponent.vue'
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
 
-import './assets/css/main.css'
-
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
     { path: '/timer/:secondsDuration', component: TimerComponent, props: true, name: 'timer' },
