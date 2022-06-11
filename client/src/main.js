@@ -13,6 +13,10 @@ import BreathComponent from './components/BreathComponent.vue'
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
+})
+
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
     { path: '/timer/:secondsDuration', component: TimerComponent, props: true, name: 'timer' },
