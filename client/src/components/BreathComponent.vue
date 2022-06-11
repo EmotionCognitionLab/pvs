@@ -1,10 +1,10 @@
 <template>
     <div>
         <div class="instruction" v-if="!sessionDone && !dayDone">
-        We have one remaining task for you with this app today.
-        We now will ask you to pace your breathing following the ball you will see on the screen.
-        Please breathe in while the ball is moving up and breathe out while the ball is moving down.
-        Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
+        We have one remaining task for you today.
+        Please breathe following the ball on the screen.
+        Breathe in while the ball is moving up and breathe out while the ball is moving down.
+        Make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
         </div>
         <div class="instruction" v-else-if="sessionDone && !dayDone">
         All done! Please come back later today to do your next session.
