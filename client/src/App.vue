@@ -26,4 +26,9 @@ body {
   flex-direction: column;
   overflow-y: auto;
 }
+.instruction {
+    max-width: 40em;
+    padding: 2.5%;
+    margin: auto;
+}
 </style>
