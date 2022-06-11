@@ -143,6 +143,12 @@ export default {
         console.log(`emwave pid is ${emWaveProc.pid}`);
     },
 
+    hideEmWave() {
+        if (process.platform === 'win32' && emWaveProc && emWaveProc.pid) {
+            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\powershell.exe', [path/to/hide-emwave-ps1, emWaveProc.pid], {stdio: 'ignore'})
+        }
+    },
+
     startPulseSensor() {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
         artifacts = new CBuffer(artifactsToTrack);
