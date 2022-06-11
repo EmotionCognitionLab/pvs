@@ -228,6 +228,10 @@ ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
   return getRegimesForSession(subjCondition);
 });
 
+ipcMain.handle('quit', () => {
+  app.quit();
+});
+
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
