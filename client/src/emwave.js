@@ -146,7 +146,7 @@ export default {
 
     hideEmWave() {
         if (process.platform === 'win32' && emWaveProc && emWaveProc.pid) {
-            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\powershell.exe', [path.join(app.getAppPath(), 'hide-emwave-ps1'), emWaveProc.pid], {stdio: 'ignore'});
+            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(app.getAppPath(), 'hide-emwave-ps1'), emWaveProc.pid], {stdio: 'ignore'});
         }
     },
 
