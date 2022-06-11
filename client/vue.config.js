@@ -8,6 +8,10 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         appId: "heartbeam",
+        extraFiles: {
+          from: 'src/powershell/hide-emwave.ps1',
+          to: 'hide-emwave.ps1'
+        },
         productName: "HeartBEAM",
         win: {
           icon: "HeartBEAM-icon.png"

@@ -1,6 +1,7 @@
 const net = require('net');
 const { spawn } = require('child_process');
-const { ipcMain } = require('electron');
+const path = require('path');
+const { ipcMain, app } = require('electron');
 const CBuffer = require('CBuffer');
 
 let emWaveProc = null;
@@ -145,7 +146,7 @@ export default {
 
     hideEmWave() {
         if (process.platform === 'win32' && emWaveProc && emWaveProc.pid) {
-            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\powershell.exe', [path/to/hide-emwave-ps1, emWaveProc.pid], {stdio: 'ignore'})
+            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\powershell.exe', [path.join(app.getAppPath(), 'hide-emwave-ps1'), emWaveProc.pid], {stdio: 'ignore'});
         }
     },
 
