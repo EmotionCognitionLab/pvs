@@ -88,6 +88,10 @@ app.on('ready', async () => {
   new Logger()
 })
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
+})
+
 app.on('before-quit', () => {
   emwave.stopEmWave()
   closeBreathDb()
