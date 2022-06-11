@@ -36,7 +36,7 @@ const day1ARegimes = aPaces.map(p => {
     return {durationMs: defaultDurationMs, breathsPerMinute: p, randomize: false};
 });
 const day2ARegimes = aPaces.map(p => {
-    return  {durationMs: defaultDurationMs, breathsPerMinute: p, hold: 'postInhale', randomize: false};
+    return  {durationMs: defaultDurationMs, breathsPerMinute: p, holdPos: 'postInhale', randomize: false};
 });
 const day3And4ARegimes = [...day1ARegimes, ...day2ARegimes];
 
@@ -45,7 +45,7 @@ const day1BRegimes = bPaces.map(p => {
     return {durationMs: defaultDurationMs, breathsPerMinute: p, randomize: true};
 });
 const day2BRegimes = bPaces.map(p => {
-    return {durationMs: defaultDurationMs, breathsPerMinute: p, hold: 'postInhale', randomize: true};
+    return {durationMs: defaultDurationMs, breathsPerMinute: p, holdPos: 'postInhale', randomize: true};
 });
 const day3And4BRegimes = [...day1BRegimes, ...day2BRegimes];
 
