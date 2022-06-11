@@ -1,6 +1,12 @@
 import { std } from 'mathjs';
 import * as bd from "../src/breath-data";
 
+jest.mock('fs/promises', () => ({
+    mkdir: jest.fn(() => {})
+}));
+
+import { mkdir } from 'fs/promises';
+
 let db;
 const tableNames = ['segments', 'rest_segments', 'regimes']; // order is important to avoid foreign key constraint errors on delete
 
@@ -17,6 +23,7 @@ describe("Breathing data functions", () => {
     
     beforeAll(async () => {
         jest.spyOn(bd, "breathDbPath").mockImplementation(() => ":memory:");
+        jest.spyOn(bd, "breathDbDir").mockImplementation(() => "/dev/null");
         const downloadSpy = jest.spyOn(bd.forTesting, "downloadDatabase");
         downloadSpy.mockImplementation(() => {});
         db = await bd.forTesting.initBreathDb({

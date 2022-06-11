@@ -169,7 +169,7 @@ export default {
                 });
             });
         } catch (err) {
-            if (err.name === 'AccessDenied' && err.hasOwn('$metadata') && err.$metadata.httpStatusCode && err.$metadata.httpStatusCode === 403) {
+            if (err.name === 'AccessDenied' && Object.prototype.hasOwnProperty.call(err, '$metadata') && err.$metadata.httpStatusCode && err.$metadata.httpStatusCode === 403) {
                 // Since we don't grant ListBucket perms we get a 403 instead of a 404 
                 // when the file doesn't exist
                 return {status: 'Not found', msg: null };

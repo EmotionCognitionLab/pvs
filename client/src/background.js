@@ -84,6 +84,7 @@ app.on('ready', async () => {
   forTesting.initBreathDb()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
+  emwave.hideEmWave()
   new Logger()
 })
 
@@ -227,6 +228,10 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
 
 ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
   return getRegimesForSession(subjCondition);
+});
+
+ipcMain.handle('quit', () => {
+  app.quit();
 });
 
 // Exit cleanly on request from parent process in development mode.
