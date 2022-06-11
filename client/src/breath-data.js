@@ -7,12 +7,13 @@ import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
+import * as path from 'path'
 
 let db;
 let insertSegmentStmt, findRegimeStmt, insertRegimeStmt, regimeByIdStmt;
 
 function breathDbPath() {
-   return breathDbDir() + 'HeartBEAM.sqlite';
+   return path.join(breathDbDir(), 'HeartBEAM.sqlite');
 }
 
 function breathDbDir() {
@@ -176,8 +177,8 @@ function saveRegimesForDay(regimes, date) {
     const stmt = db.prepare('INSERT INTO daily_regimes(regime_id, date, day_order) VALUES(?, ?, ?)');
     const yyyymmdd = yyyymmddNumber(date);
     regimes.forEach((r, idx) => {
-        if (!r.id) r.id = getRegimeId(r);
-        stmt.run(r.id, yyyymmdd, idx);
+        const id = r.id ? r.id : getRegimeId(r);
+        stmt.run(id, yyyymmdd, idx);
     });
 }
 
