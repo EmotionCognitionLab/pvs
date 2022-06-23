@@ -6,7 +6,7 @@ import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
-import { SessionStore } from './session-store.js'
+// import { SessionStore } from './session-store.js'
 import * as path from 'path'
 
 let db;
@@ -136,6 +136,7 @@ function getAllRegimeIds() {
 function getAvgRestCoherence() {
     const stmt = db.prepare('SELECT avg_coherence from rest_segments');
     const res = stmt.all();
+    if (res.length == 0) return null;
     return mean(res.map(r => r.avg_coherence));
 }
 
@@ -194,7 +195,8 @@ function saveRegimesForDay(regimes, date) {
 // certain calls in test
 // https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as testable from "./breath-data.js";
-async function initBreathDb(serializedSession) {
+// async function initBreathDb(serializedSession) {
+async function initBreathDb() {
     try {
         statSync(testable.breathDbPath());
     } catch (err) {
