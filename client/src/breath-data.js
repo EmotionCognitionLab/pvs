@@ -10,7 +10,7 @@ import { SessionStore } from './session-store.js'
 import * as path from 'path'
 
 let db;
-let insertSegmentStmt, findRegimeStmt, insertRegimeStmt, regimeByIdStmt;
+let insertSegmentStmt, insertRestSegmentStmt, findRegimeStmt, insertRegimeStmt, regimeByIdStmt;
 
 function breathDbPath() {
    return path.join(breathDbDir(), 'HeartBEAM.sqlite');
@@ -67,13 +67,21 @@ function lookupRegime(regimeId) {
 }
 
 function createSegment(regimeData) {
-    const regimeId = getRegimeId(regimeData.regime);
-    const newSegment = insertSegmentStmt.run(
-        regimeId,
-        regimeData.sessionStartTime,
-        Math.round((new Date).getTime() / 1000),
-        regimeData.avgCoherence
-    );
+    const endDateTime = Math.round((new Date).getTime() / 1000);
+    let newSegment;
+    if (!regimeData.regime) {
+        // then it's a rest segment
+        newSegment = insertRestSegmentStmt.run(endDateTime, regimeData.avgCoherence);
+    } else {
+        const regimeId = getRegimeId(regimeData.regime);
+        newSegment = insertSegmentStmt.run(
+            regimeId,
+            regimeData.sessionStartTime,
+            endDateTime,
+            regimeData.avgCoherence
+        );
+    }
+    
     if (newSegment.changes !== 1) {
         throw new Error(`Error adding segment with start time ${regimeData.sessionStartTime}`);
     }
@@ -225,6 +233,7 @@ async function initBreathDb(serializedSession) {
         // while sitting quietly
         const createRestSegmentsTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS rest_segments(id INTEGER PRIMARY KEY, end_date_time INTEGER NOT NULL, avg_coherence FLOAT)');
         createRestSegmentsTableStmt.run();
+        insertRestSegmentStmt = db.prepare('INSERT INTO rest_segments(end_date_time, avg_coherence) VALUES(?, ?)');
 
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
