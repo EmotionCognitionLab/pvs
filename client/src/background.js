@@ -7,7 +7,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { forTesting, breathDbPath, closeBreathDb } from './breath-data'
+import { forTesting, breathDbPath, closeBreathDb, getAvgRestCoherence } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -236,6 +236,10 @@ ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
 
 ipcMain.handle('quit', () => {
   app.quit();
+});
+
+ipcMain.handle('avg-rest-coherence', () => {
+  return getAvgRestCoherence();
 });
 
 // Exit cleanly on request from parent process in development mode.
