@@ -47,13 +47,8 @@ function parseIBIData(data) {
 }
 
 ipcMain.handle('pacer-regime-changed', (_event, sessionStartTime, regime) => {
-    if (sessionStartTime === 0) {
-        curRegime = regime;
-        curSessionStartTime = sessionStartTime;
-        return;
-    }
-
-    notifyAvgCoherence();
+    if (sessionStartTime !== 0) notifyAvgCoherence();
+    
     curRegime = regime;
     curSessionStartTime = sessionStartTime;
 });
