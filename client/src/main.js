@@ -9,6 +9,7 @@ import UploadComponent from './components/UploadComponent.vue'
 import LoginComponent from './components/LoginComponent.vue'
 import LumosityComponent from './components/LumosityComponent.vue'
 import BreathComponent from './components/BreathComponent.vue'
+import RestComponent from './components/RestComponent.vue'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
@@ -23,8 +24,9 @@ const routes = [
     { path: '/upload', component: UploadComponent },
     { path: '/signin', component: LoginComponent },
     { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
-    { path: '/', component: BreathComponent, name: 'breath' },
-    { path: '/lumos', component: LumosityComponent }
+    { path: '/breath', component: BreathComponent, name: 'breath' },
+    { path: '/lumos', component: LumosityComponent },
+    { path: '/rest', component: RestComponent, name: 'rest' }
 ]
 
 // const noAuthRoutes = ['/signin', '/login/index.html', '/setup']
@@ -61,9 +63,20 @@ if (isAuthenticated() && !SessionStore.getRendererSession()) {
     cognitoAuth.getSession()
 }
 
-const app = createApp(App)
-app.use(router)
+/* eslint-disable no-unexpected-multiline */
+(async () => {
+    const app = createApp(App)
+    app.use(router)
 
-app.mount('#app')
-router.push({name: 'breath'})
+    app.mount('#app')
+    // if there are no rest breathing segments, do that
+    const avgRestCoherence = await ipcRenderer.invoke('avg-rest-coherence')
+    if (avgRestCoherence === null) {
+        router.push({name: 'rest'})
+    } else {
+        // otherwise, send them to the breath component
+        router.push({name: 'breath'})
+    }
+})()
+
 
