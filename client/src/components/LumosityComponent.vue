@@ -8,17 +8,33 @@
 
 <script setup>
     import { ipcRenderer } from "electron";
+    import { onMounted } from '@vue/runtime-core';
+    import ApiClient from '../../../common/api/client.js'
+    import { SessionStore } from '../session-store.js'
 
     const emit = defineEmits(['lumosity-finished'])
+
+    onMounted(async () => {
+        let email = window.localStorage.getItem('HeartBeam.lumos.e')
+        let pw = window.localStorage.getItem('HeartBeam.lumos.p')
+        if (!email || email.length === 0 || !pw || pw.length === 0) {
+            const session = await SessionStore.getRendererSession()
+            const apiClient = new ApiClient(session)
+            const lumosCreds = await apiClient.getLumosCredsForSelf()
+            window.localStorage.setItem('HeartBeam.lumos.e', lumosCreds.email)
+            window.localStorage.setItem('HeartBeam.lumos.p', lumosCreds.pw)
+            email = lumosCreds.email
+            pw = lumosCreds.pw
+        }
+        ipcRenderer.send("create-lumosity-view", email, pw);
+    })
+
 
     function leave() {
         ipcRenderer.send("close-lumosity-view");
         emit('lumosity-finished');
     }
-    const email = window.localStorage.getItem('HeartBeam.lumos.e')
-    const pw = window.localStorage.getItem('HeartBeam.lumos.p')
-    // TODO check that email and pw are really set (and fetch from dynamo if not)
-    ipcRenderer.send("create-lumosity-view", email, pw);
+    
 
 </script>
 
