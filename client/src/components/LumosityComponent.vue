@@ -18,7 +18,7 @@
         let email = window.localStorage.getItem('HeartBeam.lumos.e')
         let pw = window.localStorage.getItem('HeartBeam.lumos.p')
         if (!email || email.length === 0 || !pw || pw.length === 0) {
-            const session = await SessionStore.getRendererSession()
+            const session = SessionStore.getRendererSession()
             const apiClient = new ApiClient(session)
             const lumosCreds = await apiClient.getLumosCredsForSelf()
             window.localStorage.setItem('HeartBeam.lumos.e', lumosCreds.email)

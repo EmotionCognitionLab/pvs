@@ -21,7 +21,7 @@ let lumosDays = []
 
 onMounted(async () => {
     windowReady.value = true
-    session = await SessionStore.getRendererSession()
+    session = SessionStore.getRendererSession()
     apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
     if (data.lumosDays && data.lumosDays.length > 0) {
@@ -31,7 +31,7 @@ onMounted(async () => {
 
 async function completedLumosity() {
     lumosityDone.value = true
-    const session = await SessionStore.getRendererSession()
+    const session = SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const now = new Date()
     lumosDays.push(`${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2,0)}${now.getDate().toString().padStart(2, 0)}`)
