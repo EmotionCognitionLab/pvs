@@ -8,11 +8,12 @@
 
 <script setup>
     import { ipcRenderer } from "electron";
-    import { useRouter } from "vue-router";
-    const router = useRouter();
+
+    const emit = defineEmits(['lumosity-finished'])
+
     function leave() {
         ipcRenderer.send("close-lumosity-view");
-        router.push({path: "/"});
+        emit('lumosity-finished');
     }
     const email = window.localStorage.getItem('HeartBeam.lumos.e')
     const pw = window.localStorage.getItem('HeartBeam.lumos.p')
