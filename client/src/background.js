@@ -14,6 +14,7 @@ const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
 import { Logger } from '../../common/logger/logger.js'
 import { SessionStore } from './session-store.js'
+import ApiClient from '../../common/api/client.js'
 import fetch from 'node-fetch'
 // fetch is defined in browsers, but not node
 // substitute node-fetch here
@@ -175,10 +176,16 @@ function lumosityPasswordValid(pw) {
   return false;
 }
 
-ipcMain.on('create-lumosity-view', (_event, email, password) => {
-    if (!mainWin || lumosityView) {
+ipcMain.on('create-lumosity-view', async (_event, email, password) => {
+    if (lumosityView) {
         return;
     }
+    if (!mainWin) {
+      // if we're going staight to Lumosity on startup we may need to
+      // wait a bit for main window initialization
+      await new Promise(resolve => setTimeout(() => resolve(), 200))
+    }
+
     if (!lumosityEmailValid(email)) {
       throw new Error('You must provide a valid Lumosity email address.');
     }
@@ -188,7 +195,7 @@ ipcMain.on('create-lumosity-view', (_event, email, password) => {
     lumosityView = new BrowserView();
     mainWin.setBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
-    lumosityView.setBounds({x: 0, y: 50, width: 1284, height: 593});  // hardcoded!!!
+    lumosityView.setBounds({x: 0, y: 100, width: 1284, height: 593});  // hardcoded!!!
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
@@ -232,6 +239,35 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
 ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
   return getRegimesForSession(subjCondition);
 });
+
+/**
+ * Stage 2 is complete when either (a) the user has done six Lumosity sessions, or
+ * (b) when the user has done four or five Lumosity sessions AND at least six calendar
+ * days have passed since the first one.
+ * @returns true or false
+ */
+ async function stage2Complete(session) {
+  const apiClient = new ApiClient(session)
+  const data = await apiClient.getSelf()
+  if (!data.lumosDays || data.lumosDays.length === 0) return false
+
+  const daySet = new Set(data.lumosDays)
+  if (daySet.size <= 3) return false
+  if (daySet.size >= 6) return true
+
+  const dayArr = new Array(...daySet)
+  dayArr.sort((a, b) => parseInt(a) - parseInt(b))
+  const startDay = new Date(dayArr[0].subtring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8))
+  const now = new Date()
+  const diffMs = now - startDay
+  const diffDays = diffMs / (1000 * 60 * 60 * 24)
+  return diffDays >= 6
+}
+
+ipcMain.on('is-stage-2-complete', async(_event, session) => {
+  const res = await stage2Complete(SessionStore.buildSession(session))
+  _event.returnValue = res
+})
 
 ipcMain.handle('quit', () => {
   app.quit();
