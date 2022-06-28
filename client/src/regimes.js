@@ -26,8 +26,8 @@ import {
  */
 
 // potential subject conditions
-const condA = 'a';
-const condB = 'b';
+const condA = 'A';
+const condB = 'B';
 
 // The static paces that participants will breathe at on various days
 const defaultDurationMs = 5 * 60 * 1000;
