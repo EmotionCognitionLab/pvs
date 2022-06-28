@@ -1,22 +1,27 @@
 <template>
     <div>
-        This is a placeholder template for the emwave upload UI.
-        <br/>
-        Click the button to upload your emWave data.
-        <button @click="login">Login</button>
-        <button @click="upload">Upload Data</button>
+        <div v-if="!uploadComplete">
+            <slot name="preUploadText">Please wait while we upload your data...</slot>
+            <i class="fa fa-spinner fa-spin" style="font-size: 48px;"></i>
+        </div>
+        <div v-else>
+            <slot name="postUploadText">Upload successful!</slot>
+        </div>
     </div>
 </template>
 <script setup>
     import { ipcRenderer } from 'electron'
+    import { ref, onMounted } from '@vue/runtime-core'
     import { SessionStore } from '../session-store.js'
 
-    function login() {
-         ipcRenderer.send('show-login-window')
-    }
+    const uploadComplete = ref(false)
 
-    async function upload() {
+    onMounted(async () => {
         await ipcRenderer.invoke('upload-emwave-data', SessionStore.getRendererSession())
         await ipcRenderer.invoke('upload-breath-data', SessionStore.getRendererSession())
-    }
+        uploadComplete.value = true
+    })
 </script>
+<style scoped>
+@import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+</style>
