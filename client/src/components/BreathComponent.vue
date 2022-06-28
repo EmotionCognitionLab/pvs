@@ -32,6 +32,8 @@
 <script setup>
 import { ipcRenderer } from 'electron'
 import { ref, onBeforeMount, computed } from '@vue/runtime-core'
+import ApiClient from '../../../common/api/client.js'
+import { SessionStore } from '../session-store.js'
 import PacerComponent from './PacerComponent.vue'
 import EmWaveListener from './EmWaveListener.vue'
 
@@ -40,15 +42,19 @@ const emwaveListener = ref(null)
 const regimes = ref([])
 const sessionDone = ref(false)
 const dayDone = computed(() => regimes.value.length === 0)
+let condition;
 
-async function setRegimes() {
-    // TODO fetch subject condition from db
-    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', 'b')
+async function setRegimes(condition) {
+    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition)
     regimes.value = sessRegimes
 }
 
 onBeforeMount(async() => {
-    await setRegimes()
+    const session = SessionStore.getRendererSession()
+    const apiClient = new ApiClient(session)
+    const data = await apiClient.getSelf()
+    condition = data.condition.assigned;
+    await setRegimes(condition)
 })
 
 async function pacerFinished() {
