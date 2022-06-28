@@ -25,7 +25,7 @@
                 :offsetProportionY=0.8
                 @pacerFinished="pacerFinished"
                 ref="pacer" />
-            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="emwaveListener"/>
+            <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="emwaveListener"/>
         </div>
     </div>
 </template>
@@ -42,7 +42,7 @@ const emwaveListener = ref(null)
 const regimes = ref([])
 const sessionDone = ref(false)
 const dayDone = computed(() => regimes.value.length === 0)
-let condition;
+const condition = ref(null);
 
 async function setRegimes(condition) {
     const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition)
@@ -53,8 +53,8 @@ onBeforeMount(async() => {
     const session = SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
-    condition = data.condition.assigned;
-    await setRegimes(condition)
+    condition.value = data.condition.assigned;
+    await setRegimes(data.condition.assigned)
 })
 
 async function pacerFinished() {

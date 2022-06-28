@@ -13,16 +13,19 @@
         </div>
         <button class="pulse-sensor-button" id="startSensor" :disabled="running" @click="startPulseSensor">Start</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
+        <div v-if="showScore" id="score">Score (higher is better): {{ score }}</div>
     </div>
    
 </template>
 <script setup>
     import { ipcRenderer } from 'electron'
-    import { ref, watch } from '@vue/runtime-core'
+    import { ref, watch, computed } from '@vue/runtime-core'
+    import { epToCoherence } from '../coherence.js'
 
-    defineProps(['showIbi'])
+    const props = defineProps(['showIbi', 'showScore', 'condition'])
     const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-signal-lost', 'pulse-sensor-signal-restored', 'pulse-sensor-stopped'])
     let ibi = ref(0)
+    const ep = ref(-1)
     let calibrated = ref(false)
     let running = ref(false)
     let sensorError = ref(false) // set to true if we fail to get a signal at session start or if we get too many signal artifacts
@@ -31,6 +34,18 @@
     let forcedRestartInterval = null
     let stopSensor = ref(false)
     defineExpose({stopSensor})
+
+    const score = computed(() => {
+        if (props.condition !== 'A' && props.condition !== 'B') return 0
+
+        if (ep.value <= 0) return 0
+
+        if (props.condition == 'A') {
+            return epToCoherence(ep.value).toPrecision(2)
+        } else {
+            return ((epToCoherence(ep.value) * -1) + 10).toPrecision(2)
+        }
+    })
 
     // per Mara, if we go a full minute without signal we should force the user to restart the session
     // If we go 10s without signal we should tell them to mess with their sensor/earlobe.
@@ -54,6 +69,10 @@
     ipcRenderer.on('emwave-ibi', (event, hrData) => {
         ibi.value = Number(hrData.ibi)
         if (ibi.value <= 0) return
+
+        if (Object.prototype.hasOwnProperty.call(hrData, 'ep')) {
+            ep.value = hrData.ep
+        }
 
         if (!calibrated.value) {
             calibrated.value = true
