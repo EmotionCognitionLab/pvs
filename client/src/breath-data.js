@@ -58,12 +58,7 @@ function lookupRegime(regimeId) {
     const res = regimeByIdStmt.get(regimeId);
     if (!res) return;
 
-    if (res.randomize === 0) {
-        res.randomize = false;
-    } else {
-        res.randomize = true;
-    }
-    return res;
+    return regimeDataToRegime(res);
 }
 
 function createSegment(regimeData) {
