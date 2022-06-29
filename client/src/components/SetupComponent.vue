@@ -22,7 +22,7 @@
            <TimerComponent :secondsDuration=300 :showButtons=false :running=false @timerFinished="timerFinished" ref="timer" />
            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" ref="timerEmwave" />
         </div>
-        <div v-else-if="step=4">
+        <div v-else-if="step==4">
             <div class="instruction">
             We have one remaining task for you with this app today.
             We now will ask you to pace your breathing following the ball you will see on the screen.
@@ -38,10 +38,23 @@
                 @pacerFinished="pacerFinished" ref="pacer" />
             <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="pacerEmwave"/>
         </div>
+        <div v-else-if="step==5">
+            <UploadComponent>
+                <template #preUploadText>
+                    <div class="instruction">Terrific! Thank you for completing this orientation. Please wait while we upload your data...</div>
+                </template>
+                <template #postUploadText>
+                     <div class="instruction">Upload complete! At home tomorrow, please log in to the app to start your home training.</div>
+                    <br/>
+                    <button class="button" @click="quit">Quit</button>
+                </template>
+            </UploadComponent>
+        </div>
     </div>
 </template>
 
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { ref } from '@vue/runtime-core';
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
@@ -49,6 +62,7 @@
     import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
     import PacerComponent from './PacerComponent.vue'
+    import UploadComponent from './UploadComponent.vue'
 
     let step = isAuthenticated() ? ref(2) : ref(1)
     const timer = ref(null)
@@ -75,6 +89,7 @@
 
     function pacerFinished() {
         pacerEmwave.value.stopSensor = true
+        nextStep()
     }
 
     function startPacer() {
@@ -87,6 +102,10 @@
 
     function resumePacer() {
         pacer.value.resume = true
+    }
+
+    function quit() {
+        ipcRenderer.invoke('quit')
     }
 
 </script>
