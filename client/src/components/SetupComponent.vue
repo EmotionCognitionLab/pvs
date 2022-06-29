@@ -14,13 +14,15 @@
             <ConditionAssignmentComponent @complete="nextStep" />
         </div>
         <div v-else-if="step==3">
-            <div class="instruction">
-            Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
-            Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
-            Click "Start" when you're ready to begin.
-            </div>
-           <TimerComponent :secondsDuration=300 :showButtons=false :running=false @timerFinished="timerFinished" ref="timer" />
-           <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" ref="timerEmwave" />
+            <RestComponent @timerFinished="timerFinished">
+                <template #preText>
+                    <div class="instruction">
+                        Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
+                        Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
+                        Click "Start" when you're ready to begin.
+                    </div>
+                </template>
+            </RestComponent>
         </div>
         <div v-else-if="step==4">
             <div class="instruction">
@@ -59,14 +61,12 @@
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
     import LoginComponent from './LoginComponent.vue'
-    import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
     import PacerComponent from './PacerComponent.vue'
     import UploadComponent from './UploadComponent.vue'
+    import RestComponent from './RestComponent.vue'
 
     let step = isAuthenticated() ? ref(2) : ref(1)
-    const timer = ref(null)
-    const timerEmwave = ref(null)
     const pacer = ref(null)
     const pacerEmwave = ref(null)
     
@@ -74,16 +74,7 @@
         step.value += 1
     }
 
-    function startTimer() {
-        timer.value.running = true
-    }
-    
-    function stopTimer() {
-        timer.value.running = false
-    }
-
     function timerFinished() {
-        timerEmwave.value.stopSensor = true
         nextStep()
     }
 
