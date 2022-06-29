@@ -31,7 +31,7 @@ function startTimer() {
 }
 
 function stopTimer() {
-    timer.value.running = true
+    timer.value.running = false
 }
 
 function stopSession() {
