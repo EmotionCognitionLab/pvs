@@ -8,7 +8,7 @@ import TimerComponent from './components/TimerComponent.vue'
 import UploadComponent from './components/UploadComponent.vue'
 import LoginComponent from './components/LoginComponent.vue'
 import LumosityComponent from './components/LumosityComponent.vue'
-import BreathComponent from './components/BreathComponent.vue'
+import Stage3Component from './components/Stage3Component.vue'
 import Stage2Component from './components/Stage2Component.vue'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
@@ -33,7 +33,7 @@ const routes = [
     { path: '/upload', component: UploadComponent },
     { path: '/signin', component: LoginComponent, name: 'signin', props: true },
     { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
-    { path: '/breath', component: BreathComponent },
+    { path: '/stage3', component: Stage3Component },
     { path: '/lumos', component: LumosityComponent },
     { path: "/stage2", component: Stage2Component },
 ]
@@ -61,7 +61,7 @@ router.beforeEach((to) => {
         } else if (!stage2Complete()) {
             return {path: '/stage2'}
         } else {
-            return {path: '/breath'}
+            return {path: '/stage3'}
         }
     }
 
