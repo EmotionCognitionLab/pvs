@@ -32,7 +32,7 @@
             Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
             </div>
             <PacerComponent 
-                :regimes="[{durationMs: 210000, breathsPerMinute: 15, randomize: false}]"
+                :regimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]"
                 :scaleH=290
                 :scaleT=0.1 
                 :offsetProportionX=0.25
