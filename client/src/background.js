@@ -257,7 +257,7 @@ ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
 
   const dayArr = new Array(...daySet)
   dayArr.sort((a, b) => parseInt(a) - parseInt(b))
-  const startDay = new Date(dayArr[0].subtring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8))
+  const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8))
   const now = new Date()
   const diffMs = now - startDay
   const diffDays = diffMs / (1000 * 60 * 60 * 24)
