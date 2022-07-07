@@ -7,6 +7,7 @@ import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
+import { yyyymmddNumber } from './utils.js';
 import * as path from 'path'
 
 let db;
@@ -170,10 +171,6 @@ function regimeDataToRegime(rd) {
     const resObj = rowToObject(rd);
     resObj.randomize = rd.randomize === 0 ? false : true;
     return resObj;
-}
-
-function yyyymmddNumber(date) {
-    return Number.parseInt(`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`);
 }
 
 /**
