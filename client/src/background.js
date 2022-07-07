@@ -248,26 +248,27 @@ ipcMain.handle('get-rest-breathing-days', () => {
  * Stage 2 is complete when either (a) the user has done six Lumosity sessions, or
  * (b) when the user has done four or five Lumosity sessions AND at least six calendar
  * days have passed since the first one.
- * TODO: Must check that participant has also done the rest breathing sessions
- * that should follow each lumosity session.
  * @returns true or false
  */
  async function stage2Complete(session) {
-  const apiClient = new ApiClient(session)
-  const data = await apiClient.getSelf()
-  if (!data.lumosDays || data.lumosDays.length === 0) return false
+  const restBreathingDays = getRestBreathingDays();
+  if (restBreathingDays.size < 3) return false; // spec calls for minimum 2, but they do 1 during setup that doesn't count for this
 
-  const daySet = new Set(data.lumosDays)
-  if (daySet.size <= 3) return false
-  if (daySet.size >= 6) return true
+  const apiClient = new ApiClient(session);
+  const data = await apiClient.getSelf();
+  if (!data.lumosDays || data.lumosDays.length === 0) return false;
 
-  const dayArr = new Array(...daySet)
-  dayArr.sort((a, b) => parseInt(a) - parseInt(b))
-  const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8))
-  const now = new Date()
-  const diffMs = now - startDay
-  const diffDays = diffMs / (1000 * 60 * 60 * 24)
-  return diffDays >= 6
+  const daySet = new Set(data.lumosDays);
+  if (daySet.size <= 3) return false;
+  if (daySet.size >= 6) return true;
+
+  const dayArr = new Array(...daySet);
+  dayArr.sort((a, b) => parseInt(a) - parseInt(b));
+  const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8));
+  const now = new Date();
+  const diffMs = now - startDay;
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return diffDays >= 6;
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
