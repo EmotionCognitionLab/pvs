@@ -35,7 +35,9 @@ const routes = [
     { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
     { path: '/stage3', component: Stage3Component },
     { path: '/lumos', component: LumosityComponent },
-    { path: "/stage2", component: Stage2Component },
+    { path: '/stage2', component: Stage2Component },
+    { path: '/current-stage', redirect: chooseStage},
+    { path: '/', redirect: chooseStage }
 ]
 
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/']
@@ -45,24 +47,22 @@ const router = createRouter({
     routes: routes
 })
 
-// use navigation guards to decided 
-// which stage is to be done and 
-// handle authentication
+function chooseStage() {
+    if (!stage1Complete()) {
+        return {path: '/setup'}
+    } else if (!isAuthenticated()) {
+        return { name: 'signin', params: { postLoginPath: '/current-stage' }}
+    } else if (!stage2Complete()) {
+        return {path: '/stage2'}
+    } else {
+        return {path: '/stage3'}
+    }
+}
+
+// use navigation guards to handle authentication
 router.beforeEach((to) => {
     if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
         return { name: 'signin', params: { 'postLoginPath': to.path } }
-    }
-
-    if (to.path === '/current-stage' || to.path === '/') {
-        if (!stage1Complete()) {
-            return {path: '/setup'}
-        } else if (!isAuthenticated()) {
-            return { name: 'signin', params: { postLoginPath: '/current-stage' }}
-        } else if (!stage2Complete()) {
-            return {path: '/stage2'}
-        } else {
-            return {path: '/stage3'}
-        }
     }
 
     return true
