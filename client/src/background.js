@@ -7,7 +7,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb } from './breath-data'
+import { breathDbPath, closeBreathDb, getRestBreathingDays } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -240,10 +240,16 @@ ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
   return getRegimesForSession(subjCondition);
 });
 
+ipcMain.handle('get-rest-breathing-days', () => {
+  return getRestBreathingDays();
+});
+
 /**
  * Stage 2 is complete when either (a) the user has done six Lumosity sessions, or
  * (b) when the user has done four or five Lumosity sessions AND at least six calendar
  * days have passed since the first one.
+ * TODO: Must check that participant has also done the rest breathing sessions
+ * that should follow each lumosity session.
  * @returns true or false
  */
  async function stage2Complete(session) {

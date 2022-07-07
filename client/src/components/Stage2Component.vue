@@ -25,14 +25,21 @@
 </template>
 <script setup>
 import { ipcRenderer } from 'electron'
-import { ref } from '@vue/runtime-core'
+import { ref, onBeforeMount } from '@vue/runtime-core'
 import LumosityComponent from './LumosityComponent.vue'
 import RestComponent from './RestComponent.vue'
 import UploadComponent from './UploadComponent.vue'
 import { useLumosityHelper, completedLumosity } from '../lumosity-helper.js'
+import { yyyymmddNumber } from '../utils.js'
 
 const restBreathingDone = ref(false)
 const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
+
+onBeforeMount(async() => {
+    const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days')
+    const todayYYMMDD = yyyymmddNumber(new Date())
+    restBreathingDone.value = restBreathingDays.has(todayYYMMDD)
+})
 
 function quit() {
     ipcRenderer.invoke('quit')
