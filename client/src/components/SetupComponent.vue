@@ -14,15 +14,17 @@
             <ConditionAssignmentComponent @complete="nextStep" />
         </div>
         <div v-else-if="step==3">
-            <div class="instruction">
-            Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
-            Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
-            Click "Start" when you're ready to begin.
-            </div>
-           <TimerComponent :secondsDuration=300 :showButtons=false :running=false @timerFinished="timerFinished" ref="timer" />
-           <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" ref="timerEmwave" />
+            <RestComponent @timerFinished="timerFinished">
+                <template #preText>
+                    <div class="instruction">
+                        Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
+                        Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
+                        Click "Start" when you're ready to begin.
+                    </div>
+                </template>
+            </RestComponent>
         </div>
-        <div v-else-if="step=4">
+        <div v-else-if="step==4">
             <div class="instruction">
             We have one remaining task for you with this app today.
             We now will ask you to pace your breathing following the ball you will see on the screen.
@@ -30,7 +32,7 @@
             Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
             </div>
             <PacerComponent 
-                :regimes="[{durationMs: 210000, breathsPerMinute: 15, randomize: false}]"
+                :regimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]"
                 :scaleH=290
                 :scaleT=0.1 
                 :offsetProportionX=0.25
@@ -38,21 +40,33 @@
                 @pacerFinished="pacerFinished" ref="pacer" />
             <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="pacerEmwave"/>
         </div>
+        <div v-else-if="step==5">
+            <UploadComponent>
+                <template #preUploadText>
+                    <div class="instruction">Terrific! Thank you for completing this orientation. Please wait while we upload your data...</div>
+                </template>
+                <template #postUploadText>
+                     <div class="instruction">Upload complete! At home tomorrow, please log in to the app to start your home training.</div>
+                    <br/>
+                    <button class="button" @click="quit">Quit</button>
+                </template>
+            </UploadComponent>
+        </div>
     </div>
 </template>
 
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { ref } from '@vue/runtime-core';
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
     import LoginComponent from './LoginComponent.vue'
-    import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
     import PacerComponent from './PacerComponent.vue'
+    import UploadComponent from './UploadComponent.vue'
+    import RestComponent from './RestComponent.vue'
 
     let step = isAuthenticated() ? ref(2) : ref(1)
-    const timer = ref(null)
-    const timerEmwave = ref(null)
     const pacer = ref(null)
     const pacerEmwave = ref(null)
     
@@ -60,21 +74,13 @@
         step.value += 1
     }
 
-    function startTimer() {
-        timer.value.running = true
-    }
-    
-    function stopTimer() {
-        timer.value.running = false
-    }
-
     function timerFinished() {
-        timerEmwave.value.stopSensor = true
         nextStep()
     }
 
     function pacerFinished() {
         pacerEmwave.value.stopSensor = true
+        nextStep()
     }
 
     function startPacer() {
@@ -87,6 +93,10 @@
 
     function resumePacer() {
         pacer.value.resume = true
+    }
+
+    function quit() {
+        ipcRenderer.invoke('quit')
     }
 
 </script>

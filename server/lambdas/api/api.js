@@ -191,10 +191,25 @@ const assignToCondition = async(userId, data) => {
 
 const getLumosCreds = async (userId) => {
     try {
-        // first, find the user's age based on their
-        // reponse to the physical activity questionnaire
+        // check to see if they already have lumos creds assigned
         const db = new Db();
         db.docClient = docClient;
+
+        const findCredsParams = {
+            TableName: lumosAcctTable,
+            FilterExpression: '#owner = :owner',
+            ExpressionAttributeNames: { '#owner': 'owner' },
+            ExpressionAttributeValues: { ':owner': userId },
+            ConsistentRead: true
+        };
+        const credsResults = await docClient.scan(findCredsParams).promise();
+        if (credsResults.Items.length === 1) {
+            return credsResults.Items[0];
+        }
+
+        // no creds assigned; assign them
+        // first, find the user's age based on their
+        // reponse to the physical activity questionnaire
         const identId = await db.getIdentityIdForUserId(userId);
         const physActRes = await db.getResultsForCurrentUser('physical-activity', identId);
         const relevantRes = physActRes.filter(i => i.isRelevant)[0];

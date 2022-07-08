@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const { ipcMain, app } = require('electron');
 const CBuffer = require('CBuffer');
+const { epToCoherence } = require('./coherence.js')
 
 let emWaveProc = null;
 const client = net.Socket();
@@ -110,7 +111,7 @@ export default {
                     }
                 }
                 if (Object.prototype.hasOwnProperty.call(hrData, 'ep')) {
-                    coherenceValues.push(Math.log((hrData.ep / 10) + 1)); // this converts EP value from emWave to coherence value
+                    coherenceValues.push(epToCoherence(hrData.ep));
                 }
             }
         });

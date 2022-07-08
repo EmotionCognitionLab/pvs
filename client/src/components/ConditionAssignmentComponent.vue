@@ -54,7 +54,7 @@ async function assignToCondition() {
     validate();
     if (!Object.keys(errors).length) {
         try {
-            const session = await SessionStore.getRendererSession()
+            const session = SessionStore.getRendererSession()
             const apiClient = new ApiClient(session)
             await apiClient.assignToCondition({bornSex: sex.value, sexDesc: sexDescription.value})
 

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <slot name="bodyText"></slot>
+        <slot name="bodyText">Please log in to continue.<br/></slot>
         <button id="startSetup" @click="login">
             <slot name="btnText">Login</slot>
         </button>

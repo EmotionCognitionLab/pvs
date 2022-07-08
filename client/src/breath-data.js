@@ -6,7 +6,8 @@ import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
-// import { SessionStore } from './session-store.js'
+import { SessionStore } from './session-store.js'
+import { yyyymmddNumber } from './utils.js';
 import * as path from 'path'
 
 let db;
@@ -58,12 +59,7 @@ function lookupRegime(regimeId) {
     const res = regimeByIdStmt.get(regimeId);
     if (!res) return;
 
-    if (res.randomize === 0) {
-        res.randomize = false;
-    } else {
-        res.randomize = true;
-    }
-    return res;
+    return regimeDataToRegime(res);
 }
 
 function createSegment(regimeData) {
@@ -94,22 +90,33 @@ function getSegmentsAfterDate(date) {
     return res.map(rowToObject);
 }
 
+function getTrainingDays(useRest, includeToday) {
+    const tableName = useRest ? 'rest_segments': 'segments';
+    let segEndTimes = [];
+    if (includeToday) {
+        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName}`);
+        segEndTimes = stmt.all();
+    } else {
+        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName} where end_date_time < ?`);
+        const startOfDay = new Date();
+        startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
+        segEndTimes = stmt.all(startOfDay.getTime() / 1000);
+    }
+
+    const uniqDays = new Set(segEndTimes.map(s => {
+        const theDate = new Date(s.end_date_time * 1000);
+        return yyyymmddNumber(theDate);
+    }));
+
+    return uniqDays;
+}
+
 /**
  * Returns the number of days, not including today, that a user
  * has done at least one breathing segment.
  */
 function getTrainingDayCount() {
-    const startOfDay = new Date();
-    startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
-    const stmt = db.prepare('SELECT end_date_time FROM segments where end_date_time < ?');
-    const segEndTimes = stmt.all(startOfDay.getTime() / 1000);
-    
-    const epochSecToDate = (epochSec) => {
-        const theDate = new Date(epochSec * 1000);
-        return `${theDate.getFullYear()}${(theDate.getMonth() + 1).toString().padStart(2,0)}${theDate.getDate().toString().padStart(2, 0)}`
-    }
-
-    const uniqDays = new Set(segEndTimes.map(s => epochSecToDate(s.end_date_time)));
+    const uniqDays = getTrainingDays(false, false);
     return uniqDays.size;
 }
 
@@ -140,6 +147,13 @@ function getAvgRestCoherence() {
     return mean(res.map(r => r.avg_coherence));
 }
 
+/**
+ * Returns the days (in YYYYMMDD format) that rest breathing has been done on
+ */
+function getRestBreathingDays() {
+    return getTrainingDays(true, true);
+}
+
 function setRegimeBestCnt(regimeId, count) {
     const updateStmt = db.prepare('UPDATE regimes set is_best_cnt = ? where id = ?');
     const res = updateStmt.run(count, regimeId);
@@ -158,10 +172,6 @@ function regimeDataToRegime(rd) {
     const resObj = rowToObject(rd);
     resObj.randomize = rd.randomize === 0 ? false : true;
     return resObj;
-}
-
-function yyyymmddNumber(date) {
-    return Number.parseInt(`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`);
 }
 
 /**
@@ -268,6 +278,7 @@ export {
     getRegimeStats,
     getRegimesForDay,
     getAvgRestCoherence,
+    getRestBreathingDays,
     lookupRegime,
     setRegimeBestCnt,
     getSegmentsAfterDate,
