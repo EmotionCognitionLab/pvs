@@ -54,6 +54,7 @@ async function createWindow() {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
+    win.webContents.openDevTools()
   }
   return win
 }
@@ -129,15 +130,28 @@ ipcMain.on('show-login-window', () => {
     mainWin.webContents.on('will-redirect', async (event, newUrl) => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
+	const curUrl = mainWin.webContents.getURL()
+	// console.log('current url is', curUrl)
+	// console.log('redirect url is', newUrl)
       if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
         if (process.env.WEBPACK_DEV_SERVER_URL) {
-          // Load the url of the dev server if in development mode
-          await mainWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        } else {
+          // Load the redirect url if in development mode; it should point at our dev server
+		// console.log(' we are in dev mode; loading the redirect url')
+          await mainWin.loadURL(newUrl)
+        } else if (!curUrl.startsWith('app')) {
+		// Load the main app page; the redirect url does not point to it and we are not currently in the app
+		// console.log('loading the main app page')
           await mainWin.loadURL('app://./index.html')
-        }
-        mainWin.webContents.send('oauth-redirect', newUrl)
-        event.preventDefault()
+		mainWin.webContents.send('oauth-redirect', newUrl)
+		event.preventDefault()
+        } else {
+		// console.log('app is already loaded, sending oauth-redirect ipc msg')
+		mainWin.webContents.send('oauth-redirect', newUrl)
+		event.preventDefault()
+	}
+      } else {
+	// console.log('not an oauth redirect; loading the new url')
+	mainWin.loadURL(newUrl)
       }
     })
   } catch (err) {
@@ -251,24 +265,8 @@ ipcMain.handle('get-rest-breathing-days', () => {
  * @returns true or false
  */
  async function stage2Complete(session) {
-  const restBreathingDays = getRestBreathingDays();
-  if (restBreathingDays.size < 3) return false; // spec calls for minimum 2, but they do 1 during setup that doesn't count for this
-
-  const apiClient = new ApiClient(session);
-  const data = await apiClient.getSelf();
-  if (!data.lumosDays || data.lumosDays.length === 0) return false;
-
-  const daySet = new Set(data.lumosDays);
-  if (daySet.size <= 3) return false;
-  if (daySet.size >= 6) return true;
-
-  const dayArr = new Array(...daySet);
-  dayArr.sort((a, b) => parseInt(a) - parseInt(b));
-  const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8));
-  const now = new Date();
-  const diffMs = now - startDay;
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  return diffDays >= 6;
+  const restBreathingDays = getRestBreathingDays()
+  return restBreathingDays.size >= 2
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
