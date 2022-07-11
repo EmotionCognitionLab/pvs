@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import unhandled from 'electron-unhandled'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
@@ -24,6 +25,9 @@ globalThis.fetch = fetch
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
+
+// use electron-unhandled to catch unhandled errors/promise rejections
+unhandled()
 
 let mainWin = null
 
@@ -88,10 +92,6 @@ app.on('ready', async () => {
   new Logger()
 })
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
-})
-
 app.on('before-quit', () => {
   emwave.stopEmWave()
   closeBreathDb()
@@ -126,10 +126,16 @@ ipcMain.on('show-login-window', () => {
     auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
     mainWin.loadURL(url)
-    mainWin.webContents.on('will-redirect', (event, newUrl) => {
+    mainWin.webContents.on('will-redirect', async (event, newUrl) => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
       if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
+        if (process.env.WEBPACK_DEV_SERVER_URL) {
+          // Load the url of the dev server if in development mode
+          await mainWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        } else {
+          await mainWin.loadURL('app://./index.html')
+        }
         mainWin.webContents.send('oauth-redirect', newUrl)
         event.preventDefault()
       }
