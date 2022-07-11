@@ -84,7 +84,7 @@ app.on('ready', async () => {
   emwave.startEmWave()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
-  emwave.hideEmWave()
+  // emwave.hideEmWave()
   new Logger()
 })
 
@@ -121,29 +121,19 @@ if (typeof atob === 'undefined') {
 }
 
 ipcMain.on('show-login-window', () => {
-  let authWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    show: false,
-    'node-integration': false
-  })
   try {
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
-    authWindow.loadURL(url)
-    authWindow.show()
-    authWindow.webContents.on('will-redirect', (event, newUrl) => {
+    mainWin.loadURL(url)
+    mainWin.webContents.on('will-redirect', (event, newUrl) => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
       if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
         mainWin.webContents.send('oauth-redirect', newUrl)
-      } else {
-        mainWin.loadURL(newUrl)
+        event.preventDefault()
       }
-      authWindow.close()
     })
-    authWindow.on('closed', () => { authWindow = null })
   } catch (err) {
     console.log(err)
   } 
