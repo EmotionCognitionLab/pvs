@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import unhandled from 'electron-unhandled'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
@@ -24,6 +25,9 @@ globalThis.fetch = fetch
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
+
+// use electron-unhandled to catch unhandled errors/promise rejections
+unhandled()
 
 let mainWin = null
 
@@ -86,10 +90,6 @@ app.on('ready', async () => {
   emwave.createClient(mainWin)
   // emwave.hideEmWave()
   new Logger()
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
 })
 
 app.on('before-quit', () => {
