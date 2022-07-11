@@ -126,10 +126,16 @@ ipcMain.on('show-login-window', () => {
     auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
     mainWin.loadURL(url)
-    mainWin.webContents.on('will-redirect', (event, newUrl) => {
+    mainWin.webContents.on('will-redirect', async (event, newUrl) => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
       if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
+        if (process.env.WEBPACK_DEV_SERVER_URL) {
+          // Load the url of the dev server if in development mode
+          await mainWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        } else {
+          await mainWin.loadURL('app://./index.html')
+        }
         mainWin.webContents.send('oauth-redirect', newUrl)
         event.preventDefault()
       }

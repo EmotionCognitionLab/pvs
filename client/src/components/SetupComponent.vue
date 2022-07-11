@@ -1,7 +1,7 @@
 <template>
     <div class="wrapper">
         <div class="instruction" v-if="step==1">
-           <LoginComponent post-login-path="/setup">
+           <LoginComponent post-login-path="/setup" @loginSucceeded="nextStep">
                <template #bodyText>
                 Welcome! This app will guide you through your heart rate biofeedback sessions.
                 The first step is to log in, using the same email address and password that you registered
