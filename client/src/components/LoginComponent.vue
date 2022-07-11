@@ -36,8 +36,12 @@
     const curUrl = window.location.href;
     if (curUrl.indexOf('?') > -1) {
         // we're handling a redirect from the oauth server
-        cognitoAuth.parseCognitoWebResponse(curUrl);
+        cognitoAuth.parseCognitoWebResponse(curUrl)
     }
+
+    ipcRenderer.on('oauth-redirect', (_event, respUrl) => {
+        cognitoAuth.parseCognitoWebResponse(respUrl)
+    })
 
     const login = () => {
         if (props.postLoginPath !== undefined) {

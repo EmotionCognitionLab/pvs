@@ -136,7 +136,11 @@ ipcMain.on('show-login-window', () => {
     authWindow.webContents.on('will-redirect', (event, newUrl) => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
-      mainWin.loadURL(newUrl)
+      if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
+        mainWin.webContents.send('oauth-redirect', newUrl)
+      } else {
+        mainWin.loadURL(newUrl)
+      }
       authWindow.close()
     })
     authWindow.on('closed', () => { authWindow = null })
