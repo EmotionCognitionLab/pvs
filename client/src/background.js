@@ -84,7 +84,7 @@ app.on('ready', async () => {
   emwave.startEmWave()
   mainWin = await createWindow()
   emwave.createClient(mainWin)
-  emwave.hideEmWave()
+  // emwave.hideEmWave()
   new Logger()
 })
 
