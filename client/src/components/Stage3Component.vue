@@ -43,8 +43,6 @@
 <script setup>
 import { ipcRenderer } from 'electron'
 import { ref, onBeforeMount, computed } from '@vue/runtime-core'
-import ApiClient from '../../../common/api/client.js'
-import { SessionStore } from '../session-store.js'
 import PacerComponent from './PacerComponent.vue'
 import UploadComponent from './UploadComponent.vue'
 import EmWaveListener from './EmWaveListener.vue'
@@ -56,7 +54,7 @@ const emwaveListener = ref(null)
 const regimes = ref([])
 const sessionDone = ref(false)
 const dayDone = computed(() => regimes.value.length === 0)
-const condition = ref(null);
+const condition = ref("B");
 const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
 
 async function setRegimes(condition) {
@@ -65,11 +63,7 @@ async function setRegimes(condition) {
 }
 
 onBeforeMount(async() => {
-    const session = SessionStore.getRendererSession()
-    const apiClient = new ApiClient(session)
-    const data = await apiClient.getSelf()
-    condition.value = data.condition.assigned;
-    await setRegimes(data.condition.assigned)
+	await setRegimes(condition.value)
 })
 
 async function pacerFinished() {
