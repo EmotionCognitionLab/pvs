@@ -7,7 +7,6 @@
             We have one remaining task for you today.
             Please breathe following the ball on the screen.
             Breathe in while the ball is moving up and breathe out while the ball is moving down.
-            Pause your breathing when the ball is not going up or down.
             Make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
             <PacerComponent 
                 :regimes="regimes"
