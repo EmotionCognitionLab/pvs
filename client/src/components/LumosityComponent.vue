@@ -1,7 +1,7 @@
 <template>
     <div>
         <header>
-            After completing the Lumosity segment, please click <span @click="leave">here</span>.
+            <img v-bind:src="require('../assets/logo.png')" id="logo"> After completing the Lumosity games below, please click <span @click="leave">here</span>.
         </header>
     </div>
 </template>
@@ -51,5 +51,8 @@
     }
     header span:hover {
         text-decoration: none;
+    }
+    #logo {
+        vertical-align: middle;
     }
 </style>
