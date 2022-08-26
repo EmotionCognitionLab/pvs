@@ -176,7 +176,7 @@ function lumosityPasswordValid(pw) {
   return false;
 }
 
-ipcMain.on('create-lumosity-view', async (_event, email, password) => {
+ipcMain.on('create-lumosity-view', async (_event, email, password, userAgent) => {
     if (lumosityView) {
         return;
     }
@@ -200,7 +200,7 @@ ipcMain.on('create-lumosity-view', async (_event, email, password) => {
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
     });
-    lumosityView.webContents.loadURL("https://www.lumosity.com/login");
+    lumosityView.webContents.loadURL("https://www.lumosity.com/login", {userAgent: userAgent.replace(/heartbeam.* /, '').replace(/Electron.* /, '')});
 });
 
 ipcMain.on('close-lumosity-view', () => {

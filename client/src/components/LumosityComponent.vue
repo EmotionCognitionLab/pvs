@@ -26,7 +26,7 @@
             email = lumosCreds.email
             pw = lumosCreds.pw
         }
-        ipcRenderer.send("create-lumosity-view", email, pw);
+        ipcRenderer.send("create-lumosity-view", email, pw, navigator.userAgent);
     })
 
 
