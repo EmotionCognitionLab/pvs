@@ -47,6 +47,14 @@ function isAuthenticated() {
 }
 
 /**
+ * @returns the cognito user id for the current user
+ */
+function getCurrentUser() {
+    var auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings);
+    return auth.getCurrentUser();
+}
+
+/**
  *
  * @param {CognitoAuthSession}
  * @returns {Object} ID token object
@@ -135,6 +143,7 @@ function verifyPhone(accessToken, verificationCode, onSuccess, onFailure) {
 export {
     getAuth,
     isAuthenticated,
+    getCurrentUser,
     getIdToken,
     hasPreferredRole,
     sendPhoneVerificationCode,
