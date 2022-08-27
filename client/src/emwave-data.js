@@ -19,6 +19,13 @@ function deleteShortSessions() {
     const db = new Database(emWaveDbPath(), {fileMustExist: true }) //nativeBinding: '../client/node_modules/better-sqlite3/build/Release/better_sqlite3.node'});
     try {
         const shortSessionLength = 4 * 60; // we delete all sessions less than or equal to 4 minutes long
+        // debug
+        const debugStmt = db.prepare(`select FirstName, datetime(IBIStartTime, 'unixepoch', 'localtime') as start, datetime(IBIEndTime, 'unixepoch', 'localtime') as end from Session join User on Session.UserUuid = User.UserUuid where IBIEndTime - IBIStartTime <= ${shortSessionLength}`);
+        const toDelete = debugStmt.all();
+        for (let shortSession of toDelete) {
+            console.log(`Deleting short session for user ${shortSession.FirstName} that runs from ${shortSession.start} to ${shortSession.end}.`)
+        }
+        // end debug
         const stmt = db.prepare(`delete from Session where IBIEndTime - IBIStartTime <= ${shortSessionLength}`);
         stmt.run();
     } finally {
