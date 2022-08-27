@@ -56,8 +56,9 @@ export class Logger {
      * Creates and initializes Logger instance.
      * @param {*} override true to override console.log, .info, .warn and .error, false to leave them alone.
      */
-    constructor(override=true) {
+    constructor(override=true, user="unknown") {
         this.override = override;
+        this.user = user;
         this.cwLogs = new CloudWatchLogs({
             region: awsSettings.AWSRegion, 
             accessKeyId: awsSettings.CloudwatchWriter, 
@@ -108,7 +109,7 @@ export class Logger {
         if (args.length === 0) return;
 
         const msg = util.format(args[0], ...args.slice(1), "\n");
-        this.logEntries.push({message: JSON.stringify({message: msg, level: level}), timestamp: Date.now()});
+        this.logEntries.push({message: JSON.stringify({message: msg, level: level, user: this.user}), timestamp: Date.now()});
 
         origLogFn(...args);
     }
