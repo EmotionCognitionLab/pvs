@@ -4,8 +4,15 @@
 
 <script setup>
 import { Logger } from '../../common/logger/logger.js'
+import { getCurrentUser } from '../../common/auth/auth.js'
+import { ipcRenderer } from 'electron'
 
-new Logger()
+new Logger(true, getCurrentUser())
+
+ipcRenderer.on('get-current-user', () => {
+  ipcRenderer.send('current-user', getCurrentUser())
+})
+
 </script>
 
 <style>

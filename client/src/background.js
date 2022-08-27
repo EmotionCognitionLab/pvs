@@ -87,9 +87,13 @@ app.on('ready', async () => {
   }
   emwave.startEmWave()
   mainWin = await createWindow()
+  mainWin.webContents.send('get-current-user')
   emwave.createClient(mainWin)
   // emwave.hideEmWave()
-  new Logger()
+})
+
+ipcMain.on('current-user', (_event, user) => {
+  new Logger(true, user)
 })
 
 app.on('before-quit', () => {
