@@ -10,9 +10,11 @@ import LoginComponent from './components/LoginComponent.vue'
 import LumosityComponent from './components/LumosityComponent.vue'
 import Stage3Component from './components/Stage3Component.vue'
 import Stage2Component from './components/Stage2Component.vue'
+import DoneTodayComponent from './components/DoneTodayComponent.vue'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
+import { yyyymmddString } from './utils'
 
 function stage1Complete() {
     return  window.localStorage.getItem('HeartBeam.isConfigured') === 'true'
@@ -36,6 +38,7 @@ const routes = [
     { path: '/stage3', component: Stage3Component },
     { path: '/lumos', component: LumosityComponent },
     { path: '/stage2', component: Stage2Component },
+    { path: '/donetoday', component: DoneTodayComponent},
     { path: '/current-stage', redirect: chooseStage},
     { path: '/', redirect: chooseStage }
 ]
@@ -48,14 +51,20 @@ const router = createRouter({
 })
 
 function chooseStage() {
+    const todayYMD = yyyymmddString(new Date());
+
     if (!stage1Complete()) {
         return {path: '/setup'}
     } else if (!isAuthenticated()) {
         return { name: 'signin', params: { postLoginPath: '/current-stage' }}
-    } else if (!stage2Complete()) {
-        return {path: '/stage2'}
     } else {
-        return {path: '/stage3'}
+        const stage2Status = stage2Complete();
+        if (!stage2Status.complete) return {path: '/stage2'}
+        if (stage2Status.completedOn != todayYMD) {
+            return {path: '/stage3'}
+        } else {
+            return {path: '/donetoday'}
+        }
     }
 }
 

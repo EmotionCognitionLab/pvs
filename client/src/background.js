@@ -7,6 +7,7 @@ import unhandled from 'electron-unhandled'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
+import { yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
 import { breathDbPath, closeBreathDb, getRestBreathingDays } from './breath-data'
 import { getRegimesForSession } from './regimes'
@@ -249,30 +250,41 @@ ipcMain.handle('get-rest-breathing-days', () => {
 });
 
 /**
- * Stage 2 is complete when either (a) the user has done six Lumosity sessions, or
- * (b) when the user has done four or five Lumosity sessions AND at least six calendar
- * days have passed since the first one.
- * @returns true or false
+ * Stage 2 is complete when either (a) the user has done six Lumosity sessions and
+ * at least two rest breathing sessions, or
+ * (b) when the user has done four or five Lumosity sessions and at least two rest
+ * breathing sessions AND at least six calendar days have passed since the first one.
+ * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
+ * representing the latest of the date the rest breathing or the lumosity days were
+ * completed, or null if complete is false}
  */
  async function stage2Complete(session) {
   const restBreathingDays = getRestBreathingDays();
-  if (restBreathingDays.size < 3) return false; // spec calls for minimum 2, but they do 1 during setup that doesn't count for this
+  if (restBreathingDays.size < 3) return { complete: false, completedOn: null }; // spec calls for minimum 2, but they do 1 during setup that doesn't count for this
 
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
-  if (!data.lumosDays || data.lumosDays.length === 0) return false;
+  if (!data.lumosDays || data.lumosDays.length === 0) return { complete: false, completedOn: null };
 
   const daySet = new Set(data.lumosDays);
-  if (daySet.size <= 3) return false;
-  if (daySet.size >= 6) return true;
+  if (daySet.size <= 3) return { complete: false, completedOn: null };
 
   const dayArr = new Array(...daySet);
   dayArr.sort((a, b) => parseInt(a) - parseInt(b));
+  const lastLumosDay = parseInt(dayArr[dayArr.length - 1]);
+  const lastBreathingDay = new Array(...restBreathingDays).sort((a, b) => a - b)[restBreathingDays.length - 1];
+  const completedOn = Math.max(lastLumosDay, lastBreathingDay).toString();
+  if (daySet.size >= 6) return { complete: true, completedOn: completedOn };
+
   const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8));
   const now = new Date();
   const diffMs = now - startDay;
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  return diffDays >= 6;
+  if (diffDays >= 6) {
+    return { complete: true, completedOn: completedOn }
+  } else {
+    return { complete: false, completedOn: null }
+  }
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
