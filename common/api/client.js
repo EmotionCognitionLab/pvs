@@ -108,13 +108,19 @@ export default class ApiClient {
         };
         if (body) init.body = JSON.stringify(body);
 
-        const response = await fetch(url, init);
+        try {
+            const response = await fetch(url, init);
 
-        if (!response.ok) {
-            const respText = await response.text();
-            throw new Error(`${errPreamble}: ${respText} (status code: ${response.status})`);
+            if (!response.ok) {
+                const respText = await response.text();
+                throw new Error(`${errPreamble}: ${respText} (status code: ${response.status})`);
+            }
+            return await response.json();
+        } catch (err) {
+            console.error(errPreamble, err);
+            throw err;
         }
-        return await response.json();
+        
     }
 }
 
