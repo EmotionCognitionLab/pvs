@@ -147,7 +147,7 @@ function getAvgRestCoherence() {
 }
 
 /**
- * Returns the days (in YYYYMMDD format) that rest breathing has been done on
+ * @return {Set}  Set of days (as YYYYMMDD numbers) that rest breathing has been done on
  */
 function getRestBreathingDays() {
     return getTrainingDays(true, true);
