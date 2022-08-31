@@ -7,7 +7,7 @@ import unhandled from 'electron-unhandled'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import emwave from './emwave'
 import s3Utils from './s3utils.js'
-import { yyyymmddString } from './utils'
+import { yyyymmddNumber, yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
 import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays } from './breath-data'
 import { getRegimesForSession } from './regimes'
@@ -127,6 +127,7 @@ if (typeof atob === 'undefined') {
 
 ipcMain.on('show-login-window', () => {
   try {
+    const remoteLogger = new Logger(false)
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
@@ -141,14 +142,25 @@ ipcMain.on('show-login-window', () => {
           // us to use an 'app://' url as a redirect, though, so
           // load the app in the main window and then manually
           // notify the LoginComponent that it should handle the oauth redirect
-          await mainWin.loadURL('app://./index.html')
+          
+          try {
+            await mainWin.loadURL('app://./index.html#/login/index.html')
+          } catch (err) {
+            // for some reason we often get an ERR_ABORTED or ERR_FAILED error here
+            // which prevents the flow from finishing
+            if (!err.message.startsWith("ERR_ABORTED") && !err.message.startsWith("ERR_FAILED")) {
+              remoteLogger.error(err)
+              throw(err)
+            }
+          }
+          
           mainWin.webContents.send('oauth-redirect', newUrl)
           event.preventDefault()
         }
       }
     })
   } catch (err) {
-    console.log(err)
+    remoteLogger.error(err)
   } 
 })
 
@@ -259,7 +271,7 @@ ipcMain.handle('get-paced-breathing-days', () => {
  * Stage 2 is complete when either (a) the user has done six Lumosity sessions and
  * at least two rest breathing sessions, or
  * (b) when the user has done four or five Lumosity sessions and at least two rest
- * breathing sessions AND at least six calendar days have passed since the first one.
+ * breathing sessions AND at least six calendar days have passed since the first Lumosity session.
  * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
  * representing the latest of the date the rest breathing or the lumosity days were
  * completed, or null if complete is false}
@@ -272,25 +284,48 @@ ipcMain.handle('get-paced-breathing-days', () => {
   const data = await apiClient.getSelf();
   if (!data.lumosDays || data.lumosDays.length === 0) return { complete: false, completedOn: null };
 
-  const daySet = new Set(data.lumosDays);
-  if (daySet.size <= 3) return { complete: false, completedOn: null };
+  const lumosDaysSet = new Set(data.lumosDays);
+  if (lumosDaysSet.size <= 3) return { complete: false, completedOn: null };
 
-  const dayArr = new Array(...daySet);
-  dayArr.sort((a, b) => parseInt(a) - parseInt(b));
-  const lastLumosDay = parseInt(dayArr[dayArr.length - 1]);
-  const lastBreathingDay = new Array(...restBreathingDays).sort((a, b) => a - b)[restBreathingDays.size - 1];
-  const completedOn = Math.max(lastLumosDay, lastBreathingDay).toString();
-  if (daySet.size >= 6) return { complete: true, completedOn: completedOn };
-
-  const startDay = new Date(dayArr[0].substring(0,4), parseInt(dayArr[0].substring(4,6))-1, dayArr[0].substring(6,8));
+  const lumosDaysArr = new Array(...lumosDaysSet).map(x => parseInt(x));
+  lumosDaysArr.sort((a, b) => a - b);
+  const firstLumosDay = lumosDaysArr[0].toString();
+  const lumosStartDate = new Date(firstLumosDay.substring(0,4), parseInt(firstLumosDay.substring(4,6))-1, firstLumosDay.substring(6,8));
+  
   const now = new Date();
-  const diffMs = now - startDay;
+  const diffMs = now - lumosStartDate;
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  if (diffDays >= 6) {
+  if (diffDays >= 6 || lumosDaysSet.size >= 6) {
+    const completedOn = calculateStage2CompletionDate(lumosDaysArr, lumosStartDate, new Array(...restBreathingDays).slice(1)); // drop first rest breathing day b/c it's from setup (stage 1)
     return { complete: true, completedOn: completedOn }
   } else {
     return { complete: false, completedOn: null }
   }
+}
+
+/**
+ * Finds the earliest possible date someone completed stage 2. This could be:
+ *  - the date of their sixth Lumosity session
+ *  - the date of their second breathing session
+ *  - six days after start of first Lumosity session (if 4-5 sessions have been done)
+ *  - the date of the fourth Lumosity session (if it's at least six days after the first Lumosity session)
+ * Throws an error if the stage is not actually complete.
+ * @param {Array} lumosDays yyyymmdd dates of Lumosity sessions
+ * @param {Date} lumosStartDate the date of the first Lumosity session
+ * @param {Array} restBreathingDays yyyymmdd dates of rest breathing sessions
+ * @returns yyyymmdd date representing the date stage 2 was completed
+ */
+function calculateStage2CompletionDate(lumosDays, lumosStartDate, restBreathingDays) {
+  if (lumosDays.length < 4) throw new Error(`Expected at least four Lumosity sessions but found ${lumosDays.length}. Stage 2 is not complete.`)
+  if (restBreathingDays.length < 2) throw new Error(`Expected at least two rest breathing sessions but found ${restBreathingDays.length}. Stage 2 is not complete.`)
+  const fourthLumos = lumosDays[3];
+  const sixthLumos = lumosDays.length >= 6 ? lumosDays[5] : Number.MAX_SAFE_INTEGER;
+  const sixDays = new Date(lumosStartDate.getTime() + (1000 * 60 * 60 * 24 * 6));
+  const sixDaysYMD = yyyymmddNumber(sixDays);
+  const secondBreathing = restBreathingDays[1];
+  const earliestLumosEnd = Math.max(fourthLumos, sixDaysYMD)
+  const lumosEnd = Math.min(earliestLumosEnd, sixthLumos)
+  return Math.max(lumosEnd, secondBreathing);
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
