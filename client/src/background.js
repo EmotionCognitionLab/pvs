@@ -9,7 +9,7 @@ import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb, getRestBreathingDays } from './breath-data'
+import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -135,14 +135,16 @@ ipcMain.on('show-login-window', () => {
       // we want the renderer (main) window to load the redirect from the oauth server
       // so that it gets the session and can store it
       if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
-        if (process.env.WEBPACK_DEV_SERVER_URL) {
-          // Load the url of the dev server if in development mode
-          await mainWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        } else {
+        if (!process.env.WEBPACK_DEV_SERVER_URL) {
+          // then we're in prod mode, which means that the app URLs 
+          // are in the form 'app://'. Cognito won't allow 
+          // us to use an 'app://' url as a redirect, though, so
+          // load the app in the main window and then manually
+          // notify the LoginComponent that it should handle the oauth redirect
           await mainWin.loadURL('app://./index.html')
+          mainWin.webContents.send('oauth-redirect', newUrl)
+          event.preventDefault()
         }
-        mainWin.webContents.send('oauth-redirect', newUrl)
-        event.preventDefault()
       }
     })
   } catch (err) {
@@ -249,6 +251,10 @@ ipcMain.handle('get-rest-breathing-days', () => {
   return getRestBreathingDays();
 });
 
+ipcMain.handle('get-paced-breathing-days', () => {
+  return getPacedBreathingDays();
+});
+
 /**
  * Stage 2 is complete when either (a) the user has done six Lumosity sessions and
  * at least two rest breathing sessions, or
@@ -272,7 +278,7 @@ ipcMain.handle('get-rest-breathing-days', () => {
   const dayArr = new Array(...daySet);
   dayArr.sort((a, b) => parseInt(a) - parseInt(b));
   const lastLumosDay = parseInt(dayArr[dayArr.length - 1]);
-  const lastBreathingDay = new Array(...restBreathingDays).sort((a, b) => a - b)[restBreathingDays.length - 1];
+  const lastBreathingDay = new Array(...restBreathingDays).sort((a, b) => a - b)[restBreathingDays.size - 1];
   const completedOn = Math.max(lastLumosDay, lastBreathingDay).toString();
   if (daySet.size >= 6) return { complete: true, completedOn: completedOn };
 
@@ -291,6 +297,21 @@ ipcMain.on('is-stage-2-complete', async(_event, session) => {
   const res = await stage2Complete(SessionStore.buildSession(session))
   _event.returnValue = res
 })
+
+async function stage1Complete() {
+  const restBreathingDays = getRestBreathingDays();
+  if (restBreathingDays.size < 1) return { complete: false, completedOn: null };
+
+  const pacedBreathingDays = getPacedBreathingDays();
+  if (pacedBreathingDays.size < 1) return { complete: false, completedOn: null };
+
+  return { complete: true, completedOn: Math.max(restBreathingDays[0], pacedBreathingDays[0]).toString() };
+}
+
+ipcMain.on('is-stage-1-complete', async(_event) => {
+  const res = await stage1Complete();
+  _event.returnValue = res;
+});
 
 ipcMain.handle('quit', () => {
   app.quit();
