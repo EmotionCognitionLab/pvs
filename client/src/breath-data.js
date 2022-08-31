@@ -153,6 +153,14 @@ function getRestBreathingDays() {
     return getTrainingDays(true, true);
 }
 
+/**
+ * 
+ * @returns {Set} Set of days (as YYYYMMDD numbers) that paced breathing has been done on
+ */
+function getPacedBreathingDays() {
+    return getTrainingDays(false, true);
+}
+
 function setRegimeBestCnt(regimeId, count) {
     const updateStmt = db.prepare('UPDATE regimes set is_best_cnt = ? where id = ?');
     const res = updateStmt.run(count, regimeId);
@@ -277,6 +285,7 @@ export {
     getRegimesForDay,
     getAvgRestCoherence,
     getRestBreathingDays,
+    getPacedBreathingDays,
     lookupRegime,
     setRegimeBestCnt,
     getSegmentsAfterDate,
