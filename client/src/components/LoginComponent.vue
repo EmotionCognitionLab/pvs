@@ -9,12 +9,12 @@
 <script setup>
     import { ipcRenderer } from 'electron'
     import { defineEmits } from 'vue';
-    import { useRouter } from "vue-router";
+    import { useRouter, useRoute } from "vue-router";
     import { getAuth } from '../../../common/auth/auth.js'
     import { SessionStore } from '../session-store.js'
 
     const router = useRouter();
-    const props = defineProps(['postLoginPath'])
+    const route = useRoute();
     const emit = defineEmits(['login-succeeded'])
     const cognitoAuth = getAuth()
     cognitoAuth.userhandler = {
@@ -44,8 +44,8 @@
     })
 
     const login = () => {
-        if (props.postLoginPath !== undefined) {
-            window.sessionStorage.setItem('HeartBeam.postLoginPath', props.postLoginPath)
+        if (route.query.postLoginPath !== undefined) {
+            window.sessionStorage.setItem('HeartBeam.postLoginPath', route.query.postLoginPath)
         }
         ipcRenderer.send('show-login-window')
     }

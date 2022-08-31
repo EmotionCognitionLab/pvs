@@ -44,7 +44,7 @@ const routes = [
     { path: '/', redirect: chooseStage }
 ]
 
-const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/']
+const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/', '/index.html']
 
 const router = createRouter({
     history: process.env.IS_ELECTRON ? createWebHashHistory() : createWebHistory(),
@@ -62,7 +62,7 @@ function chooseStage() {
     // for us to be able to download their db (if necessary) and check to 
     // see which breathing exercises they've done
     if (!isAuthenticated()) {
-        return { name: 'signin', params: { postLoginPath: '/current-stage' }}
+        return { name: 'signin', query: { postLoginPath: '/current-stage' }}
     }
 
     const stage1Status = stage1Complete()
@@ -84,7 +84,7 @@ function chooseStage() {
 // use navigation guards to handle authentication
 router.beforeEach((to) => {
     if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
-        return { name: 'signin', params: { 'postLoginPath': to.path } }
+        return { name: 'signin', query: { 'postLoginPath': to.path } }
     }
 
     return true
