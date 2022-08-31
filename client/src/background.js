@@ -93,6 +93,22 @@ app.on('ready', async () => {
   // emwave.hideEmWave()
 })
 
+// Prevent multiple instances of the app
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  if (mainWin) {
+      if (mainWin.isMinimized()) {
+        mainWin.restore();
+      }
+
+      mainWin.show();
+  }
+});
+
+
 ipcMain.on('current-user', (_event, user) => {
   new Logger(true, user)
 })
