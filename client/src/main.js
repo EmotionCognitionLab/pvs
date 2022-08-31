@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { createApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 
 import SetupComponent from './components/SetupComponent.vue'
@@ -17,7 +17,8 @@ import { SessionStore } from './session-store'
 import { yyyymmddString } from './utils'
 
 function stage1Complete() {
-    return  window.localStorage.getItem('HeartBeam.isConfigured') === 'true'
+    const res = ipcRenderer.sendSync('is-stage-1-complete')
+    return res
 }
 
 function stage2Complete() {
@@ -46,25 +47,37 @@ const routes = [
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/']
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: process.env.IS_ELECTRON ? createWebHashHistory() : createWebHistory(),
     routes: routes
 })
 
 function chooseStage() {
     const todayYMD = yyyymmddString(new Date());
 
-    if (!stage1Complete()) {
+    // no-auth check to see if they've even started assignment to condition
+    if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
         return {path: '/setup'}
-    } else if (!isAuthenticated()) {
+    }
+    // if they've at least been assigned to condition, they need to log in
+    // for us to be able to download their db (if necessary) and check to 
+    // see which breathing exercises they've done
+    if (!isAuthenticated()) {
         return { name: 'signin', params: { postLoginPath: '/current-stage' }}
+    }
+
+    const stage1Status = stage1Complete()
+    if (!stage1Status.complete) return {path: '/setup'}
+    
+    if (stage1Status.complete && stage1Status.completedOn == todayYMD) {
+        return {path: '/donetoday'}
+    }
+
+    const stage2Status = stage2Complete()
+    if (!stage2Status.complete) return {path: '/stage2'}
+    if (stage2Status.completedOn != todayYMD) {
+        return {path: '/stage3'}
     } else {
-        const stage2Status = stage2Complete();
-        if (!stage2Status.complete) return {path: '/stage2'}
-        if (stage2Status.completedOn != todayYMD) {
-            return {path: '/stage3'}
-        } else {
-            return {path: '/donetoday'}
-        }
+        return {path: '/donetoday'}
     }
 }
 
