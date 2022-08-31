@@ -1,6 +1,9 @@
 <template>
     <div class="wrapper">
-        <div class="instruction" v-if="step==1">
+        <div class="instruction" v-if="step==0">
+            One moment while we load your data...
+        </div>
+        <div class="instruction" v-else-if="step==1">
            <LoginComponent post-login-path="/setup" @loginSucceeded="nextStep">
                <template #bodyText>
                 Welcome! This app will guide you through your heart rate biofeedback sessions.
@@ -57,7 +60,7 @@
 
 <script setup>
     import { ipcRenderer } from 'electron'
-    import { ref } from '@vue/runtime-core';
+    import { ref, onBeforeMount } from '@vue/runtime-core';
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
     import LoginComponent from './LoginComponent.vue'
@@ -66,10 +69,40 @@
     import UploadComponent from './UploadComponent.vue'
     import RestComponent from './RestComponent.vue'
 
-    let step = isAuthenticated() ? ref(2) : ref(1)
+    // step 0: nothing initialized yet
+    // step 1: unauthenticated user
+    // step 2: authenticated user who has not been assigned to condition
+    // step 3: user has completed assignment to condition
+    // step 4: user has completed rest breathing
+    // step 5: user has completed paced breathing
+    let step = ref(0)
     const pacer = ref(null)
     const pacerEmwave = ref(null)
     
+    
+    onBeforeMount(async() => {
+        if (!isAuthenticated()) {
+            step = ref(1)
+            return
+        }
+        if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
+            step =  ref(2)
+            return
+        }
+        const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days')
+        if (restBreathingDays.size < 1) {
+            step = ref(3)
+            return
+        }
+        const pacedBreathingDays = await ipcRenderer.invoke('get-paced-breathing-days')
+        if (pacedBreathingDays.size < 1) {
+            step = ref(4)
+            return
+        }
+        step = ref(5)
+        return
+    })
+
     function nextStep() {
         step.value += 1
     }
