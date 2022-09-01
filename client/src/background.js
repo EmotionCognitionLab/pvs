@@ -230,7 +230,7 @@ ipcMain.on('create-lumosity-view', async (_event, email, password, userAgent) =>
     lumosityView = new BrowserView();
     mainWin.setBrowserView(lumosityView);
     lumosityView.setAutoResize({width: true, height: true, vertical: true});
-    lumosityView.setBounds({x: 0, y: 100, width: 1284, height: 593});  // hardcoded!!!
+    lumosityView.setBounds({x: 0, y: 60, width: 1284, height: 593});  // hardcoded!!!
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
         lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));

@@ -41,7 +41,6 @@
 <style scoped>
     header {
         height: 40px;
-        padding: 5px auto 5px;
         margin: 0 auto auto 0;
     }
     header span {

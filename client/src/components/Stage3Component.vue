@@ -1,6 +1,6 @@
 <template>
     <div v-if="lumosDataReady">
-        <div class="instruction" v-if="!lumosityDone">
+        <div v-if="!lumosityDone">
             <LumosityComponent @lumosityFinished="finishedLumosity()"/>
         </div>
         <div class="instruction" v-else-if="!sessionDone && !dayDone && regimes && regimes.length">  <!-- Need regimes && regimes.length here to prevent render before regimes has been initialized -->
