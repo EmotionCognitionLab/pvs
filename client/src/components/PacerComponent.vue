@@ -43,25 +43,36 @@
         }
     })
 
+    watch(() => props.regimes, newRegimes => {
+        if (bp) {
+            bp.pause() // TODO possible memory leak b/c of regime change subscription?
+            bp = buildBreathPacer(newRegimes)
+        }
+    })
+
     async function regimeChanged(startTime, regime) {
         await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
         emit('pacer-regime-changed', startTime, regime);
     }
 
-    onMounted(() => {
+    function buildBreathPacer(regimes) {
         const pacerConfig = {
             scaleH: props.scaleH,
             scaleT: props.scaleT,
             offsetProportionX: props.offsetProportionX,
             offsetProportionY: props.offsetProportionY
         }
-        bp = new BreathPacer(pacer.value, [], pacerConfig)
-        bp.subscribeToRegimeChanges(regimeChanged)
         // if we don't do this we'll fail to emit regime-changed
         // events b/c Object.clone (used by electron's ipc event system)
         // doesn't work on vue proxies
-        const rawRegimes = isProxy(props.regimes) ? toRaw(props.regimes) : props.regimes
-        bp.setInstructions(rawRegimes)
+        const rawRegimes = isProxy(regimes) ? toRaw(regimes) : regimes
+        const newBp = new BreathPacer(pacer.value, rawRegimes, pacerConfig)
+        newBp.subscribeToRegimeChanges(regimeChanged)
+        return newBp
+    }
+
+    onMounted(() => {
+        bp = buildBreathPacer(props.regimes)
     })
 </script>
 <style scoped>
