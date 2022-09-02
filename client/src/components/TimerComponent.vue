@@ -27,6 +27,10 @@
         }
     })
 
+    watch(() => props.secondsDuration, newVal => {
+        secondsRemaining.value = newVal
+    })
+
     const timeLeft = computed(() => {
         const minutes = Math.floor(secondsRemaining.value / 60)
         const seconds = secondsRemaining.value % 60
