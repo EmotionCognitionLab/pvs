@@ -120,6 +120,7 @@
         emit('pulse-sensor-stopped')
         running.value = false
         calibrated.value = false
+        stopSignalLossTimer()
     }
 
     function startSignalLossTimer() {
