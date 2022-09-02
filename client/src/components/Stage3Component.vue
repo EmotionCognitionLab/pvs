@@ -3,26 +3,13 @@
         <div v-if="!lumosityDone">
             <LumosityComponent @lumosityFinished="finishedLumosity()"/>
         </div>
-        <div class="instruction" v-else-if="!sessionDone && !dayDone && regimes && regimes.length">  <!-- Need regimes && regimes.length here to prevent render before regimes has been initialized -->
-            We have one remaining task for you today.
-            Please breathe following the ball on the screen.
-            Breathe in while the ball is moving up and breathe out while the ball is moving down.
-            Pause your breathing when the ball is not going up or down.
-            Make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
-            <PacerComponent 
-                :regimes="regimes"
-                :scaleH=290
-                :scaleT=0.1 
-                :offsetProportionX=0.25
-                :offsetProportionY=0.8
-                @pacerFinished="pacerFinished"
-                ref="pacer" />
-            <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="emwaveListener"/>
+        <div :class="{hidden: sessionDone || dayDone}">
+            <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
-        <div class="instruction" v-else-if="sessionDone && !dayDone">
+        <div class="instruction" v-if="sessionDone && !dayDone">
             All done! Please come back later today to do your next session.
             <br/>
-            <button class="button" @click="sessionDone=false">Start Next Session</button>
+            <button class="button" @click="setRegimes">Start Next Session</button>
         </div>
         <div class="instruction" v-else-if="sessionDone && dayDone">
             <UploadComponent>
@@ -43,25 +30,24 @@
 </template>
 <script setup>
 import { ipcRenderer } from 'electron'
-import { ref, onBeforeMount, computed } from '@vue/runtime-core'
+import { ref, onBeforeMount } from '@vue/runtime-core'
 import ApiClient from '../../../common/api/client.js'
 import { SessionStore } from '../session-store.js'
-import PacerComponent from './PacerComponent.vue'
+import PacedBreathingComponent from './PacedBreathingComponent.vue'
 import UploadComponent from './UploadComponent.vue'
-import EmWaveListener from './EmWaveListener.vue'
 import LumosityComponent from './LumosityComponent.vue'
 import { useLumosityHelper, completedLumosity } from '../lumosity-helper.js'
 
-const pacer = ref(null)
-const emwaveListener = ref(null)
-const regimes = ref([])
+const regimes=ref([])
 const sessionDone = ref(false)
-const dayDone = computed(() => regimes.value.length === 0)
+let dayDone = ref(false)
 const condition = ref(null);
 const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
 
-async function setRegimes(condition) {
-    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition)
+async function setRegimes() {
+    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value)
+    dayDone.value = sessRegimes.length == 0
+    sessionDone.value = sessRegimes.length == 0
     regimes.value = sessRegimes
 }
 
@@ -69,14 +55,19 @@ onBeforeMount(async() => {
     const session = SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
-    condition.value = data.condition.assigned;
-    await setRegimes(data.condition.assigned)
+    condition.value = data.condition.assigned
+    await setRegimes()
 })
 
 async function pacerFinished() {
-    emwaveListener.value.stopSensor = true
     sessionDone.value = true
-    setTimeout(async () => await setRegimes(), 50) // use setTimeout to avoid race condition with the data from last regime being saved
+    setTimeout(async () => { // use setTimeout to avoid race condition with the data from last regime being saved
+        // note we don't set regimes.value here
+        // doing so reloads the PacedBreathingComponent, losing its reference
+        // to the emwaveListener before we successfully stop the pulse sensor
+        const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value)
+        dayDone.value = sessRegimes.length == 0
+    }, 50) 
 }
 
 async function finishedLumosity() {
@@ -88,18 +79,6 @@ function quit() {
     ipcRenderer.invoke('quit')
 }
 
-function startPacer() {
-    if (pacer) pacer.value.start = true
-}
-
-function stopPacer() {
-    pacer.value.pause = true
-}
-
-function resumePacer() {
-    pacer.value.resume = true
-}
-
 </script>
 <style scope>
  .button {
@@ -109,4 +88,7 @@ function resumePacer() {
         margin-right: 4px;
         margin-top: 5px;
     }
+ .hidden {
+    display: none;
+ }
 </style>
