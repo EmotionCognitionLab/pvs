@@ -3,7 +3,7 @@
         <div v-if="!lumosityDone">
             <LumosityComponent @lumosityFinished="finishedLumosity()"/>
         </div>
-        <div :class="{hidden: sessionDone || dayDone}">
+        <div :class="{hidden: sessionDone || dayDone || !lumosityDone}">
             <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
