@@ -36,7 +36,6 @@
 </template>
 <script setup>
 import { ref } from '@vue/runtime-core';
-import { defineEmits } from 'vue';
 import { reactive } from 'vue';
 import ApiClient from '../../../common/api/client.js'
 import { SessionStore } from '../session-store.js'
