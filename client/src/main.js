@@ -11,6 +11,7 @@ import LumosityComponent from './components/LumosityComponent.vue'
 import Stage3Component from './components/Stage3Component.vue'
 import Stage2Component from './components/Stage2Component.vue'
 import DoneTodayComponent from './components/DoneTodayComponent.vue'
+import OauthRedirectComponent from './components/OauthRedirectComponent'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
@@ -35,7 +36,7 @@ const routes = [
     { path: '/timer/:secondsDuration', component: TimerComponent, props: true, name: 'timer' },
     { path: '/upload', component: UploadComponent },
     { path: '/signin', component: LoginComponent, name: 'signin', props: true },
-    { path: '/login/index.html', component: LoginComponent }, // to match the oauth redirect we get
+    { path: '/login/index.html', component: OauthRedirectComponent }, // to match the oauth redirect we get
     { path: '/stage3', component: Stage3Component },
     { path: '/lumos', component: LumosityComponent },
     { path: '/stage2', component: Stage2Component },

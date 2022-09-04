@@ -142,39 +142,39 @@ if (typeof atob === 'undefined') {
 }
 
 ipcMain.on('show-login-window', () => {
+  const remoteLogger = new Logger(false)
   try {
-    const remoteLogger = new Logger(false)
     const auth = new AmazonCognitoIdentity.CognitoAuth(awsSettings)
     auth.useCodeGrantFlow();
     const url = auth.getFQDNSignIn();
     mainWin.loadURL(url)
-    mainWin.webContents.on('will-redirect', async (event, newUrl) => {
-      // we want the renderer (main) window to load the redirect from the oauth server
+    
+    mainWin.webContents.on('will-redirect', async (event, oauthRedirectUrl) => {
+      if (!oauthRedirectUrl.startsWith(awsSettings.RedirectUriSignIn)) return
+
+      event.preventDefault()
+      // depending on how the oauth flow went, the main window may now be showing
+      // an Amazon Cognito page. We need to re-load the app and tell it to handle
+      // the oauth response.
+      // we want the renderer window to load the response from the oauth server
       // so that it gets the session and can store it
-      if (newUrl.startsWith(awsSettings.RedirectUriSignIn)) {
-        if (!process.env.WEBPACK_DEV_SERVER_URL) {
-          // then we're in prod mode, which means that the app URLs 
-          // are in the form 'app://'. Cognito won't allow 
-          // us to use an 'app://' url as a redirect, though, so
-          // load the app in the main window and then manually
-          // notify the LoginComponent that it should handle the oauth redirect
-          
-          try {
-            await mainWin.loadURL('app://./index.html#/login/index.html')
-          } catch (err) {
-            // for some reason we often get an ERR_ABORTED or ERR_FAILED error here
-            // which prevents the flow from finishing
-            if (!err.message.startsWith("ERR_ABORTED") && !err.message.startsWith("ERR_FAILED")) {
-              remoteLogger.error(err)
-              throw(err)
-            }
-          }
-          
-          mainWin.webContents.send('oauth-redirect', newUrl)
-          event.preventDefault()
+      
+      // // in prod mode app URLs start with 'app://'
+      const query = oauthRedirectUrl.indexOf('?') > 0 ? oauthRedirectUrl.slice(oauthRedirectUrl.indexOf('?')) : ''
+      const oauthHandler = process.env.WEBPACK_DEV_SERVER_URL ? `http://localhost:8080/./index.html#/login/index.html${query}` : `app://./index.html#/login/index.html${query}`
+      try {
+        await mainWin.loadURL(oauthHandler)  
+      } catch (err) {
+        // For unknown reasons, the mainWin.loadURL call above reliably triggers
+        // ERR_ABORTED (or sometimes ERR_FAILED). Wrapping it in a setTimeout 
+        // (so it happens after the will-redirect handler is over) does not help.
+        if (!err.message.startsWith("ERR_ABORTED") && !err.message.startsWith("ERR_FAILED")) {
+          remoteLogger.error(err)
+          throw(err)
         }
       }
-    })
+    }) 
+    
   } catch (err) {
     remoteLogger.error(err)
   } 
