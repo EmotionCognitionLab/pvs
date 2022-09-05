@@ -90,7 +90,7 @@ app.on('ready', async () => {
   mainWin = await createWindow()
   mainWin.webContents.send('get-current-user')
   emwave.createClient(mainWin)
-  // emwave.hideEmWave()
+  emwave.hideEmWave()
 })
 
 // Prevent multiple instances of the app
