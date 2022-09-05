@@ -82,24 +82,24 @@
     
     onBeforeMount(async() => {
         if (!isAuthenticated()) {
-            step = ref(1)
+            step.value = 1
             return
         }
         if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
-            step =  ref(2)
+            step.value = 2
             return
         }
         const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days')
         if (restBreathingDays.size < 1) {
-            step = ref(3)
+            step.value = 3
             return
         }
         const pacedBreathingDays = await ipcRenderer.invoke('get-paced-breathing-days')
         if (pacedBreathingDays.size < 1) {
-            step = ref(4)
+            step.value = 4
             return
         }
-        step = ref(5)
+        step.value = 5
         return
     })
 
