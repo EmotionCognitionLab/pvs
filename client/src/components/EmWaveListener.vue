@@ -23,7 +23,7 @@
     import { epToCoherence } from '../coherence.js'
 
     const props = defineProps(['showIbi', 'showScore', 'condition'])
-    const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-signal-lost', 'pulse-sensor-signal-restored', 'pulse-sensor-stopped'])
+    const emit = defineEmits(['pulse-sensor-calibrated', 'pulse-sensor-signal-lost', 'pulse-sensor-signal-restored', 'pulse-sensor-stopped', 'pulse-sensor-session-ended'])
     let ibi = ref(0)
     const ep = ref(-1)
     let calibrated = ref(false)
@@ -97,10 +97,7 @@
             stopPulseSensor()
             sensorError.value = true
         } else if (message === 'SessionEnded') {
-            emit('pulse-sensor-stopped')
-            running.value = false
-            calibrated.value = false
-            sessionEnded.value = true
+            endPulseSensorSession()
         }
     }
 
@@ -123,6 +120,13 @@
         stopSignalLossTimer()
     }
 
+    function endPulseSensorSession() {
+        emit('pulse-sensor-session-ended')
+        running.value = false
+        calibrated.value = false
+        sessionEnded.value = true
+    }
+
     function startSignalLossTimer() {
         signalLossInterval = setTimeout(
             () => { 
@@ -136,8 +140,7 @@
 
     function startForcedRestartTimer() {
         forcedRestartInterval = setTimeout(() => {
-            stopPulseSensor()
-            sessionEnded.value = true
+            endPulseSensorSession()
         },
         forcedRestartTimeout()
        )
