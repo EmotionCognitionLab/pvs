@@ -1,6 +1,6 @@
 <template>
     <div v-if="lumosDataReady">
-        <div class="instruction" v-if="!lumosityDone">
+        <div class="instruction-small" v-if="!lumosityDone">
             <LumosityComponent @lumosityFinished="finishedLumosity()"/>
         </div>
         <div class="instruction" v-else-if="lumosityDone && !restBreathingDone">
