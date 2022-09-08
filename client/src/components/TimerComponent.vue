@@ -13,7 +13,6 @@
     const props = defineProps(['secondsDuration', 'showButtons', 'countBy'])
     const emit = defineEmits(['timer-started', 'timer-stopped', 'timer-finished'])
     let running = ref(false)
-    defineExpose({running})
 
     let secondsRemaining = ref(props.secondsDuration)
     let interval = null
@@ -30,6 +29,12 @@
     watch(() => props.secondsDuration, newVal => {
         secondsRemaining.value = newVal
     })
+
+    function reset() {
+        secondsRemaining.value = props.secondsDuration
+    }
+
+    defineExpose({running, reset})
 
     const timeLeft = computed(() => {
         const minutes = Math.floor(secondsRemaining.value / 60)
