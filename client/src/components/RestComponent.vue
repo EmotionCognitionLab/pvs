@@ -3,7 +3,7 @@
         <slot name="preText">
             When you are ready to rest for 5 minutes while measuring your heart rate, please connect your pulse sensor to your ear and to the computer and press the start button.
         </slot>
-        <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" @pulseSensorSignalLost="stopTimer" @pulseSensorSignalRestored="startTimer" ref="emwaveListener"/> 
+        <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="stopTimer" @pulseSensorSignalLost="stopTimer" @pulseSensorSignalRestored="startTimer" @pulseSensorSessionEnded="resetTimer" ref="emwaveListener"/> 
         <br/>
         <TimerComponent :secondsDuration=300 :showButtons=false @timerFinished="stopSession" ref="timer" />
     </div>
@@ -32,6 +32,10 @@ function startTimer() {
 
 function stopTimer() {
     timer.value.running = false
+}
+
+function resetTimer() {
+    timer.value.reset()
 }
 
 function stopSession() {
