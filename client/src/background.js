@@ -284,64 +284,24 @@ ipcMain.handle('get-paced-breathing-days', () => {
 });
 
 /**
- * Stage 2 is complete when either (a) the user has done six Lumosity sessions and
- * at least two rest breathing sessions, or
- * (b) when the user has done four or five Lumosity sessions and at least two rest
- * breathing sessions AND at least six calendar days have passed since the first Lumosity session.
+ * Stage 2 is complete when the user has done six Lumosity sessions.
  * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
- * representing the latest of the date the rest breathing or the lumosity days were
- * completed, or null if complete is false}
+ * representing the date the sixth lumosity session was completed, or null if 
+ * complete is false}
  */
  async function stage2Complete(session) {
-  const restBreathingDays = getRestBreathingDays();
-  if (restBreathingDays.size < 3) return { complete: false, completedOn: null }; // spec calls for minimum 2, but they do 1 during setup that doesn't count for this
-
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
   if (!data.lumosDays || data.lumosDays.length === 0) return { complete: false, completedOn: null };
 
   const lumosDaysSet = new Set(data.lumosDays);
-  if (lumosDaysSet.size <= 3) return { complete: false, completedOn: null };
+  if (lumosDaysSet.size < 6) return { complete: false, completedOn: null };
 
   const lumosDaysArr = new Array(...lumosDaysSet).map(x => parseInt(x));
   lumosDaysArr.sort((a, b) => a - b);
-  const firstLumosDay = lumosDaysArr[0].toString();
-  const lumosStartDate = new Date(firstLumosDay.substring(0,4), parseInt(firstLumosDay.substring(4,6))-1, firstLumosDay.substring(6,8));
+  const sixthLumosDay = lumosDaysArr[5];
   
-  const now = new Date();
-  const diffMs = now - lumosStartDate;
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  if (diffDays >= 6 || lumosDaysSet.size >= 6) {
-    const completedOn = calculateStage2CompletionDate(lumosDaysArr, lumosStartDate, new Array(...restBreathingDays).slice(1)); // drop first rest breathing day b/c it's from setup (stage 1)
-    return { complete: true, completedOn: completedOn }
-  } else {
-    return { complete: false, completedOn: null }
-  }
-}
-
-/**
- * Finds the earliest possible date someone completed stage 2. This could be:
- *  - the date of their sixth Lumosity session
- *  - the date of their second breathing session
- *  - six days after start of first Lumosity session (if 4-5 sessions have been done)
- *  - the date of the fourth Lumosity session (if it's at least six days after the first Lumosity session)
- * Throws an error if the stage is not actually complete.
- * @param {Array} lumosDays yyyymmdd dates of Lumosity sessions
- * @param {Date} lumosStartDate the date of the first Lumosity session
- * @param {Array} restBreathingDays yyyymmdd dates of rest breathing sessions
- * @returns yyyymmdd date representing the date stage 2 was completed
- */
-function calculateStage2CompletionDate(lumosDays, lumosStartDate, restBreathingDays) {
-  if (lumosDays.length < 4) throw new Error(`Expected at least four Lumosity sessions but found ${lumosDays.length}. Stage 2 is not complete.`)
-  if (restBreathingDays.length < 2) throw new Error(`Expected at least two rest breathing sessions but found ${restBreathingDays.length}. Stage 2 is not complete.`)
-  const fourthLumos = lumosDays[3];
-  const sixthLumos = lumosDays.length >= 6 ? lumosDays[5] : Number.MAX_SAFE_INTEGER;
-  const sixDays = new Date(lumosStartDate.getTime() + (1000 * 60 * 60 * 24 * 6));
-  const sixDaysYMD = yyyymmddNumber(sixDays);
-  const secondBreathing = restBreathingDays[1];
-  const earliestLumosEnd = Math.max(fourthLumos, sixDaysYMD)
-  const lumosEnd = Math.min(earliestLumosEnd, sixthLumos)
-  return Math.max(lumosEnd, secondBreathing);
+    return { complete: true, completedOn: sixthLumosDay }
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
