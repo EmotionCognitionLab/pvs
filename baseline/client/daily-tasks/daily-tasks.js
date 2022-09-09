@@ -5,6 +5,7 @@ import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
 import "css/common.css";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Demographics } from "../demographics/demographics.js";
+import { EmotionalMemory } from "../emotional-memory/emotional-memory.js";
 import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -257,6 +258,8 @@ function taskForName(name, options) {
             return new Dass();
         case "demographics":
             return new Demographics();
+        case "emotional-memory":
+            return new EmotionalMemory(options.setNum || 1);
         case "face-name":
             return new FaceName(options.setNum || 1);
         case "ffmq":
