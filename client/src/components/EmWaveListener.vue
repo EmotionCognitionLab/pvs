@@ -109,6 +109,7 @@
         running.value = true
         stopSensor.value = false
         sessionEnded.value = false
+        sensorError.value = false
     }
     
     // eslint-disable-next-line no-unused-vars
