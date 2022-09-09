@@ -12,14 +12,16 @@
             :offsetProportionX=0.25
             :offsetProportionY=0.8
             @pacerFinished="pacerFinished"
+            @pacerRegimeChanged="updateRegimeStatus"
             ref="pacer" />
         <TimerComponent :secondsDuration=secondsDuration :showButtons=false :countBy="'minutes'" ref="timer" />
-        <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="emwaveListener"/>
+        <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" @pulseSensorSessionEnded="resetPacer" ref="emwaveListener"/>
     </div>
 </template>
 
 <script setup>
     import { ref, computed } from '@vue/runtime-core'
+    import { pullAt } from 'lodash'
     import PacerComponent from './PacerComponent.vue'
     import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
@@ -30,9 +32,13 @@
     const pacer = ref(null)
     const emwaveListener = ref(null)
     const timer = ref(null)
+    let remainingRegimes = ref(props.startRegimes)
+    let inProgressRegime
+    const finishedRegimes = []
     const secondsDuration = computed(() => {
-        return (props.startRegimes.reduce((prev, cur) => prev + cur.durationMs, 0)) / 1000
+        return (remainingRegimes.value.reduce((prev, cur) => prev + cur.durationMs, 0)) / 1000
     })
+    
 
     async function pacerFinished() {
         emwaveListener.value.stopSensor = true
@@ -56,6 +62,20 @@
         pacer.value.resume = true
         timer.value.running = true
         emit('pacer-started')
+    }
+
+    function updateRegimeStatus(_startTime, regime) {
+        if (inProgressRegime) finishedRegimes.push(inProgressRegime)
+        inProgressRegime = regime
+    }
+
+    function resetPacer() {
+        pacer.value.pause = true
+        timer.value.running = false
+        const toPull = finishedRegimes.map(r => remainingRegimes.value.findIndex(elem => elem.id === r.id)).filter(idx => idx !== -1)
+        if (toPull.length > 0) pullAt(remainingRegimes.value, toPull)
+        timer.value.reset()
+        pacer.value.buildBreathPacer(remainingRegimes.value)
     }
 </script>
 

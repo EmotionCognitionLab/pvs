@@ -14,7 +14,7 @@
     let start = ref(false)
     let pause = ref(false)
     let resume = ref(false)
-    defineExpose({start, pause, resume})
+    defineExpose({start, pause, resume, buildBreathPacer})
     const emit = defineEmits(['pacer-finished', 'pacer-regime-changed'])
     let bp = null
 
@@ -46,7 +46,7 @@
     watch(() => props.regimes, newRegimes => {
         if (bp) {
             bp.pause() // TODO possible memory leak b/c of regime change subscription?
-            bp = buildBreathPacer(newRegimes)
+            buildBreathPacer(newRegimes)
         }
     })
 
@@ -68,11 +68,11 @@
         const rawRegimes = isProxy(regimes) ? toRaw(regimes) : regimes
         const newBp = new BreathPacer(pacer.value, rawRegimes, pacerConfig)
         newBp.subscribeToRegimeChanges(regimeChanged)
-        return newBp
+        bp = newBp
     }
 
     onMounted(() => {
-        bp = buildBreathPacer(props.regimes)
+        buildBreathPacer(props.regimes)
     })
 </script>
 <style scoped>
