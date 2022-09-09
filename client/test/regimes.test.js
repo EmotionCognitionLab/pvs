@@ -405,7 +405,7 @@ describe("getRegimesForSession", () => {
         midnight.setHours(23); midnight.setMinutes(59); midnight.setSeconds(59);
         const msRemainingToday = midnight.getTime() - date.getTime();
         
-        const forSession = getRegimesForSession('a');
+        const forSession = getRegimesForSession('A');
         const sessionDuration = forSession.reduce((prev, cur) => prev.durationMs + cur.durationMs, {durationMs: 0});
         expect(sessionDuration).toBeLessThanOrEqual(msRemainingToday);
     });
@@ -414,7 +414,7 @@ describe("getRegimesForSession", () => {
         getRegimesForDay.mockImplementation(() => []);
         getSegmentsAfterDate.mockImplementation(() => []);
         getTrainingDayCount.mockImplementation(() => 0);
-        const forSession = getRegimesForSession('a');
+        const forSession = getRegimesForSession('A');
         expect(saveRegimesForDay).toHaveBeenCalled();
     });
 });
