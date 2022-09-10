@@ -5,7 +5,7 @@ const { ipcMain, app } = require('electron');
 const CBuffer = require('CBuffer');
 const { epToCoherence } = require('./coherence.js')
 
-let emWaveProc = null;
+let emWavePid = null;
 const client = net.Socket();
 const artifactLimit = 60; // we alert if there are more than this many artifacts in 60s
 const artifactsToTrack = 120; // we get data every 500ms, so this holds 60s of data
@@ -128,23 +128,28 @@ export default {
         // otherwise the stdout buffer will overflow after ~30s of pulse sensor data
         // and emWave will hang
         if (process.platform === 'darwin') {
-            emWaveProc = spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})
+            emWavePid = (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
         } else if (process.platform === 'win32') {
-            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})
+            const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1')]);
+            emWaveProc.stdout.on("data", (data) => {
+                const dataStr = data.toString().trim();
+                if (dataStr.length > 0) {
+                    emWavePid = dataStr;
+                }
+            });
+            emWaveProc.stderr.on("data", (data) => {
+                console.error("powershell stderr: " + data)
+            });
         } else {
             throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`
         }
-        emWaveProc.on('close', (code) => {
-            console.log(`emWave closed with code ${code}`);
-        });
-        console.log(`emwave pid is ${emWaveProc.pid}`);
     },
 
-    hideEmWave() {
-        if (process.platform === 'win32' && emWaveProc && emWaveProc.pid) {
-            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWaveProc.pid], {stdio: 'ignore'});
-        }
-    },
+    // hideEmWave() {
+    //     if (process.platform === 'win32' && emWavePid) {
+    //         spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWavePid], {stdio: 'ignore'});
+    //     }
+    // },
 
     startPulseSensor() {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
@@ -160,9 +165,9 @@ export default {
     stopEmWave() {
         // TODO should we call notifyAvgCoherence here? (Or just stopPulseSensor()?)
         client.destroy();
-        if (emWaveProc !== null) {
-            if (emWaveProc.kill()) {
-                emWaveProc = null;
+        if (emWavePid !== null) {
+            if (process.kill(emWavePid)) {
+                emWavePid = null;
             } else {
                 // TODO put in some wait/retry logic?
                 console.log('killing emwave returned false');
