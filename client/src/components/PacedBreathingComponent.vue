@@ -32,7 +32,7 @@
     const pacer = ref(null)
     const emwaveListener = ref(null)
     const timer = ref(null)
-    let remainingRegimes = ref(props.startRegimes)
+    const remainingRegimes = ref(props.startRegimes)
     let inProgressRegime
     const finishedRegimes = []
     const secondsDuration = computed(() => {
