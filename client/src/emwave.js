@@ -130,11 +130,12 @@ export default {
         if (process.platform === 'darwin') {
             emWavePid = (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
         } else if (process.platform === 'win32') {
-            const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1')]);
+            const startScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1') : path.join(app.getAppPath(), '../src/powershell/start-emwave-hidden.ps1')
+            const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", startScript])
             emWaveProc.stdout.on("data", (data) => {
-                const dataStr = data.toString().trim();
+                const dataStr = data.toString().trim()
                 if (dataStr.length > 0) {
-                    emWavePid = dataStr;
+                    emWavePid = dataStr
                 }
             });
             emWaveProc.stderr.on("data", (data) => {
