@@ -57,7 +57,7 @@ describe.each([
 jest.mock('../src/breath-data.js', () => ({
     getAvgRestCoherence: jest.fn(() => 0.0),
     getRegimeStats: jest.fn(() => {}),
-    getAllRegimeIds: jest.fn(() => [1,2,3]),
+    getPracticedRegimeIds: jest.fn(() => [1,2,3]),
     lookupRegime: jest.fn(id => ( {id: id} )),
     setRegimeBestCnt: jest.fn(() => {}),
     getRegimeId: jest.fn(() =>  Math.floor(Math.random() * 100) + 5),
@@ -67,7 +67,7 @@ jest.mock('../src/breath-data.js', () => ({
     saveRegimesForDay: jest.fn(() => {})
 }));
 
-import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getAllRegimeIds, saveRegimesForDay } from '../src/breath-data';
+import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getPracticedRegimeIds, saveRegimesForDay } from '../src/breath-data';
 
 describe("Generating regimes for days 5+", () => {
     it("should throw an error when the condition is a and no regimes have confidence intervals overlapping the highest mean coherence", () => {
@@ -252,7 +252,7 @@ describe("Generating regimes for days 5+", () => {
     ])("for condition $condition with $overlapCnt overlapping regimes", ({condition, avgRestCoherence, overlapCnt, regimeStats}) => {
         it("should use the overlapping regimes (and only the overlapping regimes)", () => {
             const allRegimeIds = regimeStats.map(rs => rs.id);
-            getAllRegimeIds.mockImplementation(() => allRegimeIds);
+            getPracticedRegimeIds.mockImplementation(() => allRegimeIds);
             getAvgRestCoherence.mockReturnValue(avgRestCoherence);
             getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
             let targetCoh = condition === forTesting.condA ? Math.max(...(regimeStats.map(rs => rs.mean))) : avgRestCoherence;
