@@ -123,6 +123,22 @@ describe("Breathing data functions", () => {
         expect(avgRestCoherence).toBeCloseTo(expectedMean);
     });
 
+    it("should return only the ids of regimes that have been practiced when getPracticedRegimeIds is called", () => {
+        const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
+        const regimes = [
+            {durationMs: 300000, breathsPerMinute: 4, holdPos: null, randomize: 0},
+            {durationMs: 300000, breathsPerMinute: 5, holdPos: null, randomize: 0},
+            {durationMs: 300000, breathsPerMinute: 6, holdPos: null, randomize: 0}
+        ];
+        const regimeIds = regimes.map(r => insertRegimeStmt.run(r.durationMs, r.breathsPerMinute, r.holdPos, r.randomize).lastInsertRowid);
+        expect(regimeIds.length).toBe(regimes.length);
+        const expectedPracticedRegime = {id: regimeIds[1], ...regimes[1]};
+        const cohVals = [1.9, 2.1, 0.7];
+        cohVals.forEach(coh => bd.forTesting.createSegment({regime: expectedPracticedRegime, avgCoherence: coh, sessionStartTime: 0}));
+        const practicedRegimeIds = bd.getPracticedRegimeIds();
+        expect(practicedRegimeIds).toEqual([expectedPracticedRegime.id]);
+    });
+
     it("should return the right statistics when getRegimeStats is called", () => {
         const regime = {
             durationMs: 300000,

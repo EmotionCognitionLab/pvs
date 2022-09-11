@@ -134,10 +134,10 @@ function getRegimeStats(regimeId) {
     return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
 }
 
-function getAllRegimeIds() {
-    const allRegimesStmt = db.prepare('SELECT id from regimes');
+function getPracticedRegimeIds() {
+    const allRegimesStmt = db.prepare('SELECT distinct(regime_id) from segments');
     const allRegimes = allRegimesStmt.all();
-    return allRegimes.map(r => r.id);
+    return allRegimes.map(r => r.regime_id);
 }
 
 function getAvgRestCoherence() {
@@ -280,7 +280,7 @@ export {
     breathDbDir,
     breathDbPath,
     getRegimeId,
-    getAllRegimeIds,
+    getPracticedRegimeIds,
     getRegimeStats,
     getRegimesForDay,
     getAvgRestCoherence,
