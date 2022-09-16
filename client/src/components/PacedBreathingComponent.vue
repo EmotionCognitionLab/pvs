@@ -20,7 +20,8 @@
 </template>
 
 <script setup>
-    import { ref, computed } from '@vue/runtime-core'
+    import { ipcRenderer } from 'electron'
+    import { ref, computed, watch } from '@vue/runtime-core'
     import { pullAt } from 'lodash'
     import PacerComponent from './PacerComponent.vue'
     import TimerComponent from './TimerComponent.vue'
@@ -39,6 +40,10 @@
         return (remainingRegimes.value.reduce((prev, cur) => prev + cur.durationMs, 0)) / 1000
     })
     
+    watch(() => props.startRegimes, (newVal) => {
+        finishedRegimes.splice(finishedRegimes.length)
+        remainingRegimes.value = newVal
+    })
 
     async function pacerFinished() {
         emwaveListener.value.stopSensor = true
@@ -64,9 +69,10 @@
         emit('pacer-started')
     }
 
-    function updateRegimeStatus(_startTime, regime) {
+    async function updateRegimeStatus(startTime, regime) {
         if (inProgressRegime) finishedRegimes.push(inProgressRegime)
         inProgressRegime = regime
+        await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
     }
 
     function resetPacer() {
