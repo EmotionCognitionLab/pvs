@@ -112,19 +112,24 @@
         sensorError.value = false
     }
     
+    function reset() {
+        running.value = false
+        calibrated.value = false
+        ibi.value = 0
+        ep.value = -1
+    }
+
     // eslint-disable-next-line no-unused-vars
     function stopPulseSensor() {
         ipcRenderer.send('pulse-stop')
         emit('pulse-sensor-stopped')
-        running.value = false
-        calibrated.value = false
+        reset()
         stopSignalLossTimer()
     }
 
     function endPulseSensorSession() {
         emit('pulse-sensor-session-ended')
-        running.value = false
-        calibrated.value = false
+        reset()
         sessionEnded.value = true
     }
 
