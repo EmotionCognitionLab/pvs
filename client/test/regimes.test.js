@@ -335,10 +335,11 @@ describe("getRegimesForSession", () => {
             }
         });
 
-        const forSession = getRegimesForSession('b');
+        const stage = 2;
+        const forSession = getRegimesForSession('b', stage);
         const today = new Date();
         today.setHours(0); today.setMinutes(0); today.setSeconds(0);
-        expect(getSegmentsAfterDate).toHaveBeenCalledWith(today);
+        expect(getSegmentsAfterDate).toHaveBeenCalledWith(today, stage);
         expect(forSession).toEqual(expectedRegimes);
     });
 

@@ -45,13 +45,14 @@ const condition = ref(null);
 const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
 
 async function setRegimes() {
-    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value)
+    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
     dayDone.value = sessRegimes.length == 0
     sessionDone.value = sessRegimes.length == 0
     regimes.value = sessRegimes
 }
 
 onBeforeMount(async() => {
+    ipcRenderer.invoke('set-stage', 3)
     const session = SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
@@ -65,7 +66,7 @@ async function pacerFinished() {
         // note we don't set regimes.value here
         // doing so reloads the PacedBreathingComponent, losing its reference
         // to the emwaveListener before we successfully stop the pulse sensor
-        const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value)
+        const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
         dayDone.value = sessRegimes.length == 0
     }, 50) 
 }

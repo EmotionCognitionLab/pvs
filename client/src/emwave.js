@@ -15,6 +15,7 @@ const subscribers = [];
 let coherenceValues = [];
 let curRegime;
 let curSessionStartTime;
+let stage = 0;
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
@@ -67,7 +68,7 @@ function notifyAvgCoherence() {
         const relevantVals = coherenceValues.slice(-1 * min_values);
         const coherenceSum = relevantVals.reduce((cur, prev) => cur + prev, 0);
         const coherenceAvg = coherenceSum / relevantVals.length;
-        subscribers.forEach(callback => callback({sessionStartTime: curSessionStartTime, regime: curRegime, avgCoherence: coherenceAvg}));
+        subscribers.forEach(callback => callback({sessionStartTime: curSessionStartTime, regime: curRegime, avgCoherence: coherenceAvg}, stage));
     } finally {
         // TODO if there's an error in one of the subscribers (or too little data) are we 100% sure we want to wipe these out?
         coherenceValues = [];
@@ -178,6 +179,13 @@ export default {
 
     subscribe(callback) {
         subscribers.push(callback);
+    },
+
+    setStage(newStage) {
+        if (!Number.isInteger(newStage) || newStage < 1 || newStage > 3) {
+            throw new Error(`Expected stage to be 1, 2 or 3, but got ${newStage}.`)
+        }
+        stage = newStage
     }
 }
 

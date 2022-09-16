@@ -133,7 +133,7 @@ function arrayShuffle(arr) {
  * @param {number} dayCount The day of training the subject is on. (Days of completed training completed + 1, not calendar days.)
  * @returns A list of six regimes.
  */
-function generateRegimesForDay(subjCondition, dayCount) {
+function generateRegimesForDay(subjCondition, dayCount, stage) {
     if (subjCondition !== condA && subjCondition !== condB) {
         throw new Error(`Unexpected subject condition '${subjCondition}'. Expected either '${condA}' or '${condB}'.`);
     }
@@ -161,14 +161,14 @@ function generateRegimesForDay(subjCondition, dayCount) {
             regimes = arrayShuffle(day3And4BRegimes);
         }
     } else {
-        const allRegimes = getPracticedRegimeIds();
-        const regimeStats = allRegimes.map(id => getRegimeStats(id));
+        const allRegimes = getPracticedRegimeIds(stage);
+        const regimeStats = allRegimes.map(id => getRegimeStats(id, stage));
 
         let targetAvgCoherence;
         if (subjCondition === condA) {
             targetAvgCoherence = Math.max(...(regimeStats.map(rs => rs.mean)));
         } else {
-            targetAvgCoherence = getAvgRestCoherence();
+            targetAvgCoherence = getAvgRestCoherence(stage);
         }
         const overlappingRegimes = regimeStats.filter(s => s.low95CI <= targetAvgCoherence && s.high95CI >= targetAvgCoherence);
         regimes = pickRegimes(overlappingRegimes.map(olr => lookupRegime(olr.id)), subjCondition);
@@ -218,7 +218,7 @@ function filterRegimesByAvailableSessionTime(regimes) {
     return regimesForSession;
 }
 
-function getRegimesForSession(subjCondition) {
+function getRegimesForSession(subjCondition, stage) {
     // first, check to see if we've already generated regimes for today    
     const regimesForToday = getRegimesForDay(new Date());
     if (regimesForToday.length > 0 && regimesForToday.length !== 6) {
@@ -231,7 +231,7 @@ function getRegimesForSession(subjCondition) {
     if (regimesForToday.length > 0) {
         const startOfDay = new Date();
         startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
-        const regimesDoneToday = getSegmentsAfterDate(startOfDay).map(s => s.regimeId);
+        const regimesDoneToday = getSegmentsAfterDate(startOfDay, stage).map(s => s.regimeId);
         const regimesForTodayIds = regimesForToday.map(r => r.id);
         // from the list of regimes to be done today, remove the regimes
         // that have already been done, keeping in mind that the same
@@ -245,8 +245,8 @@ function getRegimesForSession(subjCondition) {
         regimesForSession = filterRegimesByAvailableSessionTime(regimesForToday);
     } else {
         // we have no regimes; generate some
-        const trainingDay = getTrainingDayCount() + 1;
-        const newRegimes = generateRegimesForDay(subjCondition, trainingDay);
+        const trainingDay = getTrainingDayCount(stage) + 1;
+        const newRegimes = generateRegimesForDay(subjCondition, trainingDay, stage);
         newRegimes.forEach(r => r.id = getRegimeId(r));
         regimesForSession = filterRegimesByAvailableSessionTime(newRegimes);
     }

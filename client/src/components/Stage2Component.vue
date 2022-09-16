@@ -36,7 +36,8 @@ const restBreathingDone = ref(false)
 const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
 
 onBeforeMount(async() => {
-    const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days')
+    ipcRenderer.invoke('set-stage', 2)
+    const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days', 2)
     const todayYYMMDD = yyyymmddNumber(new Date())
     restBreathingDone.value = restBreathingDays.has(todayYYMMDD)
 })
