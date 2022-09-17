@@ -361,6 +361,32 @@ describe("getRegimesForSession", () => {
         expect(forSession).toEqual(expectedRegimes);
     });
 
+    it("should filter out all done regimes even if they were not done in the expected order", () => {
+        const regimeIds = [2,3,2,4,3,4];
+        const regimes = regimeIds.map(makeRegime);
+        getRegimesForDay.mockImplementation(() => regimes);
+
+        const doneSegments = [2,2,3,3,4,4].map(id => ({regimeId: id}));
+
+        getSegmentsAfterDate.mockImplementation(() => doneSegments);
+
+        const forSession = getRegimesForSession('a', 3);
+        expect(forSession).toEqual([]);
+    });
+
+    it("should filter out all done regimes even if some were done more often than expected", () => {
+        const regimeIds = [2,3,2,4,3,4];
+        const regimes = regimeIds.map(makeRegime);
+        getRegimesForDay.mockImplementation(() => regimes);
+
+        const doneSegments = [2,3,2,4,4,3,4].map(id => ({regimeId: id}));
+
+        getSegmentsAfterDate.mockImplementation(() => doneSegments);
+
+        const forSession = getRegimesForSession('a', 3);
+        expect(forSession).toEqual([]);
+    });
+
     it("should never return more than 15 minutes worth of regimes", () => {
         const regimeIds = [3,4,5,6];
         const regimes = [{id: 1, durationMs: 800000}, {id: 2, durationMs: 100000}];

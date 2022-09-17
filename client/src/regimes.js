@@ -231,18 +231,9 @@ function getRegimesForSession(subjCondition, stage) {
     if (regimesForToday.length > 0) {
         const startOfDay = new Date();
         startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
-        const regimesDoneToday = getSegmentsAfterDate(startOfDay, stage).map(s => s.regimeId);
-        const regimesForTodayIds = regimesForToday.map(r => r.id);
-        // from the list of regimes to be done today, remove the regimes
-        // that have already been done, keeping in mind that the same
-        // regime may be assigned multiple times in a day and only one occurrence should be removed each time it is done
-        // IMPORTANT: assumes that regimes are always done in order, that is,
-        // that the order of regimes in regimesDoneToday will match the order
-        // of regimes in todayRegimes
-        const doneIndices = regimesDoneToday.map((r, idx) => r === regimesForTodayIds[idx] ? idx : -1).filter(i => i != -1);
-        pullAt(regimesForToday, doneIndices);
-        // now check to see how many we can do
-        regimesForSession = filterRegimesByAvailableSessionTime(regimesForToday);
+        const regimesDoneToday = getSegmentsAfterDate(startOfDay, stage);
+        const remainingToDo = filterCompletedRegimes(regimesForToday, regimesDoneToday);
+        regimesForSession = filterRegimesByAvailableSessionTime(remainingToDo);
     } else {
         // we have no regimes; generate some
         const trainingDay = getTrainingDayCount(stage) + 1;
@@ -253,6 +244,31 @@ function getRegimesForSession(subjCondition, stage) {
 
     return regimesForSession;
     
+}
+
+/**
+ * Given a list of regimes the participant is supposed to do and a list she has actually done,
+ * return a list of the regimes remaining to be done today. Note that a given regime may be
+ * assigned more than once in a day, so to be completely removed from the list it must have been
+ * done as many times as it was assigned. Regimes done at least once but fewer times than assigned
+ * will be removed from the list from left to right. Regimes are compared by id.
+ * @param {Object[]} regimesForToday Regimes the participant has been assigned to do today
+ * @param {Object[]} regimesDoneToday Regimes the participant has actually done today
+ */
+function filterCompletedRegimes(regimesForToday, regimesDoneToday) {
+    const res = [...regimesForToday];
+    const toPull = [];
+    const forTodayIds = regimesForToday.map(r => r.id);
+    const doneTodayIds = regimesDoneToday.map(r => r.regimeId);
+    forTodayIds.forEach((t, todayIdx) => {
+        const doneIdx = doneTodayIds.findIndex(d => d == t);
+        if (doneIdx !== -1) {
+            pullAt(doneTodayIds, doneIdx);
+            toPull.push(todayIdx);
+        }
+    });
+    pullAt(res, toPull);
+    return res;
 }
 
 export { generateRegimesForDay, getRegimesForSession }
