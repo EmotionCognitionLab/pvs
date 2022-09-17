@@ -16,6 +16,7 @@ let coherenceValues = [];
 let curRegime;
 let curSessionStartTime;
 let stage = 0;
+let sensorStopped = true;
 
 // sample data string
 // <D01 NAME="Pat" LVL="1" SSTAT="2" STIME="2000" S="0" AS="0" EP="0" IBI="1051" ART="FALSE" HR="0" />
@@ -99,7 +100,7 @@ export default {
             if (hrData === 'SessionEnded' ) {
                 win.webContents.send('emwave-status', 'SessionEnded');
                 notifyAvgCoherence();
-            } else if (hrData !== null) {
+            } else if (hrData !== null && !sensorStopped) {  // without sensorStopped check a race can cause us to send data to client after client has told us to stop
                 win.webContents.send('emwave-ibi', hrData);
                 if (Object.prototype.hasOwnProperty.call(hrData, 'artifact')) {
                     artifacts.push(hrData.artifact);
@@ -156,16 +157,19 @@ export default {
     startPulseSensor() {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
         artifacts = new CBuffer(artifactsToTrack);
+        sensorStopped = false;
     },
 
     stopPulseSensor() {
         reportSessionEnd = false; // we're ending the session, not emWave, so don't tell our listeners about it
         client.write('<CMD ID=3 />'); // tells emWave to stop getting data from heartbeat sensor
+        sensorStopped = true;
         notifyAvgCoherence();
     },
 
     stopEmWave() {
         // TODO should we call notifyAvgCoherence here? (Or just stopPulseSensor()?)
+        sensorStopped = true;
         client.destroy();
         if (emWavePid !== null) {
             if (process.kill(emWavePid)) {
