@@ -99,7 +99,6 @@ export default {
             const hrData = parseIBIData(new Buffer.from(data).toString());
             if (hrData === 'SessionEnded' ) {
                 win.webContents.send('emwave-status', 'SessionEnded');
-                notifyAvgCoherence();
             } else if (hrData !== null && !sensorStopped) {  // without sensorStopped check a race can cause us to send data to client after client has told us to stop
                 win.webContents.send('emwave-ibi', hrData);
                 if (Object.prototype.hasOwnProperty.call(hrData, 'artifact')) {
