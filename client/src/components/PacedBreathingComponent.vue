@@ -78,6 +78,7 @@
     function resetPacer() {
         pacer.value.pause = true
         timer.value.running = false
+        inProgressRegime = null
         const toPull = finishedRegimes.map(r => remainingRegimes.value.findIndex(elem => elem.id === r.id)).filter(idx => idx !== -1)
         if (toPull.length > 0) pullAt(remainingRegimes.value, toPull)
         timer.value.reset()
