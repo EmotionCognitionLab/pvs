@@ -131,6 +131,14 @@
         emit('pulse-sensor-session-ended')
         reset()
         sessionEnded.value = true
+        clearTimeout(signalLossTimeout)
+        clearTimeout(forcedRestartInterval)
+    }
+
+    function forceSessionEnd() {
+        sessionEnded.value = true
+        emit('pulse-sensor-session-ended')
+        stopPulseSensor()
     }
 
     function startSignalLossTimer() {
@@ -146,7 +154,7 @@
 
     function startForcedRestartTimer() {
         forcedRestartInterval = setTimeout(() => {
-            endPulseSensorSession()
+            forceSessionEnd()
         },
         forcedRestartTimeout()
        )
