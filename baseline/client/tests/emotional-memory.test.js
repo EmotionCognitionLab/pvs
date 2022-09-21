@@ -53,20 +53,29 @@ describe("emotional-memory-learning", () => {
 });
 
 describe("emotional-memory-recall", () => {
-    it("results should have one result marked isRelevant", () => {
-        const response = "a\nb"
+    it("results should have as many isRelevant records as responses", () => {
+        const responses = ["a", "b", "c"]
         const timeline = (new EmotionalMemory(6)).getTimeline();
         let complete = false;
         jsPsych.init({
             timeline,
             on_finish: () => { complete = true; },
         });
-        document.getElementById("emotional-memory-textarea").value = response;
-        document.querySelector('[type="submit"]').click();
+        for (let i = 0; i < responses.length; ++i) {
+            document.querySelector('[type="text"]').value = responses[i];
+            document.querySelector('[type="submit"]').click();
+            if (i < responses.length - 1) {
+                document.querySelector("#jspsych-html-button-response-button-0 button").click();
+            } else {
+                document.querySelector("#jspsych-html-button-response-button-1 button").click();
+            }
+        }
         expect(complete).toBe(true);
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
-        expect(relevantData.length).toEqual(1);
-        expect(relevantData[0].response.descriptions).toBe(response);
+        expect(relevantData.length).toEqual(responses.length);
+        for (let i = 0; i < relevantData.length; ++i) {
+            expect(relevantData[i].response.Q0).toBe(responses[i]);
+        }
     });
 });
 

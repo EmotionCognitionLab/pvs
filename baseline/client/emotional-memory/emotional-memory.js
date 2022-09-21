@@ -1,7 +1,8 @@
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-image-keyboard-response.js";
-import "@adp-psych/jspsych/plugins/jspsych-survey-html-form.js";
+import "@adp-psych/jspsych/plugins/jspsych-survey-text.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import "./style.css";
@@ -47,7 +48,7 @@ export class EmotionalMemory {
     }
 
     getTimelineRecall() {
-        return [this.constructor.recallTrial];
+        return [this.constructor.recallLoop];
     }
 
     getTimeline() {
@@ -87,13 +88,27 @@ EmotionalMemory.learningRatingTrial = imagePath => ({
     },
 });
 
-EmotionalMemory.recallTrial = {
-    type: "survey-html-form",
-    preamble: recall_instruction_html,
-    html: `<textarea id="emotional-memory-textarea" name="descriptions" rows="8" cols="60"></textarea><br>`,
-    button_label: "Submit Descriptions",
-    autofocus: "emotional-memory-textarea",
-    data: { isRelevant: true },
+EmotionalMemory.recallLoop = {
+    timeline: [
+        {
+            type: "survey-text",
+            preamble: recall_instruction_html,
+            questions: [{ prompt: "" }],
+            data: { isRelevant: true },
+        },
+        {
+            type: "html-button-response",
+            stimulus: "",
+            choices: [
+                "Describe another image",
+                "Stop describing",
+            ],
+        },
+    ],
+    loop_function: data => {
+        const [trialData] = data.filter({trial_type: "html-button-response"}).values().slice(-1);
+        return trialData.response === 0;
+    }
 };
 
 
