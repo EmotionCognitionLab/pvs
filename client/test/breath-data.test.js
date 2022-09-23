@@ -75,7 +75,8 @@ describe("Breathing data functions", () => {
             sessionStartTime: 0,
             avgCoherence: 2.3
         };
-        const segId = bd.forTesting.createSegment(regime);
+        const stage = 1;
+        const segId = bd.forTesting.createSegment(regime, stage);
         expect(dateSpy).toHaveBeenCalled();
         dateSpy.mockRestore();
         const segStmt = db.prepare("select * from segments where id = ?");
@@ -90,7 +91,8 @@ describe("Breathing data functions", () => {
             sessionStartTime: 0,
             avgCoherence: 2.3
         };
-        bd.forTesting.createSegment(regime);
+        const stage = 3;
+        bd.forTesting.createSegment(regime, stage);
         const stmt = db.prepare('select * from regimes');
         const res = stmt.all();
         expect(res.length).toBe(1);
@@ -108,7 +110,7 @@ describe("Breathing data functions", () => {
             avgCoherence: 2.3
         };
         bd.getRegimeId(regime.regime);
-        bd.forTesting.createSegment(regime);
+        bd.forTesting.createSegment(regime, 2);
         const stmt = db.prepare('select * from regimes');
         const res = stmt.all();
         expect(res.length).toBe(1);
@@ -116,11 +118,29 @@ describe("Breathing data functions", () => {
 
     it("should return the average of all of the rest segment avg_coherence values when getAvgRestCoherence is called", () => {
         const cohValues = [3.2, 2.9, 7, 3.3, 4.7, 5, 2.2];
-        const stmt = db.prepare("INSERT INTO rest_segments(end_date_time, avg_coherence) VALUES(?, ?)");
-        cohValues.forEach(coh => {stmt.run(0, coh)});
+        const stmt = db.prepare("INSERT INTO rest_segments(end_date_time, avg_coherence, stage) VALUES(?, ?, ?)");
+        const stage = 2;
+        cohValues.forEach(coh => {stmt.run(0, coh, stage)});
         const expectedMean = cohValues.reduce((prev, cur) => prev + cur, 0) / cohValues.length;
-        const avgRestCoherence = bd.getAvgRestCoherence();
+        const avgRestCoherence = bd.getAvgRestCoherence(stage);
         expect(avgRestCoherence).toBeCloseTo(expectedMean);
+    });
+
+    it("should return only the ids of regimes that have been practiced when getPracticedRegimeIds is called", () => {
+        const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
+        const regimes = [
+            {durationMs: 300000, breathsPerMinute: 4, holdPos: null, randomize: 0},
+            {durationMs: 300000, breathsPerMinute: 5, holdPos: null, randomize: 0},
+            {durationMs: 300000, breathsPerMinute: 6, holdPos: null, randomize: 0}
+        ];
+        const regimeIds = regimes.map(r => insertRegimeStmt.run(r.durationMs, r.breathsPerMinute, r.holdPos, r.randomize).lastInsertRowid);
+        expect(regimeIds.length).toBe(regimes.length);
+        const expectedPracticedRegime = {id: regimeIds[1], ...regimes[1]};
+        const cohVals = [1.9, 2.1, 0.7];
+        const stage = 3;
+        cohVals.forEach(coh => bd.forTesting.createSegment({regime: expectedPracticedRegime, avgCoherence: coh, sessionStartTime: 0}, stage));
+        const practicedRegimeIds = bd.getPracticedRegimeIds(stage);
+        expect(practicedRegimeIds).toEqual([expectedPracticedRegime.id]);
     });
 
     it("should return the right statistics when getRegimeStats is called", () => {
@@ -131,9 +151,10 @@ describe("Breathing data functions", () => {
             randomize: false
         };
         const cohValues = [1.1, 2., 7.5, 3.9, 3.34, 5, 4.2];
-        cohValues.forEach(coh => bd.forTesting.createSegment({regime: regime, avgCoherence: coh, sessionStartTime: 0}));
+        const stage = 3;
+        cohValues.forEach(coh => bd.forTesting.createSegment({regime: regime, avgCoherence: coh, sessionStartTime: 0}, stage));
         const regimeId = bd.getRegimeId(regime);
-        const stats = bd.getRegimeStats(regimeId);
+        const stats = bd.getRegimeStats(regimeId, stage);
         const expectedAvg = cohValues.reduce((prev, cur) => prev+cur, 0) / cohValues.length;
         expect(stats.mean).toBeCloseTo(expectedAvg);
         const stdDev = std(cohValues);
@@ -143,7 +164,7 @@ describe("Breathing data functions", () => {
     });
 
     it("getTrainingDayCount should return 0 when the user has done no training", () => {
-        expect(bd.getTrainingDayCount()).toBe(0);
+        expect(bd.getTrainingDayCount(3)).toBe(0);
     });
 
     it("getTrainingDayCount should return 0 when the only training the user has done is today", () => {
@@ -152,17 +173,19 @@ describe("Breathing data functions", () => {
             sessionStartTime: 0,
             avgCoherence: 2.3
         };
-        bd.forTesting.createSegment(segment);
+        const stage = 3;
+        bd.forTesting.createSegment(segment, stage);
         expect(rowCount('segments')).toBe(1);
-        expect(bd.getTrainingDayCount()).toBe(0);
+        expect(bd.getTrainingDayCount(stage)).toBe(0);
     });
 
     it("getTrainingDayCount should coalesce multiple sessions in one day so that that day is counted only once", () => {
         const regime = { durationMs: 300000, breathsPerMinute: 12, randomize: false };
         const coherences = [1.2, 2.7, 2.2, 1.9];
+        const stage = 3;
         coherences.forEach(avgCoh => {
             const seg = {regime: regime, avgCoherence: avgCoh, sessionStartTime: Math.floor(Math.random() * 1000)};
-            bd.forTesting.createSegment(seg);
+            bd.forTesting.createSegment(seg, stage);
         });
         
         const stmt = db.prepare('SELECT id from segments');
@@ -179,6 +202,6 @@ describe("Breathing data functions", () => {
         const datesAsDays = dates.map(theDate => `${theDate.getFullYear()}${(theDate.getMonth() + 1).toString().padStart(2,0)}${theDate.getDate().toString().padStart(2, 0)}`);
         const expectedDays = new Set(datesAsDays).size;
 
-        expect(bd.getTrainingDayCount()).toBe(expectedDays);
+        expect(bd.getTrainingDayCount(stage)).toBe(expectedDays);
     });
 });

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "devDependencies": {
-    "@babel/runtime": "^7.17.8"
+    "@babel/runtime": "^7.17.8",
+    "core-js": "^3.25.1"
   }
 }

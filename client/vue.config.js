@@ -9,8 +9,8 @@ module.exports = {
       builderOptions: {
         appId: "heartbeam",
         extraFiles: {
-          from: 'src/powershell/hide-emwave.ps1',
-          to: 'hide-emwave.ps1'
+          from: 'src/powershell/start-emwave-hidden.ps1',
+          to: 'start-emwave-hidden.ps1'
         },
         productName: "HeartBEAM",
         win: {

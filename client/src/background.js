@@ -90,7 +90,6 @@ app.on('ready', async () => {
   mainWin = await createWindow()
   mainWin.webContents.send('get-current-user')
   emwave.createClient(mainWin)
-  emwave.hideEmWave()
 })
 
 // Prevent multiple instances of the app
@@ -271,16 +270,16 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
   return null;
 });
 
-ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
-  return getRegimesForSession(subjCondition);
+ipcMain.handle('regimes-for-session', (_event, subjCondition, stage) => {
+  return getRegimesForSession(subjCondition, stage);
 });
 
-ipcMain.handle('get-rest-breathing-days', () => {
-  return getRestBreathingDays();
+ipcMain.handle('get-rest-breathing-days', (_event, stage) => {
+  return getRestBreathingDays(stage);
 });
 
-ipcMain.handle('get-paced-breathing-days', () => {
-  return getPacedBreathingDays();
+ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
+  return getPacedBreathingDays(stage);
 });
 
 /**
@@ -310,18 +309,22 @@ ipcMain.on('is-stage-2-complete', async(_event, session) => {
 })
 
 async function stage1Complete() {
-  const restBreathingDays = getRestBreathingDays();
+  const restBreathingDays = getRestBreathingDays(1);
   if (restBreathingDays.size < 1) return { complete: false, completedOn: null };
 
-  const pacedBreathingDays = getPacedBreathingDays();
+  const pacedBreathingDays = getPacedBreathingDays(1);
   if (pacedBreathingDays.size < 1) return { complete: false, completedOn: null };
 
-  return { complete: true, completedOn: Math.max(restBreathingDays[0], pacedBreathingDays[0]).toString() };
+  return { complete: true, completedOn: Math.max([...restBreathingDays][0], [...pacedBreathingDays][0]).toString() };
 }
 
 ipcMain.on('is-stage-1-complete', async(_event) => {
   const res = await stage1Complete();
   _event.returnValue = res;
+});
+
+ipcMain.handle('set-stage', async(_event, stage) => {
+  emwave.setStage(stage);
 });
 
 ipcMain.handle('quit', () => {
