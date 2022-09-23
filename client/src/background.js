@@ -246,7 +246,11 @@ ipcMain.on('close-lumosity-view', () => {
 });
 
 ipcMain.handle('upload-emwave-data', async (event, session) => {
-  emwave.stopEmWave();
+  // give emWave a couple of seconds to save any lingering data before quitting
+  await new Promise(resolve => setTimeout(() => {
+    emwave.stopEmWave();
+    resolve();
+  }, 2000));
   deleteShortEmwaveSessions();
   const emWaveDb = emWaveDbPath();
   const fullSession = SessionStore.buildSession(session);
