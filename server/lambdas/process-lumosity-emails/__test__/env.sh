@@ -1,2 +1,4 @@
 DEST_BUCKET=emailbucket
 DEST_PREFIX=reports
+LUMOS_ACCT_TABLE=lumos-acct
+USERS_TABLE=users

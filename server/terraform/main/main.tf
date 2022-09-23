@@ -668,7 +668,8 @@ resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
       "Effect": "Allow",
       "Action": [
         "dynamodb:UpdateItem",
-        "dynamodb:Scan"
+        "dynamodb:Scan",
+        "dynamodb:Query"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-acct-table.name}"
@@ -816,14 +817,18 @@ resource "aws_iam_role" "lambda-ses-process" {
             "s3:GetObject"
           ]
           Resource = [
-            "${aws_s3_bucket.ses-bucket.arn}/emails/*"
+            "${aws_s3_bucket.ses-bucket.arn}/emails/*",
+            "${aws_s3_bucket.ses-bucket.arn}/reports/*"
           ]
         }
       ]
     })
   }
 
-  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn]
+  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
+    aws_iam_policy.dynamodb-user-read-write.arn,
+    aws_iam_policy.dynamodb-lumos-acct-read-write.arn
+  ]
 }
 
 # save above IAM role to SSM so serverless can reference it

@@ -48,6 +48,27 @@ functions:
         - 'process-lumosity-emails/node_modules/**'
         - 'process-lumosity-emails/*.js'
 
+  process-lumosity-reports:
+    handler: process-lumosity-emails/process-lumosity-emails.processreports
+    events:
+      - s3:
+          bucket: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ses/bucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: reports
+          existing: true
+    environment:
+      S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
+      LUMOS_ACCT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/lumosacct}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/ses/process}
+    package:
+      patterns:
+        - 'process-lumosity-emails/package*.json'
+        - 'process-lumosity-emails/node_modules/**'
+        - 'process-lumosity-emails/*.js'
+
   # do not change the name or path of this function
   # without also changing it in plugins/wordnet-plugin.js
   write-user-on-verify:
