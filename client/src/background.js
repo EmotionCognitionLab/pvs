@@ -287,24 +287,50 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
 });
 
 /**
- * Stage 2 is complete when the user has done six Lumosity sessions.
+ * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 3 times.
  * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
- * representing the date the sixth lumosity session was completed, or null if 
+ * representing the date the user last reported playing lumosity, or null if 
  * complete is false}
  */
  async function stage2Complete(session) {
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
-  if (!data.lumosDays || data.lumosDays.length === 0) return { complete: false, completedOn: null };
+  if (!data.lumosGames || data.lumosGames.length < 12) return { complete: false, completedOn: null };
 
-  const lumosDaysSet = new Set(data.lumosDays);
-  if (lumosDaysSet.size < 6) return { complete: false, completedOn: null };
+  const allGames = [
+    'Word Bubbles Web',
+    'Memory Match Web',
+    'Penguin Pursuit Web',
+    'Color Match Web',
+    'Raindrops Web',
+    'Brain Shift Web',
+    'Familiar Faces Web',
+    'Pirate Passage Web',
+    'Ebb and Flow Web',
+    'Lost in Migration Web',
+    'Tidal Treasures Web',
+    'Splitting Seeds Web'
+  ];
 
-  const lumosDaysArr = new Array(...lumosDaysSet).map(x => parseInt(x));
-  lumosDaysArr.sort((a, b) => a - b);
-  const sixthLumosDay = lumosDaysArr[5];
+  // data.lumosGames is
+  // [
+  //   {'Game 1 name': numPlays},
+  //   {'Game 2 name': numPlays},
+  //   ...
+  // ]
+  const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
+  const gameDataObj = data.lumosGames.map(i => Object.entries(i))
+    .flatMap(r => r)
+    .reduce((prev, cur) => { 
+      prev[cur[0]] = cur[1];
+      return prev;
+    }, {});
+
+  for (const game of allGames) {
+    if (!gamesPlayed.includes(game) || gameDataObj[game] < 3) return { complete: false, completedOn: null }
+  }
   
-    return { complete: true, completedOn: sixthLumosDay }
+  return { complete: true, completedOn: data.lumosDays[data.lumosDays.length - 1] };
 }
 
 ipcMain.on('is-stage-2-complete', async(_event, session) => {
