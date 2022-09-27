@@ -33,9 +33,15 @@ import { useLumosityHelper, completedLumosity } from '../lumosity-helper.js'
 import { yyyymmddNumber } from '../utils.js'
 
 const restBreathingDone = ref(false)
-const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
+const lumosDays = ref(null)
+const lumosityDone = ref(null)
+const lumosDataReady = ref(null)
 
 onBeforeMount(async() => {
+     const { days, done, ready } = await useLumosityHelper()
+    lumosDays.value = days
+    lumosityDone.value = done
+    lumosDataReady.value = ready
     ipcRenderer.invoke('set-stage', 2)
     const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days', 2)
     const todayYYMMDD = yyyymmddNumber(new Date())

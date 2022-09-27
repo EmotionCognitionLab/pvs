@@ -17,8 +17,9 @@
     const uploadComplete = ref(false)
 
     onMounted(async () => {
-        await ipcRenderer.invoke('upload-emwave-data', SessionStore.getRendererSession())
-        await ipcRenderer.invoke('upload-breath-data', SessionStore.getRendererSession())
+        const sess = await SessionStore.getRendererSession()
+        await ipcRenderer.invoke('upload-emwave-data', sess)
+        await ipcRenderer.invoke('upload-breath-data', sess)
         uploadComplete.value = true
     })
 </script>

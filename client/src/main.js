@@ -17,13 +17,14 @@ import { isAuthenticated, getAuth } from '../../common/auth/auth'
 import { SessionStore } from './session-store'
 import { yyyymmddString } from './utils'
 
-function stage1Complete() {
-    const res = ipcRenderer.sendSync('is-stage-1-complete')
+async function stage1Complete() {
+    const res = await ipcRenderer.invoke('is-stage-1-complete')
     return res
 }
 
-function stage2Complete() {
-    const res = ipcRenderer.sendSync('is-stage-2-complete', SessionStore.getRendererSession())
+async function stage2Complete() {
+    const sess = await SessionStore.getRendererSession()
+    const res = await ipcRenderer.invoke('is-stage-2-complete', sess)
     return res
 }
 
@@ -41,8 +42,8 @@ const routes = [
     { path: '/lumos', component: LumosityComponent },
     { path: '/stage2', component: Stage2Component },
     { path: '/donetoday', component: DoneTodayComponent},
-    { path: '/current-stage', redirect: chooseStage},
-    { path: '/', redirect: chooseStage }
+    { path: '/current-stage', beforeEnter: chooseStage},
+    { path: '/', beforeEnter: chooseStage }
 ]
 
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/', '/index.html']
@@ -52,7 +53,7 @@ const router = createRouter({
     routes: routes
 })
 
-function chooseStage() {
+async function chooseStage() {
     const todayYMD = yyyymmddString(new Date());
 
     // no-auth check to see if they've even started assignment to condition
@@ -66,14 +67,14 @@ function chooseStage() {
         return { name: 'signin', query: { postLoginPath: '/current-stage' }}
     }
 
-    const stage1Status = stage1Complete()
+    const stage1Status = await stage1Complete()
     if (!stage1Status.complete) return {path: '/setup'}
     
     if (stage1Status.complete && stage1Status.completedOn == todayYMD) {
         return {path: '/donetoday'}
     }
 
-    const stage2Status = stage2Complete()
+    const stage2Status = await stage2Complete()
     if (!stage2Status.complete) return {path: '/stage2'}
     if (stage2Status.completedOn != todayYMD) {
         return {path: '/stage3'}
@@ -83,25 +84,27 @@ function chooseStage() {
 }
 
 // use navigation guards to handle authentication
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
     if (!isAuthenticated() && !noAuthRoutes.includes(to.path)) {
         return { name: 'signin', query: { 'postLoginPath': to.path } }
+    }
+
+    const sess = await SessionStore.getRendererSession()
+    if (isAuthenticated() && !sess) {
+        const cognitoAuth = getAuth()
+        cognitoAuth.userhandler = {
+            onSuccess: session => {
+                ipcRenderer.invoke('login-succeeded', session)
+                SessionStore.session = session
+            },
+            onFailure: err => console.error(err)
+        }
+        cognitoAuth.getSession()
     }
 
     return true
 })
 
-if (isAuthenticated() && !SessionStore.getRendererSession()) {
-    const cognitoAuth = getAuth()
-    cognitoAuth.userhandler = {
-        onSuccess: session => {
-            ipcRenderer.invoke('login-succeeded', session)
-            SessionStore.session = session
-        },
-        onFailure: err => console.error(err)
-    }
-    cognitoAuth.getSession()
-}
 
 const app = createApp(App)
 app.use(router)

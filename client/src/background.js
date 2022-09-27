@@ -333,9 +333,9 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
   return { complete: true, completedOn: data.lumosDays[data.lumosDays.length - 1] };
 }
 
-ipcMain.on('is-stage-2-complete', async(_event, session) => {
+ipcMain.handle('is-stage-2-complete', async(_event, session) => {
   const res = await stage2Complete(SessionStore.buildSession(session))
-  _event.returnValue = res
+  return res
 })
 
 async function stage1Complete() {
@@ -348,9 +348,9 @@ async function stage1Complete() {
   return { complete: true, completedOn: Math.max([...restBreathingDays][0], [...pacedBreathingDays][0]).toString() };
 }
 
-ipcMain.on('is-stage-1-complete', async(_event) => {
+ipcMain.handle('is-stage-1-complete', async(_event) => {
   const res = await stage1Complete();
-  _event.returnValue = res;
+  return res;
 });
 
 ipcMain.handle('set-stage', async(_event, stage) => {

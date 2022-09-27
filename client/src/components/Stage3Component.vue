@@ -41,8 +41,10 @@ import { useLumosityHelper, completedLumosity } from '../lumosity-helper.js'
 const regimes=ref([])
 const sessionDone = ref(false)
 let dayDone = ref(false)
-const condition = ref(null);
-const { lumosDays, lumosityDone, lumosDataReady } = useLumosityHelper()
+const condition = ref(null)
+const lumosDays = ref(null)
+const lumosityDone = ref(null)
+const lumosDataReady = ref(null)
 
 async function setRegimes() {
     const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
@@ -53,7 +55,11 @@ async function setRegimes() {
 
 onBeforeMount(async() => {
     ipcRenderer.invoke('set-stage', 3)
-    const session = SessionStore.getRendererSession()
+    const { days, done, ready } = await useLumosityHelper()
+    lumosDays.value = days
+    lumosityDone.value = done
+    lumosDataReady.value = ready
+    const session = await SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
     condition.value = data.condition.assigned
