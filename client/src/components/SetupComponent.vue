@@ -21,7 +21,8 @@
                 <template #preText>
                     <div class="instruction">
                         Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
-                        Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
+                        The ideal position for this is to sit on a chair with your feet flat on the floor and hands resting on your legs.
+                        When you are ready, please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
                         Click "Start" when you're ready to begin.
                     </div>
                 </template>
