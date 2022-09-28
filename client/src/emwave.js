@@ -123,15 +123,15 @@ export default {
     
         return client;
     },
-
-    startEmWave() {
+ 
+    async startEmWave() {
         // must set stdio: 'ignore' on spawn options
         // otherwise the stdout buffer will overflow after ~30s of pulse sensor data
         // and emWave will hang
         if (process.platform === 'darwin') {
-            emWavePid = (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
+            emWavePid = await (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
         } else if (process.platform === 'win32') {
-            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})
+            emWavePid = await (spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})).pid
             // const startScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1') : path.join(app.getAppPath(), '../src/powershell/start-emwave-hidden.ps1')
             // const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", startScript])
             // emWaveProc.stdout.on("data", (data) => {
@@ -148,9 +148,10 @@ export default {
         }
     },
 
-    hideEmWave() {
+    async hideEmWave() {
+	const hideScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1') : path.join(app.getAppPath(), '../src/powershell/hide-emwave.ps1')
         if (process.platform === 'win32' && emWavePid) {
-            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWavePid], {stdio: 'ignore'});
+            await spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [hideScript, emWavePid], {stdio:'ignore'});
         }
     },
 
