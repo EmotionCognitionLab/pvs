@@ -148,10 +148,17 @@ async function confirmReportDataWritten() {
         expect(Object.keys(gamePlay).length).toBe(1);
         const gameName = Object.keys(gamePlay)[0];
         expect(expectedGames).toContain(gameName);
+        const playData = gamePlay[gameName];
+        expect(playData.length).toBe(2);
         if (gameName === 'Color Match Web') {
-            expect(gamePlay[gameName]).toBe(2);
+            expect(playData[0]).toBe(2);
+            expect(playData[1]).toBe(null);
+        } else if (gameName === 'Memory Match Web') {
+            expect(playData[0]).toBe(3);
+            expect(playData[1]).toBe('2022-07-09 11:16:07');
         } else {
-            expect(gamePlay[gameName]).toBe(1);
+            expect(playData[0]).toBe(1);
+            expect(playData[1]).toBe(null);
         }
     });
 }

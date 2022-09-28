@@ -6,4 +6,6 @@ user,email_address,username,activation_code,game,game_name,score,created_at,user
 100000000,heartbeam1@example.com,,NUL5R-BBTD8,600,Penguin Pursuit Web,3230,2022-07-07 16:30:46,5,1,1,
 100000000,heartbeam1@example.com,,NUL5R-BBTD8,724,Brain Shift Web,14500,2022-07-07 16:36:41,1,1,1,903
 100000000,heartbeam1@example.com,,NUL5R-BBTD8,901,Memory Match Web,9900,2022-07-07 16:38:50,2,0,1,989
+100000000,heartbeam1@example.com,,NUL5R-BBTD8,901,Memory Match Web,9900,2022-07-08 14:08:50,2,0,2,989
+100000000,heartbeam1@example.com,,NUL5R-BBTD8,901,Memory Match Web,9900,2022-07-09 11:16:07,2,0,3,989
 

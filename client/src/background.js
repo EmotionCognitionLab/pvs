@@ -314,23 +314,32 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
 
   // data.lumosGames is
   // [
-  //   {'Game 1 name': numPlays},
-  //   {'Game 2 name': numPlays},
+  //   {'Game 1 name': [numPlays, dateOfThirdPlay]},
+  //   {'Game 2 name': [numPlays, dateOfThirdPlay]},
   //   ...
   // ]
   const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
-  const gameDataObj = data.lumosGames.map(i => Object.entries(i))
-    .flatMap(r => r)
-    .reduce((prev, cur) => { 
-      prev[cur[0]] = cur[1];
-      return prev;
-    }, {});
+  const gameDataObj = {};
+  const thirdPlayDates = [];
+  data.lumosGames.forEach(i => {
+    const entries = Object.entries(i);
+    gameDataObj[entries[0][0]] = entries[0][1][0];
+    thirdPlayDates.push(Date.parse(entries[0][1][1] + ' GMT'))
+  });
 
   for (const game of allGames) {
     if (!gamesPlayed.includes(game) || gameDataObj[game] < 3) return { complete: false, completedOn: null }
   }
+
+  const completedOn = Math.max(...thirdPlayDates);
+  let completedOnDate = '1970-01-01'
+  if (completedOn) {
+    completedOnDate = yyyymmddString(new Date(completedOn));
+  } else {
+    console.error(`Expected a valid completed on date for lumosity games, but got "${completedOn}"`);
+  }
   
-  return { complete: true, completedOn: data.lumosDays[data.lumosDays.length - 1] };
+  return { complete: true, completedOn: completedOnDate };
 }
 
 ipcMain.handle('is-stage-2-complete', async(_event, session) => {

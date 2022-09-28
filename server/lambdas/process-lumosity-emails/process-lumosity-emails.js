@@ -85,9 +85,10 @@ export async function processreports(event) {
       if (!uid) {
         console.error(`Error: No user account found for lumosity player ${email}.`);
       } else {
+        // writes an array of {'game name': [number of plays, date of third play]} objects
         const playData = playsData.filter(r => r.email === email).select(row => {
           const res = {}
-          res[row.game] = row.plays;
+          res[row.game] = [row.plays, row.thirdPlayDate];
           return res;
         });
         await db.updateUser(uid, {lumosGames: playData.toArray()});
@@ -104,8 +105,9 @@ export async function processreports(event) {
 
 /**
  * Given CSV data from a lumosity game results report, returns a dataforge.DataFrame object with
- * 'email', 'game' and 'plays'. The "plays" value will be the total number of times that user
- * has played that game (ever).
+ * 'email', 'game', 'plays', and 'thirdPlayDate'. The "plays" value will be the total number of times that user
+ * has played that game (ever). The 'thirdPlayDate' value will be the date the user played that
+ * game for the third time, or null if the user has not yet played the game three times.
  * @param {string} gameResultsCSV 
  * @returns {object} DataFrame with 'email', 'game' and 'plays' keys.
  */
@@ -121,8 +123,13 @@ function lumosityGameResultsToPlaysByUserByGame(gameResultsCSV) {
         const byGame = e.groupBy(r => r.game_name);
         for (const game of byGame) {
           const gameName = game.first().game_name;
+          const thirdPlay = game.where(r => r.game_nth === 3);
+          let thirdPlayDate = null;
+          if (thirdPlay.count() === 1) {
+              thirdPlayDate = thirdPlay.first().created_at;
+          }  
           const maxNth = game.deflate(r => r.game_nth).max();
-          res.push({email: emailAddr, game: gameName, plays: maxNth});
+          res.push({email: emailAddr, game: gameName, plays: maxNth, thirdPlayDate: thirdPlayDate});
         }
     }
 
