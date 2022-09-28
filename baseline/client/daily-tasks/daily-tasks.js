@@ -33,7 +33,7 @@ import version from "../version.json";
 
 const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
 const set2 = ["demographics", "physical-activity", "panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
-const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
+const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation"];
 const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall"];
 const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning-recall"];
 const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
