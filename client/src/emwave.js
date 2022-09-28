@@ -131,27 +131,28 @@ export default {
         if (process.platform === 'darwin') {
             emWavePid = (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
         } else if (process.platform === 'win32') {
-            const startScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1') : path.join(app.getAppPath(), '../src/powershell/start-emwave-hidden.ps1')
-            const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", startScript])
-            emWaveProc.stdout.on("data", (data) => {
-                const dataStr = data.toString().trim()
-                if (dataStr.length > 0) {
-                    emWavePid = dataStr
-                }
-            });
-            emWaveProc.stderr.on("data", (data) => {
-                console.error("powershell stderr: " + data)
-            });
+            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})
+            // const startScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1') : path.join(app.getAppPath(), '../src/powershell/start-emwave-hidden.ps1')
+            // const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", startScript])
+            // emWaveProc.stdout.on("data", (data) => {
+            //     const dataStr = data.toString().trim()
+            //     if (dataStr.length > 0) {
+            //         emWavePid = dataStr
+            //     }
+            // });
+            // emWaveProc.stderr.on("data", (data) => {
+            //     console.error("powershell stderr: " + data)
+            // });
         } else {
             throw `The '${process.platform}' operating system is not supported. Please use either Macintosh OS X or Windows.`
         }
     },
 
-    // hideEmWave() {
-    //     if (process.platform === 'win32' && emWavePid) {
-    //         spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWavePid], {stdio: 'ignore'});
-    //     }
-    // },
+    hideEmWave() {
+        if (process.platform === 'win32' && emWavePid) {
+            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWavePid], {stdio: 'ignore'});
+        }
+    },
 
     startPulseSensor() {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
