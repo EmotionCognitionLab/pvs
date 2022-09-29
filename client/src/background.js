@@ -86,11 +86,15 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
-  emwave.startEmWave()
-  mainWin = await createWindow()
-  mainWin.webContents.send('get-current-user')
-  emwave.createClient(mainWin)
-  emwave.hideEmWave()
+  await emwave.startEmWave()
+  setTimeout(async () => {
+    mainWin = await createWindow()
+    mainWin.webContents.send('get-current-user')
+    emwave.createClient(mainWin)
+    mainWin.maximize()
+    mainWin.show()
+    emwave.hideEmWave()
+  }, 5000)
 })
 
 // Prevent multiple instances of the app
