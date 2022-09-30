@@ -192,8 +192,8 @@ describe("n-back", () => {
             expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
             // there should 2*3 n-back trials in a training block
             expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
-            // there should 3*3 n-back trials in a full test block
-            expect(nbTests.length).toBe(3*3);
+            // there should 3 n-back trials in a full test block
+            expect(nbTests.length).toBe(3);
             // there should be 15 digits and 5 targets per n-back test trials
             expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
             expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 5)).toBe(true);
@@ -211,7 +211,7 @@ describe("n-back", () => {
         while (!complete) {
             completeCurrentTrial(true, true);
         }
-        expect(spy).toHaveBeenCalledTimes(2*3 + 3*3);
+        expect(spy).toHaveBeenCalledTimes(2*3 + 3);
     });
 
     it("n-back plugin trials are preceded by cues", () => {
