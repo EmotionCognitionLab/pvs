@@ -371,6 +371,10 @@ ipcMain.handle('set-stage', async(_event, stage) => {
   emwave.setStage(stage);
 });
 
+ipcMain.handle('paced-breathing-days', (_event, stage) => {
+  return getPacedBreathingDays(stage);
+});
+
 ipcMain.handle('quit', () => {
   app.quit();
 });

@@ -55,7 +55,14 @@
                 <button class="button" @click="firstTimePage=5">Continue</button>
             </div>
         </div>
-        <div :class="{hidden: sessionDone || dayDone || !lumosityDone || firstTimeStep < 5}">
+        <div v-if="showDayFiveVid && lumosityDone">
+            In this video Dr. Mather discusses the connection between breathing, the heart and the brain.
+            <br/>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/i3nRus96a4E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <br/>
+            <button class="button" @click="day5VidDone">Continue</button>
+        </div>
+        <div :class="{hidden: sessionDone || dayDone || !lumosityDone || firstTimeStep < 5 || showDayFiveVid}">
             <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
@@ -109,6 +116,7 @@ const firstTimeStep = computed(() => {
     }
     return firstTimePage.value
 })
+const showDayFiveVid = ref(false)
 
 async function setRegimes() {
     const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
@@ -123,12 +131,30 @@ onBeforeMount(async() => {
     lumosDays.value = days
     lumosityDone.value = done
     lumosDataReady.value = ready
+    showDayFiveVid.value = await shouldShowDayFiveVid()
     const session = await SessionStore.getRendererSession()
     const apiClient = new ApiClient(session)
     const data = await apiClient.getSelf()
     condition.value = data.condition.assigned
     await setRegimes()
 })
+
+async function shouldShowDayFiveVid() {
+    if (window.localStorage.getItem('HeartBeam.hasSeenPBVid') === 'true') return false
+
+    const pbDays = await ipcRenderer.invoke('paced-breathing-days', 3)
+    const firstPbDay = Math.min(...pbDays)
+    const firstPbDayStr = new String(firstPbDay)
+    const firstPbDate = new Date(`${firstPbDayStr.substring(0, 4)}-${firstPbDayStr.substring(4, 6)}-${firstPbDayStr.substring(6, 8)}`) // ignore timezones; we don't need that much precision
+    const now = new Date()
+    const days = (now - firstPbDate) / (1000 * 60 * 60 * 24)
+    return days >=5
+}
+
+function day5VidDone() {
+    window.localStorage.setItem('HeartBeam.hasSeenPBVid', 'true')
+    showDayFiveVid.value = false
+}
 
 async function pacerFinished() {
     sessionDone.value = true
