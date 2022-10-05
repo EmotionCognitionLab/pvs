@@ -17,7 +17,7 @@ module.exports = {
           icon: "HeartBEAM-icon.png"
         }
       },
-      nodeIntegration: true,
+      nodeIntegration: false,
       preload: 'src/preload.js',
       externals: [ 'better-sqlite3' ]
     }

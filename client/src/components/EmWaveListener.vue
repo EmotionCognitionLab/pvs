@@ -18,8 +18,7 @@
    
 </template>
 <script setup>
-    import { ipcRenderer } from 'electron'
-    import { ref, watch, computed, onUnmounted } from '@vue/runtime-core'
+    import { ref, watch, computed } from '@vue/runtime-core'
     import { epToCoherence } from '../coherence.js'
 
     const props = defineProps(['showIbi', 'showScore', 'condition'])
@@ -66,12 +65,7 @@
         }
     })
 
-    onUnmounted(() => {
-        ipcRenderer.removeListener('emwave-ibi', handleEmwaveIbiEvent)
-        ipcRenderer.removeListener('emwave-status', handleEmwaveStatusEvent)
-    })
-
-    function handleEmwaveIbiEvent(_event, hrData) {
+    function handleEmWaveIbiEvent(_event, hrData) {
         ibi.value = Number(hrData.ibi)
         if (ibi.value <= 0) return
 
@@ -90,9 +84,9 @@
         resetForcedRestartTimer()
     }
 
-    ipcRenderer.on('emwave-ibi', handleEmwaveIbiEvent)
+    window.mainAPI.handleEmWaveIBIEvent(handleEmWaveIbiEvent)
 
-    function handleEmwaveStatusEvent(_event, message) {
+    function handleEmWaveStatusEvent(_event, message) {
         if (message === 'SensorError') {
             stopPulseSensor()
             sensorError.value = true
@@ -101,11 +95,11 @@
         }
     }
 
-    ipcRenderer.on('emwave-status', handleEmwaveStatusEvent)
+    window.mainAPI.handleEmWaveStatusEvent(handleEmWaveStatusEvent)
 
     // eslint-disable-next-line no-unused-vars
     function startPulseSensor() {
-        ipcRenderer.send('pulse-start')
+        window.mainAPI.startPulseSensor()
         running.value = true
         stopSensor.value = false
         sessionEnded.value = false
@@ -121,7 +115,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function stopPulseSensor() {
-        ipcRenderer.send('pulse-stop')
+        window.mainAPI.stopPulseSensor()
         emit('pulse-sensor-stopped')
         reset()
         stopSignalLossTimer()

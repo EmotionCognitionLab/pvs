@@ -17,7 +17,6 @@
     </div>
 </template>
 <script setup>
-import { ipcRenderer } from 'electron'
 import { ref } from '@vue/runtime-core'
 import EmWaveListener from './EmWaveListener.vue'
 import TimerComponent from './TimerComponent.vue'
@@ -53,7 +52,7 @@ function stopSession() {
 }
 
 function quit() {
-    ipcRenderer.invoke('quit')
+    window.mainAPI.quit()
 }
 
 </script>

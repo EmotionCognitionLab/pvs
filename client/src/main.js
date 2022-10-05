@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
@@ -18,19 +17,13 @@ import { SessionStore } from './session-store'
 import { yyyymmddString } from './utils'
 
 async function stage1Complete() {
-    const res = await ipcRenderer.invoke('is-stage-1-complete')
-    return res
+    return await window.mainAPI.isStage1Complete()
 }
 
 async function stage2Complete() {
     const sess = await SessionStore.getRendererSession()
-    const res = await ipcRenderer.invoke('is-stage-2-complete', sess)
-    return res
+    return await window.mainAPI.isStage2Complete(sess)
 }
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
-})
 
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
@@ -94,7 +87,7 @@ router.beforeEach(async (to) => {
         const cognitoAuth = getAuth()
         cognitoAuth.userhandler = {
             onSuccess: session => {
-                ipcRenderer.invoke('login-succeeded', session)
+                window.mainAPI.loginSucceeded(session)
                 SessionStore.session = session
             },
             onFailure: err => console.error(err)

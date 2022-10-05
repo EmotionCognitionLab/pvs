@@ -20,7 +20,6 @@
 </template>
 
 <script setup>
-    import { ipcRenderer } from 'electron'
     import { ref, computed, watch } from '@vue/runtime-core'
     import { pullAt } from 'lodash'
     import PacerComponent from './PacerComponent.vue'
@@ -72,7 +71,7 @@
     async function updateRegimeStatus(startTime, regime) {
         if (inProgressRegime) finishedRegimes.push(inProgressRegime)
         inProgressRegime = regime
-        await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
+        await window.mainAPI.pacerRegimeChanged(startTime, regime)
     }
 
     function resetPacer() {

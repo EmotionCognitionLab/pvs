@@ -88,7 +88,6 @@
     </div>
 </template>
 <script setup>
-import { ipcRenderer } from 'electron'
 import { ref, onBeforeMount, computed } from '@vue/runtime-core'
 import ApiClient from '../../../common/api/client.js'
 import { SessionStore } from '../session-store.js'
@@ -119,14 +118,14 @@ const firstTimeStep = computed(() => {
 const showDayFiveVid = ref(false)
 
 async function setRegimes() {
-    const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
+    const sessRegimes = await window.mainAPI.regimesForSession(condition.value, 3)
     dayDone.value = sessRegimes.length == 0
     sessionDone.value = sessRegimes.length == 0
     regimes.value = sessRegimes
 }
 
 onBeforeMount(async() => {
-    ipcRenderer.invoke('set-stage', 3)
+    window.mainAPI.setStage(3)
     const { days, done, ready } = await useLumosityHelper()
     lumosDays.value = days
     lumosityDone.value = done
@@ -142,7 +141,7 @@ onBeforeMount(async() => {
 async function shouldShowDayFiveVid() {
     if (window.localStorage.getItem('HeartBeam.hasSeenPBVid') === 'true') return false
 
-    const pbDays = await ipcRenderer.invoke('paced-breathing-days', 3)
+    const pbDays = await window.mainAPI.getPacedBreathingDays(3)
     const firstPbDay = Math.min(...pbDays)
     const firstPbDayStr = new String(firstPbDay)
     const firstPbDate = new Date(`${firstPbDayStr.substring(0, 4)}-${firstPbDayStr.substring(4, 6)}-${firstPbDayStr.substring(6, 8)}`) // ignore timezones; we don't need that much precision
@@ -162,7 +161,7 @@ async function pacerFinished() {
         // note we don't set regimes.value here
         // doing so reloads the PacedBreathingComponent, losing its reference
         // to the emwaveListener before we successfully stop the pulse sensor
-        const sessRegimes = await ipcRenderer.invoke('regimes-for-session', condition.value, 3)
+        const sessRegimes = await window.mainAPI.regimesForSession(condition.value, 3)
         dayDone.value = sessRegimes.length == 0
     }, 50) 
 }
@@ -173,7 +172,7 @@ async function finishedLumosity() {
 }
 
 function quit() {
-    ipcRenderer.invoke('quit')
+    window.mainAPI.quit()
 }
 
 </script>

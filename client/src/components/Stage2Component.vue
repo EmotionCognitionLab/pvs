@@ -33,7 +33,6 @@
     </div>
 </template>
 <script setup>
-import { ipcRenderer } from 'electron'
 import { ref, onBeforeMount } from '@vue/runtime-core'
 import LumosityComponent from './LumosityComponent.vue'
 import RestComponent from './RestComponent.vue'
@@ -52,8 +51,8 @@ onBeforeMount(async() => {
     lumosDays.value = days
     lumosityDone.value = done
     lumosDataReady.value = ready
-    ipcRenderer.invoke('set-stage', 2)
-    const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days', 2)
+    window.mainAPI.setStage(2)
+    const restBreathingDays = await window.mainAPI.getRestBreathingDays(2)
     const todayYYMMDD = yyyymmddNumber(new Date())
     restBreathingDone.value = restBreathingDays.has(todayYYMMDD)
 })
@@ -64,7 +63,7 @@ function continueToLumosity() {
 }
 
 function quit() {
-    ipcRenderer.invoke('quit')
+    window.mainAPI.quit()
 }
 
 async function finishedLumosity() {
