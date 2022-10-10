@@ -21,27 +21,15 @@
                 <template #preText>
                     <div class="instruction">
                         Thank you. Next, we would like to get baseline measurements of your heart rate for five minutes while you rest.
-                        Please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
+                        The ideal position for this is to sit on a chair with your feet flat on the floor and hands resting on your legs.
+                        When you are ready, please clip your pulse measurement device onto your earlobe and insert the other end into the computer.
                         Click "Start" when you're ready to begin.
                     </div>
                 </template>
             </RestComponent>
         </div>
         <div v-else-if="step==4">
-            <div class="instruction">
-            We have one remaining task for you with this app today.
-            We now will ask you to pace your breathing following the ball you will see on the screen.
-            Please breathe in while the ball is moving up and breathe out while the ball is moving down.
-            Please make sure you have the pulse device attached to your ear, and click "Start" when you're ready to begin.
-            </div>
-            <PacerComponent 
-                :regimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]"
-                :scaleH=290
-                :scaleT=0.1 
-                :offsetProportionX=0.25
-                :offsetProportionY=0.8
-                @pacerFinished="pacerFinished" ref="pacer" />
-            <EmWaveListener :showIbi=false @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" ref="pacerEmwave"/>
+            <PacedBreathingComponent :startRegimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]" :condition="'N/A'" @pacerFinished="pacerFinished" @pacerStopped="pacerStopped" />
         </div>
         <div v-else-if="step==5">
             <UploadComponent>
@@ -59,13 +47,11 @@
 </template>
 
 <script setup>
-    import { ipcRenderer } from 'electron'
     import { ref, onBeforeMount } from '@vue/runtime-core';
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
     import LoginComponent from './LoginComponent.vue'
-    import EmWaveListener from './EmWaveListener.vue'
-    import PacerComponent from './PacerComponent.vue'
+    import PacedBreathingComponent from './PacedBreathingComponent.vue'
     import UploadComponent from './UploadComponent.vue'
     import RestComponent from './RestComponent.vue'
 
@@ -76,11 +62,12 @@
     // step 4: user has completed rest breathing
     // step 5: user has completed paced breathing
     let step = ref(0)
-    const pacer = ref(null)
-    const pacerEmwave = ref(null)
+    let pacerHasFinished = false
     
     
     onBeforeMount(async() => {
+        window.mainAPI.setStage(1)
+
         if (!isAuthenticated()) {
             step.value = 1
             return
@@ -89,12 +76,12 @@
             step.value = 2
             return
         }
-        const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days')
+        const restBreathingDays = await window.mainAPI.getRestBreathingDays(1)
         if (restBreathingDays.size < 1) {
             step.value = 3
             return
         }
-        const pacedBreathingDays = await ipcRenderer.invoke('get-paced-breathing-days')
+        const pacedBreathingDays = await window.mainAPI.getPacedBreathingDays(1)
         if (pacedBreathingDays.size < 1) {
             step.value = 4
             return
@@ -112,24 +99,19 @@
     }
 
     function pacerFinished() {
-        pacerEmwave.value.stopSensor = true
-        nextStep()
+        pacerHasFinished = true
     }
 
-    function startPacer() {
-        pacer.value.start = true
-    }
-
-    function stopPacer() {
-        pacer.value.pause = true
-    }
-
-    function resumePacer() {
-        pacer.value.resume = true
+    function pacerStopped() {
+        if (pacerHasFinished) {
+            // we're all done - the pacer finished and when the sensor
+            // stopped this got emitted
+            nextStep()
+        }
     }
 
     function quit() {
-        ipcRenderer.invoke('quit')
+        window.mainAPI.quit()
     }
 
 </script>

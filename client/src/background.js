@@ -86,11 +86,15 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
-  emwave.startEmWave()
-  mainWin = await createWindow()
-  mainWin.webContents.send('get-current-user')
-  emwave.createClient(mainWin)
-  emwave.hideEmWave()
+  await emwave.startEmWave()
+  setTimeout(async () => {
+    mainWin = await createWindow()
+    mainWin.webContents.send('get-current-user')
+    emwave.createClient(mainWin)
+    mainWin.maximize()
+    mainWin.show()
+    emwave.hideEmWave()
+  }, 5000)
 })
 
 // Prevent multiple instances of the app
@@ -247,7 +251,11 @@ ipcMain.on('close-lumosity-view', () => {
 });
 
 ipcMain.handle('upload-emwave-data', async (event, session) => {
-  emwave.stopEmWave();
+  // give emWave a couple of seconds to save any lingering data before quitting
+  await new Promise(resolve => setTimeout(() => {
+    emwave.stopEmWave();
+    resolve();
+  }, 2000));
   deleteShortEmwaveSessions();
   const emWaveDb = emWaveDbPath();
   const fullSession = SessionStore.buildSession(session);
@@ -271,57 +279,100 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
   return null;
 });
 
-ipcMain.handle('regimes-for-session', (_event, subjCondition) => {
-  return getRegimesForSession(subjCondition);
+ipcMain.handle('regimes-for-session', (_event, subjCondition, stage) => {
+  return getRegimesForSession(subjCondition, stage);
 });
 
-ipcMain.handle('get-rest-breathing-days', () => {
-  return getRestBreathingDays();
+ipcMain.handle('get-rest-breathing-days', (_event, stage) => {
+  return getRestBreathingDays(stage);
 });
 
-ipcMain.handle('get-paced-breathing-days', () => {
-  return getPacedBreathingDays();
+ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
+  return getPacedBreathingDays(stage);
 });
 
 /**
- * Stage 2 is complete when the user has done six Lumosity sessions.
+ * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 3 times.
  * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
- * representing the date the sixth lumosity session was completed, or null if 
+ * representing the date the user last reported playing lumosity, or null if 
  * complete is false}
  */
  async function stage2Complete(session) {
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
-  if (!data.lumosDays || data.lumosDays.length === 0) return { complete: false, completedOn: null };
+  if (!data.lumosGames || data.lumosGames.length < 12) return { complete: false, completedOn: null };
 
-  const lumosDaysSet = new Set(data.lumosDays);
-  if (lumosDaysSet.size < 6) return { complete: false, completedOn: null };
+  const allGames = [
+    'Word Bubbles Web',
+    'Memory Match Web',
+    'Penguin Pursuit Web',
+    'Color Match Web',
+    'Raindrops Web',
+    'Brain Shift Web',
+    'Familiar Faces Web',
+    'Pirate Passage Web',
+    'Ebb and Flow Web',
+    'Lost in Migration Web',
+    'Tidal Treasures Web',
+    'Splitting Seeds Web'
+  ];
 
-  const lumosDaysArr = new Array(...lumosDaysSet).map(x => parseInt(x));
-  lumosDaysArr.sort((a, b) => a - b);
-  const sixthLumosDay = lumosDaysArr[5];
+  // data.lumosGames is
+  // [
+  //   {'Game 1 name': [numPlays, dateOfThirdPlay]},
+  //   {'Game 2 name': [numPlays, dateOfThirdPlay]},
+  //   ...
+  // ]
+  const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
+  const gameDataObj = {};
+  const thirdPlayDates = [];
+  data.lumosGames.forEach(i => {
+    const entries = Object.entries(i);
+    gameDataObj[entries[0][0]] = entries[0][1][0];
+    thirdPlayDates.push(Date.parse(entries[0][1][1] + ' GMT'))
+  });
+
+  for (const game of allGames) {
+    if (!gamesPlayed.includes(game) || gameDataObj[game] < 3) return { complete: false, completedOn: null }
+  }
+
+  const completedOn = Math.max(...thirdPlayDates);
+  let completedOnDate = '1970-01-01'
+  if (completedOn) {
+    completedOnDate = yyyymmddString(new Date(completedOn));
+  } else {
+    console.error(`Expected a valid completed on date for lumosity games, but got "${completedOn}"`);
+  }
   
-    return { complete: true, completedOn: sixthLumosDay }
+  return { complete: true, completedOn: completedOnDate };
 }
 
-ipcMain.on('is-stage-2-complete', async(_event, session) => {
+ipcMain.handle('is-stage-2-complete', async(_event, session) => {
   const res = await stage2Complete(SessionStore.buildSession(session))
-  _event.returnValue = res
+  return res
 })
 
 async function stage1Complete() {
-  const restBreathingDays = getRestBreathingDays();
+  const restBreathingDays = getRestBreathingDays(1);
   if (restBreathingDays.size < 1) return { complete: false, completedOn: null };
 
-  const pacedBreathingDays = getPacedBreathingDays();
+  const pacedBreathingDays = getPacedBreathingDays(1);
   if (pacedBreathingDays.size < 1) return { complete: false, completedOn: null };
 
-  return { complete: true, completedOn: Math.max(restBreathingDays[0], pacedBreathingDays[0]).toString() };
+  return { complete: true, completedOn: Math.max([...restBreathingDays][0], [...pacedBreathingDays][0]).toString() };
 }
 
-ipcMain.on('is-stage-1-complete', async(_event) => {
+ipcMain.handle('is-stage-1-complete', async(_event) => {
   const res = await stage1Complete();
-  _event.returnValue = res;
+  return res;
+});
+
+ipcMain.handle('set-stage', async(_event, stage) => {
+  emwave.setStage(stage);
+});
+
+ipcMain.handle('paced-breathing-days', (_event, stage) => {
+  return getPacedBreathingDays(stage);
 });
 
 ipcMain.handle('quit', () => {

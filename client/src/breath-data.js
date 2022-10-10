@@ -62,19 +62,20 @@ function lookupRegime(regimeId) {
     return regimeDataToRegime(res);
 }
 
-function createSegment(regimeData) {
+function createSegment(regimeData, stage) {
     const endDateTime = Math.round((new Date).getTime() / 1000);
     let newSegment;
     if (!regimeData.regime) {
         // then it's a rest segment
-        newSegment = insertRestSegmentStmt.run(endDateTime, regimeData.avgCoherence);
+        newSegment = insertRestSegmentStmt.run(endDateTime, regimeData.avgCoherence, stage);
     } else {
         const regimeId = getRegimeId(regimeData.regime);
         newSegment = insertSegmentStmt.run(
             regimeId,
             regimeData.sessionStartTime,
             endDateTime,
-            regimeData.avgCoherence
+            regimeData.avgCoherence,
+            stage
         );
     }
     
@@ -84,30 +85,31 @@ function createSegment(regimeData) {
     return newSegment.lastInsertRowid;
 }
 
-function getSegmentsAfterDate(date) {
-    const stmt = db.prepare('SELECT * FROM segments where end_date_time >= ? ORDER BY end_date_time asc');
-    const res = stmt.all(date.getTime() / 1000);
+function getSegmentsAfterDate(date, stage) {
+    const stmt = db.prepare('SELECT * FROM segments where end_date_time >= ? and stage = ? ORDER BY end_date_time asc');
+    const res = stmt.all(date.getTime() / 1000, stage);
     return res.map(rowToObject);
 }
 
-function getTrainingDays(useRest, includeToday) {
+function getTrainingDays(useRest, includeToday, stage) {
+    if (!Number.isInteger(stage) || stage < 1 || stage > 3) {
+        throw new Error(`Expected a stage between 1 and 3, but got ${stage}.`);
+    }
     const tableName = useRest ? 'rest_segments': 'segments';
     let segEndTimes = [];
     if (includeToday) {
-        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName}`);
-        segEndTimes = stmt.all();
+        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName} where stage = ?`);
+        segEndTimes = stmt.all(stage);
     } else {
-        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName} where end_date_time < ?`);
+        const stmt = db.prepare(`SELECT end_date_time FROM ${tableName} where end_date_time < ? and stage = ?`);
         const startOfDay = new Date();
         startOfDay.setHours(0); startOfDay.setMinutes(0); startOfDay.setSeconds(0);
-        segEndTimes = stmt.all(startOfDay.getTime() / 1000);
+        segEndTimes = stmt.all(startOfDay.getTime() / 1000, stage);
     }
-
     const uniqDays = new Set(segEndTimes.map(s => {
         const theDate = new Date(s.end_date_time * 1000);
         return yyyymmddNumber(theDate);
     }));
-
     return uniqDays;
 }
 
@@ -115,50 +117,50 @@ function getTrainingDays(useRest, includeToday) {
  * Returns the number of days, not including today, that a user
  * has done at least one breathing segment.
  */
-function getTrainingDayCount() {
-    const uniqDays = getTrainingDays(false, false);
+function getTrainingDayCount(stage) {
+    const uniqDays = getTrainingDays(false, false, stage);
     return uniqDays.size;
 }
 
-function getAvgCoherenceValues(regimeId) {
-    const stmt = db.prepare('SELECT avg_coherence from segments where regime_id = ?');
-    const res = stmt.all(regimeId);
+function getAvgCoherenceValues(regimeId, stage) {
+    const stmt = db.prepare('SELECT avg_coherence from segments where regime_id = ? and stage = ?');
+    const res = stmt.all(regimeId, stage);
     return res.map(r => r.avg_coherence);
 }
 
-function getRegimeStats(regimeId) {
-    const avgCohVals = getAvgCoherenceValues(regimeId);
+function getRegimeStats(regimeId, stage) {
+    const avgCohVals = getAvgCoherenceValues(regimeId, stage);
     const stdDev = std(avgCohVals);
     const interval = 1.96 * stdDev;
     const meanAvgCoh = mean(avgCohVals);
     return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
 }
 
-function getAllRegimeIds() {
-    const allRegimesStmt = db.prepare('SELECT id from regimes');
-    const allRegimes = allRegimesStmt.all();
-    return allRegimes.map(r => r.id);
+function getPracticedRegimeIds(stage) {
+    const allRegimesStmt = db.prepare('SELECT distinct(regime_id) from segments where stage = ?');
+    const allRegimes = allRegimesStmt.all(stage);
+    return allRegimes.map(r => r.regime_id);
 }
 
-function getAvgRestCoherence() {
-    const stmt = db.prepare('SELECT avg_coherence from rest_segments');
-    const res = stmt.all();
+function getAvgRestCoherence(stage) {
+    const stmt = db.prepare('SELECT avg_coherence from rest_segments where stage = ?');
+    const res = stmt.all(stage);
     return mean(res.map(r => r.avg_coherence));
 }
 
 /**
  * @return {Set}  Set of days (as YYYYMMDD numbers) that rest breathing has been done on
  */
-function getRestBreathingDays() {
-    return getTrainingDays(true, true);
+function getRestBreathingDays(stage) {
+    return getTrainingDays(true, true, stage);
 }
 
 /**
  * 
  * @returns {Set} Set of days (as YYYYMMDD numbers) that paced breathing has been done on
  */
-function getPacedBreathingDays() {
-    return getTrainingDays(false, true);
+function getPacedBreathingDays(stage) {
+    return getTrainingDays(false, true, stage);
 }
 
 function setRegimeBestCnt(regimeId, count) {
@@ -243,15 +245,15 @@ async function initBreathDb(serializedSession) {
         // a segment is eseentially an instance of a regime - while participants may breathe
         // following a particular regime many different times, each time they do so will be
         // a unique segment
-        const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, session_start_time INTEGER NOT NULL, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
+        const createSegmentTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS segments(id INTEGER PRIMARY KEY, regime_id INTEGER NOT NULL, session_start_time INTEGER NOT NULL, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, stage INTEGER NOT NULL, FOREIGN KEY(regime_id) REFERENCES regimes(id))');
         createSegmentTableStmt.run();
-        insertSegmentStmt = db.prepare('INSERT INTO segments(regime_id, session_start_time, end_date_time, avg_coherence) VALUES(?, ?, ?, ?)');
+        insertSegmentStmt = db.prepare('INSERT INTO segments(regime_id, session_start_time, end_date_time, avg_coherence, stage) VALUES(?, ?, ?, ?, ?)');
 
         // a rest segment is one in which a subject breathes at whatever pace they like
         // while sitting quietly
-        const createRestSegmentsTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS rest_segments(id INTEGER PRIMARY KEY, end_date_time INTEGER NOT NULL, avg_coherence FLOAT)');
+        const createRestSegmentsTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS rest_segments(id INTEGER PRIMARY KEY, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, stage INTEGER NOT NULL)');
         createRestSegmentsTableStmt.run();
-        insertRestSegmentStmt = db.prepare('INSERT INTO rest_segments(end_date_time, avg_coherence) VALUES(?, ?)');
+        insertRestSegmentStmt = db.prepare('INSERT INTO rest_segments(end_date_time, avg_coherence, stage) VALUES(?, ?, ?)');
 
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
@@ -280,7 +282,7 @@ export {
     breathDbDir,
     breathDbPath,
     getRegimeId,
-    getAllRegimeIds,
+    getPracticedRegimeIds,
     getRegimeStats,
     getRegimesForDay,
     getAvgRestCoherence,

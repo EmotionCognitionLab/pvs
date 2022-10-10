@@ -49,13 +49,7 @@ export class NBack {
         const i = this.constructor.simpleInstruction;  // helper for simple instruction trials
         const test_block = [
             i(test_introduction_html),
-            ...this.randTrialGroup(0),  // 0
-            ...this.randTrialGroup(1),
-            ...this.randTrialGroup(2),
-            ...this.randTrialGroup(0),  // 1
-            ...this.randTrialGroup(1),
-            ...this.randTrialGroup(2),
-            ...this.randTrialGroup(0),  // 2
+            ...this.randTrialGroup(0),
             ...this.randTrialGroup(1),
             ...this.randTrialGroup(2, undefined, undefined, undefined, false)
         ];

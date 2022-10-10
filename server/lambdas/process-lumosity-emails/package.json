@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "dependencies": {
+    "data-forge": "^1.9.6",
+    "db": "file:../../../common/db",
     "mailparser": "^3.2.0"
   }
 }

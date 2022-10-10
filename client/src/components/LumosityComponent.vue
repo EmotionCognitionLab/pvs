@@ -7,7 +7,6 @@
 </template>
 
 <script setup>
-    import { ipcRenderer } from "electron";
     import { onMounted } from '@vue/runtime-core';
     import ApiClient from '../../../common/api/client.js'
     import { SessionStore } from '../session-store.js'
@@ -18,7 +17,7 @@
         let email = window.localStorage.getItem('HeartBeam.lumos.e')
         let pw = window.localStorage.getItem('HeartBeam.lumos.p')
         if (!email || email.length === 0 || !pw || pw.length === 0) {
-            const session = SessionStore.getRendererSession()
+            const session = await SessionStore.getRendererSession()
             const apiClient = new ApiClient(session)
             const lumosCreds = await apiClient.getLumosCredsForSelf()
             window.localStorage.setItem('HeartBeam.lumos.e', lumosCreds.email)
@@ -26,13 +25,13 @@
             email = lumosCreds.email
             pw = lumosCreds.pw
         }
-        ipcRenderer.send("create-lumosity-view", email, pw, navigator.userAgent);
+        window.mainAPI.createLumosityView(email, pw, navigator.userAgent)
     })
 
 
     function leave() {
-        ipcRenderer.send("close-lumosity-view");
-        emit('lumosity-finished');
+        window.mainAPI.closeLumosityView()
+        emit('lumosity-finished')
     }
     
 

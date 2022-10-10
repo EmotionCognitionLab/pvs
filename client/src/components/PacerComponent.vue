@@ -7,7 +7,6 @@
     import { BreathPacer } from 'pvs-breath-pacer'
     import { onMounted, ref, watch } from '@vue/runtime-core';
     import { isProxy, toRaw } from 'vue'
-    import { ipcRenderer } from 'electron';
 
     const props = defineProps(['regimes', 'scaleH', 'scaleT', 'offsetProportionX', 'offsetProportionY'])
     const pacer = ref(null)
@@ -50,8 +49,7 @@
         }
     })
 
-    async function regimeChanged(startTime, regime) {
-        await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
+    function regimeChanged(startTime, regime) {
         emit('pacer-regime-changed', startTime, regime);
     }
 

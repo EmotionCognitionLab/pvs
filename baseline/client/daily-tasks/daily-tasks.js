@@ -31,7 +31,6 @@ import version from "../version.json";
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
  * to the user in the correct order.
  */
-
 const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
 const set2 = ["demographics", "physical-activity", "panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];

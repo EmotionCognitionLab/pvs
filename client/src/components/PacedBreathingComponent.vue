@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-    import { ref, computed } from '@vue/runtime-core'
+    import { ref, computed, watch } from '@vue/runtime-core'
     import { pullAt } from 'lodash'
     import PacerComponent from './PacerComponent.vue'
     import TimerComponent from './TimerComponent.vue'
@@ -32,13 +32,17 @@
     const pacer = ref(null)
     const emwaveListener = ref(null)
     const timer = ref(null)
-    let remainingRegimes = ref(props.startRegimes)
+    const remainingRegimes = ref(props.startRegimes)
     let inProgressRegime
     const finishedRegimes = []
     const secondsDuration = computed(() => {
         return (remainingRegimes.value.reduce((prev, cur) => prev + cur.durationMs, 0)) / 1000
     })
     
+    watch(() => props.startRegimes, (newVal) => {
+        finishedRegimes.splice(finishedRegimes.length)
+        remainingRegimes.value = newVal
+    })
 
     async function pacerFinished() {
         emwaveListener.value.stopSensor = true
@@ -64,14 +68,16 @@
         emit('pacer-started')
     }
 
-    function updateRegimeStatus(_startTime, regime) {
+    async function updateRegimeStatus(startTime, regime) {
         if (inProgressRegime) finishedRegimes.push(inProgressRegime)
         inProgressRegime = regime
+        await window.mainAPI.pacerRegimeChanged(startTime, regime)
     }
 
     function resetPacer() {
         pacer.value.pause = true
         timer.value.running = false
+        inProgressRegime = null
         const toPull = finishedRegimes.map(r => remainingRegimes.value.findIndex(elem => elem.id === r.id)).filter(idx => idx !== -1)
         if (toPull.length > 0) pullAt(remainingRegimes.value, toPull)
         timer.value.reset()

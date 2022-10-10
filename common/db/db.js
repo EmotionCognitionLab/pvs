@@ -16,6 +16,7 @@ export default class Db {
         this.identityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;
         this.userPoolId = options.userPoolId || awsSettings.UserPoolId;
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
+        this.lumosTable = options.lumosTable || awsSettings.LumosTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.dsTable = options.dsTable || awsSettings.DsTable;

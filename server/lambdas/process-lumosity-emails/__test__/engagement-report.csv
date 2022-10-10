@@ -1,0 +1,15 @@
+user_id,email_address,activation_code,date,num_games,playtime_in_seconds,playtime_in_minutes
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-10,12,3549,59.15
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-09,6,2099,34.983333
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-08,6,840,14.0
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-07,6,1867,31.116667
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-05,6,2378,39.633333
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-04,6,1094,18.233333
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-03,6,829,13.816667
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-02,6,691,11.516667
+100000001,heartbeam2@example.com,QBV9T-DMYK4,2022-09-01,6,875,14.583333
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-09-01,6,841,14.016667
+100000001,heartbeam2@example.com,QBV9T-DMYK4,2022-08-31,6,1276,21.266667
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-08-31,6,680,11.333333
+100000001,heartbeam2@example.com,QBV9T-DMYK4,2022-08-30,6,1040,17.333333
+100000000,heartbeam1@example.com,QBV9T-DMYK4,2022-08-30,6,1130,18.833333
