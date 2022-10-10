@@ -5,6 +5,7 @@ import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
 import "css/common.css";
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Demographics } from "../demographics/demographics.js";
+import { EmotionalMemory } from "../emotional-memory/emotional-memory.js";
 import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -30,13 +31,12 @@ import version from "../version.json";
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
  * to the user in the correct order.
  */
-
 const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["demographics", "physical-activity", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
-const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation"];
-const set4 = ["daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall"];
-const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "verbal-learning-recall"];
-const set6 = ["mood-memory", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
+const set2 = ["demographics", "physical-activity", "panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
+const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
+const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall", "emotional-memory"];
+const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning-recall"];
+const set6 = ["mood-memory", "emotional-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
 const allSets = [set1, set2, set3, set4, set5, set6];
 const setFinished = "set-finished";
 const setStarted = "set-started";
@@ -257,6 +257,8 @@ function taskForName(name, options) {
             return new Dass();
         case "demographics":
             return new Demographics();
+        case "emotional-memory":
+            return new EmotionalMemory(options.setNum || 1);
         case "face-name":
             return new FaceName(options.setNum || 1);
         case "ffmq":
