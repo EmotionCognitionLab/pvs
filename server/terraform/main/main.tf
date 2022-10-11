@@ -279,6 +279,31 @@ resource "aws_ssm_parameter" "lumos-acct-table" {
   value = "${aws_dynamodb_table.lumos-acct-table.name}"
 }
 
+resource "aws_dynamodb_table" "segments-table" {
+  name           = "pvs-${var.env}-segments"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "humanId"
+  range_key = "endDateTime"
+
+  attribute {
+    name = "humanId"
+    type = "S"
+  }
+
+  attribute {
+    name = "endDateTime"
+    type = "N"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-segments-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/segments"
+  description = "Dynamo table holding user breathing data"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.segments-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
