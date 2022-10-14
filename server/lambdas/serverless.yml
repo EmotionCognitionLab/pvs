@@ -69,6 +69,28 @@ functions:
         - 'process-lumosity-emails/node_modules/**'
         - 'process-lumosity-emails/*.js'
 
+  process-sqlite-dbs:
+    handler: process-sqlite-dbs/process-sqlite-dbs.savesegments
+    events:
+      - s3:
+          bucket: ${self:service}-${self:provider.stage}-usr-data
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .sqlite
+          existing: true
+    environment:
+      S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
+      SEGMENTS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/segments}
+    layers:
+      # - !Ref BetterSqlite3LambdaLayer
+      - arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:BetterSqlite3:4
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/sqlite/process}
+    package:
+      patterns:
+        - 'process-sqlite-dbs/package*.json'
+        - 'process-sqlite-dbs/node_modules/**'
+        - 'process-sqlite-dbs/*.js'
+
   # do not change the name or path of this function
   # without also changing it in plugins/wordnet-plugin.js
   write-user-on-verify:
@@ -229,6 +251,18 @@ functions:
       patterns:
         - 'admin-api/docusign/*.js'
 
+layers:
+  BetterSqlite3:
+    path: 'better-sqlite3-layer/layer'
+    package:
+      patterns:
+        - './**'
+    description: Provides better-sqlite3 for nodejs-based Lambda functions
+    compatibleRuntimes:
+      - nodejs14.x
+    allowedAccounts:
+      - ${aws:accountId}
+
 resources:
   Resources:
     PostConfirmationTriggerInvokePermission:
@@ -244,6 +278,9 @@ resources:
       Export:
         Name: "${self:service}-${self:provider.stage}-post-confirmation-lambda-arn"
       Description: Arn for the post-cognito-verification lambda trigger
+    BetterSqlite3LambdaLayerQualifiedArn:
+      Export:
+        Name: "${self:service}-${self:provider.stage}-BetterSqlite3"
 
 custom:
   ssmPublish:
@@ -257,6 +294,7 @@ custom:
     includeModules:
       forceExclude:
         - aws-sdk
+        - better-sqlite3
   dsBasePath:
     dev: 'https://demo.docusign.net/restapi'
     prod: 'https://www.docusign.net/restapi'

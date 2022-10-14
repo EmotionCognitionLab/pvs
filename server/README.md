@@ -17,6 +17,16 @@ You can replace 'dev' with whatever workspace name you prefer.
 
 Do `docker pull localstack/localstack:latest`.
 
+### better-sqlite3 lambda layer setup
+Do the following:
+```
+cd lambdas/better-sqlite-3-layer
+docker build -t lambda-docker:14.x .
+chmod +x build.sh
+./build.sh
+```
+
+
 ## Testing
 Do `docker run --rm -it -p 4566:4566 -p 4571:4571 -e "SERVICES=serverless" localstack/localstack`. Once it's up and running, open another terminal window and do:
 
@@ -40,9 +50,21 @@ cd lambdas
 sls deploy
 cd ..
 ```
+The 'sls deploy' should spit out (among many other things) a couple of lines that look like this:
+```
+layers:
+  BetterSqlite3: arn:aws:lambda:us-west-2:1234567890:layer:BetterSqlite3:4
+```
+Copy the part after "layer:" and edit lambdas/serverless.yml, setting the layer name and version in the "layers" section of the process-sqlite-dbs function.
 3.
 ```
 cd terraform/post-lambdas
 terraform apply -var-file=dev.tfvars
 cd ../..
+```
+4.
+```
+cd lambdas
+sls deploy
+cd ..
 ```
