@@ -158,7 +158,7 @@ describe("Breathing data functions", () => {
         const expectedAvg = cohValues.reduce((prev, cur) => prev+cur, 0) / cohValues.length;
         expect(stats.mean).toBeCloseTo(expectedAvg);
         const stdDev = std(cohValues);
-        const interval = 1.96*stdDev;
+        const interval = 1.645*stdDev;
         expect(stats.low95CI).toBeCloseTo(expectedAvg - interval);
         expect(stats.high95CI).toBeCloseTo(expectedAvg + interval);
     });
