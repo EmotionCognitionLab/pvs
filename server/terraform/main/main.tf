@@ -279,6 +279,31 @@ resource "aws_ssm_parameter" "lumos-acct-table" {
   value = "${aws_dynamodb_table.lumos-acct-table.name}"
 }
 
+resource "aws_dynamodb_table" "segments-table" {
+  name           = "pvs-${var.env}-segments"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "humanId"
+  range_key = "endDateTime"
+
+  attribute {
+    name = "humanId"
+    type = "S"
+  }
+
+  attribute {
+    name = "endDateTime"
+    type = "N"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-segments-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/segments"
+  description = "Dynamo table holding user breathing data"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.segments-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
@@ -742,6 +767,56 @@ resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
 POLICY
 }
 
+# Policy to allow reading from the segments table
+resource "aws_iam_policy" "dynamodb-read-all-segments" {
+  name = "pvs-${var.env}-dynamodb-read-all-segments"
+  path = "/policy/dynamodb/segments/readAll/"
+  description = "Allows reading all data from Dynamodb segments table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.segments-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# Policy to allow writing to the segments table
+resource "aws_iam_policy" "dynamodb-write-all-segments" {
+  name = "pvs-${var.env}-dynamodb-write-all-segments"
+  path = "/policy/dynamodb/segments/writeAll/"
+  description = "Allows writing to the Dynamodb segments table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.segments-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow sns publishing
 resource "aws_iam_policy" "sns-publish" {
   name = "pvs-${var.env}-sns-publish"
@@ -837,6 +912,58 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
   description = "ARN for lambda role to process emails received from SES"
   type = "SecureString"
   value = "${aws_iam_role.lambda-ses-process.arn}"
+}
+
+resource "aws_iam_role" "lambda-sqlite-process" {
+  name = "pvs-${var.env}-lambda-sqlite-process"
+  path = "/role/lambda/sqlite/process/"
+  description = "Role for lambda function(s) processing sqlite files uploaded to usr data bucket"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "pvs-${var.env}-usr-data-bucket-read"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.data-bucket.arn}/*"
+          ]
+        }
+      ]
+    })
+  }
+
+  managed_policy_arns = [
+    aws_iam_policy.cloudwatch-write.arn,
+    aws_iam_policy.dynamodb-read-all-segments.arn,
+    aws_iam_policy.dynamodb-write-all-segments.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-sqlite-role" {
+  name = "/pvs/${var.env}/role/lambda/sqlite/process"
+  description = "ARN for lambda role to process sqlite files uploaded to usr data bucket"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-sqlite-process.arn}"
 }
 
 resource "aws_iam_role" "dynamodb-experiment-reader-writer" {

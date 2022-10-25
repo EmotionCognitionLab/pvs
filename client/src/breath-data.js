@@ -131,7 +131,7 @@ function getAvgCoherenceValues(regimeId, stage) {
 function getRegimeStats(regimeId, stage) {
     const avgCohVals = getAvgCoherenceValues(regimeId, stage);
     const stdDev = std(avgCohVals);
-    const interval = 1.96 * stdDev;
+    const interval = 1.645 * stdDev;
     const meanAvgCoh = mean(avgCohVals);
     return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
 }
