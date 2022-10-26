@@ -6,7 +6,7 @@
         <div v-if="firstTimeStep == 1" class="instruction">
             In this video Dr. Mather discusses the paced breathing exercises you will be doing in the next part of this study.
             <br/>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/5fnUrh1GDKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/piwhKqlcI8M" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <br/>
             <button @click="firstTimePage=2" class="button">Continue</button>
         </div>
@@ -58,7 +58,7 @@
         <div v-if="showDayFiveVid && lumosityDone">
             In this video Dr. Mather discusses the connection between breathing, the heart and the brain.
             <br/>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/i3nRus96a4E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/BAlxN0nmnao" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <br/>
             <button class="button" @click="day5VidDone">Continue</button>
         </div>

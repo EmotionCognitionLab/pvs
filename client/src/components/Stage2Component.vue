@@ -2,7 +2,7 @@
     <div v-if="firstTime" class="instruction">
         In this video, Dr. Mara Mather explains the next phase of the study.
         <br/>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/MAVUImKD36E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/NK3sfoz_AOQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <br/>
         <button @click="continueToLumosity" class="button">Continue</button>
     </div>
