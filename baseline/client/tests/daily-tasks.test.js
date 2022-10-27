@@ -465,19 +465,10 @@ describe("doing the tasks", () => {
         clickContinue();
         jest.runAllTimers();
         
-        // questionnaire
-        const dispElem = jsPsych.getDisplayElement();
-        const questions = dispElem.querySelectorAll(".jspsych-percent-sum-field");
-        expect(questions.length).toBe(3);
-        // each question needs a number input; the three should sum to 100
-        questions[0].value = 33;
-        questions[1].value = 33;
-        questions[2].value = 34;
-        //trigger input event to get the jspsych-percent-sum plugin to activate the submit button
-        questions[0].dispatchEvent(new InputEvent("input"));
-        clickContinue("input[type=submit]");
+        // video
+        clickContinue();
 
-        expect(saveResultsMock.mock.calls.length).toBe(6); // set-started, task-started, full-screen, results, user-agent, next task started
+        expect(saveResultsMock.mock.calls.length).toBe(6); // set-started, video task-started, video full-screen, video results, video user-agent, next task started
         // the experiment name saved to the results should be the name of the first task in allTimelines
         expect(saveResultsMock.mock.calls[3][0]).toBe(allTimelines.remainingTasks[0].taskName);
         // it should save the browser user agent as part of the results
@@ -492,14 +483,6 @@ describe("doing the tasks", () => {
         const vers = saveResultsMock.mock.calls[4][1].filter(r => r.v);
         expect(vers.length).toBe(1);
         expect(vers[0].v).toBe(version.v);
-        // we only care about the relevant result
-        let relevantResult = saveResultsMock.mock.calls[3][1].filter(r => r.isRelevant);
-        expect(relevantResult.length).toBe(1);
-        relevantResult = relevantResult[0];
-        expect(relevantResult.response).toBeDefined();
-        // the panas task result has a "response" key that's a map of questions -> answers
-        expect(Object.keys(relevantResult.response).length).toBe(questions.length);
-
     });
     it("should save a 'set-finished' result at the end of a set", () => {
         const tasksToRun = allTimelines.remainingTasks.slice(allTimelines.remainingTasks.length - 2);
