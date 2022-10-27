@@ -170,7 +170,7 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
         } else {
             targetAvgCoherence = getAvgRestCoherence(2);
         }
-        const overlappingRegimes = regimeStats.filter(s => s.low95CI <= targetAvgCoherence && s.high95CI >= targetAvgCoherence);
+        const overlappingRegimes = regimeStats.filter(s => s.low90CI <= targetAvgCoherence && s.high90CI >= targetAvgCoherence);
         regimes = pickRegimes(overlappingRegimes.map(olr => lookupRegime(olr.id)), subjCondition);
         if (regimes.length === 0) {
             if (subjCondition === condA) {
