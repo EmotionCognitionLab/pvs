@@ -70,18 +70,6 @@ jest.mock('../src/breath-data.js', () => ({
 import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getPracticedRegimeIds, saveRegimesForDay } from '../src/breath-data';
 
 describe("Generating regimes for days 5+", () => {
-    it("should throw an error when the condition is a and no regimes have confidence intervals overlapping the highest mean coherence", () => {
-        const regimeStats = [
-            {id: 1, mean: 2.2, low90CI: 2.6, high90CI: 3.0},
-            {id: 2, mean: 1.7, low90CI: 2.6, high90CI: 3.0},
-            {id: 3, mean: 0.9, low90CI: 2.6, high90CI: 3.0}
-        ];
-        getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
-        expect(() => {
-            generateRegimesForDay(forTesting.condA, 17);
-        }).toThrow();
-    });
-
     it("should return the regime closest to the average rest coherence when the condition is b and no regimes have confidence intervals overlapping the average rest coherence", () => {
         const avgRestCoherence = 2.3;
         getAvgRestCoherence.mockReturnValueOnce(avgRestCoherence);
@@ -101,7 +89,7 @@ describe("Generating regimes for days 5+", () => {
         expect(res.every(r => r.id === closestToRestRegime.id)).toBeTruthy();
     });
 
-    it("should generate two new regimes when the condition is a and only one regime has a confidence interval overlapping the highest average coherence", () => {
+    it("should generate two new regimes when the condition is a and zero regimes have a confidence interval overlapping the highest average coherence (other than the regime with the highest average coherence, which overlaps itself)", () => {
         const regimeStats = [
             // if you change this make sure the first entry is always the highest avg coherence
             {id: 1, mean: 2.7, low90CI: 2.6, high90CI: 3.0}, 
@@ -110,12 +98,12 @@ describe("Generating regimes for days 5+", () => {
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const fakeBpm = (someVal) => someVal * 4;
-        const defaultIsBestCnt = 0;
-        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: fakeBpm(id), is_best_cnt: defaultIsBestCnt}));
+        const defaultIsBestCnt = 1;
+        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: fakeBpm(id), isBestCnt: defaultIsBestCnt}));
         const res = generateRegimesForDay(forTesting.condA, 5);
 
         expect(res.length).toBe(6);
-        expect(setRegimeBestCnt).toHaveBeenCalledWith(regimeStats[0].id, 1);
+        expect(setRegimeBestCnt).toHaveBeenCalledWith(regimeStats[0].id, defaultIsBestCnt + 1);
 
         const expectedBpmDiff = 1 / (2 ** (defaultIsBestCnt + 1));
         expect(res.filter(r => r.breathsPerMinute == fakeBpm(regimeStats[0].id) - expectedBpmDiff).length).toBe(2);
@@ -125,10 +113,10 @@ describe("Generating regimes for days 5+", () => {
         expect(getRegimeId).toHaveBeenCalledTimes(2);
         const call1 = getRegimeId.mock.calls[0][0];
         expect(call1.breathsPerMinute).toBe(fakeBpm(regimeStats[0].id) + expectedBpmDiff);
-        expect(call1.is_best_cnt).toBe(0);
+        expect(call1.isBestCnt).toBe(0);
         const call2 = getRegimeId.mock.calls[1][0];
         expect(call2.breathsPerMinute).toBe(fakeBpm(regimeStats[0].id) - expectedBpmDiff);
-        expect(call2.is_best_cnt).toBe(0);
+        expect(call2.isBestCnt).toBe(0);
     });
 
     it("should use is_best_cnt when generating new regimes in condition a with only one overlapping confidence interval", () => {
@@ -141,7 +129,7 @@ describe("Generating regimes for days 5+", () => {
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const defaultBpm = 6;
         const defaultIsBestCnt = 2;
-        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: defaultBpm, is_best_cnt: defaultIsBestCnt}));
+        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: defaultBpm, isBestCnt: defaultIsBestCnt}));
         const res = generateRegimesForDay(forTesting.condA, 5);
 
         expect(res.length).toBe(6);
@@ -262,14 +250,53 @@ describe("Generating regimes for days 5+", () => {
             const expectedRegimeIds = expectedRegimes.map(er => er.id);
             expect(res.every(receivedRegime => expectedRegimeIds.includes(receivedRegime.id))).toBeTruthy();
             const receivedRegimeIds = res.map(r => r.id);
-            if (overlapCnt <= 6) { // if we have more than 6 regimes to pick from we aren't going to use all of them
-                expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
+            if (condition === forTesting.condA) {
+                let bestRegimeId = regimeStats[0].id;
+                let bestMean = regimeStats[0].mean;
+                expectedRegimeIds.splice(expectedRegimeIds.indexOf(bestRegimeId), 1);
+
+                if (overlapCnt <= 6) {
+                    expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
+                }
+                regimeStats.forEach(rs => {
+                    if (rs.mean > bestMean) {
+                        bestRegimeId = rs.id;
+                        bestMean = rs.mean;
+                    }
+                });
+                if (overlapCnt < 6 && overlapCnt > 1) {
+                    const bestRepeats = 6 - overlapCnt;
+                    expect(receivedRegimeIds[0] === bestRegimeId || receivedRegimeIds[5] === bestRegimeId).toBeTruthy();
+                    if (receivedRegimeIds[0] === bestRegimeId) {
+                        expect(receivedRegimeIds.slice(0, bestRepeats)).toEqual(Array(bestRepeats).fill(bestRegimeId));
+                    } else if (receivedRegimeIds[5] == bestRegimeId) {
+                        expect(receivedRegimeIds.slice(-bestRepeats)).toEqual(Array(bestRepeats).fill(bestRegimeId));
+                    }
+                }
+
+                if (overlapCnt == 6) {
+                    // we already checked that the received regimes contain all of the expected regimes
+                    // other than the best regime, so just check that here
+                    expect(receivedRegimeIds.includes(bestRegimeId)).toBeTruthy();
+                }
+    
+                if (overlapCnt > 6) {
+                    const idCount = {};
+                    res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
+                    // make sure no regime appears more than once
+                    expect(Object.values(idCount).every(cnt => cnt == 1)).toBeTruthy();
+                }
             }
-            if (6 % overlapCnt === 0) {
-                // check that every regime is evenly represented
-                const idCount = {};
-                res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
-                expect(Object.values(idCount).every(v => v === 6 / Object.keys(idCount).length)).toBeTruthy();
+            if (condition === forTesting.condB) {
+                if (overlapCnt <= 6) { // if we have more than 6 regimes to pick from we aren't going to use all of them
+                    expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
+                }
+                if (6 % overlapCnt === 0) {
+                    // check that every regime is evenly represented
+                    const idCount = {};
+                    res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
+                    expect(Object.values(idCount).every(v => v === 6 / Object.keys(idCount).length)).toBeTruthy();
+                }
             }
         });
     });
