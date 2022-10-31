@@ -67,13 +67,13 @@ async function chooseStage() {
         return {path: '/donetoday'}
     }
 
-    const stage2Status = await stage2Complete()
-    if (!stage2Status.complete) return {path: '/stage2'}
-    if (stage2Status.completedOn != todayYMD) {
-        return {path: '/stage3'}
-    } else {
-        return {path: '/donetoday'}
-    }
+    const stage2Done = await stage2Complete()
+    if (!stage2Done) return {path: '/stage2'}
+    // the data on which stage2 completion is judged
+    // are from the previous day, so we assume
+    // that if they're finished with stage 2 they
+    // must not have finished it today
+    return {path: '/stage3'}
 }
 
 // use navigation guards to handle authentication

@@ -292,15 +292,14 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
 });
 
 /**
- * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 3 times.
- * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
- * representing the date the user last reported playing lumosity, or null if 
- * complete is false}
+ * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 2 times
+ * AND has done at least 31 total game plays.
+ * @returns {boolean} true if the criteria are met, false otherwise
  */
  async function stage2Complete(session) {
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
-  if (!data.lumosGames || data.lumosGames.length < 12) return { complete: false, completedOn: null };
+  if (!data.lumosGames || data.lumosGames.length < 12) return false;
 
   const allGames = [
     'Word Bubbles Web',
@@ -319,32 +318,24 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
 
   // data.lumosGames is
   // [
-  //   {'Game 1 name': [numPlays, dateOfThirdPlay]},
-  //   {'Game 2 name': [numPlays, dateOfThirdPlay]},
+  //   {'Game 1 name': [numPlays, dateOfLastPlay]},
+  //   {'Game 2 name': [numPlays, dateOfLastPlay]},
   //   ...
   // ]
   const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
   const gameDataObj = {};
-  const thirdPlayDates = [];
   data.lumosGames.forEach(i => {
     const entries = Object.entries(i);
-    gameDataObj[entries[0][0]] = entries[0][1][0];
-    thirdPlayDates.push(Date.parse(entries[0][1][1] + ' GMT'))
+    gameDataObj[entries[0][0]] = entries[0][1][0]; // { 'Game 1 name': numPlays, 'Game 2 name': numPlays, ... }
   });
 
   for (const game of allGames) {
-    if (!gamesPlayed.includes(game) || gameDataObj[game] < 3) return { complete: false, completedOn: null }
+    if (!gamesPlayed.includes(game) || gameDataObj[game] < 2) return false;
   }
 
-  const completedOn = Math.max(...thirdPlayDates);
-  let completedOnDate = '1970-01-01'
-  if (completedOn) {
-    completedOnDate = yyyymmddString(new Date(completedOn));
-  } else {
-    console.error(`Expected a valid completed on date for lumosity games, but got "${completedOn}"`);
-  }
+  const totalPlays = Object.values(gameDataObj).reduce((cur, prev) => cur + prev, 0);
   
-  return { complete: true, completedOn: completedOnDate };
+  return totalPlays >= 31;
 }
 
 ipcMain.handle('is-stage-2-complete', async(_event, session) => {
