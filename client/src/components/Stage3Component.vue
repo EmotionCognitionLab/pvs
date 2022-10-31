@@ -66,9 +66,16 @@
             <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
-            All done! Please come back later today to do your next session.
-            <br/>
-            <button class="button" @click="setRegimes">Start Next Session</button>
+            <UploadComponent>
+                <template #preUploadText>
+                    <div class="instruction">Terrific! Please wait while we upload your data...</div>
+                </template>
+                <template #postUploadText>
+                        <div class="instruction">Upload complete. Please come back later today to do your next session.</div>
+                    <br/>
+                    <button class="button" @click="quit">Quit</button>
+                </template>
+            </UploadComponent>
         </div>
         <div class="instruction" v-else-if="sessionDone && dayDone">
             <UploadComponent>
