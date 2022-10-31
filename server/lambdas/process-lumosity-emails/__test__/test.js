@@ -152,13 +152,13 @@ async function confirmReportDataWritten() {
         expect(playData.length).toBe(2);
         if (gameName === 'Color Match Web') {
             expect(playData[0]).toBe(2);
-            expect(playData[1]).toBe(null);
+            expect(playData[1]).toBe('2022-07-07 15:53:42');
         } else if (gameName === 'Memory Match Web') {
             expect(playData[0]).toBe(3);
             expect(playData[1]).toBe('2022-07-09 11:16:07');
         } else {
             expect(playData[0]).toBe(1);
-            expect(playData[1]).toBe(null);
+            expect(playData[1].startsWith('2022-07-07 1')).toBe(true);
         }
     });
 }

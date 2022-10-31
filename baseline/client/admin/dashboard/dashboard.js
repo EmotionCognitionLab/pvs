@@ -211,6 +211,10 @@ export class Dashboard {
         nameDiv.textContent = user.name;
         nameDiv.classList.add("username");
         subjectCell.append(nameDiv);
+        const idDiv = document.createElement("div");
+        idDiv.textContent = user.humanId;
+        idDiv.classList.add("small");
+        subjectCell.append(idDiv);
         const dateDiv = document.createElement("div");
         dateDiv.textContent = user.createdAt.substring(0, 10);
         dateDiv.classList.add("small");

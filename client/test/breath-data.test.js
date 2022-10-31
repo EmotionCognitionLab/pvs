@@ -159,8 +159,8 @@ describe("Breathing data functions", () => {
         expect(stats.mean).toBeCloseTo(expectedAvg);
         const stdDev = std(cohValues);
         const interval = 1.645*stdDev;
-        expect(stats.low95CI).toBeCloseTo(expectedAvg - interval);
-        expect(stats.high95CI).toBeCloseTo(expectedAvg + interval);
+        expect(stats.low90CI).toBeCloseTo(expectedAvg - interval);
+        expect(stats.high90CI).toBeCloseTo(expectedAvg + interval);
     });
 
     it("getTrainingDayCount should return 0 when the user has done no training", () => {

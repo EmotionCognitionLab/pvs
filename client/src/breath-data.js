@@ -133,7 +133,7 @@ function getRegimeStats(regimeId, stage) {
     const stdDev = std(avgCohVals);
     const interval = 1.645 * stdDev;
     const meanAvgCoh = mean(avgCohVals);
-    return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
+    return { id: regimeId, mean: meanAvgCoh, low90CI: meanAvgCoh - interval, high90CI: meanAvgCoh + interval};
 }
 
 function getPracticedRegimeIds(stage) {

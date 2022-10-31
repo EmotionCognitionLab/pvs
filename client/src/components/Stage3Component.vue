@@ -6,7 +6,7 @@
         <div v-if="firstTimeStep == 1" class="instruction">
             In this video Dr. Mather discusses the paced breathing exercises you will be doing in the next part of this study.
             <br/>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/5fnUrh1GDKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/piwhKqlcI8M" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <br/>
             <button @click="firstTimePage=2" class="button">Continue</button>
         </div>
@@ -58,7 +58,7 @@
         <div v-if="showDayFiveVid && lumosityDone">
             In this video Dr. Mather discusses the connection between breathing, the heart and the brain.
             <br/>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/i3nRus96a4E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/BAlxN0nmnao" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             <br/>
             <button class="button" @click="day5VidDone">Continue</button>
         </div>
@@ -66,9 +66,16 @@
             <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
-            All done! Please come back later today to do your next session.
-            <br/>
-            <button class="button" @click="setRegimes">Start Next Session</button>
+            <UploadComponent>
+                <template #preUploadText>
+                    <div class="instruction">Terrific! Please wait while we upload your data...</div>
+                </template>
+                <template #postUploadText>
+                        <div class="instruction">Upload complete. Please come back later today to do your next session.</div>
+                    <br/>
+                    <button class="button" @click="quit">Quit</button>
+                </template>
+            </UploadComponent>
         </div>
         <div class="instruction" v-else-if="sessionDone && dayDone">
             <UploadComponent>
