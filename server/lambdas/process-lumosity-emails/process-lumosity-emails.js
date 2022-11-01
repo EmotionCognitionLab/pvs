@@ -86,12 +86,8 @@ export async function processreports(event) {
         console.error(`Error: No user account found for lumosity player ${email}.`);
       } else {
         // writes an array of {'game name': [number of plays, date of last play]} objects
-        const playData = playsData.filter(r => r.email === email).select(row => {
-          const res = {}
-          res[row.game] = [row.plays, row.lastPlayDate];
-          return res;
-        });
-        await db.updateUser(uid, {lumosGames: playData.toArray()});
+        const playData = playsData.filter(r => r.email === email).toObject(row => row.game, row => row.plays);
+        await db.updateUser(uid, {lumosGames: playData});
       }
     };
 
@@ -105,18 +101,15 @@ export async function processreports(event) {
 
 /**
  * Given CSV data from a lumosity game results report, returns a dataforge.DataFrame object with
- * 'email', 'game', 'plays', and 'lastPlayDate'. The "plays" value will be the total number of times that user
- * has played that game (ever). The 'lastPlayDate' value will be the date the user last played that
- * game.
+ * 'email', 'game' and 'plays'. The "plays" value will be the total number of times that user
+ * has played that game (ever).
  * @param {string} gameResultsCSV 
  * @returns {object} DataFrame with 'email', 'game', 'plays', and 'lastPlayDate' keys.
  */
 function lumosityGameResultsToPlaysByUserByGame(gameResultsCSV) {
   const df = dataForge.fromCSV(gameResultsCSV)
     .parseInts('game_nth')
-    .dropSeries(['user', 'username', 'activation_code', 'game', 'score', 'user_level', 'session_level', 'game_lpi'])
-    .parseDates('created_at')
-    .orderBy(r => r.created_at);
+    .dropSeries(['user', 'username', 'activation_code', 'game', 'score', 'user_level', 'session_level', 'game_lpi']);
 
     const res = [];
     const byEmail = df.groupBy(row => row.email_address);
@@ -125,13 +118,12 @@ function lumosityGameResultsToPlaysByUserByGame(gameResultsCSV) {
         const byGame = e.groupBy(r => r.game_name);
         for (const game of byGame) {
           const gameName = game.first().game_name;
-          const lastPlayDate = game.last().created_at;
           const maxNth = game.deflate(r => r.game_nth).max();
-          res.push({email: emailAddr, game: gameName, plays: maxNth, lastPlayDate: lastPlayDate});
+          res.push({email: emailAddr, game: gameName, plays: maxNth});
         }
     }
 
-    return new dataForge.DataFrame(res).toStrings('lastPlayDate', 'YYYY-MM-DD HH:mm:ss');
+    return new dataForge.DataFrame(res);
 }
 
 async function getUserIdForLumosEmail(lumosEmail) {

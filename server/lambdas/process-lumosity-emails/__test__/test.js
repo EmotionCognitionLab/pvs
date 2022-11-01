@@ -142,25 +142,19 @@ async function confirmReportDataWritten() {
     expect(userQueryRes.Items.length).toBe(1);
     const testUser = userQueryRes.Items[0];
     expect(testUser.lumosGames).toBeDefined();
-    expect(testUser.lumosGames.length).toBe(6);
+    expect(Object.keys(testUser.lumosGames).length).toBe(6);
     const expectedGames = ['Color Match Web', 'Raindrops Web', 'Word Bubbles Web', 'Penguin Pursuit Web', 'Brain Shift Web', 'Memory Match Web'];
-    testUser.lumosGames.forEach(gamePlay => {
-        expect(Object.keys(gamePlay).length).toBe(1);
-        const gameName = Object.keys(gamePlay)[0];
+    for (const gameName in testUser.lumosGames) {
         expect(expectedGames).toContain(gameName);
-        const playData = gamePlay[gameName];
-        expect(playData.length).toBe(2);
+        const playCount = testUser.lumosGames[gameName];
         if (gameName === 'Color Match Web') {
-            expect(playData[0]).toBe(2);
-            expect(playData[1]).toBe('2022-07-07 15:53:42');
+            expect(playCount).toBe(2);
         } else if (gameName === 'Memory Match Web') {
-            expect(playData[0]).toBe(3);
-            expect(playData[1]).toBe('2022-07-09 11:16:07');
+            expect(playCount).toBe(3);
         } else {
-            expect(playData[0]).toBe(1);
-            expect(playData[1].startsWith('2022-07-07 1')).toBe(true);
+            expect(playCount).toBe(1);
         }
-    });
+    };
 }
 
 async function runAttachmentLambda() {

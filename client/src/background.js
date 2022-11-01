@@ -299,7 +299,7 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
  async function stage2Complete(session) {
   const apiClient = new ApiClient(session);
   const data = await apiClient.getSelf();
-  if (!data.lumosGames || data.lumosGames.length < 12) return false;
+  if (!data.lumosGames) return false;
 
   const allGames = [
     'Word Bubbles Web',
@@ -317,23 +317,12 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
   ];
 
   // data.lumosGames is
-  // [
-  //   {'Game 1 name': [numPlays, dateOfLastPlay]},
-  //   {'Game 2 name': [numPlays, dateOfLastPlay]},
-  //   ...
-  // ]
-  const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
-  const gameDataObj = {};
-  data.lumosGames.forEach(i => {
-    const entries = Object.entries(i);
-    gameDataObj[entries[0][0]] = entries[0][1][0]; // { 'Game 1 name': numPlays, 'Game 2 name': numPlays, ... }
-  });
-
+  // { 'Game 1 name': numPlays, 'Game 2 name': numPlays, ... }
   for (const game of allGames) {
-    if (!gamesPlayed.includes(game) || gameDataObj[game] < 2) return false;
+    if (!data.lumosGames[game] || data.lumosGames[game] < 2) return false;
   }
 
-  const totalPlays = Object.values(gameDataObj).reduce((cur, prev) => cur + prev, 0);
+  const totalPlays = Object.values(data.lumosGames).reduce((cur, prev) => cur + prev, 0);
   
   return totalPlays >= 31;
 }
