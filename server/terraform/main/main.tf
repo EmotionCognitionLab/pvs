@@ -304,6 +304,31 @@ resource "aws_ssm_parameter" "dynamo-segments-table" {
   value = "${aws_dynamodb_table.segments-table.name}"
 }
 
+resource "aws_dynamodb_table" "lumos-plays-table" {
+  name           = "pvs-${var.env}-lumos-plays"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "userId"
+  range_key      = "dateTime"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "dateTime"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lumos-plays-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/lumosplays"
+  description = "Dynamo table holding lumosity plays info"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.lumos-plays-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
@@ -705,6 +730,30 @@ resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
 POLICY
 }
 
+# policy to allow limited reading/writing of dynamo lumosity plays table
+resource "aws_iam_policy" "dynamodb-lumos-plays-read-write" {
+  name = "pvs-${var.env}-dynamodb-lumos-plays-read-write"
+  path = "/policy/dynamodb/lumos/plays/all/"
+  description = "Allows limited reading from/writing of dynamodb lumosity plays table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:BatchWriteItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-plays-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow fetching user ids from dynamo user table
 # TODO remove this after refactoring experiment data table to allow query by experiment name
 resource "aws_iam_policy" "dynamodb-userid-read" {
@@ -1066,6 +1115,7 @@ resource "aws_iam_role" "lambda" {
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-user-read-write.arn,
     aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
+    aws_iam_policy.dynamodb-lumos-plays-read-write.arn,
     aws_iam_policy.dynamodb-read-all-experiment-data.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
