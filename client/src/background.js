@@ -291,47 +291,6 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
   return getPacedBreathingDays(stage);
 });
 
-/**
- * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 2 times
- * AND has done at least 31 total game plays.
- * @returns {boolean} true if the criteria are met, false otherwise
- */
- async function stage2Complete(session) {
-  const apiClient = new ApiClient(session);
-  const data = await apiClient.getSelf();
-  if (!data.lumosGames) return false;
-
-  const allGames = [
-    'Word Bubbles Web',
-    'Memory Match Web',
-    'Penguin Pursuit Web',
-    'Color Match Web',
-    'Raindrops Web',
-    'Brain Shift Web',
-    'Familiar Faces Web',
-    'Pirate Passage Web',
-    'Ebb and Flow Web',
-    'Lost in Migration Web',
-    'Tidal Treasures Web',
-    'Splitting Seeds Web'
-  ];
-
-  // data.lumosGames is
-  // { 'Game 1 name': numPlays, 'Game 2 name': numPlays, ... }
-  for (const game of allGames) {
-    if (!data.lumosGames[game] || data.lumosGames[game] < 2) return false;
-  }
-
-  const totalPlays = Object.values(data.lumosGames).reduce((cur, prev) => cur + prev, 0);
-  
-  return totalPlays >= 31;
-}
-
-ipcMain.handle('is-stage-2-complete', async(_event, session) => {
-  const res = await stage2Complete(SessionStore.buildSession(session))
-  return res
-})
-
 async function stage1Complete() {
   const restBreathingDays = getRestBreathingDays(1);
   if (restBreathingDays.size < 1) return { complete: false, completedOn: null };

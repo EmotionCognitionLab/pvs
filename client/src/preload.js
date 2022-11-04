@@ -1,7 +1,6 @@
 import { ipcRenderer, contextBridge } from 'electron'
 contextBridge.exposeInMainWorld('mainAPI', {
     isStage1Complete: async () => await ipcRenderer.invoke('is-stage-1-complete'),
-    isStage2Complete: async (session) => await ipcRenderer.invoke('is-stage-2-complete', session),
     loginSucceeded: (session) => ipcRenderer.invoke('login-succeeded', session),
     onGetCurrentUser: (callback) => ipcRenderer.on('get-current-user', callback),
     getRestBreathingDays: async (stage) => await ipcRenderer.invoke('get-rest-breathing-days', stage),

@@ -13,16 +13,12 @@ import DoneTodayComponent from './components/DoneTodayComponent.vue'
 import OauthRedirectComponent from './components/OauthRedirectComponent'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
+import ApiClient from '../../common/api/client.js'
 import { SessionStore } from './session-store'
 import { yyyymmddString } from './utils'
 
 async function stage1Complete() {
     return await window.mainAPI.isStage1Complete()
-}
-
-async function stage2Complete() {
-    const sess = await SessionStore.getRendererSession()
-    return await window.mainAPI.isStage2Complete(sess)
 }
 
 const routes = [
@@ -67,8 +63,10 @@ async function chooseStage() {
         return {path: '/donetoday'}
     }
 
-    const stage2Done = await stage2Complete()
-    if (!stage2Done) return {path: '/stage2'}
+    const sess = await SessionStore.getRendererSession()
+    const apiClient = new ApiClient(sess)
+    const data = await apiClient.getSelf()
+    if (!data.stage2Done) return {path: '/stage2'}
     // the data on which stage2 completion is judged
     // are from the previous day, so we assume
     // that if they're finished with stage 2 they
