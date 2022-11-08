@@ -62,6 +62,7 @@ functions:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       USERS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/users}
       LUMOS_ACCT_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/lumosacct}
+      LUMOS_PLAYS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/lumosplays}
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/ses/process}
     package:
       patterns:
