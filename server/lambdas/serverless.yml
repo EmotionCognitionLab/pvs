@@ -214,13 +214,27 @@ functions:
           name: "pre-baseline-6am-email-reminder"
           rate: cron(0 14 * * ? *)
           input:
-              commType: email
+            commType: email
+            reminderType: preBaseline
       - schedule:
           rate:
             - cron(0 19 * * ? *)
             - cron(0 4 * * ? *)
           input:
             commType: sms
+            reminderType: preBaseline
+      - schedule:
+          name: "home-training-11am-email-reminder"
+          rate: cron(0 19 * * ? *)
+          input:
+            commType: email
+            reminderType: homeTraining
+      - schedule:
+          name: "home-training-730pm-sms-reminder"
+          rate: cron(0 3 30 * ? *)
+          input:
+            commType: sms
+            reminderType: homeTraining
         
     environment:
       SITE_URL: "https://dev.heartbeamstudy.org/daily-tasks/"

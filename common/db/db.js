@@ -20,6 +20,7 @@ export default class Db {
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.dsTable = options.dsTable || awsSettings.DsTable;
+        this.segmentsTable = options.segmentsTable || awsSettings.segmentsTable;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -206,21 +207,38 @@ export default class Db {
     }
 
     async getBaselineIncompleteUsers(preOrPost) {
-        let filter;
-    
-        if (preOrPost === 'pre') {
-            filter = 'attribute_not_exists(preComplete) or preComplete = :f';
-        } else if (preOrPost === 'post') {
-            filter = 'attribute_not_exists(postComplete) or postComplete = :f';
-        } else {
+        return await this.getUsersByBaselineStatus(preOrPost, 'incomplete');
+    }
+
+    async getBaselineCompleteUsers(preOrPost) {
+        return await this.getUsersByBaselineStatus(preOrPost, 'complete');
+    }
+
+    async getUsersByBaselineStatus(preOrPost, status) {
+        if (preOrPost !== 'pre' && preOrPost !== 'post') {
             throw new Error(`Expected preOrPost to be either 'pre' or 'post' but received "${preOrPost}".`);
         }
-    
+
+        if (status !== 'complete' && status !== 'incomplete') {
+            throw new Error(`Expected status to be either 'complete' or 'incomplete' but received "${status}".`);
+        }
+
+        const preOrPostAttr = preOrPost === 'pre' ? 'preComplete' : 'postComplete'
+        let filter;
+        let attrValues;
+        if (status === 'incomplete') {
+            filter = `attribute_not_exists(${preOrPostAttr}) or ${preOrPostAttr} = :f`;
+            attrValues = { ':f': false };
+        } else {
+            filter = `${preOrPostAttr} = :t`;
+            attrValues = { ':t': true };
+        }
+
         try {
             const params = {
                 TableName: this.usersTable,
                 FilterExpression: filter,
-                ExpressionAttributeValues: { ':f': false }
+                ExpressionAttributeValues: attrValues
             };
             const dynResults = await this.scan(params);
             return dynResults.Items;
@@ -229,6 +247,47 @@ export default class Db {
             this.logger.error(err);
             throw err;
         }
+    }
+
+    async getHomeTrainingInProgressUsers() {
+        try {
+            const params = {
+                TableName: this.usersTable,
+                FilterExpression: 'preComplete = :t and (homeComplete = :f or attribute_not_exists(homeComplete))',
+                ExpressionAttributeValues: {':t': true, ':f': false}
+            };
+            const dynResults = await this.scan(params);
+            return dynResults.Items;
+            
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    /**
+     * Gets breathing segments done by the given user on the given day.
+     * @param {string} humanId The 7-character humanId for the user
+     * @param {Date} day Date object representing the day the query should cover.
+     * @returns Breathing segments done by the given user on the given day.
+     */
+    async segmentsForUserAndDay(humanId, day) {
+        try {
+            const dayStart = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate());
+            const dayEnd = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate(), 23, 59, 59); 
+            const params = {
+                TableName: segmentsTable,
+                KeyConditionExpression: 'humanId = :hId and endDateTime >= :ds and endDateTime <= :de',
+                ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart.getTime(), ':de': dayEnd.getTime() }
+            };
+
+            const results = await this.query(params).promise();
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+        
     }
 
     async updateUser(userId, updates) {

@@ -4,9 +4,11 @@ import { format } from 'date-fns-tz';
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
-const user =  { userId: '123abc', email: 'nobody@example.com' };
+const user =  { userId: '123abc', humanId: 'BigIdea', email: 'nobody@example.com' };
 const mockGetBaselineIncompleteUsers = jest.fn(() => [ user ]);
+const mockGetHomeTrainingInProgressUsers = jest.fn(() => [ user ]);
 const mockGetResultsForCurrentUser = jest.fn(() => []);
+const mockSegmentsForUserAndDay = jest.fn(() => []);
 const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
@@ -14,7 +16,7 @@ const mockUpdateUser = jest.fn(() => {});
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetBaselineIncompleteUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockUpdateUser, mockSendEmail, mockSnsPublish];
+const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUserAndDay, mockUpdateUser, mockSendEmail, mockSnsPublish];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -38,7 +40,9 @@ jest.mock('db/db', () => {
             getResultsForCurrentUser: (exp, ident) => mockGetResultsForCurrentUser(exp, ident),
             getBaselineIncompleteUsers: (baseType) => mockGetBaselineIncompleteUsers(baseType),
             getSetsForUser: (userId) => mockGetSetsForUser(userId),
-            updateUser: (userId, updates) => mockUpdateUser(userId, updates)
+            updateUser: (userId, updates) => mockUpdateUser(userId, updates),
+            getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
+            segmentsForUserAndDay: (humanId, date) => mockSegmentsForUserAndDay(humanId, date)
         };
     });
 });
@@ -64,14 +68,22 @@ describe("reminders", () => {
     });
 
     it("should throw an error if no commType is provided", async () => {
-        await expect(() => handler({})).rejects.toEqual(Error("A commType of either 'email' or 'sms' was expected, but 'undefined' was received."));
+        await expect(() => handler({reminderType: 'preBaseline'})).rejects.toEqual(Error("A commType of either 'email' or 'sms' was expected, but 'undefined' was received."));
     });
 
     it("should throw an error if an unexpected commType is provided", async () => {
-        await expect(() => handler({commType: 'pigeon'})).rejects.toEqual(Error("A commType of either 'email' or 'sms' was expected, but 'pigeon' was received."));
+        await expect(() => handler({commType: 'pigeon', reminderType: 'preBaseline'})).rejects.toEqual(Error("A commType of either 'email' or 'sms' was expected, but 'pigeon' was received."));
     });
 
-    describe("for people who have already completed the baseline", () => {
+    it("should throw an error if no reminderType is provided", async () => {
+        await expect(() => handler({commType: 'email'})).rejects.toEqual(Error("A reminderType of either 'preBaseline' or 'homeTraining' was expected, but 'undefined' was received."));
+    });
+
+    it("should throw an error if an unexpected reminderType is provided", async () => {
+        await expect(() => handler({commType: 'email', reminderType: 'make your bed'})).rejects.toEqual(Error("A reminderType of either 'preBaseline' or 'homeTraining' was expected, but 'make your bed' was received."));
+    });
+
+    describe("daily training reminders for people who have already completed the baseline", () => {
         const setsDone = buildSets(6,6);
 
         beforeEach(() => {
@@ -80,7 +92,7 @@ describe("reminders", () => {
         });
 
         it("should not be sent", async () => {
-            await handler({commType: 'email'});
+            await handler({commType: 'email', reminderType: 'preBaseline'});
             expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
             expect(mockGetSetsForUser).toHaveBeenCalledWith(user.userId);
             expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
@@ -88,7 +100,7 @@ describe("reminders", () => {
         });
     
         it("should update the db record for those people", async () => {
-            await handler({commType: 'email'});
+            await handler({commType: 'email', reminderType: 'preBaseline'});
             expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
             expect(mockGetSetsForUser).toHaveBeenCalledWith(user.userId);
             expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
@@ -105,7 +117,7 @@ describe("reminders", () => {
             {}, {}, {}, {}, {}, {}, {}, {}, {}, {} 
         ]);
         
-        await handler({commType: 'email'});
+        await handler({commType: 'email', reminderType: 'preBaseline'});
         expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
         expect(mockGetSetsForUser).toHaveBeenCalledWith(user.userId);
         expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
@@ -113,7 +125,7 @@ describe("reminders", () => {
     });
 
     it("should send an email when the commType is email", async () => {
-        await handler({commType: 'email'});
+        await handler({commType: 'email', reminderType: 'preBaseline'});
         expect(mockSendEmail).toHaveBeenCalled();
         expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).toStrictEqual([user.email]);
         expect(mockSnsPublish).not.toHaveBeenCalled();
@@ -122,7 +134,7 @@ describe("reminders", () => {
     it("should send an sms when the commType is sms", async () => {
         const phoneUser =  { userId: '123abc', email: 'nobody@example.com', phone_number: '+10123456789', phone_number_verified: true};
         mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [phoneUser]);
-        await handler({commType: 'sms'});
+        await handler({commType: 'sms', reminderType: 'preBaseline'});
         expect(mockSnsPublish).toHaveBeenCalled();
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(phoneUser.phone_number);
         expect(mockSendEmail).not.toHaveBeenCalled();
@@ -131,7 +143,7 @@ describe("reminders", () => {
     it("should not not send an sms to people whose phone numbers are not verified", async () => {
         const phoneUser =  { userId: '123abc', email: 'nobody@example.com', phone_number: '+10123456789', phone_number_verified: false};
         mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [phoneUser]);
-        await handler({commType: 'sms'});
+        await handler({commType: 'sms', reminderType: 'preBaseline'});
         expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
         expect(mockGetSetsForUser).toHaveBeenCalledWith(user.userId);
         expect(mockSnsPublish).not.toHaveBeenCalled();
@@ -229,5 +241,61 @@ describe('hasDoneSetToday', () => {
         const sets = [ { experiment: 'set-started', dateTime: localToday }, { experiment: 'set-finished', dateTime: localToday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeTruthy();
+    });
+});
+
+describe("home training reminders", () => {
+
+    afterEach(() => {
+        mockSegmentsForUserAndDay.mockClear();
+        mockGetHomeTrainingInProgressUsers.mockClear();
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+    });
+
+    it("should be sent if no segments have been done today", async () => {
+        const phoneUser =  { userId: '123abc', humanId: 'BigText', email: 'nobody@example.com', phone_number: '+10123456789', phone_number_verified: true};
+        mockGetHomeTrainingInProgressUsers.mockImplementationOnce(() => [phoneUser]);
+        await handler({commType: 'sms', reminderType: 'homeTraining'});
+        expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
+        expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(phoneUser.humanId);
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe((new Date()).toString().substring(0, 15));
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).toHaveBeenCalled();
+        expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(phoneUser.phone_number)
+    });
+
+    async function testWithSegments(segments) {
+        mockSegmentsForUserAndDay.mockImplementationOnce((hId, day) => segments);
+        await handler({commType: 'email', reminderType: 'homeTraining'});
+        expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
+        expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(user.humanId);
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe((new Date()).toString().substring(0, 15));
+    }
+
+    it("should not be sent if a stage 1 segment has been done today", async() => {
+        await testWithSegments([{ stage: 1 }]);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    it("should not be sent if a stage 2 segment has been done today", async() => {
+        await testWithSegments([{ stage: 2 }]);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    it("should not be sent if 6+ stage 3 segments have been done today", async() => {
+        const segments = [0,1,2,3,4,5].map(() => ({ stage: 3 }));
+        await testWithSegments(segments);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    it("should be sent if <6 stage 3 segments have been done today", async () => {
+        const segments = [0,1,2,3,4].map(() => ({ stage: 3 }));
+        await testWithSegments(segments);
+        expect(mockSendEmail).toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
     });
 });
