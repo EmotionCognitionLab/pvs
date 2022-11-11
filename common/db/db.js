@@ -276,7 +276,7 @@ export default class Db {
             const dayStart = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate());
             const dayEnd = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate(), 23, 59, 59); 
             const params = {
-                TableName: segmentsTable,
+                TableName: this.segmentsTable,
                 KeyConditionExpression: 'humanId = :hId and endDateTime >= :ds and endDateTime <= :de',
                 ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart.getTime(), ':de': dayEnd.getTime() }
             };
