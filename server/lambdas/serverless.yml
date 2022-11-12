@@ -231,7 +231,7 @@ functions:
             reminderType: homeTraining
       - schedule:
           name: "home-training-730pm-sms-reminder"
-          rate: cron(0 3 30 * ? *)
+          rate: cron(30 3 * * ? *)
           input:
             commType: sms
             reminderType: homeTraining
