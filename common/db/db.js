@@ -281,7 +281,7 @@ export default class Db {
                 ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart.getTime(), ':de': dayEnd.getTime() }
             };
 
-            const results = await this.query(params).promise();
+            const results = await this.query(params);
             return results.Items;
         } catch (err) {
             this.logger.error(err);
