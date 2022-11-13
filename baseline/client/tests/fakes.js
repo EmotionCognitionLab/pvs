@@ -177,3 +177,5 @@ export const fakeResults = [
         userId: "95240257-42f9-4ae6-b989-0126f595e547",
     },
 ];
+
+export const fakeSetFinishedResults = fakeResults.filter(r => r.experimentDateTime.startsWith("set-finished"));

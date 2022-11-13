@@ -13,10 +13,11 @@ export const PaymentStatus = Object.freeze({
 });
 
 export class Payboard {
-    constructor(rootDiv, errorDiv, client, userId, admin = false) {
+    constructor(rootDiv, errorDiv, client, db, userId, admin = false) {
         this.rootDiv = rootDiv;
         this.errorDiv = errorDiv;
         this.client = client;
+        this.db = db;
         this.userId = userId;
         this.admin = admin;
         // initialize payboard elements and their setters
@@ -130,12 +131,19 @@ export class Payboard {
     async refresh() {
         try {
             // get data
-            const [user, sets, sessions] = await Promise.all([
-                this.client.getUser(this.userId, true),
-                this.client.getSetsForUser(this.userId),
-                null,  // to-do
-            ]);
-            const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
+            let user;
+            let sets;
+            let sessions;
+            if (this.admin) {
+                user = await this.client.getUser(this.userId, true);
+                sets = await this.client.getSetsForUser(this.userId);
+                sessions = null; // TODO
+            } else {
+                user = await this.client.getSelf();
+                sets = await this.db.getExperimentResultsForCurrentUser('set-finished');
+                sessions = null; // TODO
+            }
+            const finishedSetsCount = this.admin ? sets.filter(s => s.experiment === "set-finished").length : sets.length;
             const finishedSetsT1Count = finishedSetsCount;
             const finishedSetsT2Count = 0;  // to-do
             const finishedSessionsCount = 0;  // to-do
