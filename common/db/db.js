@@ -20,7 +20,7 @@ export default class Db {
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.dsTable = options.dsTable || awsSettings.DsTable;
-        this.segmentsTable = options.segmentsTable || awsSettings.segmentsTable;
+        this.segmentsTable = options.segmentsTable || awsSettings.SegmentsTable;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
