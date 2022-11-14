@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     onGetCurrentUser: (callback) => ipcRenderer.on('get-current-user', callback),
     getRestBreathingDays: async (stage) => await ipcRenderer.invoke('get-rest-breathing-days', stage),
     getPacedBreathingDays: async (stage) => await ipcRenderer.invoke('get-paced-breathing-days', stage),
+    getSegmentsAfterDate: async (date, stage) => await ipcRenderer.invoke('get-segments-after-date', date, stage),
     setStage: (stage) => ipcRenderer.invoke('set-stage', stage),
     showLoginWindow: () => ipcRenderer.send('show-login-window'),
     createLumosityView: (email, pw, userAgent) => ipcRenderer.send("create-lumosity-view", email, pw, userAgent),

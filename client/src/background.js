@@ -9,7 +9,7 @@ import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { yyyymmddNumber, yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays } from './breath-data'
+import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays, getSegmentsAfterDate } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -289,6 +289,10 @@ ipcMain.handle('get-rest-breathing-days', (_event, stage) => {
 
 ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
   return getPacedBreathingDays(stage);
+});
+
+ipcMain.handle('get-segments-after-date', (_event, date, stage) => {
+  return getSegmentsAfterDate(date, stage);
 });
 
 async function stage1Complete() {
