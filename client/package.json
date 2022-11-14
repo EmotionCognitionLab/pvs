@@ -29,6 +29,7 @@
     "lodash": "^4.17.21",
     "mathjs": "^10.5.3",
     "node-fetch": "2",
+    "pay-info": "file:../common/pay-info",
     "pvs-breath-pacer": "git+https://github.com/EmotionCognitionLab/pvs-breath-pacer.git#semver:^1.0.0",
     "uuid": "^8.3.2",
     "vue": "^3.0.0",

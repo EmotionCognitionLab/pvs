@@ -9,6 +9,8 @@ import LoginComponent from './components/LoginComponent.vue'
 import LumosityComponent from './components/LumosityComponent.vue'
 import Stage3Component from './components/Stage3Component.vue'
 import Stage2Component from './components/Stage2Component.vue'
+import StudyStatusComponent from './components/StudyStatusComponent.vue'
+import StreakComponent from './components/StreakComponent.vue'
 import DoneTodayComponent from './components/DoneTodayComponent.vue'
 import OauthRedirectComponent from './components/OauthRedirectComponent'
 
@@ -28,6 +30,8 @@ const routes = [
     { path: '/signin', component: LoginComponent, name: 'signin', props: true },
     { path: '/login/index.html', component: OauthRedirectComponent }, // to match the oauth redirect we get
     { path: '/stage3', component: Stage3Component },
+    { path: '/status', component: StudyStatusComponent },
+    { path: '/streak', component: StreakComponent },
     { path: '/lumos', component: LumosityComponent },
     { path: '/stage2', component: Stage2Component },
     { path: '/donetoday', component: DoneTodayComponent},
