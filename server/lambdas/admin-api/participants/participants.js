@@ -2,7 +2,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand} from "@aws-sdk/lib-dynamodb";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import Db from 'db/db.js';
-import { baselineStatus, stage2Status, stage3Status } from "status.js";
+import { baselineStatus, stage2Status, stage3Status } from "./status.js";
 
 const AWS = require("aws-sdk");
 const region = process.env.REGION;
