@@ -91,6 +91,30 @@ export default class ApiClient {
         return await this.doFetch(url, "get", "There was an error fetching particiapnts");
     }
 
+    /**
+     * Returns the status of the user, which describes how well they're keeping up with the study.
+     * Status will be one of:
+     *  * {status: 'red'} - user is behind
+     *  * {status: 'yellow'} - at risk of falling behind
+     *  * {status: 'green'} - on track
+     *  * {status: 'gray'} - waiting on something from the lab
+     *  * {status: 'black'} - status for this stage not implemented
+     * There may also be subfields describing components of the overall status, e.g.:
+     *   { status: 'yellow', lumosity: 'green', breathing: 'yellow' }
+     * @param {string} userId 
+     * @param {string} humanId 
+     * @param {boolean} preComplete User has completed the pre-experiment cognitive baseline tasks
+     * @param {boolean} stage2Completed has completed stage 2
+     * @param {string} stage2CompletedOn YYYYMMDD string for the date the user completed stage 2
+     * @param {boolean} homeComplete has completed the home training
+     * @param {boolean} postComplete has completed the post-experiement cognitive baseline tasks
+     */
+    async getUserStatus(userId, humanId, preComplete, stage2Completed, stage2CompletedOn, homeComplete, postComplete) {
+        const b2p = (name, b) => b ? `${name}=1` : `${name}=0`;
+        const url = `${awsSettings.AdminApiUrl}/participant/${userId}/status?hId=${humanId}&${b2p('preComplete', preComplete)}&${b2p('stage2Completed', stage2Completed)}&stage2CompletedOn=${stage2CompletedOn}&${b2p('homeComplete', homeComplete)}&${b2p('postComplete', postComplete)}`
+        return await this.doFetch(url, "get", `There was an error getting the status for user ${userId}`);
+    }
+
     async doDocusignCallback(code) {
         const url = `${awsSettings.DsTokenUri}?code=${code}`;
         return await this.doFetch(url, "get", "There was an error completing the Docusign authentication process");
