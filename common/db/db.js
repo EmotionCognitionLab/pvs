@@ -17,6 +17,7 @@ export default class Db {
         this.userPoolId = options.userPoolId || awsSettings.UserPoolId;
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.lumosAcctTable = options.lumosAcctTable || awsSettings.LumosAcctTable;
+        this.lumosPlaysTable = options.lumosPlaysTable || awsSettings.LumosPlaysTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.dsTable = options.dsTable || awsSettings.DsTable;
@@ -287,7 +288,38 @@ export default class Db {
             this.logger.error(err);
             throw err;
         }
-        
+    }
+
+    async segmentsForUser(humanId) {
+        try {
+            const params = {
+                TableName: this.segmentsTable,
+                KeyConditionExpression: 'humanId = :hId',
+                ExpressionAttributeValues: { ':hId': humanId }
+            };
+
+            const results = await this.query(params);
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async lumosPlaysForUser(userId, sinceDate = '1970-01-01') {
+        try {
+            const params = {
+                TableName: this.lumosPlaysTable,
+                KeyConditionExpression: 'userId = :userId and dateTime >= :dt',
+                ExpressionAttributeValues: { ':userId': userId, ':dt': sinceDate },
+            };
+
+            const results = await this.query(params);
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
     }
 
     async updateUser(userId, updates) {
