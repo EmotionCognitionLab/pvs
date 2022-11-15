@@ -149,7 +149,9 @@ export async function processreports(event) {
         continue;
       }
       if (stage2Done && !email2UserInfoMap[email].stage2Done) {
-        await db.updateUser(email2UserInfoMap[email].userId, {stage2Done: true});
+        const date = new Date();
+        const today = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`;
+        await db.updateUser(email2UserInfoMap[email].userId, {stage2Complete: true, stage2CompletedOn: today});
       }
     }
 

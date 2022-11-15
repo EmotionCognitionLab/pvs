@@ -158,7 +158,7 @@ describe("Processing reports from S3", () => {
             await confirmPlaysWritten(expectedPlays);
         });
 
-        test("should update the stage2Done status for a user who has finished stage 2", async () => {
+        test("should update the stage2Complete status for a user who has finished stage 2", async () => {
             const allGames = [
                 'Word Bubbles Web',
                 'Memory Match Web',
@@ -186,19 +186,19 @@ describe("Processing reports from S3", () => {
             }).flatMap(a => a);
             await processGameReport(playsData);
            
-            confirmStage2Done(lumosAcct.owner);
+            confirmStage2Complete(lumosAcct.owner);
         });
 
-        test("should not change a user's stage2Done status from true to false", async () => {
+        test("should not change a user's stage2Status.complete from true to false", async () => {
             const params = {
                 TableName: usersTable,
                 Key: { userId: lumosAcct.owner },
-                UpdateExpression: 'set stage2Done = :true',
-                ExpressionAttributeValues: {':true': true}
+                UpdateExpression: 'set stage2Complete = :true, stage2CompletedOn = :today',
+                ExpressionAttributeValues: {':true': true, ':today': todayYyyymmdd() }
             };
             await docClient.update(params).promise();
 
-            confirmStage2Done(lumosAcct.owner);
+            confirmStage2Complete(lumosAcct.owner);
 
             const playsData = [
                 { email_address: lumosAcct.email, game_name: 'Color Match Web', created_at: '2022-05-07 12:09:34', game_lpi: 590 },
@@ -206,7 +206,7 @@ describe("Processing reports from S3", () => {
             ];
             await processGameReport(playsData);
 
-            confirmStage2Done(lumosAcct.owner);
+            confirmStage2Complete(lumosAcct.owner);
         });
     });
 
@@ -287,14 +287,15 @@ async function confirmPlaysWritten(expectedPlays) {
     expectedPlays.forEach(ep => expect(playsScan.Items).toContainEqual(ep));
 }
 
-async function confirmStage2Done(userId) {
+async function confirmStage2Complete(userId) {
     const qParams = {
         TableName: usersTable,
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: { ':userId': userId }
     };
     const res = await docClient.query(qParams).promise();
-    expect(res.Items[0].stage2Done).toBe(true);
+    expect(res.Items[0].stage2Complete).toBe(true);
+    expect(res.Items[0].stage2CompletedOn).toBe(todayYyyymmdd());
 }
 
 async function runAttachmentLambda() {
@@ -330,6 +331,11 @@ async function runReportsLambda(fileKey) {
         verboseLevel: 0
     });
     return result;
+}
+
+function todayYyyymmdd() {
+    const date = new Date();
+    return`${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`;
 }
 
 
