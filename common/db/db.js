@@ -301,9 +301,10 @@ export default class Db {
                 const propVal = `:${prop}`
                 expressionAttrNames[propName] = prop;
                 expressionAttrVals[propVal] = updates[prop];
-                updateExpression += ` ${propName} = ${propVal}`
+                updateExpression += ` ${propName} = ${propVal},`
             }
         }
+        updateExpression = updateExpression.slice(0, -1); // drop the trailing comma
         if (Object.keys(expressionAttrVals).length < 1) {
             throw new Error("You must provide an update to at least one allowed attribute.");
         }
