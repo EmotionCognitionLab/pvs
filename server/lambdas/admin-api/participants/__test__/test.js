@@ -150,16 +150,19 @@ describe("stage 2 status", () => {
 });
 
 const stage3BreathingConditions = [
-    { startDaysAgo: 0, numSegs: 1, exp: 'green'},
-    { startDaysAgo: 2, numSegs: 12, exp: 'green'},
-    { startDaysAgo: 2, numSegs: 6, exp: 'green'},
-    { startDaysAgo: 3, numSegs: 12, exp: 'green'},
-    { startDaysAgo: 3, numSegs: 6, exp: 'yellow'},
-    { startDaysAgo: 4, numSegs: 24, exp: 'green'},
-    { startDaysAgo: 4, numSegs: 18, exp: 'green'},
-    { startDaysAgo: 4, numSegs: 12, exp: 'yellow'},
-    { startDaysAgo: 4, numSegs: 6, exp: 'red'},
-    { startDaysAgo: 5, numSegs: 12, exp: 'red'},
+    { startDaysAgo: 0, numSegsLast5Days: 1, exp: 'green'},
+    { startDaysAgo: 2, numSegsLast5Days: 12, exp: 'green'},
+    { startDaysAgo: 2, numSegsLast5Days: 6, exp: 'green'},
+    { startDaysAgo: 3, numSegsLast5Days: 12, exp: 'green'},
+    { startDaysAgo: 3, numSegsLast5Days: 6, exp: 'yellow'},
+    { startDaysAgo: 4, numSegsLast5Days: 24, exp: 'green'},
+    { startDaysAgo: 4, numSegsLast5Days: 18, exp: 'yellow'},
+    { startDaysAgo: 4, numSegsLast5Days: 12, exp: 'red'},
+    { startDaysAgo: 4, numSegsLast5Days: 6, exp: 'red'},
+    { startDaysAgo: 5, numSegsLast5Days: 12, exp: 'red'},
+    { startDaysAgo: 13, numSegsLast5Days: 20, exp: 'yellow'},
+    { startDaysAgo: 18, numSegsLast5Days: 24, exp: 'green'},
+    { startDaysAgo: 27, numSegsLast5Days: 17, exp: 'red'},
 ];
 
 describe("stage 3 status", () => {
@@ -167,10 +170,10 @@ describe("stage 3 status", () => {
     describe("if the user has played 6 lumosity games/day 0 or 1 days in the last six days", () => {
         const lumosData = buildLumosityData(1);
 
-        describe.each(stage3BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
-            ({startDaysAgo, numSegs, exp}) => {
+        describe.each(stage3BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
+            ({startDaysAgo, numSegsLast5Days, exp}) => {
                 it("should return red", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegs, lumosData);
+                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
                     expect(status.status).toBe('red');
                     expect(status.lumosity).toBe('red');
                     expect(status.breathing).toBe(exp);
@@ -184,20 +187,20 @@ describe("stage 3 status", () => {
         const nonRedConds = stage3BreathingConditions.filter(c => c.exp !== 'red');
         const redConds = stage3BreathingConditions.filter(c => c.exp === 'red');
 
-        describe.each(nonRedConds)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
-            ({startDaysAgo, numSegs, exp}) => {
+        describe.each(nonRedConds)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
+            ({startDaysAgo, numSegsLast5Days, exp}) => {
                 it("should return yellow", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegs, lumosData);
+                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
                     expect(status.status).toBe('yellow');
                     expect(status.lumosity).toBe('yellow');
                     expect(status.breathing).toBe(exp);
                 });
         });
 
-        describe.each(redConds)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
-            ({startDaysAgo, numSegs, exp}) => {
+        describe.each(redConds)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
+            ({startDaysAgo, numSegsLast5Days, exp}) => {
                 it("should return red", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegs, lumosData);
+                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
                     expect(status.status).toBe('red');
                     expect(status.lumosity).toBe('yellow');
                     expect(status.breathing).toBe(exp);
@@ -208,10 +211,10 @@ describe("stage 3 status", () => {
     describe("if the user has played 6 lumosity games/day 4 or more days in the last six days", () => {
         const lumosData = buildLumosityData(4);
 
-        describe.each(stage3BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments it should return $exp",
-            ({startDaysAgo, numSegs, exp}) => {
+        describe.each(stage3BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments  in the last 5 days it should return $exp",
+            ({startDaysAgo, numSegsLast5Days, exp}) => {
                 it("", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegs, lumosData);
+                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
                     expect(status.status).toBe(exp);
                     expect(status.lumosity).toBe('green');
                     expect(status.breathing).toBe(exp);
@@ -246,13 +249,16 @@ async function checkStage2Status(startDaysAgo, numSegmentsDone, lumosData) {
     return await stage2Status(mockDb(results, lumosData), '123456');
 }
 
-async function checkStage3Status(startDaysAgo, numSegmentsDone, lumosData) {
+async function checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData) {
     const now = dayjs();
     const stage2CompletedDate = now.subtract(startDaysAgo, 'days').format("YYYYMMDD");
     const results = [];
-    for (let i = 0; i < numSegmentsDone; i++) {
-        results.push({stage: 3});
+    const fiveDaysAgo = now.subtract(5, 'days');
+    const segGapSeconds = (5 * 24 * 60 * 60) / numSegsLast5Days;
+    for (let j = 0; j < numSegsLast5Days; j++) {
+        results.push({stage: 3, endDateTime: fiveDaysAgo.add(j * segGapSeconds, 'seconds').unix()});
     }
+    
     return await stage3Status(mockDb(results, lumosData), '123456', 'FastCow', stage2CompletedDate);
 }
 
