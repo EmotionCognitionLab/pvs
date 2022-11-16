@@ -103,18 +103,12 @@ export class Dashboard {
         try {
             const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
-                const sets = await this.client.getSetsForUser(user.userId);
-                const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
-                const finishedSetsT1Count = finishedSetsCount;
-                const finishedSetsT2Count = 0;  // to-do: fix this
-                const finishedSessionsCount = 0;  // to-do: fix this
+                const status = await this.client.getUserStatus(user.userId, user.humanId, user.preComplete, user.stage2Completed, user.stage2CompletedOn, user.homeComplete, user.postComplete);
                 temp.push([
                     user.userId,
                     {
                         user,
-                        finishedSetsT1Count,
-                        finishedSetsT2Count,
-                        finishedSessionsCount,
+                        status
                     },
                 ]);
             }));
@@ -197,9 +191,7 @@ export class Dashboard {
         // prepare data
         const {
             user,
-            finishedSetsT1Count,
-            finishedSetsT2Count,
-            finishedSessionsCount,
+            status,
         } = this.records.get(userId);
         // insert row element
         const row = this.tbody.insertRow();
@@ -219,22 +211,38 @@ export class Dashboard {
         dateDiv.textContent = user.createdAt.substring(0, 10);
         dateDiv.classList.add("small");
         subjectCell.appendChild(dateDiv);
-        // Daily Tasks T1
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT1Count, "sets"));
-        // EEG T1
-        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT1"));
-        // MRI T1
-        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT1"));
-        // Biofeedback Practice
-        row.insertCell().appendChild(Dashboard.createProgress(280, finishedSessionsCount, "sessions"));
-        // EEG T2
-        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "eegT2"));
-        // MRI T2
-        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "mriT2"));
-        // Daily Tasks T2
-        row.insertCell().appendChild(Dashboard.createProgress(6, finishedSetsT2Count, "sets"));
+        const [preStatus, lumosBreathingStatus, postStatus] = Dashboard.buildStatusDivs(user.preComplete, user.homeComplete, user.postComplete, status);
+        // Pre-Intervention Home Tasks Status
+
+        row.insertCell().appendChild(preStatus);
+        // Visit 1
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit1"));
+        // Lumosity + Breathing Practice Status
+        row.insertCell().appendChild(lumosBreathingStatus);
+        // Visit 2
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit2"));
+        // Visit 3
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit3"));
+        // Post-Intervention Home Tasks Status
+        row.insertCell().appendChild(postStatus);
         // dropped
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "dropped"));
+    }
+
+    static buildStatusDivs(preComplete, homeComplete, postComplete, status) {
+        const statusSpan = document.createElement("span");
+        statusSpan.classList.add("dot");
+        statusSpan.classList.add(status.status);
+        if (!preComplete) return [statusSpan, Dashboard.textDiv("N/A"), Dashboard.textDiv("N/A")];
+        if (!homeComplete) return [Dashboard.textDiv("Done"), statusSpan, Dashboard.textDiv("N/A")];
+        if (!postComplete) return [Dashboard.textDiv("Done"), Dashboard.textDiv("Done"), statusSpan];
+        return [Dashboard.textDiv("Done"), Dashboard.textDiv("Done"), Dashboard.textDiv("Done")];
+    }
+
+    static textDiv(text) {
+        const newDiv = document.createElement("div");
+        newDiv.textContent = text;
+        return newDiv;
     }
 
     showUserDetails(userId) {

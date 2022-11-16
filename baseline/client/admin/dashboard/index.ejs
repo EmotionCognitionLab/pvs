@@ -3,6 +3,29 @@
 <head>
     <meta charset="utf-8">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <style>
+        .dot {
+            height: 25px;
+            width: 25px;
+            border-radius: 50%;
+            display: inline-block
+        }
+        .red {
+            background-color: red;
+        }
+        .yellow {
+            background-color: yellow;
+        }
+        .green {
+            background-color: green;
+        }
+        .gray {
+            background-color: gray;
+        }
+        .black {
+            background-color: black;
+        }
+    </style>
 </head>
 <body>
     <div>
@@ -11,13 +34,12 @@
             <thead>
                 <tr>
                     <th>Subject</th>
-                    <th>Daily Tasks T1</th>
-                    <th>EEG T1</th>
-                    <th>MRI T1</th>
-                    <th>Biofeedback Practice</th>
-                    <th>EEG T2</th>
-                    <th>MRI T2</th>
-                    <th>Daily Tasks T2</th>
+                    <th>Pre-Intervention Home Tasks</th>
+                    <th>Visit 1</th>
+                    <th>Lumosity + Breathing Practice</th>
+                    <th>Visit 2</th>
+                    <th>Visit 3</th>
+                    <th>Post-Intervention Home Tasks</th>
                     <th>Dropped</th>
                 </tr>
             </thead>
