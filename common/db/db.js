@@ -290,12 +290,13 @@ export default class Db {
         }
     }
 
-    async segmentsForUser(humanId) {
+    async segmentsForUser(humanId, sinceDate = new Date(0)) {
+        const sinceDateEpoch = Math.floor(sinceDate.getTime() / 1000);
         try {
             const params = {
                 TableName: this.segmentsTable,
-                KeyConditionExpression: 'humanId = :hId',
-                ExpressionAttributeValues: { ':hId': humanId }
+                KeyConditionExpression: 'humanId = :hId and endDateTime >= :dt',
+                ExpressionAttributeValues: { ':hId': humanId, ':dt': sinceDateEpoch }
             };
 
             const results = await this.query(params);
@@ -306,13 +307,14 @@ export default class Db {
         }
     }
 
-    async lumosPlaysForUser(userId, sinceDate = '1970-01-01') {
+    async lumosPlaysForUser(userId, sinceDate = new Date(0)) {
+        const sinceDateYYYYMMDD = `${sinceDate.getFullYear()}-${(sinceDate.getMonth() + 1).toString().padStart(2,0)}-${sinceDate.getDate().toString().padStart(2, 0)}`
         try {
             const params = {
                 TableName: this.lumosPlaysTable,
                 KeyConditionExpression: 'userId = :userId and #dateTime >= :dt',
                 ExpressionAttributeNames: { '#dateTime': 'dateTime' },
-                ExpressionAttributeValues: { ':userId': userId, ':dt': sinceDate },
+                ExpressionAttributeValues: { ':userId': userId, ':dt': sinceDateYYYYMMDD },
             };
 
             const results = await this.query(params);

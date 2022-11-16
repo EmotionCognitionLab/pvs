@@ -103,7 +103,7 @@ const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
 const lumosityStatus = async(db, userId) => {
     // subtract 6, rather than 5, b/c we will never have any lumosity data from today, 
     // so we go back one extra day to get five days of data
-    const sixDaysAgo = dayjs().subtract(6, 'days').format('YYYY-MM-DD'); 
+    const sixDaysAgo = dayjs().subtract(6, 'days').toDate(); 
 
     const lumosPlays = await db.lumosPlaysForUser(userId, sixDaysAgo);
 
