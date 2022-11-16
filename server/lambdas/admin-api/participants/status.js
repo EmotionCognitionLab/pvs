@@ -67,7 +67,7 @@ const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
     const started = dayjs(stage2CompletedOn);
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day'); // will be 0 for all values <24h, 1 for <48h, etc.
-    const segsDone = await db.segmentsForUser(humanId).filter(s => s.stage === 3).length;
+    const segsDone = (await db.segmentsForUser(humanId)).filter(s => s.stage === 3).length;
     const expectedSegsPerDay = 6;
 
     if (daysSinceStart <= 1) {
