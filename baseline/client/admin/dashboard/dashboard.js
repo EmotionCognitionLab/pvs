@@ -233,6 +233,16 @@ export class Dashboard {
         const statusSpan = document.createElement("span");
         statusSpan.classList.add("dot");
         statusSpan.classList.add(status.status);
+        if (Object.keys(status).length > 1) {
+            // add tooltips for the other values
+            let tipText = '';
+            Object.entries(status).forEach(([k, v]) => {
+                if (k !== 'status') {
+                    tipText += `${k}: ${v}\n`;
+                }
+            });
+            statusSpan.setAttribute('title', tipText);
+        }
         if (!preComplete) return [statusSpan, Dashboard.textDiv("N/A"), Dashboard.textDiv("N/A")];
         if (!homeComplete) return [Dashboard.textDiv("Done"), statusSpan, Dashboard.textDiv("N/A")];
         if (!postComplete) return [Dashboard.textDiv("Done"), Dashboard.textDiv("Done"), statusSpan];
