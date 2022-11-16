@@ -274,12 +274,12 @@ export default class Db {
      */
     async segmentsForUserAndDay(humanId, day) {
         try {
-            const dayStart = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate());
-            const dayEnd = new Date(day.getFullYear(), day.getMonth() + 1, day.getDate(), 23, 59, 59); 
+            const dayStart = Math.floor((new Date(day.getFullYear(), day.getMonth() + 1, day.getDate())).getTime() / 1000);
+            const dayEnd = Math.floor((new Date(day.getFullYear(), day.getMonth() + 1, day.getDate(), 23, 59, 59)).getTime() / 1000);
             const params = {
                 TableName: this.segmentsTable,
                 KeyConditionExpression: 'humanId = :hId and endDateTime BETWEEN :ds and :de',
-                ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart.getTime(), ':de': dayEnd.getTime() }
+                ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart, ':de': dayEnd }
             };
 
             const results = await this.query(params);
