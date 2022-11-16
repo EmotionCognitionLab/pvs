@@ -17,8 +17,8 @@ const baselineStatus = async (db, userId) => {
         return {status: 'yellow'};
     }
 
-    if (finishedSetsCount >= 4) return {status: 'green'};
-    if (finishedSetsCount == 2 || finishedSetsCount == 3) return {status: 'yellow'};
+    if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green'};
+    if (finishedSetsCount >= daysSinceStart - 2) return {status: 'yellow'};
     return {status: 'red'};
 }
 

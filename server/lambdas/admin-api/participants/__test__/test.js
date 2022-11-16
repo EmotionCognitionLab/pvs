@@ -41,13 +41,21 @@ describe("pre-baseline complete status", () => {
         await checkBaselineStatus(100, 4, 'green');
     });
 
-    it("should return yellow if the user started >= 4 days ago and has done >=2 and < 4 sets", async () => {
-        await checkBaselineStatus(240, 2, 'yellow');
+    it("should return red if the user started >= 4 days ago and has done 2 sets", async () => {
+        await checkBaselineStatus(240, 2, 'red');
+    });
+
+    it("should return yellow if the user started >= 4 days ago and has done 3 sets", async () => {
+        await checkBaselineStatus(240, 3, 'red');
     });
 
     it("should return red if the user started >= 4 days ago and has done < 2 sets", async () => {
         await checkBaselineStatus(100, 1, 'red');
     });
+
+    it("should return red if the user started >= 9 days ago and has done < 7 sets", async () => {
+        await checkBaselineStatus(220, 6, 'red');
+    })
 
 });
 
