@@ -310,7 +310,8 @@ export default class Db {
         try {
             const params = {
                 TableName: this.lumosPlaysTable,
-                KeyConditionExpression: 'userId = :userId and dateTime >= :dt',
+                KeyConditionExpression: 'userId = :userId and #dateTime >= :dt',
+                ExpressionAttributeNames: { '#dateTime': 'dateTime' },
                 ExpressionAttributeValues: { ':userId': userId, ':dt': sinceDate },
             };
 
