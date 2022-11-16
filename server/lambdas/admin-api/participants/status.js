@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 
-exports.baselineStatus = async (db, userId) => {
+const baselineStatus = async (db, userId) => {
     // they're doing baseline training; check to see how many sets they've finished
     // and when they did their first set
     const sets = await db.getSetsForUser(userId);
@@ -26,11 +26,11 @@ exports.baselineStatus = async (db, userId) => {
 // if they have not done stage 1, return 'gray' b/c they're waiting on a lab visit
 // if they have done stage 1, see when they did it and return appropriate status
 // based on how much lumosity they've played and how much breathing they've done
-exports.stage2Status = async(db, userId, humanId) => {
+const stage2Status = async(db, userId, humanId) => {
     const segments = await db.segmentsForUser(humanId);
     if (segments.length === 0) return {status: 'gray'};
 
-    const lumosStatus = await exports.lumosityStatus(db, userId);
+    const lumosStatus = await lumosityStatus(db, userId);
     let breathStatus;
 
     const started = dayjs(segments[0].endDateTime * 1000); // segment times are seconds since the epoch, not ms
@@ -60,8 +60,8 @@ exports.stage2Status = async(db, userId, humanId) => {
     return {status: 'green', lumosity: lumosStatus, breathing: breathStatus};
 }
 
-exports.stage3Status = async(db, userId, humanId, stage2CompletedOn) => {    
-    const lumosStatus = await exports.lumosityStatus(db, userId);
+const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {    
+    const lumosStatus = await lumosityStatus(db, userId);
     let breathStatus;
 
     const started = dayjs(stage2CompletedOn);
@@ -100,7 +100,7 @@ exports.stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
  * red: <2 days with at least six games played per day in the past five days
  * @param {string} userId 
  */
-exports.lumosityStatus = async(db, userId) => {
+const lumosityStatus = async(db, userId) => {
     // subtract 6, rather than 5, b/c we will never have any lumosity data from today, 
     // so we go back one extra day to get five days of data
     const sixDaysAgo = dayjs().subtract(6, 'days').format('YYYY-MM-DD'); 
@@ -122,3 +122,6 @@ exports.lumosityStatus = async(db, userId) => {
     if (minSix < 2) return 'red';
 }
 
+export {
+    baselineStatus, stage2Status, stage3Status, lumosityStatus
+}
