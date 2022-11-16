@@ -110,7 +110,7 @@ export default class ApiClient {
      * @param {boolean} postComplete has completed the post-experiement cognitive baseline tasks
      */
     async getUserStatus(userId, humanId, preComplete, stage2Completed, stage2CompletedOn, homeComplete, postComplete) {
-        const b2p = (name, b) => b ? `${name}=1` : `${name}=0`;
+        const b2p = (name, b) => b === undefined || b === null || !b ? `${name}=0` : `${name}=1`;
         const url = `${awsSettings.AdminApiUrl}/participant/${userId}/status?hId=${humanId}&${b2p('preComplete', preComplete)}&${b2p('stage2Completed', stage2Completed)}&stage2CompletedOn=${stage2CompletedOn}&${b2p('homeComplete', homeComplete)}&${b2p('postComplete', postComplete)}`
         return await this.doFetch(url, "get", `There was an error getting the status for user ${userId}`);
     }
