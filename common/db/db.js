@@ -274,8 +274,8 @@ export default class Db {
      */
     async segmentsForUserAndDay(humanId, day) {
         try {
-            const dayStart = Math.floor((new Date(day.getFullYear(), day.getMonth() + 1, day.getDate())).getTime() / 1000);
-            const dayEnd = Math.floor((new Date(day.getFullYear(), day.getMonth() + 1, day.getDate(), 23, 59, 59)).getTime() / 1000);
+            const dayStart = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate())).getTime() / 1000);
+            const dayEnd = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59)).getTime() / 1000);
             const params = {
                 TableName: this.segmentsTable,
                 KeyConditionExpression: 'humanId = :hId and endDateTime BETWEEN :ds and :de',
