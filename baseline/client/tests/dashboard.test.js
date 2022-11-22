@@ -10,6 +10,8 @@ function expectRowMatches(row, user) {
         lumosBreathStatusCell,
         visit2Cell,
         visit3Cell,
+        visit4Cell,
+        visit5Cell,
         dailyTasksT2Cell,
         droppedCell,
     ] = row.querySelectorAll("td");
@@ -36,6 +38,8 @@ function expectRowMatches(row, user) {
     }
 
     expect(visit3Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit3));
+    expect(visit4Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit4));
+    expect(visit5Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit5));
     expect(droppedCell.querySelector("input").checked).toBe(Boolean(user.progress?.dropped));
 }
 

@@ -223,6 +223,10 @@ export class Dashboard {
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit2"));
         // Visit 3
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit3"));
+         // Visit 4
+         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit4"));
+          // Visit 5
+        row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit5"));
         // Post-Intervention Home Tasks Status
         row.insertCell().appendChild(postStatus);
         // dropped
