@@ -17,7 +17,6 @@ export const fakeUsers = [
         progress: {
             visit1: "2022-03-04T00:00:00.000Z",
             visit2: "2022-03-05T00:00:00.000Z",
-            visit3: "2022-03-06T00:00:00.000Z"
         },
         userId: "95240257-42f9-4ae6-b989-0126f595e547",
         status: {
@@ -42,6 +41,11 @@ export const fakeUsers = [
         phone_number_verified: false,
         userId: "693ab825-43d4-4e48-89f0-f9d7b03179af",
         preComplete: true,
+        progress: {
+            visit1: "2022-03-04T00:00:00.000Z",
+            visit2: "2022-03-05T00:00:00.000Z",
+            visit3: "2022-03-06T00:00:00.000Z"
+        },
         homeComplete: true,
         status: {
             status: 'green'
@@ -61,6 +65,16 @@ export const fakeUsers = [
         name: "Applejack",
         phone_number: "+19990000002",
         phone_number_verified: true,
+        preComplete: true,
+        homeComplete: true,
+        postComplete: true,
+        progress: {
+            visit1: "2022-03-04T00:00:00.000Z",
+            visit2: "2022-03-05T00:00:00.000Z",
+            visit3: "2022-03-06T00:00:00.000Z",
+            visit4: "2022-03-07T00:00:00.000Z",
+            visit5: "2022-03-08T00:00:00.000Z",
+        },
         userId: "1d84a646-db05-4093-8be5-41d1de595a6b",
         status: {
             status: 'yellow'

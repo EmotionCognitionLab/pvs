@@ -29,7 +29,12 @@ function expectRowMatches(row, user) {
             expect(lumosBreathStatusCell.innerHTML).toBe(`<span class="dot ${status}" title="lumosity: ${lumosStatus}\nbreathing: ${breathStatus}\n"></span>`);
         } else {
             expect(lumosBreathStatusCell.textContent).toBe('Done');
-            expect(dailyTasksT2Cell.innerHTML).toBe(`<span class="dot ${status}"></span>`);
+            if (!user.postComplete) {
+                expect(dailyTasksT2Cell.innerHTML).toBe(`<span class="dot ${status}"></span>`);
+            } else {
+                expect(dailyTasksT2Cell.textContent).toBe('Done');
+            }
+            
         }
     } else {
         expect(dailyTasksT1Cell.innerHTML).toBe(`<span class="dot ${status}"></span>`);
