@@ -60,17 +60,41 @@ describe("pre-baseline complete status", () => {
 });
 
 describe("lumosity status", () => {
-    it.each([4,5])("should return green if the user has played 6 games/day for %p of the last six days", async (days) => {
-        checkLumosityStatus(days, 'green');
+    describe("for users who started >3 days ago", () => {
+        it.each([4,5])("should return green if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'green', 10);
+        });
+    
+        it.each([2,3])("should return yellow if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'yellow', 10);
+        });
+    
+        it.each([0,1])("should return red if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'red', 10);
+        });
     });
 
-    it.each([2,3])("should return yellow if the user has played 6 games/day for %p of the last six days", async (days) => {
-        checkLumosityStatus(days, 'yellow');
+    describe("for users who started <= 1 day ago", () => {
+        it.each([0,1,2,3,4,5])("should return green if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'green', 1);
+        });
     });
 
-    it.each([0,1])("should return red if the user has played 6 games/day for %p of the last six days", async (days) => {
-        checkLumosityStatus(days, 'red');
+    describe("for users who started 2 or 3 days ago", () => {
+        it.each([0,1])("should return yellow if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'yellow', 2);
+        });
+        it.each([0,1])("should return yellow if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'yellow', 3);
+        });
+        it.each([2,3,4,5])("should return green if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'green', 3);
+        });
+        it.each([2,3,4,5])("should return green if the user has played 6 games/day for %p of the last six days", async (days) => {
+            checkLumosityStatus(days, 'green', 2);
+        });
     });
+    
 });
 
 const stage2BreathingConditions = [
@@ -97,12 +121,28 @@ describe("stage 2 status", () => {
 
         describe.each(stage2BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
             ({startDaysAgo, numSegs, exp}) => {
-                it("should return red", async () => {
-                    const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
-                    expect(status.status).toBe('red');
-                    expect(status.lumosity).toBe('red');
-                    expect(status.breathing).toBe(exp);
-                });
+                if (startDaysAgo <= 1) {
+                    it("should return green", async () => {
+                        const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
+                        expect(status.status).toBe('green');
+                        expect(status.lumosity).toBe('green');
+                        expect(status.breathing).toBe('green');
+                    });
+                } else if (startDaysAgo == 2 || startDaysAgo == 3) {
+                    it("should return yellow", async () => {
+                        const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
+                        expect(status.status).toBe('yellow');
+                        expect(status.lumosity).toBe('yellow');
+                        expect(status.breathing).toBe(exp);
+                    });
+                } else {
+                    it("should return red", async () => {
+                        const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
+                        expect(status.status).toBe('red');
+                        expect(status.lumosity).toBe('red');
+                        expect(status.breathing).toBe(exp);
+                    });
+                }
         });
 
     });
@@ -114,12 +154,21 @@ describe("stage 2 status", () => {
 
         describe.each(nonRedConds)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
             ({startDaysAgo, numSegs, exp}) => {
-                it("should return yellow", async () => {
-                    const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
-                    expect(status.status).toBe('yellow');
-                    expect(status.lumosity).toBe('yellow');
-                    expect(status.breathing).toBe(exp);
-                });
+                if (startDaysAgo <= 3) {
+                    it("should return the expected status", async () => {
+                        const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
+                        expect(status.status).toBe(exp);
+                        expect(status.lumosity).toBe('green');
+                        expect(status.breathing).toBe(exp);
+                    });
+                } else {
+                    it("should return yellow", async () => {
+                        const status = await checkStage2Status(startDaysAgo, numSegs, lumosData);
+                        expect(status.status).toBe('yellow');
+                        expect(status.lumosity).toBe('yellow');
+                        expect(status.breathing).toBe(exp);
+                    });
+                }
         });
 
         describe.each(redConds)("if the user started $startDaysAgo days ago and has done $numSegs breathing segments",
@@ -172,12 +221,28 @@ describe("stage 3 status", () => {
 
         describe.each(stage3BreathingConditions)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
             ({startDaysAgo, numSegsLast5Days, exp}) => {
-                it("should return red", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
-                    expect(status.status).toBe('red');
-                    expect(status.lumosity).toBe('red');
-                    expect(status.breathing).toBe(exp);
-                });
+                if (startDaysAgo <= 1) {
+                    it("should return green", async () => {
+                        const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
+                        expect(status.status).toBe('green');
+                        expect(status.lumosity).toBe('green');
+                        expect(status.breathing).toBe('green');
+                    })
+                } else if (startDaysAgo == 2 || startDaysAgo == 3) {
+                    it("should return yellow", async () => {
+                        const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
+                        expect(status.status).toBe('yellow');
+                        expect(status.lumosity).toBe('yellow');
+                        expect(status.breathing).toBe(exp);
+                    });
+                } else {
+                    it("should return red", async () => {
+                        const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
+                        expect(status.status).toBe('red');
+                        expect(status.lumosity).toBe('red');
+                        expect(status.breathing).toBe(exp);
+                    });
+                }
         });
 
     });
@@ -189,12 +254,21 @@ describe("stage 3 status", () => {
 
         describe.each(nonRedConds)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
             ({startDaysAgo, numSegsLast5Days, exp}) => {
-                it("should return yellow", async () => {
-                    const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
-                    expect(status.status).toBe('yellow');
-                    expect(status.lumosity).toBe('yellow');
-                    expect(status.breathing).toBe(exp);
-                });
+                if (startDaysAgo <= 3) {
+                    it("should return the expected status", async () => {
+                        const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
+                        expect(status.status).toBe(exp);
+                        expect(status.lumosity).toBe('green');
+                        expect(status.breathing).toBe(exp);
+                    });
+                } else {
+                    it("should return yellow", async () => {
+                        const status = await checkStage3Status(startDaysAgo, numSegsLast5Days, lumosData);
+                        expect(status.status).toBe('yellow');
+                        expect(status.lumosity).toBe('yellow');
+                        expect(status.breathing).toBe(exp);
+                    });
+                }
         });
 
         describe.each(redConds)("if the user started $startDaysAgo days ago and has done $numSegsLast5Days breathing segments in the last 5 days",
@@ -281,8 +355,8 @@ function buildLumosityData(numDaysWithSixPlays) {
     return [...fullPlays, ...nonFullPlays];
 }
 
-async function checkLumosityStatus(numDaysWithSixPlays, expectedStatus) {
+async function checkLumosityStatus(numDaysWithSixPlays, expectedStatus, daysSinceStart) {
     const allPlays = buildLumosityData(numDaysWithSixPlays);
-    const status = await lumosityStatus(mockDb([], allPlays), 'abc123');
+    const status = await lumosityStatus(mockDb([], allPlays), 'abc123', daysSinceStart);
     expect(status).toBe(expectedStatus);
 }

@@ -30,16 +30,16 @@ const stage2Status = async(db, userId, humanId) => {
     const segments = await db.segmentsForUser(humanId);
     if (segments.length === 0) return {status: 'gray'};
 
-    const lumosStatus = await lumosityStatus(db, userId);
-    let breathStatus;
-
     const started = dayjs(segments[0].endDateTime * 1000); // segment times are seconds since the epoch, not ms
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day'); // will be 0 for all values <24h, 1 for <48h, etc.
-    const segsDone = segments.length - 1; // subtract 1 b/c we don't count the stage 1 segment
     if (daysSinceStart <= 1) {
-        breathStatus = 'green';
-    } else if (daysSinceStart == 2 || daysSinceStart == 3) {
+        return {status: 'green', lumosity: 'green', breathing: 'green'};
+    }
+
+    let breathStatus;
+    const segsDone = segments.length - 1; // subtract 1 b/c we don't count the stage 1 segment
+    if (daysSinceStart == 2 || daysSinceStart == 3) {
         if (segsDone >= daysSinceStart - 1) {
             breathStatus = 'green';
         } else {
@@ -55,13 +55,13 @@ const stage2Status = async(db, userId, humanId) => {
         }
     }
 
+    const lumosStatus = await lumosityStatus(db, userId, daysSinceStart);
     if (lumosStatus === 'red' || breathStatus === 'red') return {status: 'red', lumosity: lumosStatus, breathing: breathStatus};
     if (lumosStatus === 'yellow' || breathStatus === 'yellow') return {status: 'yellow', lumosity: lumosStatus, breathing: breathStatus};
     return {status: 'green', lumosity: lumosStatus, breathing: breathStatus};
 }
 
 const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {    
-    const lumosStatus = await lumosityStatus(db, userId);
     let breathStatus;
 
     const started = dayjs(stage2CompletedOn);
@@ -73,8 +73,10 @@ const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
     const expectedSegsPerDay = 6;
 
     if (daysSinceStart <= 1) {
-        breathStatus = 'green';
-    } else if (daysSinceStart == 2 || daysSinceStart == 3) {
+        return {status: 'green', lumosity: 'green', breathing: 'green'};
+    }
+    
+    if (daysSinceStart == 2 || daysSinceStart == 3) {
         if (segsDone >= expectedSegsPerDay * (daysSinceStart - 1)) {
             breathStatus = 'green';
         } else {
@@ -90,6 +92,7 @@ const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
         }
     }
 
+    const lumosStatus = await lumosityStatus(db, userId, daysSinceStart);
     if (lumosStatus === 'red' || breathStatus === 'red') return {status: 'red', lumosity: lumosStatus, breathing: breathStatus};
     if (lumosStatus === 'yellow' || breathStatus === 'yellow') return {status: 'yellow', lumosity: lumosStatus, breathing: breathStatus};
     return {status: 'green', lumosity: lumosStatus, breathing: breathStatus};
@@ -102,7 +105,9 @@ const stage3Status = async(db, userId, humanId, stage2CompletedOn) => {
  * red: <2 days with at least six games played per day in the past five days
  * @param {string} userId 
  */
-const lumosityStatus = async(db, userId) => {
+const lumosityStatus = async(db, userId, daysSinceStart) => {
+    if (daysSinceStart <= 1) return 'green';
+
     // subtract 6, rather than 5, b/c we will never have any lumosity data from today, 
     // so we go back one extra day to get five days of data
     const sixDaysAgo = dayjs().subtract(6, 'days').toDate(); 
@@ -119,6 +124,11 @@ const lumosityStatus = async(db, userId) => {
     });
 
     const minSix = Object.entries(byDate).filter(e => e[1] >= 6).length;
+    if (daysSinceStart == 2 || daysSinceStart == 3) {
+        if (minSix < 2) return 'yellow';
+        return 'green';
+    }
+    
     if (minSix >= 4) return 'green';
     if (minSix == 2 || minSix == 3) return 'yellow';
     if (minSix < 2) return 'red';
