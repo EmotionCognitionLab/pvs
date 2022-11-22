@@ -1,32 +1,41 @@
 import { Dashboard } from "admin/dashboard/dashboard.js";
 import { MockClient } from "./mock-client.js";
-import { fakeUsers as users, fakeResults as results } from "./fakes.js";
+import { fakeUsers as users } from "./fakes.js";
 
-function expectRowMatches(row, user, sets) {
+function expectRowMatches(row, user) {
     const [
         subjectCell,
         dailyTasksT1Cell,
-        eegT1Cell,
-        mriT1Cell,
-        sessionsCell,
-        eegT2Cell,
-        mriT2Cell,
+        visit1Cell,
+        lumosBreathStatusCell,
+        visit2Cell,
+        visit3Cell,
         dailyTasksT2Cell,
         droppedCell,
     ] = row.querySelectorAll("td");
-    const finishedSetsCount = sets.filter(s => s.experiment === "set-finished").length;
-    const finishedSetsT1Count = finishedSetsCount;  // to-do: fix this
-    const finishedSetsT2Count = 0;  // to-do: fix this
-    const finishedSessionsCount = 0;  // to-do: fix this
     expect(row.dataset.userId).toBe(user.userId);
     expect(subjectCell.querySelector(".username").textContent).toBe(user.name);
-    expect(parseInt(dailyTasksT1Cell.querySelector("progress").value, 10)).toBe(finishedSetsT1Count);
-    expect(eegT1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT1));
-    expect(mriT1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.mriT1));
-    expect(parseInt(sessionsCell.querySelector("progress").value, 10)).toBe(finishedSessionsCount);
-    expect(eegT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.eegT2));
-    expect(mriT2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.mriT2));
-    expect(parseInt(dailyTasksT2Cell.querySelector("progress").value, 10)).toBe(finishedSetsT2Count);
+    expect(visit1Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit1));
+    expect(visit2Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit2));
+
+    const status = user.status.status;
+    const lumosStatus = user.status.lumosity;
+    const breathStatus = user.status.breathing;
+    if (user.preComplete) {
+        expect(dailyTasksT1Cell.textContent).toBe("Done");
+        if (!user.homeComplete) {
+            expect(lumosBreathStatusCell.innerHTML).toBe(`<span class="dot ${status}" title="lumosity: ${lumosStatus}\nbreathing: ${breathStatus}\n"></span>`);
+        } else {
+            expect(lumosBreathStatusCell.textContent).toBe('Done');
+            expect(dailyTasksT2Cell.innerHTML).toBe(`<span class="dot ${status}"></span>`);
+        }
+    } else {
+        expect(dailyTasksT1Cell.innerHTML).toBe(`<span class="dot ${status}"></span>`);
+        expect(lumosBreathStatusCell.textContent).toBe("N/A");
+        expect(dailyTasksT2Cell.textContent).toBe("N/A");
+    }
+
+    expect(visit3Cell.querySelector("input").checked).toBe(Boolean(user.progress?.visit3));
     expect(droppedCell.querySelector("input").checked).toBe(Boolean(user.progress?.dropped));
 }
 
@@ -58,7 +67,7 @@ describe("dashboard", () => {
 
     it("cells display correct data", async () => {
         const {wrapper, error, table, details} = getDashboardElements();
-        const mc = new MockClient(users, results);
+        const mc = new MockClient(users);
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
         dash.showActive();
@@ -68,7 +77,7 @@ describe("dashboard", () => {
         for (let i = 0; i < users.length; ++i) {
             const user = users[i];
             const row = document.querySelector(`[data-user-id="${user.userId}"]`);
-            expectRowMatches(row, user, await mc.getSetsForUser(user.userId));
+            expectRowMatches(row, user);
         }
     });
 
@@ -88,9 +97,12 @@ describe("dashboard", () => {
             phone_number: "+19990000006",
             phone_number_verified: false,
             userId: "ea1623c7-834e-47d7-bdda-6c665978128b",
+            status: {
+                status: 'red'
+            }
         };
         // create dashboard without Spike
-        const mc = new MockClient(users, results);
+        const mc = new MockClient(users);
         const {wrapper, error, table, details} = getDashboardElements();
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
@@ -102,7 +114,7 @@ describe("dashboard", () => {
         dash.showActive();
         const spikeRow = document.querySelector(`[data-user-id="${spike.userId}"]`);
         expect(spikeRow).not.toBeNull();
-        expectRowMatches(spikeRow, spike, await mc.getSetsForUser(spike.userId));
+        expectRowMatches(spikeRow, spike);
     });
 
     it("updates backend through client on check", async () => {
@@ -110,7 +122,7 @@ describe("dashboard", () => {
         const date = new Date(2010, 9, 10);
         const dateSpy = jest.spyOn(global, "Date").mockImplementation(() => date);
         // create dashboard
-        const mc = new MockClient(users, results);
+        const mc = new MockClient(users);
         const {wrapper, error, table, details} = getDashboardElements();
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
@@ -118,18 +130,18 @@ describe("dashboard", () => {
         // Fluttershy should not have a timestamp for EEG T1
         const fluttershyId = "597e8b3e-7907-4eae-a7da-b1abb25f5579";
         const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
-        const [_, __, eegT1Cell, ...___] = fluttershyRow.querySelectorAll("td");
+        const [_, __, visit1Cell, ...___] = fluttershyRow.querySelectorAll("td");
         expect(mc.users.get(fluttershyId).progress?.eegT1).toBeFalsy();
-        expect(eegT1Cell.querySelector("input").checked).toBe(false);
-        expect(eegT1Cell.querySelector("span").textContent).toBeFalsy();
+        expect(visit1Cell.querySelector("input").checked).toBe(false);
+        expect(visit1Cell.querySelector("span").textContent).toBeFalsy();
         // check Fluttershy's EEG T1 checkbox
-        eegT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        visit1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
         // wait for the async click event handler to resolve
         await new Promise(process.nextTick);
         // Fluttershy should now have a timestamp for EEG T1
-        expect(mc.users.get(fluttershyId).progress?.eegT1).toBeTruthy();  // backend is updated
-        expect(eegT1Cell.querySelector("input").checked).toBe(true);  // checkbox is checked
-        expect(eegT1Cell.querySelector("span").textContent).toBe("2010-10-10");  // timestamp is displayed
+        expect(mc.users.get(fluttershyId).progress?.visit1).toBeTruthy();  // backend is updated
+        expect(visit1Cell.querySelector("input").checked).toBe(true);  // checkbox is checked
+        expect(visit1Cell.querySelector("span").textContent).toBe("2010-10-10");  // timestamp is displayed
         expect(dateSpy).toHaveBeenCalledTimes(1);
         // restore mocks
         dateSpy.mockRestore();
@@ -139,7 +151,7 @@ describe("dashboard", () => {
         // mock window.confirm
         const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
         // create dashboard
-        const mc = new MockClient(users, results);
+        const mc = new MockClient(users);
         const {wrapper, error, table, details} = getDashboardElements();
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
@@ -147,18 +159,18 @@ describe("dashboard", () => {
         // Twilight Sparkle should have a timestamp for MRI T1
         const twiId = "95240257-42f9-4ae6-b989-0126f595e547";
         const twiRow = document.querySelector(`[data-user-id="${twiId}"]`);
-        const [_, __, ___, mriT1Cell, ...____] = twiRow.querySelectorAll("td");
-        expect(mc.users.get(twiId).progress?.mriT1).toBeTruthy();
-        expect(mriT1Cell.querySelector("input").checked).toBe(true);
-        expect(mriT1Cell.querySelector("span").textContent).toBeTruthy();
+        const [_, __, ___, ____,visit2Cell, ..._____] = twiRow.querySelectorAll("td");
+        expect(mc.users.get(twiId).progress?.visit2).toBeTruthy();
+        expect(visit2Cell.querySelector("input").checked).toBe(true);
+        expect(visit2Cell.querySelector("span").textContent).toBeTruthy();
         // uncheck Twilight Sparkle's MRI T1 checkbox
-        mriT1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        visit2Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
         // wait for the async click event handler to resolve
         await new Promise(process.nextTick);
         // Twilight Sparkle should no longer have a timestamp for MRI T1
-        expect(mc.users.get(twiId).progress?.mriT1).toBeFalsy();  // backend is updated
-        expect(mriT1Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
-        expect(mriT1Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
+        expect(mc.users.get(twiId).progress?.visit2).toBeFalsy();  // backend is updated
+        expect(visit2Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
+        expect(visit2Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
         expect(confirmSpy).toHaveBeenCalledTimes(1);
         // restore mocks
         confirmSpy.mockRestore();
