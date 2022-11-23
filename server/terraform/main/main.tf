@@ -329,6 +329,31 @@ resource "aws_ssm_parameter" "lumos-plays-table" {
   value = "${aws_dynamodb_table.lumos-plays-table.name}"
 }
 
+resource "aws_dynamodb_table" "earnings-table" {
+  name           = "pvs-${var.env}-earnings"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "userId"
+  range_key      = "typeDate"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "typeDate"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "earnings-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/earnings"
+  description = "Dynamo table holding earnings info"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.earnings-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
