@@ -126,6 +126,8 @@ export async function processreports(event) {
     if (newPlayData.length > 0) await savePlaysData(newPlayData);
 
     // find all the users who have a new stage2Done status and save that to dynamo
+    // stage2Done is true when a user has played each of the available games at least twice
+    // and has done a total of at least 31 plays
     const stage2StatusMap = {};
     for (const email of emails) {
       const forEmail = playsData.filter(r => r.email === email);
