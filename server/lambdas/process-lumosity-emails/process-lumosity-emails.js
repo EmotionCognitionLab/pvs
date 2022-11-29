@@ -77,6 +77,7 @@ export async function processreports(event) {
   const record = event.Records[0];
   // there are also daily engagement reports - we ignore those for now
   if (record && record.s3 && record.s3.object && record.s3.object.key && !record.s3.object.key.includes('game_result_report')) {
+    console.log('Skipping - missing file key or file is not a game result report.')
     return { status: 'ignored', reason: 'Missing file key or file is not a game result report.'};
   }
 
