@@ -14,13 +14,17 @@
         <img v-bind:src="require('../assets/streak15.png')" :class="{gray: streakDur < 15}">
         <img v-bind:src="require('../assets/streak30.png')" :class="{gray: streakDur < 30}">
         <img v-bind:src="require('../assets/streak60.png')" :class="{gray: streakDur < 60}">
+        <div><button id="continue" class="button" @click="goToTasks">Continue to today's session</button></div>
     </div>
 </template>
 <script setup>
 import { ref, onBeforeMount } from '@vue/runtime-core'
+import { useRouter } from "vue-router";
 import { yyyymmddString } from '../utils.js';
 import ApiClient from '../../../common/api/client.js'
 import { SessionStore } from '../session-store'
+
+const router = useRouter();
 
 const streakDur = ref(null)
 const numCompleteDays = ref(null)
@@ -84,9 +88,17 @@ function yyyymmddStrToDate(yyyymmdd) {
     const d = yyyymmdd.substring(6, 8);
     return new Date(y, Number.parseInt(m) - 1, d);
 }
+
+function goToTasks() {
+    router.push({path: '/current-stage'})
+}
+
 </script>
 <style scoped>
 .gray {
     filter: grayscale(1);
+}
+#continue {
+    margin-top: 50px;
 }
 </style>
