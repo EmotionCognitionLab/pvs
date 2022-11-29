@@ -19,7 +19,7 @@ function handleError(err) {
 }
 
 getAuth(
-    session => {
+    async session => {
         try {
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
@@ -27,11 +27,11 @@ getAuth(
             const payboard = new Payboard(
                 payboardDiv,
                 errorDiv,
-                new ApiClient(session),
+                client,
                 targetId,
                 hasPreferredRole(idToken, awsSettings.AdminRole),
             );
-            payboard.refresh();
+            await payboard.init();
         } catch (err) {
             handleError(err);
         }
