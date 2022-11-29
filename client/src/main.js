@@ -36,7 +36,7 @@ const routes = [
     { path: '/stage2', component: Stage2Component },
     { path: '/donetoday', component: DoneTodayComponent},
     { path: '/current-stage', beforeEnter: chooseStage},
-    { path: '/', beforeEnter: chooseStage }
+    { path: '/', beforeEnter: streakOrSetup }
 ]
 
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/', '/index.html']
@@ -45,6 +45,20 @@ const router = createRouter({
     history: process.env.IS_ELECTRON ? createWebHashHistory() : createWebHistory(),
     routes: routes
 })
+
+function streakOrSetup() {
+    // no-auth check to see if they've even started assignment to condition
+    if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
+        return {path: '/setup'}
+    }
+    // if they've at least been assigned to condition, they need to log in
+    // for us to be able to show the streak page
+    if (!isAuthenticated()) {
+        return { name: 'signin', query: { postLoginPath: '/streak' }}
+    }
+
+    return {path: '/streak'}
+}
 
 async function chooseStage() {
     const todayYMD = yyyymmddString(new Date());
