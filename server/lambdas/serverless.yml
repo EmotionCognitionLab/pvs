@@ -280,6 +280,19 @@ functions:
       patterns:
         - 'admin-api/docusign/*.js'
 
+  earnings:
+    handler: earnings/earnings.handler
+    events:
+      - schedule:
+          name: "2AM-earnings-calculation"
+          rate: cron(0 10 * * ? *)
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'earnings/*.js'
+
 layers:
   BetterSqlite3:
     path: 'better-sqlite3-layer/layer'
