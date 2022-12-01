@@ -7,6 +7,7 @@
  import DynamoDB from 'aws-sdk/clients/dynamodb.js';
  import { Logger } from "../logger/logger.js";
  import { getAuth } from "../auth/auth.js";
+ import { earningsTypes } from "../types/types.js";
  
  'use strict';
 
@@ -15,6 +16,7 @@ export default class Db {
         this.region = options.region || awsSettings.AWSRegion;
         this.identityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;
         this.userPoolId = options.userPoolId || awsSettings.UserPoolId;
+        this.earningsTable = options.earningsTable || awsSettings.EarningsTable;
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
         this.lumosAcctTable = options.lumosAcctTable || awsSettings.LumosAcctTable;
         this.lumosPlaysTable = options.lumosPlaysTable || awsSettings.LumosPlaysTable;
@@ -325,6 +327,41 @@ export default class Db {
         }
     }
 
+    async earningsForUser(userId, type = null) {
+        try {
+            const params =  {
+                TableName: earningsTable,
+                KeyConditionExpression: 'userId = :uid',
+                ExpressionAttributeValues: {
+                    ':uid': userId,
+                }
+            };
+            if (type) {
+                params.KeyConditionExpression += ' and begins_with(typeDate, :td)';
+                params.ExpressionAttributeValues[':td'] = type;
+            }
+
+            const results = await this.query(params);
+            return results.Items.map(i => {
+                const parts = i.typeDate.split('|');
+                if (parts.length !== 2) {
+                    throw new Error(`Unexpected typeDate value: ${i.typeDate}. Expected two parts, but found ${parts.length}.`);
+                }
+                const type = parts[0];
+                const date = parts[1];
+                return {
+                    userId: i.userId,
+                    type: type,
+                    date: date,
+                    amount: i.amount
+                };
+            });
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
     async updateUser(userId, updates) {
         const disallowedAttrs = ['userId', 'createdAt', 'email', 'name', 'phone_number', 'phone_number_verified'];
         const expressionAttrVals = {};
@@ -435,6 +472,45 @@ export default class Db {
             }
         }
         this.logger.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
+    }
+
+    async saveEarnings(userId, earningsType, date) {
+        let amount;
+        switch(earningsType) {
+            case earningsTypes.PRE:
+            case earningsTypes.POST:
+                amount = 30;
+                break;
+            case earningsTypes.VISIT1:
+            case earningsTypes.VISIT2:
+            case earningsTypes.VISIT3:
+            case earningsTypes.VISIT4:
+            case earningsTypes.VISIT5:
+                amount = 50;
+                break;
+            case earningsTypes.LUMOS_AND_BREATH_1:
+            case earningsTypes.BREATH_BONUS:
+                amount = 1;
+                break;
+            case earningsTypes.BREATH2:
+            case earningsTypes.LUMOS_BONUS:
+                amount = 2;
+                break;
+            default:
+                throw new Error(`Unrecognized earnings type ${earningsType}.`);
+        }
+        const params = {
+            TableName: earningsTable,
+            Key: {
+                userId: userId
+            },
+            UpdateExpression: 'set typeDate = :td, amount = :amount',
+            ExpressionAttributeValues: {
+                ':td': `${earningsType}|${date}`,
+                ':amount': amount
+            }
+        };
+        await this.update(params);
     }
 
     async saveDsOAuthCreds(userId, accessToken, refreshToken, expiresAt) {
