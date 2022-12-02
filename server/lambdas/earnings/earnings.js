@@ -60,7 +60,10 @@ export async function handler() {
 async function saveBaselineEarnings(userId, earningsType) {    
     const sets = await db.getSetsForUser(userId);
     const finalSetNum = earningsType === earningsTypes.PRE ? 6 :12;
-    const finalSets = sets.filter(s => s.experiment === 'set-finished' && s.results?.setNum === finalSetNum);
+    if (sets.length < finalSetNum) throw new Error(`Can't save ${earningsType} baseline earnings. Expected to find at least ${finalSetNum} set records, but found ${sets.length}.`);
+
+    const setsDone = await db.getResultsForCurrentUser('set-finished', sets[0].identityId);
+    const finalSets = setsDone.filter(s => s.results?.setNum === finalSetNum);
     if (finalSets.length !== 1) throw new Error(`Can't save ${earningsType} baseline earnings. Expected to find 1 set-finished record with setNum ${finalSetNum}, but found ${finalSets.length}.`);
     
     const finalSet = finalSets[0];

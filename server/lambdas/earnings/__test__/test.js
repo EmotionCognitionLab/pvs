@@ -9,9 +9,10 @@ const mockEarningsForUser = jest.fn(() => []);
 const mockLumosPlaysForUser = jest.fn(() => []);
 const mockSaveEarnings = jest.fn(() => {});
 const mockSegmentsForUser = jest.fn(() => []);
-const mockGetSetsForUser = jest.fn(() => []);
+const mockGetSetsForUser = jest.fn((userId) => Array(12).fill({identityId: 0}));
+const mockGetResultsForCurrentUser = jest.fn(() => []);
 
-const allMocks = [mockGetBaselineCompleteUsers, mockEarningsForUser, mockLumosPlaysForUser, mockSaveEarnings, mockSegmentsForUser, mockGetSetsForUser];
+const allMocks = [mockGetBaselineCompleteUsers, mockEarningsForUser, mockLumosPlaysForUser, mockSaveEarnings, mockSegmentsForUser, mockGetSetsForUser, mockGetResultsForCurrentUser];
 
 jest.mock('db/db', () => {
     return jest.fn().mockImplementation(() => {
@@ -21,7 +22,8 @@ jest.mock('db/db', () => {
             getSetsForUser: (userId) => mockGetSetsForUser(userId),
             lumosPlaysForUser: (userId) => mockLumosPlaysForUser(userId),
             saveEarnings: (userId, earningsType, dateDone) => mockSaveEarnings(userId, earningsType, dateDone),
-            segmentsForUser: (humanId) => mockSegmentsForUser(humanId)
+            segmentsForUser: (humanId) => mockSegmentsForUser(humanId),
+            getResultsForCurrentUser: (expName, identityId) => mockGetResultsForCurrentUser(expName, identityId)
         };
     });
 });
@@ -43,7 +45,7 @@ describe("Earnings calculation", () => {
             {experiment: 'set-finished', results: {setNum: 6}, dateTime: '2022-10-11'}
         ];
 
-        mockGetSetsForUser.mockImplementationOnce(() => sets);
+        mockGetResultsForCurrentUser.mockImplementationOnce(() => sets);
         mockGetBaselineCompleteUsers.mockImplementationOnce(() => users);
         await handler();
         expect(mockSaveEarnings).toHaveBeenCalledTimes(1);
@@ -88,7 +90,7 @@ describe("Earnings calculation", () => {
                 {experiment: 'set-finished', results: {setNum: finalSetNum}, dateTime: '2022-10-11'}
             ];
     
-            mockGetSetsForUser.mockReturnValue(sets);
+            mockGetResultsForCurrentUser.mockReturnValue(sets);
             mockGetBaselineCompleteUsers.mockReturnValue(prePostUsers);
             // ensure that in post case call for pre- earnings returns something and call for post- earnings returns nothing
             // otherwise we'll try to save pre- earnings and fail b/c there isn't a set-finished record for the pre- baseline
@@ -105,7 +107,7 @@ describe("Earnings calculation", () => {
                 {experiment: 'set-finished', results: {setNum: finalSetNum}, dateTime: '2022-10-11'}
             ];
     
-            mockGetSetsForUser.mockReturnValue(sets);
+            mockGetResultsForCurrentUser.mockReturnValue(sets);
             mockGetBaselineCompleteUsers.mockReturnValue(prePostUsers);
             mockEarningsForUser.mockImplementation((userId, earnType) => {
                 if (earnType === earningsTypes.PRE) {
@@ -121,9 +123,9 @@ describe("Earnings calculation", () => {
 
         it(`should not save ${type}- baseline earnings if the user's sets don't show they have finished the baseline`, async () => {
             if (type === earningsTypes.PRE) {
-                mockGetSetsForUser.mockReturnValue([]);
+                mockGetResultsForCurrentUser.mockReturnValue([]);
             } else {
-                mockGetSetsForUser.mockReturnValue([
+                mockGetResultsForCurrentUser.mockReturnValue([
                     {experiment: 'set-finished', results: {setNum: 6}, dateTime: '2022-10-11'}
                 ]);
             }
