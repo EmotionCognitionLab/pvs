@@ -10,7 +10,7 @@ const db = new Db();
 db.docClient = docClient;
 
 export async function handler() {
-    const users = await db.getBaselineCompleteUsers();
+    const users = await db.getBaselineCompleteUsers('pre');
 
     for (const u of users) {
         try {
