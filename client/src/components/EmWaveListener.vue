@@ -13,7 +13,7 @@
         </div>
         <button class="pulse-sensor-button" id="startSensor" :disabled="running" @click="startPulseSensor">Start</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
-        <div v-if="showScore" id="score">Score (higher is better): {{ score }}</div>
+        <div v-if="showScore" id="scoreText">Score (higher is better): <span  id="score">{{ score }}</span></div>
     </div>
    
 </template>
@@ -174,6 +174,16 @@
         text-decoration-color: cornflowerblue;
         font-size: 80px;
         margin: 20px;
+    }
+    #score {
+        font-size: 40px;
+        display: inline-block;
+        margin-left: 10px;
+    }
+    #scoreText {
+        display: flex;
+        padding-left: 420px;
+        margin-top: 15px;
     }
     .pulse-sensor-button {
         padding: 8px;
