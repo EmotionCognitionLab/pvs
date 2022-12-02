@@ -330,7 +330,7 @@ export default class Db {
     async earningsForUser(userId, type = null) {
         try {
             const params =  {
-                TableName: earningsTable,
+                TableName: this.earningsTable,
                 KeyConditionExpression: 'userId = :uid',
                 ExpressionAttributeValues: {
                     ':uid': userId,
@@ -500,7 +500,7 @@ export default class Db {
                 throw new Error(`Unrecognized earnings type ${earningsType}.`);
         }
         const params = {
-            TableName: earningsTable,
+            TableName: this.earningsTable,
             Key: {
                 userId: userId
             },
