@@ -9,7 +9,12 @@ const s3 = new AWS.S3({
   s3ForcePathStyle: true
 });
 const simpleParser = require('mailparser').simpleParser;
-const dataForge = require('data-forge')
+const dataForge = require('data-forge');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const destBucket = process.env.DEST_BUCKET;
 const destPrefix = process.env.DEST_PREFIX;
@@ -189,11 +194,11 @@ function lumosityGameResultsToPlaysByUserByGame(gameResultsCSV) {
         const byGame = e.groupBy(r => r.game_name);
         for (const game of byGame) {
           const gameName = game.first().game_name;
-          const byDate = game.groupBy(r => r.created_at.substring(0, 10)); // created_at is YYYY-MM-DD HH:mm:ss
+          const byDate = game.groupBy(r => dayjs(r.created_at).tz('America/Los_Angeles').format('YYYY-MM-DD'));
           for (const date of byDate) {
             const multiPlay = date.count() > 1;
             const lpi = date.first().game_lpi === '' ? 0 : Number.parseInt(date.first().game_lpi);
-            res.push({email: emailAddr, game: gameName, dateTime: date.first().created_at, lpi: lpi, multiPlay: multiPlay});
+            res.push({email: emailAddr, game: gameName, dateTime: dayjs(date.first().created_at).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm:ss'), lpi: lpi, multiPlay: multiPlay});
           }
         }
     }
