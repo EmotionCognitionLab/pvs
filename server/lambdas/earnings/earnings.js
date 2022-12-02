@@ -32,7 +32,7 @@ export async function handler() {
                 const lumosEarnings = await db.earningsForUser(u.userId,  earningsTypes.LUMOS_AND_BREATH_1);
                 // should be sorted by date asc, so last should be most recent
                 const lastLumosEarningsDate = lumosEarnings.length > 0 ? lumosEarnings.slice(-1)[0].date : '1970-01-01 00:00:00';
-                if (!u.stage2Complete) {
+                if (!u.stage2Completed) {
                     await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 2);
                 } else {
                     await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 3);

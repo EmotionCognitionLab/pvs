@@ -84,7 +84,7 @@ async function chooseStage() {
     const sess = await SessionStore.getRendererSession()
     const apiClient = new ApiClient(sess)
     const data = await apiClient.getSelf()
-    if (!data.stage2Complete) return {path: '/stage2'}
+    if (!data.stage2Completed) return {path: '/stage2'}
     // the data on which stage2 completion is judged
     // are from the previous day, so we assume
     // that if they're finished with stage 2 they

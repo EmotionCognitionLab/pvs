@@ -111,11 +111,11 @@ export async function processreports(event) {
      
       const lastPlay = userId ? await lastPlayDate(userId) : '1970-01-01 00:00:00';
       const userInfo = userId ? await db.getUser(userId) : {};
-      userInfoArr.push({email: em, userId: userId, lastPlay: lastPlay, stage2Done: userInfo.stage2Done});
+      userInfoArr.push({email: em, userId: userId, lastPlay: lastPlay, stage2Completed: userInfo.stage2Completed});
     };
     
     const email2UserInfoMap = userInfoArr.reduce((prev, cur) => {
-      prev[cur.email] = {userId: cur.userId, lastPlay: cur.lastPlay, stage2Done: cur.stage2Done};
+      prev[cur.email] = {userId: cur.userId, lastPlay: cur.lastPlay, stage2Completed: cur.stage2Completed};
       return prev;
     }, {});
 
@@ -131,8 +131,8 @@ export async function processreports(event) {
       }).toArray();
     if (newPlayData.length > 0) await savePlaysData(newPlayData);
 
-    // find all the users who have a new stage2Done status and save that to dynamo
-    // stage2Done is true when a user has played each of the available games at least twice
+    // find all the users who have a new stage2Completed status and save that to dynamo
+    // stage2Completed is true when a user has played each of the available games at least twice
     // and has done a total of at least 31 plays
     const stage2StatusMap = {};
     for (const email of emails) {
@@ -150,16 +150,16 @@ export async function processreports(event) {
       stage2StatusMap[forEmail.first().email] = twoPlays && totalPlays >= 31;
     }
 
-    for (const [email, stage2Done] of Object.entries(stage2StatusMap)) {
-      if (stage2Done && email2UserInfoMap[email].stage2Done) continue;
-      if (!stage2Done && email2UserInfoMap[email].stage2Done) {
+    for (const [email, stage2Completed] of Object.entries(stage2StatusMap)) {
+      if (stage2Completed && email2UserInfoMap[email].stage2Completed) continue;
+      if (!stage2Completed && email2UserInfoMap[email].stage2Completed) {
         console.error(`Error: User ${email2UserInfoMap[email].userId} had previously completed stage 2 but now appears to not have completed it.`);
         continue;
       }
-      if (stage2Done && !email2UserInfoMap[email].stage2Done) {
+      if (stage2Completed && !email2UserInfoMap[email].stage2Completed) {
         const date = new Date();
         const today = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2,0)}${date.getDate().toString().padStart(2, 0)}`;
-        await db.updateUser(email2UserInfoMap[email].userId, {stage2Complete: true, stage2CompletedOn: today});
+        await db.updateUser(email2UserInfoMap[email].userId, {stage2Completed: true, stage2CompletedOn: today});
       }
     }
 

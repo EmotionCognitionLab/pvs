@@ -249,7 +249,7 @@ describe("Lumosity bonuses", () => {
 
 describe("Lumos + breathing 1 earnings", () => {
     const users = [
-        {userId: '123abc', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Complete: false}
+        {userId: '123abc', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Completed: false}
     ];
 
     beforeEach(() => {
@@ -288,7 +288,7 @@ describe("Lumos + breathing 1 earnings", () => {
 
     it("in stage 3, should pay for Lumosity plays on days with >=6 game plays and three breathing segments following the Lumosity session", async () => {
         const stage3Users = [Object.assign({}, users[0])];
-        stage3Users[0].stage2Complete = true;
+        stage3Users[0].stage2Completed = true;
         mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
 
         const testDate = new Date("2022-10-15 11:45:17");
@@ -427,7 +427,7 @@ describe("Lumos + breathing 1 earnings", () => {
 
     it("in stage 3, should not pay for Lumosity plays on days with >=6 game plays that are not followed by three breathing segments", async () => {
         const stage3Users = [Object.assign({}, users[0])];
-        stage3Users[0].stage2Complete = true;
+        stage3Users[0].stage2Completed = true;
         mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
 
         const testDate1 = new Date("2022-10-15 11:45:17");
@@ -474,7 +474,7 @@ describe("Lumos + breathing 1 earnings", () => {
 
     it("should not pay for Lumosity plays for users where homeComplete is true", async () => {
         const homeCompleteUsers = [
-            {userId: '123abc', humanId: 'BigTest', homeComplete: true, preComplete: true, stage2Complete: true}
+            {userId: '123abc', humanId: 'BigTest', homeComplete: true, preComplete: true, stage2Completed: true}
         ];
         const testDate = new Date('2022-11-06 13:44:02');
         expect(testDate.getDay == 0);
@@ -528,7 +528,7 @@ describe("Breathing 2 earnings", () => {
     });
 
     it("should pay an additional $2 in stage 3 if the user does six breathing segments after a Lumosity session", async () => {
-        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Complete: true}];
+        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true}];
         mockGetBaselineCompleteUsers.mockReturnValue(users);
 
         const testDate = new Date("2022-10-15 11:45:17");
@@ -595,7 +595,7 @@ describe("Breathing 2 earnings", () => {
 
 describe("Breathing bonuses", () => {
     const users = [
-        {userId: 'breathbonus', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Complete: true}
+        {userId: 'breathbonus', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Completed: true}
     ];
 
     beforeEach(() => {

@@ -158,7 +158,7 @@ describe("Processing reports from S3", () => {
             await confirmPlaysWritten(expectedPlays);
         });
 
-        test("should update the stage2Complete status for a user who has finished stage 2", async () => {
+        test("should update the stage2Completed status for a user who has finished stage 2", async () => {
             const allGames = [
                 'Word Bubbles Web',
                 'Memory Match Web',
@@ -176,7 +176,7 @@ describe("Processing reports from S3", () => {
 
             const randMaxNoZero = (max) => Math.floor((Math.random() * (max - 1)) + 1).toString().padStart(2, '0');
             const randCreatedAt = () => `2022-${randMaxNoZero(12)}-${randMaxNoZero(28)} ${randMaxNoZero(23)}:${randMaxNoZero(59)}:${randMaxNoZero(59)}`;
-            // for stage2Done to be true every game in allGames must be played at least twice,
+            // for stage2Completed to be true every game in allGames must be played at least twice,
             // and a total of >=31 games must be played, so just loop through allGames 3 times to
             // get a total of 36 games played
             const playsData = [0,1,2].map( () => {
@@ -193,7 +193,7 @@ describe("Processing reports from S3", () => {
             const params = {
                 TableName: usersTable,
                 Key: { userId: lumosAcct.owner },
-                UpdateExpression: 'set stage2Complete = :true, stage2CompletedOn = :today',
+                UpdateExpression: 'set stage2Completed = :true, stage2CompletedOn = :today',
                 ExpressionAttributeValues: {':true': true, ':today': todayYyyymmdd() }
             };
             await docClient.update(params).promise();
@@ -294,7 +294,7 @@ async function confirmStage2Complete(userId) {
         ExpressionAttributeValues: { ':userId': userId }
     };
     const res = await docClient.query(qParams).promise();
-    expect(res.Items[0].stage2Complete).toBe(true);
+    expect(res.Items[0].stage2Completed).toBe(true);
     expect(res.Items[0].stage2CompletedOn).toBe(todayYyyymmdd());
 }
 
