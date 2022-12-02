@@ -502,13 +502,11 @@ export default class Db {
         const params = {
             TableName: this.earningsTable,
             Key: {
-                userId: userId
+                userId: userId,
+                typeDate: `${earningsType}|${date}`
             },
-            UpdateExpression: 'set typeDate = :td, amount = :amount',
-            ExpressionAttributeValues: {
-                ':td': `${earningsType}|${date}`,
-                ':amount': amount
-            }
+            UpdateExpression: `set amount = :amount`,
+            ExpressionAttributeValues: { ':amount': amount }
         };
         await this.update(params);
     }
