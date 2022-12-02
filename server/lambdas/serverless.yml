@@ -288,7 +288,7 @@ functions:
           rate: cron(0 10 * * ? *)
     environment:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
-    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/earnings}
     package:
       patterns:
         - 'earnings/*.js'

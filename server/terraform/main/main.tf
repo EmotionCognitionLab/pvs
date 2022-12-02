@@ -730,6 +730,30 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
 POLICY
 }
 
+# policy to allow limited reading of dynamo user table
+resource "aws_iam_policy" "dynamodb-user-read" {
+  name = "pvs-${var.env}-dynamodb-user-read"
+  path = "/policy/dynamodb/users/read/all/"
+  description = "Allows limited reading from dynamodb user table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow limited reading/writing of dynamo lumosity account table
 resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
   name = "pvs-${var.env}-dynamodb-lumos-acct-read-write"
@@ -923,6 +947,30 @@ resource "aws_iam_policy" "ses-send" {
         }
       ]
   })
+}
+
+# policy to allow limited reading/writing of dynamo earnings table
+resource "aws_iam_policy" "dynamodb-earnings-read-write" {
+  name = "pvs-${var.env}-dynamodb-earnings-read-write"
+  path = "/policy/dynamodb/earnings/all/"
+  description = "Allows limited reading from/writing of dynamodb earnings table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.earnings-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
 }
 
 # IAM roles
@@ -1152,6 +1200,43 @@ resource "aws_ssm_parameter" "lambda-role" {
   description = "ARN for lambda role"
   type = "SecureString"
   value = "${aws_iam_role.lambda.arn}"
+}
+
+resource "aws_iam_role" "lambda-earnings" {
+  name = "pvs-${var.env}-lambda-earnings"
+  path = "/role/lambda/earnings/"
+  description = "Role for lambda functions that handle earnings"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-user-read.arn,
+    aws_iam_policy.dynamodb-read-all-segments.arn,
+    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
+    aws_iam_policy.dynamodb-earnings-read-write.arn,
+    aws_iam_policy.dynamodb-lumos-plays-read-write.arn,
+    aws_iam_policy.cloudwatch-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-earnings-role" {
+  name = "/pvs/${var.env}/role/lambda/earnings"
+  description = "ARN for lambda-earnings role"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-earnings.arn}"
 }
 
 resource "aws_iam_role_policy" "lambda-role-assumption" {
