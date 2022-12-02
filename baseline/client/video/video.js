@@ -15,7 +15,7 @@ export class Video {
             return [{
                 type: 'html-button-response',
                 choices: ['Continue'],
-                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/vIb-peai4jE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/eR9zNMfrQ0c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
             }];
         } else if (this.setNum == 6) {
             return [{
