@@ -204,4 +204,29 @@ describe("Breathing data functions", () => {
 
         expect(bd.getTrainingDayCount(stage)).toBe(expectedDays);
     });
+
+    it("getSegmentsAfterDate should return segments for the given stage", () => {
+        const regime = { durationMs: 300000, breathsPerMinute: 12, randomize: false };
+        const segs = [
+            { seg: {avgCoherence: 1, sessionStartTime: 1000}, stage: 1 },
+            { seg: {avgCoherence: 2, sessionStartTime: 2000}, stage: 2 },
+            { seg: {regime: regime, avgCoherence: 3, sessionStartTime: 3000}, stage: 3 },
+        ];
+        
+        segs.forEach(s => bd.forTesting.createSegment(s.seg, s.stage));
+        const startDate = new Date(0);
+        const stages = [1,2,3];
+        stages.forEach(stage => {
+            const segResults = bd.getSegmentsAfterDate(startDate, stage);
+            expect(segResults.length).toBe(1);
+            const curSeg = segResults[0];
+            expect(curSeg.avgCoherence).toBe(segs[stage - 1].seg.avgCoherence);
+            expect(curSeg.stage).toBe(segs[stage - 1].stage);
+            if (stage == 3) {
+                expect(curSeg.regimeId).toBeDefined();
+                expect(curSeg.regimeId).not.toBeNull();
+                expect(curSeg.sessionStartTime).toBe(segs[stage - 1].seg.sessionStartTime);
+            }
+        });
+    });
 });

@@ -86,7 +86,8 @@ function createSegment(regimeData, stage) {
 }
 
 function getSegmentsAfterDate(date, stage) {
-    const stmt = db.prepare('SELECT * FROM segments where end_date_time >= ? and stage = ? ORDER BY end_date_time asc');
+    const tableName = stage == 3 ? 'segments' : 'rest_segments';
+    const stmt = db.prepare(`SELECT * FROM ${tableName} where end_date_time >= ? and stage = ? ORDER BY end_date_time asc`);
     const res = stmt.all(date.getTime() / 1000, stage);
     return res.map(rowToObject);
 }
