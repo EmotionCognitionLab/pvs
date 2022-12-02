@@ -105,17 +105,17 @@ async function saveVisitEarnings(userId, whichVisit, visitDate) {
 // save any earnings from it (including bonuses) as well as from
 // breathing exercises (including bonuses)
 async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate, stage) {
-    const lumosPlays = db.lumosPlaysForUser(userId);
+    const lumosPlays = await db.lumosPlaysForUser(userId);
 
     // group lumos plays by day
     // dates are in YYYY-MM-DD HH:mm:ss format
-     const lumosPlaysByDate = {};
-     lumosPlays.forEach(lp => {
-         const date = lp.dateTime.substring(0, 10);
-         const plays = lumosPlaysByDate[date] || [];
-         plays.push(lp);
-         lumosPlaysByDate[date] = plays;
-     });
+    const lumosPlaysByDate = {};
+    lumosPlays.forEach(lp => {
+        const date = lp.dateTime.substring(0, 10);
+        const plays = lumosPlaysByDate[date] || [];
+        plays.push(lp);
+        lumosPlaysByDate[date] = plays;
+    });
 
     // calculate Lumosity bonuses
     // Lumosity bonuses are only done on Sunday and only apply once you have played 
@@ -140,7 +140,7 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
     .map(e => e[0]);
     
     // you only get paid for lumosity if you did a breathing practice afterward
-    const breathSegs = db.segmentsForUser(humanId);
+    const breathSegs = await db.segmentsForUser(humanId);
     const breathSegsByDate = {};
     breathSegs.forEach(bs => {
         const date = dayjs(bs.endDateTime * 1000).format('YYYY-MM-DD');
@@ -168,7 +168,7 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
         
         if (stage3Segs.length < 9) return; // must have completed 3 15 minute sessions (=== 9 segments) to be eligible
 
-        const breathBonusEarnings = db.earningsForUser(userId, earningsTypes.BREATH_BONUS)
+        const breathBonusEarnings = await db.earningsForUser(userId, earningsTypes.BREATH_BONUS)
         const lastBreathBonusDate = breathBonusEarnings.length > 0 ? breathBonusEarnings.slice(-1)[0].date : '1970-01-01 00:00:00';
         const potentialBreathBonusDates = {};
         Object.entries(breathSegsByDate).forEach(e => {
