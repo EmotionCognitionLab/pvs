@@ -183,13 +183,11 @@
     #scoreText {
         display: flex;
         padding-left: 420px;
-        margin-top: 15px;
     }
     .pulse-sensor-button {
         padding: 8px;
         font-size: 18px;
         font-weight: bold;
         margin-right: 4px;
-        margin-top: 5px;
     }
 </style>
