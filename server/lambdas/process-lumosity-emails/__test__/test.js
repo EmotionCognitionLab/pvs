@@ -1,9 +1,13 @@
 'use strict';
-
 const path = require('path');
 require('dotenv').config({path: path.join(__dirname, './env.sh')});
 const th = require('../../common-test/test-helper.js');
 const fs = require('fs/promises');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const lambdaLocal = require("lambda-local");
 const AWS = require('aws-sdk');
 const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01',
@@ -18,6 +22,7 @@ const engagementKey = `${originPrefix}/2022-09-13-09-00-30-347.daily_engagement_
 const usersTable = process.env.USERS_TABLE;
 const lumosAcctTable = process.env.LUMOS_ACCT_TABLE;
 const lumosPlaysTable = process.env.LUMOS_PLAYS_TABLE;
+const toLATime = (dtStr) => dayjs(dtStr).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm:ss');
 
 afterEach(async () => {
     await th.s3.removeBucket(process.env.DEST_BUCKET);
@@ -113,7 +118,7 @@ describe("Processing reports from S3", () => {
             ];
             await processGameReport(playsData);
             const expectedPlays = playsData.map(pd => {
-                return { game: pd.game_name, dateTime: pd.created_at, userId: lumosAcct.owner, multiPlay: false, lpi: pd.game_lpi }
+                return { game: pd.game_name, dateTime: toLATime(pd.created_at), userId: lumosAcct.owner, multiPlay: false, lpi: pd.game_lpi }
             });
             await confirmPlaysWritten(expectedPlays);
         });
@@ -139,7 +144,7 @@ describe("Processing reports from S3", () => {
             await processGameReport(playsData);
             const expectedPlays = [
                 { userId: params.Item.userId, game: params.Item.game, dateTime: params.Item.dateTime, lpi: params.Item.lpi, multiPlay: params.Item.multiPlay },
-                { userId: lumosAcct.owner, game: playsData[1].game_name, dateTime: playsData[1].created_at, lpi: playsData[1].game_lpi, multiPlay: false }
+                { userId: lumosAcct.owner, game: playsData[1].game_name, dateTime: toLATime(playsData[1].created_at), lpi: playsData[1].game_lpi, multiPlay: false }
             ];
             await confirmPlaysWritten(expectedPlays);
         });
@@ -152,8 +157,8 @@ describe("Processing reports from S3", () => {
             ];
             await processGameReport(playsData);
             const expectedPlays = [
-                { game: playsData[0].game_name, dateTime: playsData[0].created_at, userId: lumosAcct.owner, multiPlay: true, lpi: playsData[0].game_lpi },
-                { game: playsData[1].game_name, dateTime: playsData[1].created_at, userId: lumosAcct.owner, multiPlay: false, lpi: playsData[1].game_lpi }
+                { game: playsData[0].game_name, dateTime: toLATime(playsData[0].created_at), userId: lumosAcct.owner, multiPlay: true, lpi: playsData[0].game_lpi },
+                { game: playsData[1].game_name, dateTime: toLATime(playsData[1].created_at), userId: lumosAcct.owner, multiPlay: false, lpi: playsData[1].game_lpi }
             ];
             await confirmPlaysWritten(expectedPlays);
         });
@@ -240,7 +245,7 @@ describe("Processing reports from S3", () => {
             const result = await runReportsLambda(reportKey);
             expect(result.status).toBe('success');
             
-            const expectedPlays = [{game: playsData[0].game_name, userId: lumosAcct.owner, dateTime: playsData[0].created_at, lpi: playsData[0].game_lpi, multiPlay: false}];
+            const expectedPlays = [{game: playsData[0].game_name, userId: lumosAcct.owner, dateTime: toLATime(playsData[0].created_at), lpi: playsData[0].game_lpi, multiPlay: false}];
             await confirmPlaysWritten(expectedPlays);
         });
     });

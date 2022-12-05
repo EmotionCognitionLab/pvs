@@ -1,6 +1,6 @@
 'use strict';
 
-import { format } from 'date-fns-tz';
+import { format, utcToZonedTime } from 'date-fns-tz';
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
@@ -228,7 +228,7 @@ describe('hasDoneSetToday', () => {
 
     it("should return false if the YYYY-MM-DD matches today but the fact that it's UTC means that it was really yesterday", () => {
         const yyyyMMdd = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
-        const localYesterday = new Date(`${yyyyMMdd}T02:03:45.678Z`); // UTC YMD of today, but time of 2:03AM means that it was really yesterday in LA
+        const localYesterday = utcToZonedTime(new Date(`${yyyyMMdd}T02:03:45.678Z`), 'America/Los_Angeles'); // UTC YMD of today, but time of 2:03AM means that it was really yesterday in LA
         const sets = [ { experiment: 'set-started', dateTime: localYesterday }, { experiment: 'set-finished', dateTime: localYesterday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
@@ -237,7 +237,7 @@ describe('hasDoneSetToday', () => {
     it("should return true if the YYYY-MM-DD matches tomorrow but the fact that it's UTC means that it was really today", () => {
         const tomorrow = new Date(Date.now() + (1000 * 60 * 60 * 24));
         const tomorrowYMD = format(tomorrow, 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
-        const localToday = new Date(`${tomorrowYMD}T02:34:56.789Z`); // UTC YMD of tomorrow, but time of 2:34AM means that it was really today in LA
+        const localToday = utcToZonedTime(new Date(`${tomorrowYMD}T02:34:56.789Z`), 'America/Los_Angeles'); // UTC YMD of tomorrow, but time of 2:34AM means that it was really today in LA
         const sets = [ { experiment: 'set-started', dateTime: localToday }, { experiment: 'set-finished', dateTime: localToday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeTruthy();
