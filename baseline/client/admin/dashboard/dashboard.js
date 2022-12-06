@@ -1,3 +1,6 @@
+import "../../../../common/pay-info/style.css";
+import { Payboard } from "pay-info";
+
 export class Dashboard {
     constructor(tbody, client) {
         this.tbody = tbody;
@@ -57,20 +60,41 @@ export class Dashboard {
         }
     }
 
-    handleUserEvent(event) {
+    async handleUserEvent(event) {
         event.stopPropagation();
         const parentRow = event.target.closest("[data-user-id]");
         const userId = parentRow.dataset.userId;
         const user = this.records.get(userId).user;
+        // add basic user contact info to user detail display
         const userDetails = [user.email, user.phone_number, user.userId];
         const divs = userDetails.map(item => {
             const elem = document.createElement("div");
             elem.textContent = item;
             return elem;
         });
+        // add user earnings to user detail display
+        const payboardErrs = document.createElement("div");
+        const payboardDiv = document.createElement("div");
+        divs.push(payboardErrs);
+        divs.push(payboardDiv);
+        const payboard = new Payboard(
+            payboardDiv,
+            payboardErrs,
+            this.client,
+            user,
+            true,
+        );
+        await payboard.init();
         const deetsDiv = Dashboard.getUserDetailsDiv();
-        while (deetsDiv.hasChildNodes()) {
-            deetsDiv.removeChild(deetsDiv.lastChild);
+        while (deetsDiv.childNodes.length > 1) {
+            let toDelete = deetsDiv.childNodes[0];
+            if (toDelete.id === "close-button") {
+                if (deetsDiv.childNodes.length > 1) {
+                    deetsDiv.removeChild(deetsDiv.childNodes[1]);
+                }
+            } else {
+                deetsDiv.removeChild(toDelete);
+            }
         }
         divs.forEach(div => deetsDiv.appendChild(div));
         deetsDiv.classList.remove("hidden");
@@ -78,20 +102,20 @@ export class Dashboard {
 
     listen() {
         // add checkbox click event listener to table body
-        this.tbody.addEventListener("click", event => {
+        this.tbody.addEventListener("click", async event => {
             const target = event.target;
             if (target.type == "checkbox") {
                 this.handleCheckboxEvent(event);
             } else if (target.className == "username") {
-                this.handleUserEvent(event);
+               await this.handleUserEvent(event);
             }
             return;
         });
 
         // hides the user details div when you click anywhere outside of it
-        document.addEventListener("click", event => {
+        Dashboard.getUserDetailsCloseButton().addEventListener("click", () => {
             const deetsDiv = Dashboard.getUserDetailsDiv();
-            if (event.target !== deetsDiv && event.target.parentNode !== deetsDiv && !deetsDiv.classList.contains("hidden")) {
+            if (!deetsDiv.classList.contains("hidden")) {
                 deetsDiv.classList.add("hidden");
             }
         });
@@ -185,6 +209,10 @@ export class Dashboard {
 
     static getUserDetailsDiv() {
         return document.getElementById("user-details");
+    }
+
+    static getUserDetailsCloseButton() {
+        return document.getElementById("close-button");
     }
 
     appendRow(userId) {
