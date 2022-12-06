@@ -337,6 +337,7 @@ export default class Db {
                 }
             };
             if (type) {
+                if (!earningsTypes[type.toUpperCase()]) throw new Error(`Invalid earning type ${type}.`);
                 params.KeyConditionExpression += ' and begins_with(typeDate, :td)';
                 params.ExpressionAttributeValues[':td'] = type;
             }
