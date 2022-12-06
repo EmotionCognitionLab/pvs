@@ -10,6 +10,12 @@ export default class ApiClient {
         return await this.doFetch(url, "get", "There was an error retrieving the sets for the user");
     }
 
+    async getEarningsForUser(userId, earningsType) {
+        let url = `${awsSettings.AdminApiUrl}/participant/${userId}/earnings/`;
+        if (earningsType) url += earningsType;
+        return await this.doFetch(url, "get", "There was an error retrieving earnings for the user");
+    }
+
     /**
      * Fetches the user record for the logged-in user.
      * @returns {object} A user record
@@ -41,6 +47,12 @@ export default class ApiClient {
             url += "?consistentRead=true";
         }
         return await this.doFetch(url, "get", "There was an error retrieving the user data");
+    }
+
+    async getEarningsForSelf(earningsType) {
+        let url = `${awsSettings.UserApiUrl}/earnings/`;
+        if (earningsType) url += 'earningsType';
+        return await this.doFetch(url, "get", "There was an error retrieving the earnings for the user");
     }
 
     async getLumosCredsForSelf() {

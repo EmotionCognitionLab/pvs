@@ -25,6 +25,18 @@ exports.getAll = async(event) => {
     return await getAllParticipants(docClient);
 }
 
+exports.getEarnings = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) return noAccess;
+    
+    const credentials = await credentialsForRole(userRole);
+    const db = dbWithCredentials(credentials);
+
+    const participantId = event.pathParameters.id;
+    const earningsType = event.pathParameters.earningsType;
+    return await db.earningsForUser(participantId, earningsType);
+}
+
 exports.getSets = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
     if (!userRole) return noAccess;

@@ -116,6 +116,10 @@ functions:
           path: /self
           authorizer: serviceAuthorizer
       - httpApi:
+          method: GET
+          path: /self/earnings/{earningsType+}
+          authorizer: serviceAuthorizer
+      - httpApi:
           method: POST
           path: /condition
           authorizer: serviceAuthorizer
@@ -212,6 +216,20 @@ functions:
     events:
       - httpApi:
           path: /admin/participant/{id}/status
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
+
+  get-participant-earnings:
+    handler: admin-api/participants/participants.getEarnings
+    events:
+      - httpApi:
+          path: /admin/participant/{id}/earnings/{earningsType+}
           method: GET
           authorizer: serviceAuthorizer
     environment:
