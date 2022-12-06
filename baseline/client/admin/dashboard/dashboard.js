@@ -113,7 +113,11 @@ export class Dashboard {
         });
 
         // hides the user details div when you click anywhere outside of it
-        Dashboard.getUserDetailsCloseButton().addEventListener("click", () => {
+        Dashboard.getUserDetailsDiv().addEventListener("click", (event) => {
+            if (event.target.id !== "close-button") {
+                event.stopPropagation();
+                return false;
+            }
             const deetsDiv = Dashboard.getUserDetailsDiv();
             if (!deetsDiv.classList.contains("hidden")) {
                 deetsDiv.classList.add("hidden");
@@ -209,10 +213,6 @@ export class Dashboard {
 
     static getUserDetailsDiv() {
         return document.getElementById("user-details");
-    }
-
-    static getUserDetailsCloseButton() {
-        return document.getElementById("close-button");
     }
 
     appendRow(userId) {
