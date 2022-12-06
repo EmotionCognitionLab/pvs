@@ -11,7 +11,7 @@
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Week 1 home tasks ($30)</td>
             <td class="pay-info-study-activity-status">{{week1Status}}</td>
-            <td class="pay-info-total-earned">{{week1Earned}}</td>
+            <td class="pay-info-total-earned">{{#if week1Earned}} ${{week1Earned}} {{/if}}</td>
             <td class="pay-info-payment-status" rowspan="4">
                 {{#if admin}}
                     <select>
@@ -27,22 +27,22 @@
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #1 ($50)</td>
             <td class="pay-info-study-activity-status">{{visit1.status}}</td>
-            <td class="pay-info-total-earned">{{visit1.earned}}</td>
+            <td class="pay-info-total-earned">{{#if visit1.earned}} ${{visit1.earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #2 ($50)</td>
             <td class="pay-info-study-activity-status">{{visit2.status}}</td>
-            <td class="pay-info-total-earned">{{visit2.earned}}</td>
+            <td class="pay-info-total-earned">{{#if visit2.earned}} ${{visit2.earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #3 ($50)</td>
             <td class="pay-info-study-activity-status">{{visit3.status}}</td>
-            <td class="pay-info-total-earned">{{visit3.earned}}</td>
+            <td class="pay-info-total-earned">{{#if visit3.earned}} ${{visit3.earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #4 ($50)</td>
             <td class="pay-info-study-activity-status">{{visit4.status}}</td>
-            <td class="pay-info-total-earned">{{visit4.earned}}</td>
+            <td class="pay-info-total-earned">{{#if visit4.earned}} ${{visit4.earned}} {{/if}}</td>
             <td class="pay-info-payment-status" rowspan="6">
                 {{#if admin}}
                     <select>
@@ -57,32 +57,32 @@
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #5 ($50)</td>
             <td class="pay-info-study-activity-status">{{visit5.status}}</td>
-            <td class="pay-info-total-earned">{{visit5.earned}}</td>
+            <td class="pay-info-total-earned">{{#if visit5.earned}} ${{visit5.earned}} {{/if}}</td>
         </tr>
         
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Week 12 home tasks ($30)</td>
             <td class="pay-info-study-activity-status">{{week12Status}}</td>
-            <td class="pay-info-total-earned">{{week12Earned}}</td>
+            <td class="pay-info-total-earned">{{#if week12Earned}} ${{week12Earned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lumosity practice</td>
             <td class="pay-info-study-activity-status">{{lumosityStatus}}</td>
-            <td class="pay-info-total-earned">{{lumosityEarned}}</td>
+            <td class="pay-info-total-earned">{{#if lumosityEarned}} ${{lumosityEarned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Breathing practice</td>
             <td class="pay-info-study-activity-status">{{breathingStatus}}</td>
-            <td class="pay-info-total-earned">{{breathingEarned}}</td>
+            <td class="pay-info-total-earned">{{#if breathingEarned}} ${{breathingEarned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lumosity + Breathing Bonuses</td>
             <td class="pay-info-study-activity-status">{{bonusStatus}}</td>
-            <td class="pay-info-total-earned">{{bonusEarned}}</td>
+            <td class="pay-info-total-earned">{{#if bonusEarned}} ${{bonusEarned}} {{/if}}</td>
         </tr>
     </tbody>
 </table>
 <br/>
 <div>
-    Earnings may not include today's activity. Bonuses may not include this week's activity.
+    Earnings may not include activity from the past two days. Bonuses may not include this week's activity.
 </div>
