@@ -116,7 +116,8 @@ function buildMenuTemplate(window) {
         { type: 'separator' },
         { role: 'togglefullscreen' },
         { type: 'separator' },
-        { label: 'Earnings', click: () => window.webContents.send('show-earnings')}
+        { label: 'Earnings', click: () => window.webContents.send('show-earnings')},
+        { label: 'Daily Training', click: () => window.webContents.send('show-tasks')}
       ]
     },
     // { role: 'windowMenu' }

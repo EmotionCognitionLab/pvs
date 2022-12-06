@@ -118,6 +118,10 @@ window.mainAPI.onShowEarnings(() => {
     router.push({path: '/earnings'});
 })
 
+window.mainAPI.onShowTasks(() => {
+    router.push({path: '/current-stage'});
+})
+
 const app = createApp(App)
 app.use(router)
 
