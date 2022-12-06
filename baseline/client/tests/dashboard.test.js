@@ -136,18 +136,18 @@ describe("dashboard", () => {
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
         dash.showActive();
-        // Fluttershy should not have a timestamp for EEG T1
+        // Fluttershy should not have a timestamp for visit1
         const fluttershyId = "597e8b3e-7907-4eae-a7da-b1abb25f5579";
         const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
         const [_, __, visit1Cell, ...___] = fluttershyRow.querySelectorAll("td");
-        expect(mc.users.get(fluttershyId).progress?.eegT1).toBeFalsy();
+        expect(mc.users.get(fluttershyId).progress?.visit1).toBeFalsy();
         expect(visit1Cell.querySelector("input").checked).toBe(false);
         expect(visit1Cell.querySelector("span").textContent).toBeFalsy();
-        // check Fluttershy's EEG T1 checkbox
+        // check Fluttershy's visit1 checkbox
         visit1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
         // wait for the async click event handler to resolve
         await new Promise(process.nextTick);
-        // Fluttershy should now have a timestamp for EEG T1
+        // Fluttershy should now have a timestamp for visit1
         expect(mc.users.get(fluttershyId).progress?.visit1).toBeTruthy();  // backend is updated
         expect(visit1Cell.querySelector("input").checked).toBe(true);  // checkbox is checked
         expect(visit1Cell.querySelector("span").textContent).toBe("2010-10-10");  // timestamp is displayed
@@ -165,18 +165,18 @@ describe("dashboard", () => {
         const dash = new Dashboard(table, mc);
         await dash.refreshRecords();
         dash.showActive();
-        // Twilight Sparkle should have a timestamp for MRI T1
+        // Twilight Sparkle should have a timestamp for visit2
         const twiId = "95240257-42f9-4ae6-b989-0126f595e547";
         const twiRow = document.querySelector(`[data-user-id="${twiId}"]`);
         const [_, __, ___, ____,visit2Cell, ..._____] = twiRow.querySelectorAll("td");
         expect(mc.users.get(twiId).progress?.visit2).toBeTruthy();
         expect(visit2Cell.querySelector("input").checked).toBe(true);
         expect(visit2Cell.querySelector("span").textContent).toBeTruthy();
-        // uncheck Twilight Sparkle's MRI T1 checkbox
+        // uncheck Twilight Sparkle's visit2 checkbox
         visit2Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
         // wait for the async click event handler to resolve
         await new Promise(process.nextTick);
-        // Twilight Sparkle should no longer have a timestamp for MRI T1
+        // Twilight Sparkle should no longer have a timestamp for visit2
         expect(mc.users.get(twiId).progress?.visit2).toBeFalsy();  // backend is updated
         expect(visit2Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
         expect(visit2Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
