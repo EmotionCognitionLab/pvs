@@ -63,7 +63,7 @@
             <button class="button" @click="day5VidDone">Continue</button>
         </div>
         <div :class="{hidden: sessionDone || dayDone || !lumosityDone || firstTimeStep < 5 || showDayFiveVid}">
-            <PacedBreathingComponent :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
+            <PacedBreathingComponent :showScore="true" :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
             <UploadComponent>

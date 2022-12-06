@@ -15,7 +15,7 @@
             @pacerRegimeChanged="updateRegimeStatus"
             ref="pacer" />
         <TimerComponent :secondsDuration=secondsDuration :showButtons=false :countBy="'minutes'" ref="timer" />
-        <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" @pulseSensorSessionEnded="resetPacer" ref="emwaveListener"/>
+        <EmWaveListener :showIbi=false :showScore=showScore :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" @pulseSensorSessionEnded="resetPacer" ref="emwaveListener"/>
     </div>
 </template>
 
@@ -26,7 +26,7 @@
     import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
 
-    const props = defineProps(['startRegimes', 'condition'])
+    const props = defineProps(['startRegimes', 'condition', 'showScore'])
     const emit = defineEmits(['pacer-started', 'pacer-stopped', 'pacer-finished'])
 
     const pacer = ref(null)
