@@ -31,7 +31,11 @@ export class Dashboard {
                 if (!progress[key]) {
                     // timestamp for key can be set
                     progress[key] = (new Date()).toISOString();
-                    await this.client.updateUser(userId, {progress});
+                    const updates = {progress};
+                    if (key === "visit5") {
+                        updates['homeComplete'] = true;
+                    }
+                    await this.client.updateUser(userId, updates);
                     this.records.get(userId).user.progress = progress;
                 }
                 Dashboard.setMarkable(checkbox, span, progress[key]);
@@ -48,7 +52,11 @@ export class Dashboard {
                 const progress = user.progress ?? {};
                 if (progress[key]) {
                     delete progress[key];
-                    await this.client.updateUser(userId, {progress});
+                    const updates = {progress};
+                    if (key === "visit5") {
+                        updates['homeComplete'] = false;
+                    }
+                    await this.client.updateUser(userId, updates);
                     this.records.get(userId).user.progress = progress;
                 }
                 Dashboard.clearMarkable(checkbox, span);

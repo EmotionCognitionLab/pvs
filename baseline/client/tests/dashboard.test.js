@@ -137,20 +137,8 @@ describe("dashboard", () => {
         await dash.refreshRecords();
         dash.showActive();
         // Fluttershy should not have a timestamp for visit1
-        const fluttershyId = "597e8b3e-7907-4eae-a7da-b1abb25f5579";
-        const fluttershyRow = document.querySelector(`[data-user-id="${fluttershyId}"]`);
-        const [_, __, visit1Cell, ...___] = fluttershyRow.querySelectorAll("td");
-        expect(mc.users.get(fluttershyId).progress?.visit1).toBeFalsy();
-        expect(visit1Cell.querySelector("input").checked).toBe(false);
-        expect(visit1Cell.querySelector("span").textContent).toBeFalsy();
-        // check Fluttershy's visit1 checkbox
-        visit1Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
-        // wait for the async click event handler to resolve
-        await new Promise(process.nextTick);
-        // Fluttershy should now have a timestamp for visit1
-        expect(mc.users.get(fluttershyId).progress?.visit1).toBeTruthy();  // backend is updated
-        expect(visit1Cell.querySelector("input").checked).toBe(true);  // checkbox is checked
-        expect(visit1Cell.querySelector("span").textContent).toBe("2010-10-10");  // timestamp is displayed
+        const visit1Cell = await clickVisitCheckbox(mc, "597e8b3e-7907-4eae-a7da-b1abb25f5579", 1, false, true);
+        expect(visit1Cell.querySelector("span").textContent).toBe("2010-10-10");
         expect(dateSpy).toHaveBeenCalledTimes(1);
         // restore mocks
         dateSpy.mockRestore();
@@ -166,22 +154,75 @@ describe("dashboard", () => {
         await dash.refreshRecords();
         dash.showActive();
         // Twilight Sparkle should have a timestamp for visit2
-        const twiId = "95240257-42f9-4ae6-b989-0126f595e547";
-        const twiRow = document.querySelector(`[data-user-id="${twiId}"]`);
-        const [_, __, ___, ____,visit2Cell, ..._____] = twiRow.querySelectorAll("td");
-        expect(mc.users.get(twiId).progress?.visit2).toBeTruthy();
-        expect(visit2Cell.querySelector("input").checked).toBe(true);
-        expect(visit2Cell.querySelector("span").textContent).toBeTruthy();
-        // uncheck Twilight Sparkle's visit2 checkbox
-        visit2Cell.querySelector("input").dispatchEvent(new MouseEvent("click", {bubbles: true}));
-        // wait for the async click event handler to resolve
-        await new Promise(process.nextTick);
-        // Twilight Sparkle should no longer have a timestamp for visit2
-        expect(mc.users.get(twiId).progress?.visit2).toBeFalsy();  // backend is updated
-        expect(visit2Cell.querySelector("input").checked).toBe(false);  // checkbox is unchecked
-        expect(visit2Cell.querySelector("span").textContent).toBeFalsy();  // timestamp is removed
+        await clickVisitCheckbox(mc, "95240257-42f9-4ae6-b989-0126f595e547", 2, true, false);
         expect(confirmSpy).toHaveBeenCalledTimes(1);
         // restore mocks
         confirmSpy.mockRestore();
     });
+
+    it("sets homeComplete to true when visit5 is checked off", async () => {
+        // create dashboard
+        const mc = new MockClient(users);
+        const {_, __, table, ___} = getDashboardElements();
+        const dash = new Dashboard(table, mc);
+        await dash.refreshRecords();
+        dash.showActive();
+        // rainbow dash should not have visit5/homeComplete set
+        const rdId = "de7e842d-da61-4756-b120-61eca3e6ab11";
+        expect(mc.users.get(rdId).homeComplete).toBeFalsy();
+        await clickVisitCheckbox(mc, rdId, 5, false, true);
+        expect(mc.users.get(rdId).homeComplete).toBe(true);
+    });
+
+    it("sets homeComplete to false when visit5 is unchecked", async () => {
+        // mock window.confirm
+        const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
+        // create dashboard
+        const mc = new MockClient(users);
+        const {_, __, table, ___} = getDashboardElements();
+        const dash = new Dashboard(table, mc);
+        await dash.refreshRecords();
+        dash.showActive();
+        // applejack should have visit5/homeComplete set
+        const ajId = "1d84a646-db05-4093-8be5-41d1de595a6b";
+        expect(mc.users.get(ajId).homeComplete).toBe(true);
+        await clickVisitCheckbox(mc, ajId, 5, true, false);
+        expect(mc.users.get(ajId).homeComplete).toBe(false);
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
+        // restore mocks
+        confirmSpy.mockRestore();
+    });
+
+    async function clickVisitCheckbox(mockClient, userId, visitNum, expectedPreClickState, expectedPostClickState) {
+        const userRow = document.querySelector(`[data-user-id="${userId}"]`);
+        const [_, __, visit1Cell, ___, visit2Cell, visit3Cell, visit4Cell, visit5Cell, ...____] = userRow.querySelectorAll("td");
+        const visitCells = [visit1Cell, visit2Cell, visit3Cell, visit4Cell, visit5Cell];
+        const whichVisit = `visit${visitNum}`;
+        const whichVisitCell = visitCells[visitNum - 1];
+        if (expectedPreClickState) {
+            expect(mockClient.users.get(userId).progress).toBeTruthy();
+            expect(mockClient.users.get(userId).progress[whichVisit]).toBeTruthy();
+            expect(whichVisitCell.querySelector("span").textContent).toBeTruthy();
+        } else {
+            if (mockClient.users.get(userId).progress) {
+                expect(mockClient.users.get(userId).progress[whichVisit]).toBeFalsy();
+            }
+            expect(whichVisitCell.querySelector("span").textContent).toBeFalsy();
+        }
+        const input = whichVisitCell.querySelector("input");
+        expect(input.checked).toBe(expectedPreClickState);
+        input.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        await new Promise(process.nextTick);
+        if (expectedPostClickState) {
+            expect(mockClient.users.get(userId).progress[whichVisit]).toBeTruthy();
+            expect(whichVisitCell.querySelector("span").textContent).toBeTruthy();
+        } else {
+            expect(mockClient.users.get(userId).progress[whichVisit]).toBeFalsy();
+            expect(whichVisitCell.querySelector("span").textContent).toBeFalsy();
+        }
+        
+        expect(input.checked).toBe(expectedPostClickState);
+
+        return whichVisitCell;
+    }
 });
