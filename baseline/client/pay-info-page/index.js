@@ -24,12 +24,14 @@ getAuth(
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
+            const isAdmin = hasPreferredRole(idToken, awsSettings.AdminRole);
+            const user = isAdmin ? await client.getUser(targetId) : await client.getSelf();
             const payboard = new Payboard(
                 payboardDiv,
                 errorDiv,
                 client,
-                targetId,
-                hasPreferredRole(idToken, awsSettings.AdminRole),
+                user,
+                isAdmin,
             );
             await payboard.init();
         } catch (err) {

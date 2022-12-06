@@ -2,11 +2,11 @@ import payboardTempl from "./payboard.handlebars";
 import { earningsTypes } from "../types/types.js";
 
 export class Payboard {
-    constructor(rootDiv, errorDiv, client, userId, admin = false) {
+    constructor(rootDiv, errorDiv, client, user, admin = false) {
         this.rootDiv = rootDiv;
         this.errorDiv = errorDiv;
         this.client = client;
-        this.userId = userId;
+        this.user = user;
         this.admin = admin;
     }
 
@@ -23,14 +23,14 @@ export class Payboard {
                 selectElem.addEventListener("change", async event => {
                     const value = event.target.value;
                     try {
-                        const progress = (await this.client.getUser(this.userId, true)).progress ?? {};
+                        const progress = this.user.progress ?? {};
                         if (!progress['payments']) progress['payments'] = [];
                         if (progress['payments'][i]?.status !== value) {
                             progress['payments'][i] = {
                                 status: value,
                                 timestamp: (new Date()).toISOString(),
                             };
-                            await this.client.updateUser(this.userId, {progress});
+                            await this.client.updateUser(this.user.userId, {progress});
                         }
                     } catch (err) {
                         this.handleError(err);
@@ -43,13 +43,10 @@ export class Payboard {
     async refresh() {
         try {
             // get data
-            let user;
             let earnings;
             if (this.admin) {
-                user = await this.client.getUser(this.userId, true);
-                earnings = await this.client.getEarningsForUser(this.userId);
+                earnings = await this.client.getEarningsForUser(this.user.userId);
             } else {
-                user = await this.client.getSelf();
                 earnings = await this.client.getEarningsForSelf();
             }
             const data = {};
@@ -66,7 +63,7 @@ export class Payboard {
                     ].includes(earningType)) {
                         return earned.reduce((prev, cur) => prev + cur.amount, 0);
                 } else {
-                    if (earned.length > 1) throw new Error(`Expected only one earnings result of type ${earningType} for user ${this.userId}, but found ${earned.length}.`);
+                    if (earned.length > 1) throw new Error(`Expected only one earnings result of type ${earningType} for user ${this.user.userId}, but found ${earned.length}.`);
                     return earned[0].amount;
                 }
             }     
@@ -84,9 +81,9 @@ export class Payboard {
             const breathBonus = earningsForType(earningsTypes.BREATH_BONUS);
             data.bonusEarned = lumosBonus + breathBonus;
 
-            if (user.progress?.payments) {
-                if (user.progress.payments[0]?.status === 'processed') data['pay1-processed'] = true;
-                if (user.progress.payments[1]?.status === 'processed') data['pay2-processed'] = true;
+            if (this.user.progress?.payments) {
+                if (this.user.progress.payments[0]?.status === 'processed') data['pay1-processed'] = true;
+                if (this.user.progress.payments[1]?.status === 'processed') data['pay2-processed'] = true;
             }
 
             this.rootDiv.innerHTML = payboardTempl(data);
