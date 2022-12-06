@@ -7,7 +7,8 @@
 </template>
 
 <script setup>
-    import { onMounted } from '@vue/runtime-core';
+    import { onMounted } from '@vue/runtime-core'
+    import { onBeforeRouteLeave } from 'vue-router'
     import ApiClient from '../../../common/api/client.js'
     import { SessionStore } from '../session-store.js'
 
@@ -28,6 +29,9 @@
         window.mainAPI.createLumosityView(email, pw, navigator.userAgent)
     })
 
+    onBeforeRouteLeave(() => {
+        window.mainAPI.closeLumosityView()
+    })
 
     function leave() {
         window.mainAPI.closeLumosityView()
