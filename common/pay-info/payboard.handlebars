@@ -2,7 +2,6 @@
     <thead>
         <tr>
             <th>Study Activity</th>
-            <th>Study Activity Status</th>
             <th>Total Earned</th>
             <th>Payment Status</th>
         </tr>
@@ -10,7 +9,6 @@
     <tbody>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Week 1 home tasks ($30)</td>
-            <td class="pay-info-study-activity-status">{{week1Status}}</td>
             <td class="pay-info-total-earned">{{#if week1Earned}} ${{week1Earned}} {{/if}}</td>
             <td class="pay-info-payment-status" rowspan="4">
                 {{#if admin}}
@@ -26,23 +24,19 @@
 
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #1 ($50)</td>
-            <td class="pay-info-study-activity-status">{{visit1.status}}</td>
-            <td class="pay-info-total-earned">{{#if visit1.earned}} ${{visit1.earned}} {{/if}}</td>
+            <td class="pay-info-total-earned">{{#if visit1Earned}} ${{visit1Earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #2 ($50)</td>
-            <td class="pay-info-study-activity-status">{{visit2.status}}</td>
-            <td class="pay-info-total-earned">{{#if visit2.earned}} ${{visit2.earned}} {{/if}}</td>
+            <td class="pay-info-total-earned">{{#if visit2Earned}} ${{visit2Earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #3 ($50)</td>
-            <td class="pay-info-study-activity-status">{{visit3.status}}</td>
-            <td class="pay-info-total-earned">{{#if visit3.earned}} ${{visit3.earned}} {{/if}}</td>
+            <td class="pay-info-total-earned">{{#if visit3Earned}} ${{visit3Earned}} {{/if}}</td>
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #4 ($50)</td>
-            <td class="pay-info-study-activity-status">{{visit4.status}}</td>
-            <td class="pay-info-total-earned">{{#if visit4.earned}} ${{visit4.earned}} {{/if}}</td>
+            <td class="pay-info-total-earned">{{#if visit4Earned}} ${{visit4Earned}} {{/if}}</td>
             <td class="pay-info-payment-status" rowspan="6">
                 {{#if admin}}
                     <select>
@@ -56,28 +50,23 @@
         </tr>
          <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lab visit #5 ($50)</td>
-            <td class="pay-info-study-activity-status">{{visit5.status}}</td>
-            <td class="pay-info-total-earned">{{#if visit5.earned}} ${{visit5.earned}} {{/if}}</td>
+            <td class="pay-info-total-earned">{{#if visit5Earned}} ${{visit5Earned}} {{/if}}</td>
         </tr>
         
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Week 12 home tasks ($30)</td>
-            <td class="pay-info-study-activity-status">{{week12Status}}</td>
             <td class="pay-info-total-earned">{{#if week12Earned}} ${{week12Earned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lumosity practice</td>
-            <td class="pay-info-study-activity-status">{{lumosityStatus}}</td>
             <td class="pay-info-total-earned">{{#if lumosityEarned}} ${{lumosityEarned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Breathing practice</td>
-            <td class="pay-info-study-activity-status">{{breathingStatus}}</td>
             <td class="pay-info-total-earned">{{#if breathingEarned}} ${{breathingEarned}} {{/if}}</td>
         </tr>
         <tr class="pay-info-row">
             <td class="pay-info-study-activity">Lumosity + Breathing Bonuses</td>
-            <td class="pay-info-study-activity-status">{{bonusStatus}}</td>
             <td class="pay-info-total-earned">{{#if bonusEarned}} ${{bonusEarned}} {{/if}}</td>
         </tr>
     </tbody>

@@ -69,35 +69,20 @@ export class Payboard {
                     if (earned.length > 1) throw new Error(`Expected only one earnings result of type ${earningType} for user ${this.userId}, but found ${earned.length}.`);
                     return earned[0].amount;
                 }
-            }
+            }     
 
-            const visitStatus = (whichVisit, visitDate, dropDate) => {
-                if (!visitDate) return {status: "Not Started", earned: ''};
-                if ((visitDate && !dropDate) || (visitDate < dropDate)) {
-                    const earned = earningsForType(whichVisit);
-                    return {status: "Completed", earned: earned};
-                }
-                return {status: "Dropped out", earned: ''}
-            }            
-
-            data.visit1 = visitStatus("visit1", user.progress?.visit1, user.progress?.dropped);
-            data.visit2 = visitStatus("visit2", user.progress?.visit2, user.progress?.dropped);
-            data.visit3 = visitStatus("visit3", user.progress?.visit3, user.progress?.dropped);
-            data.visit4 = visitStatus("visit4", user.progress?.visit4, user.progress?.dropped);
-            data.visit5 = visitStatus("visit5", user.progress?.visit5, user.progress?.dropped);
-            data.week1Status = user.preComplete? 'Completed' : 'In Progress';
+            data.visit1Earned = earningsForType("visit1");
+            data.visit2Earned = earningsForType("visit2");
+            data.visit3Earned = earningsForType("visit3");
+            data.visit4Earned = earningsForType("visit4");
+            data.visit5Earned = earningsForType("visit5");
             data.week1Earned = earningsForType(earningsTypes.PRE);
-            data.week12Status = user.postComplete ? 'Completed' : '';
             data.week12Earned = earningsForType(earningsTypes.POST);
             data.lumosityEarned = earningsForType(earningsTypes.LUMOS_AND_BREATH_1);
             data.breathingEarned = earningsForType(earningsTypes.BREATH2);
             const lumosBonus = earningsForType(earningsTypes.LUMOS_BONUS);
             const breathBonus = earningsForType(earningsTypes.BREATH_BONUS);
             data.bonusEarned = lumosBonus + breathBonus;
-            if (user.homeComplete) {
-                data.lumosityStatus = 'Completed';
-                data.breathingStatus = 'Completed';
-            }
 
             if (user.progress?.payments) {
                 if (user.progress.payments[0]?.status === 'processed') data['pay1-processed'] = true;
