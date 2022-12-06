@@ -949,11 +949,11 @@ resource "aws_iam_policy" "ses-send" {
   })
 }
 
-# policy to allow limited reading/writing of dynamo earnings table
-resource "aws_iam_policy" "dynamodb-earnings-read-write" {
-  name = "pvs-${var.env}-dynamodb-earnings-read-write"
-  path = "/policy/dynamodb/earnings/all/"
-  description = "Allows limited reading from/writing of dynamodb earnings table"
+# policy to allow limited reading of dynamo earnings table
+resource "aws_iam_policy" "dynamodb-earnings-read" {
+  name = "pvs-${var.env}-dynamodb-earnings-read"
+  path = "/policy/dynamodb/earnings/read/"
+  description = "Allows limited reading from dynamodb earnings table"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -961,8 +961,30 @@ resource "aws_iam_policy" "dynamodb-earnings-read-write" {
     {
       "Effect": "Allow",
       "Action": [
-        "dynamodb:UpdateItem",
         "dynamodb:Query"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.earnings-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# policy to allow limited writing to dynamo earnings table
+resource "aws_iam_policy" "dynamodb-earnings-write" {
+  name = "pvs-${var.env}-dynamodb-earnings-write"
+  path = "/policy/dynamodb/earnings/write/"
+  description = "Allows limited writing to dynamodb earnings table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem"
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.earnings-table.name}"
@@ -1188,6 +1210,7 @@ resource "aws_iam_role" "lambda" {
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-user-read-write.arn,
+    aws_iam_policy.dynamodb-earnings-read.arn,
     aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
     aws_iam_policy.dynamodb-read-all-experiment-data.arn,
     aws_iam_policy.cloudwatch-write.arn
@@ -1225,7 +1248,8 @@ resource "aws_iam_role" "lambda-earnings" {
     aws_iam_policy.dynamodb-user-read.arn,
     aws_iam_policy.dynamodb-read-all-segments.arn,
     aws_iam_policy.dynamodb-read-all-experiment-data.arn,
-    aws_iam_policy.dynamodb-earnings-read-write.arn,
+    aws_iam_policy.dynamodb-earnings-read.arn,
+    aws_iam_policy.dynamodb-earnings-write.arn,
     aws_iam_policy.dynamodb-lumos-plays-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
