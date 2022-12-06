@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     isStage1Complete: async () => await ipcRenderer.invoke('is-stage-1-complete'),
     loginSucceeded: (session) => ipcRenderer.invoke('login-succeeded', session),
     onGetCurrentUser: (callback) => ipcRenderer.on('get-current-user', callback),
+    onShowEarnings: (callback) => ipcRenderer.on('show-earnings', callback),
     getRestBreathingDays: async (stage) => await ipcRenderer.invoke('get-rest-breathing-days', stage),
     getPacedBreathingDays: async (stage) => await ipcRenderer.invoke('get-paced-breathing-days', stage),
     getSegmentsAfterDate: async (date, stage) => await ipcRenderer.invoke('get-segments-after-date', date, stage),

@@ -114,6 +114,9 @@ router.beforeEach(async (to) => {
     return true
 })
 
+window.mainAPI.onShowEarnings(() => {
+    router.push({path: '/earnings'});
+})
 
 const app = createApp(App)
 app.use(router)
