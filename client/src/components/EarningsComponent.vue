@@ -5,7 +5,7 @@
         <div class="pay-info" ref="payInfo">
 
         </div>
-        <button @click="goToTasks" class="button">Return to Tasks</button>
+        <button @click="goToTasks" class="button">Return to Daily Training</button>
     </div>
 </template>
 <script setup>
