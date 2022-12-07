@@ -66,30 +66,28 @@
     
     
     onBeforeMount(async() => {
-        step.value =4
-        return
-        // window.mainAPI.setStage(1)
+        window.mainAPI.setStage(1)
 
-        // if (!isAuthenticated()) {
-        //     step.value = 1
-        //     return
-        // }
-        // if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
-        //     step.value = 2
-        //     return
-        // }
-        // const restBreathingDays = await window.mainAPI.getRestBreathingDays(1)
-        // if (restBreathingDays.size < 1) {
-        //     step.value = 3
-        //     return
-        // }
-        // const pacedBreathingDays = await window.mainAPI.getPacedBreathingDays(1)
-        // if (pacedBreathingDays.size < 1) {
-        //     step.value = 4
-        //     return
-        // }
-        // step.value = 5
-        // return
+        if (!isAuthenticated()) {
+            step.value = 1
+            return
+        }
+        if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
+            step.value = 2
+            return
+        }
+        const restBreathingDays = await window.mainAPI.getRestBreathingDays(1)
+        if (restBreathingDays.size < 1) {
+            step.value = 3
+            return
+        }
+        const pacedBreathingDays = await window.mainAPI.getPacedBreathingDays(1)
+        if (pacedBreathingDays.size < 1) {
+            step.value = 4
+            return
+        }
+        step.value = 5
+        return
     })
 
     function nextStep() {
