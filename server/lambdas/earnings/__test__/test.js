@@ -186,6 +186,8 @@ describe("Lumosity bonuses", () => {
         const testDate = new Date('2022-11-06 13:44:02');
         expect(testDate.getDay == 0);
         const lumosPlays = buildLumosPlaysForBonus(users[0].userId, testDate);
+        // the last play is from the past week and
+        // has an LPI higher than the average of other plays - reset it to be lower
         lumosPlays[lumosPlays.length - 1].lpi = 0;
 
         const weekAgo = dayjs(testDate).subtract(1, 'week').format('YYYY-MM-DD HH:mm:ss');
@@ -244,6 +246,39 @@ describe("Lumosity bonuses", () => {
         await handler();
         expect(mockSaveEarnings).toHaveBeenCalled();
 
+    });
+
+    it("should only include games played between 12:01AM 7 days ago and 11:59PM 1 day ago in the previous week calculation", async () => {
+        const testDate = new Date('2022-11-06 13:44:02');
+        expect(testDate.getDay == 0);
+        const lumosPlays = buildLumosPlaysForBonus(users[0].userId, testDate);
+        // this additional play is (a) outside the time boundary of the previous week and
+        // (b), if included in the previous week's calculation will bring down the average 
+        // LPI for this week so low that no bonus should be earned
+        lumosPlays.push({userId: users[0].userId, dateTime: dayjs(testDate).hour(0).minute(10).format('YYYY-MM-DD HH:mm:ss'), lpi: 0});
+        
+        const weekAgoStart = dayjs(testDate).subtract(7, 'days').hour(0).minute(0).second(1);
+        const weekAgoEnd = dayjs(testDate).subtract(1, 'day').hour(23).minute(59).second(59);
+        const thisWeekGames = lumosPlays.filter(lp => 
+            lp.dateTime >= weekAgoStart.format('YYYY-MM-DD HH:mm:ss') &&
+            lp.dateTime < weekAgoEnd.format('YYYY-MM-DD HH:mm:ss')
+        );
+        const recentGames = lumosPlays.filter(lp => lp.dateTime >= weekAgoStart.format('YYYY-MM-DD HH:mm:ss'));
+        const prevGames = lumosPlays.filter(lp => lp.dateTime < weekAgoStart.format('YYYY-MM-DD HH:mm:ss'));
+        const thisWeekAvg = thisWeekGames.reduce((prev, cur) => prev + cur.lpi, 0) / thisWeekGames.length;
+        const recentAvg = recentGames.reduce((prev, cur) => prev + cur.lpi, 0) / recentGames.length;
+        const prevAvg = prevGames.reduce((prev, cur) => prev + cur.lpi, 0) / prevGames.length;
+        expect(thisWeekAvg).toBeGreaterThan(prevAvg);
+        expect(recentAvg).toBeLessThan(prevAvg);
+
+        mockLumosPlaysForUser.mockReturnValue(lumosPlays);
+        mockEarningsForUser.mockReturnValue([{}]);
+        jest.useFakeTimers().setSystemTime(testDate);
+
+        await handler();
+        // we expect it to be called because we expect our extra lumos play to be exluded
+        // and therefore for the average for this week to be high enough to get a bonus
+        expect(mockSaveEarnings).toHaveBeenCalled();
     });
 });
 

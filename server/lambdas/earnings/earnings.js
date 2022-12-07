@@ -2,6 +2,11 @@ const AWS = require("aws-sdk");
 const region = process.env.REGION;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 const docClient = new AWS.DynamoDB.DocumentClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region});
+const timezone = require('dayjs/plugin/timezone');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 import Db from 'db/db.js';
 import dayjs from 'dayjs';
 import { earningsTypes } from '../../../common/types/types.js';
@@ -96,7 +101,7 @@ async function saveVisitEarnings(userId, whichVisit, visitDate) {
             earnType = earningsTypes.VISIT5;
             break;
         default:
-            throw new Error(`Cannot save visit earnings for ${userId} - unrecognized visit earning type ${whichVisit}`);
+            throw new Error(`Cannot save visit earnings for ${userId} - unrecognized visit earning type ${whichVisit}.`);
     }
     await db.saveEarnings(userId, earnType, visitDate);
 }
@@ -119,18 +124,19 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
 
     // calculate Lumosity bonuses
     // Lumosity bonuses are only done on Sunday and only apply once you have played 
-    // at least one game/day for at least seven days (not necessarily consecutive)
+    // at least one game/day for at least seven days (not necessarily consecutive).
     const today = new Date();
     if (today.getDay() == 0 && Object.keys(lumosPlaysByDate).length >= 7) {
-        const weekAgo = dayjs(today).subtract(1, 'week').format('YYYY-MM-DD HH:mm:ss');
+        const weekAgoStart = dayjs(today).subtract(7, 'days').hour(0).minute(0).second(1).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm:ss');
+        const weekAgoEnd = dayjs(today).subtract(1, 'day').hour(23).minute(59).minute(59).tz('America/Los_Angeles').format('YYYY-MM-DD HH:mm:ss');
         // skip Penguin Pursuit and Word Bubbles; they don't have LPI scores
         const lpiGames = lumosPlays.filter(lp => lp.game !== 'Word Bubbles Web' && lp.game !== 'Penguin Pursuit Web');
-        const prevGames = lpiGames.filter(lp => lp.dateTime < weekAgo);
-        const thisWeekGames = lpiGames.filter(lp => lp.dateTime >= weekAgo);
+        const prevGames = lpiGames.filter(lp => lp.dateTime < weekAgoStart);
+        const thisWeekGames = lpiGames.filter(lp => lp.dateTime >= weekAgoStart && lp.dateTime < weekAgoEnd);
         if (prevGames.length != 0 && thisWeekGames.length != 0) {
             const prevAvg = prevGames.reduce((prev, cur) => prev + cur.lpi, 0) / prevGames.length;
             const curAvg = thisWeekGames.reduce((prev, cur) => prev + cur.lpi, 0) / thisWeekGames.length;
-            if (curAvg > prevAvg) await db.saveEarnings(userId, earningsTypes.LUMOS_BONUS, dayjs(today).format('YYYY-MM-DD'));
+            if (curAvg > prevAvg) await db.saveEarnings(userId, earningsTypes.LUMOS_BONUS, dayjs(today).tz('America/Los_Angeles').format('YYYY-MM-DD'));
         }
     }
  
