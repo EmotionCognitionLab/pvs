@@ -48,7 +48,7 @@
 
 <script setup>
     import { ref, onBeforeMount } from '@vue/runtime-core';
-    // import { isAuthenticated } from '../../../common/auth/auth.js'
+    import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
     import LoginComponent from './LoginComponent.vue'
     import PacedBreathingComponent from './PacedBreathingComponent.vue'
