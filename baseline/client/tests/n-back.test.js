@@ -229,10 +229,8 @@ describe("n-back", () => {
                     } else if (trial.n === 2) {
                         return cueStimulus === cue_2_html && cueWrongStimulus === cue_2_wrong_html;
                     } else {
-                        fail("invalid n");
-                        return false;
+                        throw new Error("invalid n");
                     }
-                    return expected_cue !== null && flatTimeline[index - 2] === expected_cue;
                 } else {
                     return true;
                 }
