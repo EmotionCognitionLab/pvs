@@ -9,3 +9,7 @@
     background-color: AliceBlue;
     outline-color: CornflowerBlue;
 }
+
+#jspsych-content:has(#jspsych-image-keyboard-response-stimulus) {
+    max-width: none;
+}
