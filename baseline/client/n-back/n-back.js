@@ -36,7 +36,7 @@ import test_introduction_html from "./frag/test/introduction.html";
 export class NBack {
     constructor(setNum) {
         // check for training block
-        if (setNum === 1) {
+        if (setNum === 1 || setNum === 7) {
             this.training = true;
         } else if (Number.isInteger(setNum) && setNum > 0) {
             this.training = false;
@@ -141,13 +141,13 @@ export class NBack {
             show_duration: this.constructor.show_duration,
             hide_duration: this.constructor.hide_duration,
             data: { isRelevant: isRelevant },
-        }
+        };
     }
 
     randSequence(choices, length, n, targets) {
         const sampleWithoutReplacement = jsPsych.randomization.sampleWithoutReplacement;
         // choose where the targets should appear in the sequence
-        const indices = [...Array(length).keys()]
+        const indices = [...Array(length).keys()];
         const validTargetIndices = indices.filter(index => (
             n === 0 ? true : index - n >= 0
         ));
