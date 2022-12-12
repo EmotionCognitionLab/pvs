@@ -215,7 +215,7 @@ it("displays 9 blocks of 16 trials each", () => {
 
 describe("flanker training", () => {
     beforeEach(() => {
-        let timeline = (new Flanker(1)).getTimeline();
+        let timeline = (new Flanker(randomTrainingSetNum())).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
         expect(timeline.length).toBeGreaterThanOrEqual(7);
@@ -314,7 +314,7 @@ describe("flanker training with controlled randomization", () => {
     let randomizationSpy;
 
     beforeEach(() => {
-        timeline = (new Flanker(1)).getTimeline();
+        timeline = (new Flanker(randomTrainingSetNum())).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
         expect(timeline.length).toBeGreaterThanOrEqual(7);
@@ -383,6 +383,10 @@ describe("flanker training with controlled randomization", () => {
     });
 
 });
+
+function randomTrainingSetNum() {
+    return Math.random() < 0.5 ? 1 : 7;
+}
 
 function doTrainingInstructions() {
     // welcome screen -> instruction 1

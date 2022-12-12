@@ -192,6 +192,20 @@ describe("getSetAndTasks", () => {
         expect(result.remainingTasks[result.remainingTasks.length -1].taskName).toBe(dailyTasks.doneForToday);
     });
 
+    it("should include an 'all-done' message when the user finishes the last task of the pre-intervention baseline sets", () => {
+        const setList = dailyTasks.allSets.slice(0, dailyTasks.preInterventionSetCount).map( (s, idx) => ( { 
+            taskNames: s,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
+            setNum: idx + 1 }
+        ));
+        
+        const lastSetTasks = setList[setList.length - 1].taskNames;
+        setList[setList.length - 1].taskNames = lastSetTasks.slice(0, lastSetTasks.length - 2);
+        const result = dailyTasks.getSetAndTasks(buildInput(setList));
+        expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
+    });
+
     it("should include an 'all-done' message when the user finishes the last task of the last set", () => {
         const setList = dailyTasks.allSets.map( (s, idx) => ( { 
             taskNames: s,
@@ -234,6 +248,36 @@ describe("getSetAndTasks", () => {
         expect(saveResultsMock).toHaveBeenCalled();
         expect(saveResultsMock.mock.calls[0][0]).toBe(dailyTasks.setFinished);
         expect(saveResultsMock.mock.calls[0][1]).toStrictEqual({"setNum": setNum});
+    });
+
+    it("works for the post-intervention sets as well", () => {
+        const input = buildInput( [{ taskNames: dailyTasks.allSets[7].slice(0, 2), setNum: 8 }] );
+        const result = dailyTasks.getSetAndTasks(input);
+        expect(result.set).toBe(8);
+        const expectedTaskNames = dailyTasks.allSets[7].slice(input.length - 1); // -1 because the input includes a set-started record
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+    });
+
+    it("does allow you to start post-intervention sets when homeComplete is true", () => {
+        dailyTasks.setHomeComplete(true);
+        const setList = dailyTasks.allSets.slice(0, dailyTasks.preInterventionSetCount).map( (s, idx) => ( { 
+            taskNames: s,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 47)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 46)).toISOString(),
+            setNum: idx + 1 }
+        ));
+        const lastSetTasks = setList[setList.length - 1].taskNames;
+        setList[setList.length - 1].taskNames = lastSetTasks.slice(0, lastSetTasks.length - 2);
+        const result = dailyTasks.getSetAndTasks(buildInput(setList));
+        const expectedTaskNames = dailyTasks.allSets[dailyTasks.preInterventionSetCount];
+        const remainingTaskNames = result.remainingTasks
+            .filter(t => t.taskName !== dailyTasks.doneForToday)
+            .map(t => t.taskName);
+        expect(remainingTaskNames).toStrictEqual(expectedTaskNames);
+        expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.doneForToday);
     });
 });
 
@@ -585,7 +629,7 @@ describe("doing the tasks", () => {
     });
     it("should not show a progress page if you've done all of the tasks", () => {
         const allNames = dailyTasks.allSets.flatMap(t => t);
-        const input = buildInput([{setNum: 6, setFinishedTime: new Date(), taskNames: allNames}]);
+        const input = buildInput([{setNum: 12, setFinishedTime: new Date(), taskNames: allNames}]);
         dailyTasks.startTasks(input, jest.fn());
         const html = jsPsych.getDisplayElement().innerHTML;
         expect(html).toMatch(/You have done all of the daily measurements required/);

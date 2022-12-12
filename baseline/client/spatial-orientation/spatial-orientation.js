@@ -23,7 +23,7 @@ export class SpatialOrientation {
         if (setNum === 5 || setNum === 11) {
             throw new Error("invalid setNum");
         } else if (Number.isInteger(setNum) && setNum > 0) {
-            this.setNum = setNum
+            this.setNum = setNum;
         } else {
             throw new Error("setNum must be a strictly positive integer");
         }
@@ -69,8 +69,8 @@ export class SpatialOrientation {
         return [
             i(instruction_0_html),
             i(instruction_1_html),
-            ...(this.setNum === 1 ? exampleBlock : []),
-            ...(this.setNum === 1 ? practiceBlock : []),
+            ...(this.setNum === 1 || this.setNum === 7 ? exampleBlock : []),
+            ...(this.setNum === 1 || this.setNum === 7 ? practiceBlock : []),
             ...testBlock,
         ];
     }
@@ -93,7 +93,7 @@ SpatialOrientation.scenePositions = {
     bell: [108, -149],
     barrel: [395, 78],
     tree: [342, -129],
-}
+};
 
 SpatialOrientation.preload = {
     type: "preload",
