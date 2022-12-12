@@ -173,7 +173,7 @@ app.on('ready', async () => {
     Menu.setApplicationMenu(menu);
     mainWin.webContents.send('get-current-user')
     emwave.createClient(mainWin)
-    mainWin.maximize()
+    mainWin.setFullScreen(true)
     mainWin.show()
     emwave.hideEmWave()
   }, 5000)
