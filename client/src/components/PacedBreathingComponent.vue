@@ -1,6 +1,5 @@
 <template>
     <div class="instruction-small">
-        We have one remaining task for you today.
         Please breathe following the ball on the screen.
         Breathe in while the ball is moving up and breathe out while the ball is moving down.
         Pause your breathing when the ball is not going up or down.
