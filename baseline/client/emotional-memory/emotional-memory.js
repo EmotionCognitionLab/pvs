@@ -63,7 +63,7 @@ export class EmotionalMemory {
 EmotionalMemory.taskName = "emotional-memory";
 EmotionalMemory.imageBucket = "https://d3vowlh1lzbs4j.cloudfront.net/emomem/";
 EmotionalMemory.stimulus = stimulus;
-EmotionalMemory.encodeDuration = 30000;
+EmotionalMemory.encodeDuration = 3000;
 
 EmotionalMemory.learningInstructionTrial = {
     type: "html-keyboard-response",
