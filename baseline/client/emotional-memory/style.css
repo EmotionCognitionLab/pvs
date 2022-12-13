@@ -10,6 +10,6 @@
     outline-color: CornflowerBlue;
 }
 
-#jspsych-content:has(#jspsych-image-keyboard-response-stimulus) {
+#jspsych-content.emo-mem-stimulus {
     max-width: none;
 }
