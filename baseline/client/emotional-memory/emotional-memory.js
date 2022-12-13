@@ -76,6 +76,7 @@ EmotionalMemory.learningEncodingTrial = imagePath => ({
     stimulus: EmotionalMemory.imageBucket + imagePath,
     choices: jsPsych.NO_KEYS,
     trial_duration: EmotionalMemory.encodeDuration,
+    css_classes: ["emo-mem-stimulus"],
 });
 
 EmotionalMemory.learningRatingTrial = imagePath => ({

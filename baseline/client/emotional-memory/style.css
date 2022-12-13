@@ -9,3 +9,7 @@
     background-color: AliceBlue;
     outline-color: CornflowerBlue;
 }
+
+#jspsych-content.emo-mem-stimulus {
+    max-width: none;
+}
