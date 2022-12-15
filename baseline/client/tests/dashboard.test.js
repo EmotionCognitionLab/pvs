@@ -7,8 +7,8 @@ function expectRowMatches(row, user) {
         subjectCell,
         dailyTasksT1Cell,
         visit1Cell,
-        lumosBreathStatusCell,
         visit2Cell,
+        lumosBreathStatusCell,
         visit3Cell,
         visit4Cell,
         visit5Cell,
@@ -195,7 +195,7 @@ describe("dashboard", () => {
 
     async function clickVisitCheckbox(mockClient, userId, visitNum, expectedPreClickState, expectedPostClickState) {
         const userRow = document.querySelector(`[data-user-id="${userId}"]`);
-        const [_, __, visit1Cell, ___, visit2Cell, visit3Cell, visit4Cell, visit5Cell, ...____] = userRow.querySelectorAll("td");
+        const [_, __, visit1Cell, visit2Cell, ___, visit3Cell, visit4Cell, visit5Cell, ...____] = userRow.querySelectorAll("td");
         const visitCells = [visit1Cell, visit2Cell, visit3Cell, visit4Cell, visit5Cell];
         const whichVisit = `visit${visitNum}`;
         const whichVisitCell = visitCells[visitNum - 1];

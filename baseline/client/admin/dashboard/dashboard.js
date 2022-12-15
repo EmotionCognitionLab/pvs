@@ -253,10 +253,10 @@ export class Dashboard {
         row.insertCell().appendChild(preStatus);
         // Visit 1
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit1"));
-        // Lumosity + Breathing Practice Status
-        row.insertCell().appendChild(lumosBreathingStatus);
         // Visit 2
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit2"));
+         // Lumosity + Breathing Practice Status
+         row.insertCell().appendChild(lumosBreathingStatus);
         // Visit 3
         row.insertCell().appendChild(Dashboard.createMarkable(user.progress, "visit3"));
          // Visit 4
