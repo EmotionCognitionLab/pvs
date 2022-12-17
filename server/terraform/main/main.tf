@@ -354,6 +354,57 @@ resource "aws_ssm_parameter" "earnings-table" {
   value = "${aws_dynamodb_table.earnings-table.name}"
 }
 
+resource "aws_dynamodb_table" "potential-participants-table" {
+  name           = "pvs-${var.env}-potential-participants"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "email"
+
+  attribute {
+    name = "email"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "potential-participants" {
+  name = "/pvs/${var.env}/info/dynamo/table/potential/participants"
+  description = "Dynamo table holding potential participants info"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.potential-participants-table.name}"
+}
+
+resource "aws_dynamodb_table" "screening-table" {
+  name           = "pvs-${var.env}-screening"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "status"
+
+  attribute {
+    name = "status"
+    type = "S"
+  }
+}
+
+# the screening table will only ever have one row;
+# insert it here
+resource "aws_dynamodb_table_item" "screening-ineligible" {
+  table_name = aws_dynamodb_table.screening-table.name
+  hash_key   = aws_dynamodb_table.screening-table.hash_key
+
+  item = <<ITEM
+{
+  "status": {"S": "ineligible"}
+}
+ITEM
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "screening" {
+  name = "/pvs/${var.env}/info/dynamo/table/screening"
+  description = "Dynamo table holding screening survey data"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.screening-table.name}"
+}
+
 # SES setup, including relevant S3 buckets and IAM settings
 # bucket for receiving automated report emails from Lumosity
 resource "aws_s3_bucket" "ses-bucket" {
@@ -915,6 +966,75 @@ resource "aws_iam_policy" "dynamodb-write-all-segments" {
 POLICY
 }
 
+# policy to allow writing to potential participants table
+resource "aws_iam_policy" "dynamodb-potential-participants-write" {
+  name = "pvs-${var.env}-dynamodb-potential-participants-write"
+  path = "/policy/dynamodb/potential/participants/write/"
+  description = "Allows writing to dynamodb potential participants table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.potential-participants-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# policy to allow reading from potential participants table
+resource "aws_iam_policy" "dynamodb-potential-participants-read" {
+  name = "pvs-${var.env}-dynamodb-potential-participants-read"
+  path = "/policy/dynamodb/potential/participants/read/"
+  description = "Allows reading from dynamodb potential participants table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.potential-participants-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+# policy to allow writing to screening survey table
+resource "aws_iam_policy" "dynamodb-screening-write" {
+  name = "pvs-${var.env}-dynamodb-screening-write"
+  path = "/policy/dynamodb/potential/screening/write/"
+  description = "Allows writing to dynamodb screening table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.screening-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow sns publishing
 resource "aws_iam_policy" "sns-publish" {
   name = "pvs-${var.env}-sns-publish"
@@ -1213,6 +1333,7 @@ resource "aws_iam_role" "lambda" {
     aws_iam_policy.dynamodb-earnings-read.arn,
     aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
     aws_iam_policy.dynamodb-read-all-experiment-data.arn,
+    aws_iam_policy.dynamodb-potential-participants-read.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
 }
@@ -1261,6 +1382,40 @@ resource "aws_ssm_parameter" "lambda-earnings-role" {
   description = "ARN for lambda-earnings role"
   type = "SecureString"
   value = "${aws_iam_role.lambda-earnings.arn}"
+}
+
+resource "aws_iam_role" "lambda-screening" {
+  name = "pvs-${var.env}-lambda-screening"
+  path = "/role/lambda/screening/"
+  description = "Role for lambda function that handles screening survey"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns   = [
+    aws_iam_policy.dynamodb-screening-write.arn,
+    aws_iam_policy.dynamodb-potential-participants-write.arn,
+    aws_iam_policy.cloudwatch-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-screening-role" {
+  name = "/pvs/${var.env}/role/lambda/screening"
+  description = "ARN for lambda-screening role"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-screening.arn}"
 }
 
 resource "aws_iam_role_policy" "lambda-role-assumption" {

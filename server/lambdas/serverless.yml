@@ -317,6 +317,21 @@ functions:
       patterns:
         - 'earnings/*.js'
 
+  screening:
+    handler: screening/screening.handler
+    events:
+      - httpApi:
+          path: /screening
+          method: POST
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      SCREENING_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/screening}
+      POTENTIAL_PARTICIPANTS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/potential/participants}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/screening}
+    package:
+      patterns:
+        - 'screening/*.js'
+
 layers:
   BetterSqlite3:
     path: 'better-sqlite3-layer/layer'
