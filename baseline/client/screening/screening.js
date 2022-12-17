@@ -32,7 +32,7 @@ export class Screening {
                 on_finish: function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment('You are not eligible. Sorry!');
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
                     }
                 }
             },
@@ -48,7 +48,7 @@ export class Screening {
                 on_finish: function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment('You are not eligible. Sorry!');
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
                     }
                 }
             },
@@ -63,13 +63,13 @@ export class Screening {
                 on_finish: function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment('You are not eligible. Sorry!');
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
                     }
                 }
             },
             {
                 type: "html-keyboard-response",
-                stimulus: "Thank you for completing the questionnaire. A study team member will contact you to tell you more about the study.",
+                stimulus: "Thank you for taking the time to complete this screening survey. Based on your responses, you are eligible to participate in the study. Our team will contact you soon regarding next steps.",
                 choices: []
             }
         ];
@@ -100,6 +100,8 @@ export class Screening {
 }
 
 Screening.taskName = "screening";
+
+Screening.notEligibleMsg = 'Thank you for taking the time to complete this screening survey. Unfortunately, you are not eligible to participate in this study. If you are not already a USC Healthy Minds volunteer and would like to learn about other opportunities to participate in USC studies, please visit <a href="http://healthyminds.usc.edu">healthyminds.usc.edu</a>.';
 
 Screening.preamble = `
 <p>
