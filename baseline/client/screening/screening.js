@@ -258,7 +258,7 @@ Screening.baseQuestions = [
         ok: "yes",
     },
     {
-        prompt: "Would you be willing to provide a blood and urine sample at all lab visits?",
+        prompt: "Would you be willing to provide a blood and urine sample at some lab visits?",
         name: "will-give-blood",
         ok: "yes",
     },
