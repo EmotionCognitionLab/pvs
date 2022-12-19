@@ -5,10 +5,19 @@ import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-survey-multi-choice-patch.css";
 import "css/common.css";
+import { Logger } from "logger/logger.js";
 
 export class Screening {
+
+    constructor() {
+        this.logger = new Logger();
+    }
+
     getTimeline() {      
-        const isEligibleFn = this.isEligible.bind(this);  
+        const isEligibleFn = this.isEligible.bind(this);
+        const endNotEligibleFn = this.endNotEligibile.bind(this);
+        const savePotentialParticipantFn = this.savePotentialParticipant.bind(this);
+
         return [
             {
                 type: "survey-html-form",
@@ -29,10 +38,10 @@ export class Screening {
                     }
                     return questions;
                 },
-                on_finish: function() {
+                on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await endNotEligibleFn();
                     }
                 }
             },
@@ -45,10 +54,10 @@ export class Screening {
                 Have you ever had any of the following?
                 `,
                 questions: Screening.healthQuestions.map(Screening.yesNoDefaults),
-                on_finish: function() {
+                on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await endNotEligibleFn();
                     }
                 }
             },
@@ -60,17 +69,21 @@ export class Screening {
                 </p>
                 `,
                 questions: Screening.mriQuestions.map(Screening.yesNoDefaults),
-                on_finish: function() {
+                on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await endNotEligibleFn();
                     }
                 }
             },
             {
                 type: "html-keyboard-response",
                 stimulus: "Thank you for taking the time to complete this screening survey. Based on your responses, you are eligible to participate in the study. Our team will contact you soon regarding next steps.",
-                choices: []
+                choices: [],
+                on_start: async function() {
+                    const data = jsPsych.data.get().values();
+                    await savePotentialParticipantFn(data);
+                }
             }
         ];
     }
@@ -96,6 +109,56 @@ export class Screening {
         }));
 
         return eligible;
+    }
+
+    async endNotEligibile() {
+        try {
+            await fetch(Screening.url, {
+                method: "post",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-type": "application/json",
+                },
+                body: '{"status": "ineligible"}'
+            });
+        } catch (err) {
+            // just log it; we don't need to
+            // let them know or to do anything
+            this.logger.error(err);
+        }
+        jsPsych.endExperiment(Screening.notEligibleMsg);
+    }
+
+    async savePotentialParticipant(data) {
+        try {
+            const participantInfo = {
+                status: "eligible",
+                "first-name": data[0].response["first-name"],
+                "last-name": data[0].response["last-name"],
+                email: data[0].response.email,
+                phone: data[0].response.phone,
+                gender: data[0].response.gender
+            };
+
+            await fetch(Screening.url, {
+                method: "post",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-type": "application/json",
+                },
+                body: JSON.stringify(participantInfo)
+            });
+
+            // TODO check response for errors, ask them to fix
+            // which means somehow displaying screen 1 again
+            // and overwriting the old screen 1 data with the new
+
+        } catch (err) {
+            // TODO somehow display a retry button and ask them to click it?
+            this.logger.error(err);
+        }
     }
 }
 
@@ -431,6 +494,8 @@ Screening.mriQuestions = [
         ok: "no"
     },
 ];
+
+Screening.url = "https://93mm1d1bce.execute-api.us-west-2.amazonaws.com/screening";
 
 if (window.location.href.includes(Screening.taskName)) {
     jsPsych.init({
