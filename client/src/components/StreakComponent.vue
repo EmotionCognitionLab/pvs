@@ -63,6 +63,13 @@ function streakLength(allSessionDays) {
         if (a > b) return -1;
         return 0;
     })
+    // if they haven't already done today's training, 
+    // pretend that they have
+    // the streak calculation is really just concerned
+    // with yesterday and backwards, so today is a gimme
+    const today = yyyymmddString(new Date())
+    if (allDaysSorted[0] < today) allDaysSorted.unshift(today)
+    
     const daysBetween = daysBetweenDates(allDaysSorted)
     let res = 0;
     let i = 0;
@@ -77,7 +84,7 @@ function daysBetweenDates(dates) {
     for (let i = 0; i < dates.length - 1; i++) {
         const d1 = yyyymmddStrToDate(dates[i])
         const d2 = yyyymmddStrToDate(dates[i+1])
-        res.push((d2 - d1) / (1000 * 60 * 60 * 24))
+        res.push((d1 - d2) / (1000 * 60 * 60 * 24))
     }
     return res;
 }
