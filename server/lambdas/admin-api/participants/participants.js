@@ -2,11 +2,13 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand} from "@aws-sdk/lib-dynamodb";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import Db from 'db/db.js';
+import awsSettings from "../../../../common/aws-settings.json";
 import { baselineStatus, stage2Status, stage3Status } from "./status.js";
 
 const AWS = require("aws-sdk");
 const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
+const potentialParticipantsTable = process.env.POTENTIAL_PARTICIPANTS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 
 const noAccess = {
@@ -78,6 +80,28 @@ exports.get = async(event) => {
     }
     
     return user;
+}
+
+exports.getPotential = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole.endsWith(awsSettings.AdminRole)) return noAccess;
+
+    try {
+        const params = {
+            TableName: potentialParticipantsTable
+        };
+        const scan = new ScanCommand(params);
+        const credentials = await credentialsForRole(userRole)
+        const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
+        const docClient = DynamoDBDocumentClient.from(dbClient);
+        const dynResults = await docClient.send(scan);
+        return dynResults.Items;
+        
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+
 }
 
 /**

@@ -239,6 +239,21 @@ functions:
       patterns:
         - 'admin-api/participants/*.js'
 
+  get-potential-participants:
+    handler: admin-api/participants/participants.getPotential
+    events:
+      - httpApi:
+          path: /admin/participants/potential
+          method: GET
+          authorizer: serviceAuthorizer
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      POTENTIAL_PARTICIPANTS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/potential/participants}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
+    package:
+      patterns:
+        - 'admin-api/participants/*.js'
+
   reminders:
     handler: reminders/reminders.handler
     events:

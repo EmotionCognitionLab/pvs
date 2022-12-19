@@ -127,6 +127,11 @@ export default class ApiClient {
         return await this.doFetch(url, "get", `There was an error getting the status for user ${userId}`);
     }
 
+    async getPotentialParticipants() {
+        const url = `${awsSettings.AdminApiUrl}/participants/potential`;
+        return await this.doFetch(url, "get", "There was an error fetching potential participants");
+    }
+
     async doDocusignCallback(code) {
         const url = `${awsSettings.DsTokenUri}?code=${code}`;
         return await this.doFetch(url, "get", "There was an error completing the Docusign authentication process");
