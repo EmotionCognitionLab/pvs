@@ -8,6 +8,7 @@ export class Dashboard {
         this.records = new Map();
         this.listen();
         this.allUsersLoadedSuccessfully = false;
+        this.potentialParticipantsLoaded = false;
     }
 
     async handleCheckboxEvent(event) {
@@ -131,6 +132,38 @@ export class Dashboard {
                 deetsDiv.classList.add("hidden");
             }
         });
+
+        // handle clicks on potential participants link
+        Dashboard.getPotentialParticipantsLink().addEventListener("click", async () => {
+            const potPartsTable = Dashboard.getPotentialParticipants();
+            if (!this.potentialParticipantsLoaded) {
+                const potParts = await this.client.getPotentialParticipants();
+                const tbody = document.createElement("tbody");
+                potParts.forEach(p => {
+                    const row = document.createElement("tr");
+                    Object.values(p).forEach(v => {
+                        const cell = document.createElement("td");
+                        cell.innerText = v;
+                        row.appendChild(cell);
+                    });
+                    tbody.appendChild(row);
+                });
+                const children = potPartsTable.childNodes;
+                for (const child of children) {
+                    if (child.nodeName === "TBODY") potPartsTable.removeChild(child);
+                }
+                potPartsTable.appendChild(tbody);
+                this.potentialParticipantsLoaded = true;
+            }
+            
+            Dashboard.getDashboard().classList.add("hidden");
+            potPartsTable.classList.remove("hidden");
+        });
+
+        Dashboard.getDashboardLink().addEventListener("click", () => {
+            Dashboard.getPotentialParticipants().classList.add("hidden");
+            Dashboard.getDashboard().classList.remove("hidden");
+        });
     }
 
     async refreshRecords() {
@@ -221,6 +254,22 @@ export class Dashboard {
 
     static getUserDetailsDiv() {
         return document.getElementById("user-details");
+    }
+
+    static getPotentialParticipantsLink() {
+        return document.getElementById("screened-link");
+    }
+
+    static getDashboard() {
+        return document.getElementById("dashboard");
+    }
+
+    static getDashboardLink() {
+        return document.getElementById("dash-link");
+    }
+
+    static getPotentialParticipants() {
+        return document.getElementById("screened");
     }
 
     appendRow(userId) {
