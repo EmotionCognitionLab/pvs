@@ -181,23 +181,23 @@ This screening should take about 10 minutes to complete. If you have any questio
 Screening.persInfo = `
 <div>
     <label for="first-name">First Name: </label>
-    <input type="text" id="first-name" name="first-name" required="true">
+    <input type="text" id="first-name" name="first-name" placeholder="First name" required="true">
     <br/>
     <label for="last-name">Last Name: </label>
-    <input type="text" id="last-name" name="last-name" required="true">
+    <input type="text" id="last-name" name="last-name" placeholder="Last name" required="true">
 
     <br/>
     <label for="email">Email: </label>
-    <input type="text" id="email" name="email" required="true">
+    <input type="email" id="email" name="email" placeholder="email@example.com" prequired="true">
 
     <br/>
     <label for="phone">Phone: </label>
-    <input type="text" id="phone" name="phone" required="true">
+    <input type="tel" id="phone" name="phone" placeholder="111-222-3333" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required="true">
 
     <br/>
     <label for="gender">Gender: </label>
     <select id="gender" name="gender" required="true">
-        <option name="choose" value="choose" disabled selected>Select one</option>
+        <option name="choose" value="" disabled selected>Select one</option>
         <option name="female" value="female">Female</option>
         <option name="male" value="male">Male</option>
         <option name="other" value="other">Other</option>
