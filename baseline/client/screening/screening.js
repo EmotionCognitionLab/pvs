@@ -29,7 +29,7 @@ export class Screening {
             },
             {
                 type: "survey-multi-choice",
-                preamble: 'Thanks! Here are the study-related questions.',
+                preamble: 'Thanks! Please answer the below questions.',
                 questions: function() {
                     const data = jsPsych.data.get().values()[0];
                     const questions = Screening.baseQuestions.map(Screening.yesNoDefaults);
@@ -281,7 +281,7 @@ Screening.baseQuestions = [
         ok: "no",
     },
     {
-        prompt: "Have you participated in heart rate biofeedback studies at the USC Emotion & Cognition Lab or other labs?",
+        prompt: "Have you participated in heart rate biofeedback studies at the USC Emotion & Cognition Lab?",
         name: "did-hr-study",
         ok: "no",
     },
@@ -308,19 +308,14 @@ Screening.healthQuestions = [
         name: "dyspnea",
         ok: "no",
     },
-    {
-        prompt: "Metals in your body",
-        name: "body-metals",
-        ok: "no",
-    },
+];
+
+Screening.mriQuestions = [
     {
         prompt: "Claustrophobia",
         name: "claustrophobia",
         ok: "no",
     },
-];
-
-Screening.mriQuestions = [
     {
         prompt: "Have worked as a machinist, metal worker, or in any profession or hobby grinding metal",
         name: "machinist",
