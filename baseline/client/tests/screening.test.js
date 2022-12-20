@@ -1,5 +1,17 @@
 require("@adp-psych/jspsych/jspsych.js");
 import { Screening } from "../screening/screening.js";
+import fetch from 'jest-mock-fetch';
+global.fetch = fetch;
+
+jest.mock('../../../common/logger/Logger', () => {
+    return {
+        Logger: jest.fn().mockImplementation(() => ({
+            log: (msg, err) => console.log(msg, err),
+            warn: (msg, err) => console.warn(msg, err),
+            error: (msg, err) => console.error(msg, err),
+        }))
+    };
+});
 
 describe("Screening Survey", () => {
     beforeEach(() => {
@@ -18,12 +30,12 @@ describe("Screening Survey", () => {
     });
 
     describe("screen 2", () => {
-        const getToScreen = () => {
+        const getToScreen = async () => {
             fillScreen1Form();
-            submitForm();
+            await submitForm();
         };
 
-        beforeEach(getToScreen);
+        beforeEach(async () => await getToScreen());
 
         it("should display all of the expected questions in the expected order", () => {
             confirmExpectedQuestions(Screening.baseQuestions.map(q => q.prompt));
@@ -33,17 +45,17 @@ describe("Screening Survey", () => {
             confirmAllQuestionsRequired(Screening.baseQuestions.length);
         });
 
-        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", () => {
-            checkEligibility(Screening.baseQuestions, () => {
+        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", async () => {
+            await checkEligibility(Screening.baseQuestions, async () => {
                 jsPsych.init({timeline: (new Screening()).getTimeline()});
-                getToScreen();
+                await getToScreen();
             });
         });
     });
 
-    it("should not display question about menstruation when the gender is male", () => {
+    it("should not display question about menstruation when the gender is male", async () => {
         fillScreen1Form("male");
-        submitForm();
+        await submitForm();
         const dispElem = jsPsych.getDisplayElement();
 
         const displayedQuestions = [];
@@ -54,9 +66,9 @@ describe("Screening Survey", () => {
         expect(displayedQuestions).toEqual(expectedQuestions);
     });
 
-    it.each([['other'],['female']])("should display question about menstruation when the gender is %s", (gender) => {
+    it.each([['other'],['female']])("should display question about menstruation when the gender is %s", async (gender) => {
         fillScreen1Form(gender);
-        submitForm();
+        await submitForm();
         const dispElem = jsPsych.getDisplayElement();
 
         const displayedQuestions = [];
@@ -68,14 +80,14 @@ describe("Screening Survey", () => {
     });
 
     describe("screen 3", () => {
-        const getToScreen = () => {
+        const getToScreen = async () => {
             fillScreen1Form();
-            submitForm();
+            await submitForm();
             fillSurveyForm(Screening.baseQuestions);
-            submitForm();
+            await submitForm();
         };
 
-        beforeEach(getToScreen);
+        beforeEach(async () => await getToScreen());
 
         it("should display all of the expected questions in the expected order", () => {
             confirmExpectedQuestions(Screening.healthQuestions.map(q => q.prompt));
@@ -85,26 +97,26 @@ describe("Screening Survey", () => {
             confirmAllQuestionsRequired(Screening.healthQuestions.length);
         });
 
-        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", () => {
-            checkEligibility(Screening.healthQuestions, () => {
+        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", async () => {
+            await checkEligibility(Screening.healthQuestions, async () => {
                 jsPsych.init({timeline: (new Screening()).getTimeline()});
-                getToScreen();
+                await getToScreen();
             });
         });
 
     });
 
     describe("screen 4", () => {
-        const getToScreen = () => {
+        const getToScreen = async () => {
             fillScreen1Form();
-            submitForm();
+            await submitForm();
             fillSurveyForm(Screening.baseQuestions);
-            submitForm();
+            await submitForm();
             fillSurveyForm(Screening.healthQuestions);
-            submitForm();
+            await submitForm();
         };
 
-        beforeEach(getToScreen);
+        beforeEach(async () => await getToScreen());
 
         it("should display all of the expected questions in the expected order", () => {
             confirmExpectedQuestions(Screening.mriQuestions.map(q => q.prompt));
@@ -114,27 +126,46 @@ describe("Screening Survey", () => {
             confirmAllQuestionsRequired(Screening.mriQuestions.length);
         });
 
-        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", () => {
-            checkEligibility(Screening.mriQuestions, () => {
+        it("should tell you you are not eligible if your answers don't meet the eligibility criteria", async () => {
+            await checkEligibility(Screening.mriQuestions, async () => {
                 jsPsych.init({timeline: (new Screening()).getTimeline()});
-                getToScreen();
+                await getToScreen();
             });
         });
 
-        it("should tell you you will be contacted if you are eligible", () => {
-            fillSurveyForm (Screening.mriQuestions);
-            submitForm();
-            expect(document.body.innerHTML).toEqual(expect.stringContaining("contact you to tell you more about the study"));
+        it("should tell you you will be contacted if you are eligible", async () => {
+            fillSurveyForm(Screening.mriQuestions);
+            await submitForm();
+            expect(document.body.innerHTML).toEqual(expect.stringContaining("you are eligible to participate"));
+            
+            expect(fetch).toHaveBeenCalledWith(Screening.url, {
+                method: "post",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-type": "application/json",
+                },
+                body: JSON.stringify(participantInfo)
+            });
         });
     });
 
 });
 
+const participantInfo = {
+    "status": "eligible",
+    "first-name": "John",
+    "last-name": "Doe",
+    "email": "jdoe@example.com",
+    "phone": "12345678901",
+    "gender": "female"
+};
+
 function fillScreen1Form(gender="female") {
-    document.getElementById("first-name").value = "John";
-    document.getElementById("last-name").value = "Doe";
-    document.getElementById("email").value = "jdoe@example.com";
-    document.getElementById("phone").value = "12345678901";
+    document.getElementById("first-name").value = participantInfo["first-name"];
+    document.getElementById("last-name").value = participantInfo["last-name"];
+    document.getElementById("email").value = participantInfo.email;
+    document.getElementById("phone").value = participantInfo.phone;
     document.getElementById("gender").value = gender;
 }
 
@@ -151,11 +182,11 @@ function fillSurveyForm(promptInfo) {
     }
 }
 
-function submitForm() {
+async function submitForm() {
     const dispElem = jsPsych.getDisplayElement();
     const submitButton = dispElem.querySelector("input[type=submit]");
     expect(submitButton).not.toBe(null);
-    submitButton.click();
+    await submitButton.click();
 }
 
 function formIsValid(formId="jspsych-survey-html-form") {
@@ -189,7 +220,7 @@ function confirmAllQuestionsRequired(numQuestions) {
     }
 }
 
-function checkEligibility(promptInfo, reloadFn) {
+async function checkEligibility(promptInfo, reloadFn) {
     const [yesAnswers, noAnswers] = getAnswers(promptInfo.length);
     const numQuestions = promptInfo.length;
     const rightAnswers = promptInfo.map(p => p.ok);
@@ -209,10 +240,23 @@ function checkEligibility(promptInfo, reloadFn) {
                 }
             }
         }
-        submitForm();
-        expect(document.body.innerHTML).toEqual(expect.stringContaining("You are not eligible"));
+        try {
+            await submitForm();
+        } catch (err) {
+            console.error('error submitting form', err);
+        }
+        expect(fetch).toHaveBeenCalledWith(Screening.url, {
+            method: "post",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-type": "application/json",
+            },
+            body: '{"status": "ineligible"}'
+        });
+        expect(document.body.innerHTML).toEqual(expect.stringContaining("you are not eligible"));
         // use the reload function to return to the state we were in at the start
-        reloadFn();
+        await reloadFn();
     }
 }
 

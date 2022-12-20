@@ -51,6 +51,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.0.5",
     "jest-canvas-mock": "^2.3.1",
+    "jest-mock-fetch": "^2.0.5",
     "jest-raw-loader": "^1.0.1",
     "mime-types": "^2.1.31",
     "prompt": "^1.2.0",
