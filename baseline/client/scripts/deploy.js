@@ -54,7 +54,8 @@ function invalidateCloudFrontDistribution(distId) {
                 Items: [
                     '/daily-tasks/*',
                     '/login/*',
-                    '/admin/*'
+                    '/admin/*',
+                    '/screening/*'
                 ]
             }
         }
