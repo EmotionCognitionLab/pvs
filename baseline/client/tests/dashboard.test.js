@@ -55,13 +55,19 @@ describe("dashboard", () => {
         const dashboardError = document.createElement("div");
         const dashboardTable = document.createElement("table");
         const dashboardDetails = document.createElement("div");
+        const potPartsLink = document.createElement("a");
+        const dashLink = document.createElement("a");
         dashboardWrapper.id = "wrapper";
         dashboardError.id = "error";
         dashboardTable.id = "table";
         dashboardDetails.id = "user-details";
+        potPartsLink.id = "screened-link";
+        dashLink.id = "dash-link";
         dashboardWrapper.appendChild(dashboardError);
         dashboardWrapper.appendChild(dashboardTable);
         dashboardWrapper.appendChild(dashboardDetails);
+        dashboardWrapper.appendChild(potPartsLink);
+        dashboardWrapper.appendChild(dashLink);
         document.body.appendChild(dashboardWrapper);
     });
     const getDashboardElements = () => ({
