@@ -140,7 +140,8 @@ export class Screening {
                 "last-name": data[0].response["last-name"],
                 email: data[0].response.email,
                 phone: data[0].response.phone,
-                gender: data[0].response.gender
+                gender: data[0].response.gender,
+                date: (new Date()).toLocaleString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric'})
             };
 
             await fetch(Screening.url, {

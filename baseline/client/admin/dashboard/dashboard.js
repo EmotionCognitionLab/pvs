@@ -141,9 +141,9 @@ export class Dashboard {
                 const tbody = document.createElement("tbody");
                 potParts.forEach(p => {
                     const row = document.createElement("tr");
-                    Object.values(p).forEach(v => {
+                    ["date", "email", "phone", "firstName", "lastName", "gender"].forEach(v => {
                         const cell = document.createElement("td");
-                        cell.innerText = v;
+                        cell.innerText = p[v];
                         row.appendChild(cell);
                     });
                     tbody.appendChild(row);

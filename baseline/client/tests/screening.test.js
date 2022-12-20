@@ -137,7 +137,9 @@ describe("Screening Survey", () => {
             fillSurveyForm(Screening.mriQuestions);
             await submitForm();
             expect(document.body.innerHTML).toEqual(expect.stringContaining("you are eligible to participate"));
-            
+            const dateStr = (new Date()).toLocaleString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric'});
+            const expected = Object.assign({}, participantInfo);
+            expected.date = dateStr;
             expect(fetch).toHaveBeenCalledWith(Screening.url, {
                 method: "post",
                 mode: "cors",
@@ -145,7 +147,7 @@ describe("Screening Survey", () => {
                 headers: {
                     "Content-type": "application/json",
                 },
-                body: JSON.stringify(participantInfo)
+                body: JSON.stringify(expected)
             });
         });
     });

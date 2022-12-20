@@ -77,7 +77,8 @@ async function saveParticipant(data) {
                 "firstName": data["first-name"],
                 "lastName": data["last-name"],
                 "phone": data.phone,
-                "gender": data.gender
+                "gender": data.gender,
+                "date": data.date
             }
         };
 
