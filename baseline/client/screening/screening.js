@@ -15,7 +15,7 @@ export class Screening {
 
     getTimeline() {      
         const isEligibleFn = this.isEligible.bind(this);
-        const endNotEligibleFn = this.endNotEligibile.bind(this);
+        const saveNotEligibleFn = this.saveNotEligibile.bind(this);
         const savePotentialParticipantFn = this.savePotentialParticipant.bind(this);
 
         return [
@@ -41,7 +41,8 @@ export class Screening {
                 on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        await endNotEligibleFn();
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await saveNotEligibleFn();
                     }
                 }
             },
@@ -57,7 +58,8 @@ export class Screening {
                 on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        await endNotEligibleFn();
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await saveNotEligibleFn();
                     }
                 }
             },
@@ -72,7 +74,8 @@ export class Screening {
                 on_finish: async function() {
                     const data = jsPsych.data.get().values();
                     if (!isEligibleFn(data)) {
-                        await endNotEligibleFn();
+                        jsPsych.endExperiment(Screening.notEligibleMsg);
+                        await saveNotEligibleFn();
                     }
                 }
             },
@@ -111,7 +114,7 @@ export class Screening {
         return eligible;
     }
 
-    async endNotEligibile() {
+    async saveNotEligibile() {
         try {
             await fetch(Screening.url, {
                 method: "post",
@@ -127,7 +130,6 @@ export class Screening {
             // let them know or to do anything
             this.logger.error(err);
         }
-        jsPsych.endExperiment(Screening.notEligibleMsg);
     }
 
     async savePotentialParticipant(data) {
