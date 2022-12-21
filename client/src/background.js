@@ -165,12 +165,28 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
+
+  // register protocol to handle image loading
+  protocol.registerFileProtocol('image', (req, callback) => {
+    const prefix = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), '../src/assets/') : path.join(app.getAppPath(), '../src/assets/')
+    const url = req.url.replace('image://', prefix)
+    try {
+      return callback(url)
+    } catch (err) {
+      console.error(`Failed to load image ${req.url}`, err)
+      return callback(404)
+    }
+  })
+
   await emwave.startEmWave()
+
+  // give emwave some time to start,
+  // them create window and menus
   setTimeout(async () => {
     mainWin = await createWindow()
-    const menuTmpl = buildMenuTemplate(mainWin);
-    const menu = Menu.buildFromTemplate(menuTmpl);
-    Menu.setApplicationMenu(menu);
+    const menuTmpl = buildMenuTemplate(mainWin)
+    const menu = Menu.buildFromTemplate(menuTmpl)
+    Menu.setApplicationMenu(menu)
     mainWin.webContents.send('get-current-user')
     emwave.createClient(mainWin)
     mainWin.setFullScreen(true)
