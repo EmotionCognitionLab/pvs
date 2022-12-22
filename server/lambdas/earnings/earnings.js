@@ -40,7 +40,9 @@ export async function handler() {
                 if (!u.stage2Completed) {
                     await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 2);
                 } else {
-                    await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 3);
+                    // stage2CompletedOn is YYYYMMDD. Add hyphens b/c lumosity dates are YYYY-MM-DD.
+                    const stage2Date = `${u.stage2CompletedOn.slice(0, 4)}-${u.stage2CompletedOn.slice(4, 6)}-${u.stage2CompletedOn.slice(6, 8)}`;
+                    await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 3, stage2Date);
                 }
             }
 
@@ -109,7 +111,7 @@ async function saveVisitEarnings(userId, whichVisit, visitDate) {
 // check for lumosity activity since lastLumosEarningsDate and
 // save any earnings from it (including bonuses) as well as from
 // breathing exercises (including bonuses)
-async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate, stage) {
+async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate, stage, stage2CompletedDate="2100-01-01") {
     const lumosPlays = await db.lumosPlaysForUser(userId);
 
     // group lumos plays by day
@@ -159,9 +161,10 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
     // stage 3 requires three
     for (const d of minSixLumosPlaysDates) {
         if (!breathSegsByDate[d]) continue;
-        if (stage == 2) await db.saveEarnings(userId, earningsTypes.LUMOS_AND_BREATH_1, d);
-        if (stage == 3) {
-            // you get $1 for lumos + one breathing session
+        if (d <= stage2CompletedDate) {
+            await db.saveEarnings(userId, earningsTypes.LUMOS_AND_BREATH_1, d);
+        } else {
+            // in stage 3 you get $1 for lumos + one breathing session
             // and an additional $2 for a second breathing session
             if (breathSegsByDate[d].length >= 3) await db.saveEarnings(userId, earningsTypes.LUMOS_AND_BREATH_1, d);
             if (breathSegsByDate[d].length >= 6) await db.saveEarnings(userId, earningsTypes.BREATH2, d);

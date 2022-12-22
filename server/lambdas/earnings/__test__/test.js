@@ -322,11 +322,14 @@ describe("Lumos + breathing 1 earnings", () => {
     });
 
     it("in stage 3, should pay for Lumosity plays on days with >=6 game plays and three breathing segments following the Lumosity session", async () => {
+        const testDate = new Date("2022-10-15 11:45:17");
+        const stage2CompletedDate = "20221012";
         const stage3Users = [Object.assign({}, users[0])];
         stage3Users[0].stage2Completed = true;
+        stage3Users[0].stage2CompletedOn = stage2CompletedDate;
         mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
 
-        const testDate = new Date("2022-10-15 11:45:17");
+        
         const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
         
         mockLumosPlaysForUser.mockReturnValue(lumosPlays);
@@ -461,11 +464,14 @@ describe("Lumos + breathing 1 earnings", () => {
     });
 
     it("in stage 3, should not pay for Lumosity plays on days with >=6 game plays that are not followed by three breathing segments", async () => {
+        const testDate1 = new Date("2022-10-15 11:45:17");
+        const stage2CompletedDate = "20220930";
         const stage3Users = [Object.assign({}, users[0])];
         stage3Users[0].stage2Completed = true;
+        stage3Users[0].stage2CompletedOn = stage2CompletedDate;
         mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
 
-        const testDate1 = new Date("2022-10-15 11:45:17");
+        
         const lumosPlays1 = buildLumosPlaysForEarnings(users[0].userId, testDate1);
         const testDate2 = new Date("2022-10-16 18:15:33");
         const lumosPlays2 = buildLumosPlaysForEarnings(users[0].userId, testDate2);
@@ -508,10 +514,11 @@ describe("Lumos + breathing 1 earnings", () => {
     });
 
     it("should not pay for Lumosity plays for users where homeComplete is true", async () => {
-        const homeCompleteUsers = [
-            {userId: '123abc', humanId: 'BigTest', homeComplete: true, preComplete: true, stage2Completed: true}
-        ];
         const testDate = new Date('2022-11-06 13:44:02');
+        const homeCompleteUsers = [
+            {userId: '123abc', humanId: 'BigTest', homeComplete: true, preComplete: true, stage2Completed: true, stage2CompletedOn: "20221015"}
+        ];
+        
         expect(testDate.getDay == 0);
         const lumosPlays = buildLumosPlaysForEarnings(homeCompleteUsers[0].userId, testDate);
         
@@ -555,6 +562,39 @@ describe("Lumos + breathing 1 earnings", () => {
         expect(mockSaveEarnings).toHaveBeenCalledWith(homeCompleteUsers[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
 
     });
+
+    it("should pay users who recently transitioned to stage 3 for doing 1 breath segment after six lumosity plays if those plays happened while the user was still in stage 2", async() => {
+        const testDate = new Date("2022-10-14 11:45:17");
+        const stage2CompletedDate = "20221015";
+        const stage3Users = [Object.assign({}, users[0])];
+        stage3Users[0].stage2Completed = true;
+        stage3Users[0].stage2CompletedOn = stage2CompletedDate;
+        mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
+
+        
+        const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
+        
+        mockLumosPlaysForUser.mockReturnValue(lumosPlays);
+        mockEarningsForUser.mockImplementation((userId, earnType) => {
+            if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
+            return [{}];
+        });
+
+        const breathSegs = [
+            {
+                humanId: users[0].humanId,
+                endDateTime: dayjs(testDate).add(120, 'minutes').unix(),
+                avgCoherence: 0.84,
+                isRest: false,
+                stage: 2
+            },
+        ];
+        mockSegmentsForUser.mockReturnValue(breathSegs);
+
+        await handler();
+        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
+
+    });
 });
 
 describe("Breathing 2 earnings", () => {
@@ -563,10 +603,11 @@ describe("Breathing 2 earnings", () => {
     });
 
     it("should pay an additional $2 in stage 3 if the user does six breathing segments after a Lumosity session", async () => {
-        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true}];
+        const testDate = new Date("2022-10-15 11:45:17");
+        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true, stage2CompletedOn: "20221003"}];
         mockGetBaselineCompleteUsers.mockReturnValue(users);
 
-        const testDate = new Date("2022-10-15 11:45:17");
+        
         const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
         
         mockLumosPlaysForUser.mockReturnValue(lumosPlays);
@@ -630,7 +671,7 @@ describe("Breathing 2 earnings", () => {
 
 describe("Breathing bonuses", () => {
     const users = [
-        {userId: 'breathbonus', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Completed: true}
+        {userId: 'breathbonus', humanId: 'BigTest', homeComplete: false, preComplete: true, stage2Completed: true, stage2CompletedOn: "20000101"}
     ];
 
     beforeEach(() => {
