@@ -161,7 +161,7 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
     // stage 3 requires three
     for (const d of minSixLumosPlaysDates) {
         if (!breathSegsByDate[d]) continue;
-        if (d <= stage2CompletedDate) {
+        if (d < stage2CompletedDate) {
             await db.saveEarnings(userId, earningsTypes.LUMOS_AND_BREATH_1, d);
         } else {
             // in stage 3 you get $1 for lumos + one breathing session

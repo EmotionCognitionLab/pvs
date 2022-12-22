@@ -603,71 +603,80 @@ describe("Breathing 2 earnings", () => {
     });
 
     it("should pay an additional $2 in stage 3 if the user does six breathing segments after a Lumosity session", async () => {
-        const testDate = new Date("2022-10-15 11:45:17");
-        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true, stage2CompletedOn: "20221003"}];
-        mockGetBaselineCompleteUsers.mockReturnValue(users);
-
-        
-        const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
-        
-        mockLumosPlaysForUser.mockReturnValue(lumosPlays);
-        mockEarningsForUser.mockImplementation((userId, earnType) => {
-            if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
-            return [{}];
-        });
-
-        const breathSegs = [
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(120, 'minutes').unix(),
-                avgCoherence: 0.84,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(125, 'minutes').unix(),
-                avgCoherence: 1.12,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(130, 'minutes').unix(),
-                avgCoherence: 0.77,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(135, 'minutes').unix(),
-                avgCoherence: 0.77,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(140, 'minutes').unix(),
-                avgCoherence: 0.77,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: users[0].humanId,
-                endDateTime: dayjs(testDate).add(145, 'minutes').unix(),
-                avgCoherence: 0.77,
-                isRest: false,
-                stage: 3
-            }
-        ];
-        mockSegmentsForUser.mockReturnValue(breathSegs);
-
-        await handler();
-        expect(mockSaveEarnings).toHaveBeenCalledTimes(2);
-        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
-        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.BREATH2, dayjs(testDate).format('YYYY-MM-DD'));
+        await confirmBreath2Earnings(new Date("2022-10-15 11:45:17"), "20221003")
     });
+
+    it("should pay users a stage 3 breathing bonus if they meet the requirements and it is the same day that they transitioned to stage 3", async () => {
+        const d = new Date('2022-10-15 11:45:17');
+        await confirmBreath2Earnings(d, dayjs(d).format('YYYYMMDD'))
+    });
+       
 });
+
+async function confirmBreath2Earnings(testDate, stage2CompletedOn) {
+    const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true, stage2CompletedOn: stage2CompletedOn}];
+    mockGetBaselineCompleteUsers.mockReturnValue(users);
+
+    
+    const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
+    
+    mockLumosPlaysForUser.mockReturnValue(lumosPlays);
+    mockEarningsForUser.mockImplementation((userId, earnType) => {
+        if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
+        return [{}];
+    });
+
+    const breathSegs = [
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(120, 'minutes').unix(),
+            avgCoherence: 0.84,
+            isRest: false,
+            stage: 3
+        },
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(125, 'minutes').unix(),
+            avgCoherence: 1.12,
+            isRest: false,
+            stage: 3
+        },
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(130, 'minutes').unix(),
+            avgCoherence: 0.77,
+            isRest: false,
+            stage: 3
+        },
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(135, 'minutes').unix(),
+            avgCoherence: 0.77,
+            isRest: false,
+            stage: 3
+        },
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(140, 'minutes').unix(),
+            avgCoherence: 0.77,
+            isRest: false,
+            stage: 3
+        },
+        {
+            humanId: users[0].humanId,
+            endDateTime: dayjs(testDate).add(145, 'minutes').unix(),
+            avgCoherence: 0.77,
+            isRest: false,
+            stage: 3
+        }
+    ];
+    mockSegmentsForUser.mockReturnValue(breathSegs);
+
+    await handler();
+    expect(mockSaveEarnings).toHaveBeenCalledTimes(2);
+    expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
+    expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.BREATH2, dayjs(testDate).format('YYYY-MM-DD'));
+}
 
 describe("Breathing bonuses", () => {
     const users = [
