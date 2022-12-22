@@ -4,7 +4,9 @@ const path = require('path');
 const { ipcMain, app } = require('electron');
 const CBuffer = require('CBuffer');
 const { epToCoherence } = require('./coherence.js')
+const { Logger } = require('../../common/logger/logger.js')
 
+const logger = new Logger(false)
 let emWavePid = null;
 const client = net.Socket();
 const artifactLimit = 60; // we alert if there are more than this many artifacts in 60s
@@ -62,7 +64,7 @@ function notifyAvgCoherence() {
         // we get ~ 2 ep values/sec, so four minutes is 2 * 60 * 4
         const min_values = 2 * 60 * 4;
         if (coherenceValues.length < min_values) {
-            console.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
+            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
             return;
         }
 
@@ -84,11 +86,11 @@ export default {
         let retries = 0;
     
         client.on('error', async function() {
-            if (retries > 0) console.log('network error') // we always get error on 1st try; don't log unless we are past that
+            if (retries > 0) logger.log('network error') // we always get error on 1st try; don't log unless we are past that
             retries++;
             if (retries < 4) {
                 await new Promise(r => setTimeout(r, retries * 10000));
-                if (retries > 1) console.log(`doing retry #${retries}`);
+                if (retries > 1) logger.log(`doing retry #${retries}`);
                 client.connect(20480, '127.0.0.1', function() {
                     win.webContents.send('emwave-status', 'Connected');
                 });	
@@ -177,7 +179,7 @@ export default {
                 emWavePid = null;
             } else {
                 // TODO put in some wait/retry logic?
-                console.log('killing emwave returned false');
+                logger.log('killing emwave returned false');
             }
         }
     },
