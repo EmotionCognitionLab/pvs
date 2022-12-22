@@ -28,7 +28,8 @@ export async function handler() {
                 const visits = [1,2,3,4,5];
                 for (const v of visits) {
                     const whichVisit = `visit${v}`;
-                    if (u.progress[whichVisit]) await saveVisitEarnings(u.userId, whichVisit, u.progress[whichVisit].substring(0, 10));
+                    const visitDate = dayjs(u.progress[whichVisit]).tz('America/Los_Angeles').format('YYYY-MM-DD');
+                    if (u.progress[whichVisit]) await saveVisitEarnings(u.userId, whichVisit, visitDate);
                 }
             }
 
