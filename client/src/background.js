@@ -168,7 +168,16 @@ app.on('ready', async () => {
 
   // register protocol to handle image loading
   protocol.registerFileProtocol('image', (req, callback) => {
-    const prefix = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), '../src/assets/') : path.join(app.getAppPath(), '../src/assets/')
+    let prefix;
+    if (process.env.NODE_ENV === 'production') {
+      if (process.platform === 'darwin') {
+        prefix = path.join(path.dirname(app.getPath('exe')), '../src/assets/')
+      } else {
+        prefix = path.join(path.dirname(app.getPath('exe')), '/src/assets/')
+      }
+    } else {
+      prefix = path.join(app.getAppPath(), '../src/assets/')
+    }
     const url = req.url.replace('image://', prefix)
     try {
       return callback(url)
