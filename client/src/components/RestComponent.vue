@@ -27,8 +27,9 @@ const done = ref(false)
 const emit = defineEmits(['timer-finished'])
 let timerDone = false
 
-function startTimer() {
+async function startTimer() {
     timer.value.running = true
+    await window.mainAPI.disableMenus()
 }
 
 function sensorStopped() {

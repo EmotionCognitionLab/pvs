@@ -59,6 +59,9 @@ async function createWindow() {
   return win
 }
 
+const EARNINGS_MENU_ID = 'earnings'
+const TRAINING_MENU_ID = 'training'
+
 function buildMenuTemplate(window) {
   const isMac = process.platform === 'darwin'
   const isDev = isDevelopment && !process.env.IS_TEST
@@ -116,8 +119,8 @@ function buildMenuTemplate(window) {
         { type: 'separator' },
         { role: 'togglefullscreen' },
         { type: 'separator' },
-        { label: 'Earnings', click: () => window.webContents.send('show-earnings')},
-        { label: 'Daily Training', click: () => window.webContents.send('show-tasks')}
+        { label: 'Earnings', id: EARNINGS_MENU_ID, click: () => window.webContents.send('show-earnings')},
+        { label: 'Daily Training', id: TRAINING_MENU_ID, click: () => window.webContents.send('show-tasks')}
       ]
     },
     // { role: 'windowMenu' }
@@ -202,6 +205,12 @@ app.on('ready', async () => {
     mainWin.show()
     emwave.hideEmWave()
   }, 5000)
+})
+
+ipcMain.handle('disable-menus', () => {
+  const m = Menu.getApplicationMenu()
+  m.getMenuItemById(EARNINGS_MENU_ID).enabled = false
+  m.getMenuItemById(TRAINING_MENU_ID).enabled = false
 })
 
 // Prevent multiple instances of the app

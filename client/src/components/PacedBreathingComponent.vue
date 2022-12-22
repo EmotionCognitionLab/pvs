@@ -49,9 +49,10 @@
         emit('pacer-finished')
     }
 
-    function startPacer() {
+    async function startPacer() {
         if (pacer) pacer.value.start = true
         if (timer) timer.value.running = true
+        await window.mainAPI.disableMenus()
         emit('pacer-started')
     }
 

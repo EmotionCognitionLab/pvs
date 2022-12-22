@@ -20,5 +20,6 @@ contextBridge.exposeInMainWorld('mainAPI', {
     stopPulseSensor: () => ipcRenderer.send('pulse-stop'),
     handleEmWaveIBIEvent: (callback) => ipcRenderer.on('emwave-ibi', callback),
     handleEmWaveStatusEvent: (callback) => ipcRenderer.on('emwave-status', callback),
+    disableMenus: async () => ipcRenderer.invoke('disable-menus'),
     quit: () => ipcRenderer.invoke('quit'),
 })
