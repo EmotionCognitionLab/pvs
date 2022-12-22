@@ -513,56 +513,6 @@ describe("Lumos + breathing 1 earnings", () => {
 
     });
 
-    it("should not pay for Lumosity plays for users where homeComplete is true", async () => {
-        const testDate = new Date('2022-11-06 13:44:02');
-        const homeCompleteUsers = [
-            {userId: '123abc', humanId: 'BigTest', homeComplete: true, preComplete: true, stage2Completed: true, stage2CompletedOn: "20221015"}
-        ];
-        
-        expect(testDate.getDay == 0);
-        const lumosPlays = buildLumosPlaysForEarnings(homeCompleteUsers[0].userId, testDate);
-        
-        mockGetBaselineCompleteUsers.mockReturnValue(homeCompleteUsers);
-        mockLumosPlaysForUser.mockReturnValue(lumosPlays);
-        mockEarningsForUser.mockImplementation((userId, earnType) => {
-            if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
-            return [{}];
-        });
-
-        const breathSegs = [
-            {
-                humanId: homeCompleteUsers[0].humanId,
-                endDateTime: dayjs(testDate).add(2, 'hours').unix(),
-                avgCoherence: 0.84,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: homeCompleteUsers[0].humanId,
-                endDateTime: dayjs(testDate).add(3, 'hours').unix(),
-                avgCoherence: 0.84,
-                isRest: false,
-                stage: 3
-            },
-            {
-                humanId: homeCompleteUsers[0].humanId,
-                endDateTime: dayjs(testDate).add(4, 'hours').unix(),
-                avgCoherence: 0.84,
-                isRest: false,
-                stage: 3
-            }
-        ];
-        mockSegmentsForUser.mockReturnValue(breathSegs);
-
-        await handler();
-        expect(mockSaveEarnings).not.toHaveBeenCalled();
-
-        homeCompleteUsers[0].homeComplete = false;
-        await handler();
-        expect(mockSaveEarnings).toHaveBeenCalledWith(homeCompleteUsers[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
-
-    });
-
     it("should pay users who recently transitioned to stage 3 for doing 1 breath segment after six lumosity plays if those plays happened while the user was still in stage 2", async() => {
         const testDate = new Date("2022-10-14 11:45:17");
         const stage2CompletedDate = "20221015";

@@ -32,18 +32,16 @@ export async function handler() {
                 }
             }
 
-            if (!u.homeComplete) {
-                // lumosity practice + subsequent breathing session
-                const lumosEarnings = await db.earningsForUser(u.userId,  earningsTypes.LUMOS_AND_BREATH_1);
-                // should be sorted by date asc, so last should be most recent
-                const lastLumosEarningsDate = lumosEarnings.length > 0 ? lumosEarnings.slice(-1)[0].date : '1970-01-01 00:00:00';
-                if (!u.stage2Completed) {
-                    await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 2);
-                } else {
-                    // stage2CompletedOn is YYYYMMDD. Add hyphens b/c lumosity dates are YYYY-MM-DD.
-                    const stage2Date = `${u.stage2CompletedOn.slice(0, 4)}-${u.stage2CompletedOn.slice(4, 6)}-${u.stage2CompletedOn.slice(6, 8)}`;
-                    await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 3, stage2Date);
-                }
+            // lumosity practice + subsequent breathing session
+            const lumosEarnings = await db.earningsForUser(u.userId,  earningsTypes.LUMOS_AND_BREATH_1);
+            // should be sorted by date asc, so last should be most recent
+            const lastLumosEarningsDate = lumosEarnings.length > 0 ? lumosEarnings.slice(-1)[0].date : '1970-01-01 00:00:00';
+            if (!u.stage2Completed) {
+                await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 2);
+            } else {
+                // stage2CompletedOn is YYYYMMDD. Add hyphens b/c lumosity dates are YYYY-MM-DD.
+                const stage2Date = `${u.stage2CompletedOn.slice(0, 4)}-${u.stage2CompletedOn.slice(4, 6)}-${u.stage2CompletedOn.slice(6, 8)}`;
+                await saveLumosAndBreathEarnings(u.userId, u.humanId, lastLumosEarningsDate, 3, stage2Date);
             }
 
             // post-intervention baseline
