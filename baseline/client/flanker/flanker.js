@@ -227,7 +227,7 @@ Flanker.trainingFeedback = {
         const data = jsPsych.data.getLastTimelineData();
         const values = data.last(1).values()[0];
         if (values.response === null) {
-            return "Answer faster next time";
+            return '<span class="flanker-miss"></span>';
         }
         if (values.correct) {
             return "Correct";
