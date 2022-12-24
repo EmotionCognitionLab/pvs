@@ -14,6 +14,8 @@ import instruction6_html from "./frag/instruction-6.html";
 import comprehension1_html from "./frag/comprehension-1.html";
 import comprehension2_html from "./frag/comprehension-2.html";
 import comprehension3_html from "./frag/comprehension-3.html";
+import instruction1alt_html from "./frag/instruction-1-alt.html";
+
 
 
 export class Flanker {
@@ -38,7 +40,7 @@ export class Flanker {
         } else {
             return [
                 this.constructor.preload,
-                this.constructor.instruction1,
+                this.constructor.instruction1alt,
                 this.mainTrials(),
             ];
         }
@@ -177,6 +179,12 @@ Flanker.instruction6 = {
     choices: [" "]
 };
 
+Flanker.instruction1alt = {
+    type: "html-keyboard-response",
+    stimulus: instruction1alt_html,
+    choices: [" "]
+};
+
 Flanker.fixation = {
     type: "html-keyboard-response",
     stimulus: '<div style="font-size: 60px;">+</div>',
@@ -213,13 +221,22 @@ Flanker.timelineVarsForStimuli = (stimuli) => {
     }));
 };
 
+Flanker.toggleMissedBackgroundOn = () => {
+    document.body.classList.add("flanker-miss");
+};
+
+Flanker.toggleMissedBackgroundOff = () => {
+    document.body.classList.remove("flanker-miss");
+};
+
 Flanker.trainingFeedback = {
     type: "html-keyboard-response",
     stimulus: function() {
         const data = jsPsych.data.getLastTimelineData();
         const values = data.last(1).values()[0];
         if (values.response === null) {
-            return "Answer faster next time";
+            Flanker.toggleMissedBackgroundOn();
+            return "";
         }
         if (values.correct) {
             return "Correct";
@@ -227,14 +244,17 @@ Flanker.trainingFeedback = {
         return "Incorrect";
     },
     choices: jsPsych.NO_KEYS,
-    trial_duration: 800
+    trial_duration: 800,
+    on_finish: Flanker.toggleMissedBackgroundOff,
 };
 
 Flanker.mainFeedback = {
     type: "html-keyboard-response",
-    stimulus: "Answer faster next time",
+    stimulus: "",
     choices: jsPsych.NO_KEYS,
-    trial_duration: 800
+    trial_duration: 800,
+    on_start: Flanker.toggleMissedBackgroundOn,
+    on_finish: Flanker.toggleMissedBackgroundOff,
 };
 
 Flanker.mainFeedbackNode = {
