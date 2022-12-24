@@ -9,6 +9,6 @@
 ul {
     text-align: left;
 }
-body:has(.flanker-miss) {
+.flanker-miss {
     background-color: red;
 }

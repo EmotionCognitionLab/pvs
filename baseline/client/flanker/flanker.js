@@ -221,13 +221,22 @@ Flanker.timelineVarsForStimuli = (stimuli) => {
     }));
 };
 
+Flanker.toggleMissedBackgroundOn = () => {
+    document.body.classList.add("flanker-miss");
+};
+
+Flanker.toggleMissedBackgroundOff = () => {
+    document.body.classList.remove("flanker-miss");
+};
+
 Flanker.trainingFeedback = {
     type: "html-keyboard-response",
     stimulus: function() {
         const data = jsPsych.data.getLastTimelineData();
         const values = data.last(1).values()[0];
         if (values.response === null) {
-            return '<span class="flanker-miss"></span>';
+            Flanker.toggleMissedBackgroundOn();
+            return "";
         }
         if (values.correct) {
             return "Correct";
@@ -235,14 +244,17 @@ Flanker.trainingFeedback = {
         return "Incorrect";
     },
     choices: jsPsych.NO_KEYS,
-    trial_duration: 800
+    trial_duration: 800,
+    on_finish: Flanker.toggleMissedBackgroundOff,
 };
 
 Flanker.mainFeedback = {
     type: "html-keyboard-response",
-    stimulus: "Answer faster next time",
+    stimulus: "",
     choices: jsPsych.NO_KEYS,
-    trial_duration: 800
+    trial_duration: 800,
+    on_start: Flanker.toggleMissedBackgroundOn,
+    on_finish: Flanker.toggleMissedBackgroundOff,
 };
 
 Flanker.mainFeedbackNode = {
