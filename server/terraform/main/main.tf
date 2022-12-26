@@ -239,13 +239,13 @@ resource "aws_ssm_parameter" "dynamo-consent-table" {
 
 resource "aws_dynamodb_table" "ds-table" {
   name           = "pvs-${var.env}-ds"
-  billing_mode   = "PROVISIONED"
+  billing_mode   = "PAY_PER_REQUEST"
   read_capacity  = 1
   write_capacity = 1
-  hash_key       = "userId"
+  hash_key       = "envelopeId"
 
   attribute {
-    name = "userId"
+    name = "envelopeId"
     type = "S"
   }
 }
