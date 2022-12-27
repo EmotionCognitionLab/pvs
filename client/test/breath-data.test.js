@@ -1,4 +1,4 @@
-import { std } from 'mathjs';
+import { std, sqrt } from 'mathjs';
 import * as bd from "../src/breath-data";
 
 jest.mock('fs/promises', () => ({
@@ -158,7 +158,7 @@ describe("Breathing data functions", () => {
         const expectedAvg = cohValues.reduce((prev, cur) => prev+cur, 0) / cohValues.length;
         expect(stats.mean).toBeCloseTo(expectedAvg);
         const stdDev = std(cohValues);
-        const interval = 1.645*stdDev;
+        const interval = (1.645*stdDev) / sqrt(cohValues.length - 1);
         expect(stats.low90CI).toBeCloseTo(expectedAvg - interval);
         expect(stats.high90CI).toBeCloseTo(expectedAvg + interval);
     });

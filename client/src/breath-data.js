@@ -1,7 +1,7 @@
 import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
 import { mkdir } from 'fs/promises';
-import { mean, std } from 'mathjs';
+import { mean, std, sqrt } from 'mathjs';
 import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
@@ -132,7 +132,7 @@ function getAvgCoherenceValues(regimeId, stage) {
 function getRegimeStats(regimeId, stage) {
     const avgCohVals = getAvgCoherenceValues(regimeId, stage);
     const stdDev = std(avgCohVals);
-    const interval = 1.645 * stdDev;
+    const interval = (1.645 * stdDev) / sqrt(avgCohVals.length - 1);
     const meanAvgCoh = mean(avgCohVals);
     return { id: regimeId, mean: meanAvgCoh, low90CI: meanAvgCoh - interval, high90CI: meanAvgCoh + interval};
 }
