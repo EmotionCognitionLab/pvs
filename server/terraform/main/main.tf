@@ -240,8 +240,6 @@ resource "aws_ssm_parameter" "dynamo-consent-table" {
 resource "aws_dynamodb_table" "ds-table" {
   name           = "pvs-${var.env}-ds"
   billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 1
-  write_capacity = 1
   hash_key       = "envelopeId"
 
   attribute {
@@ -1035,6 +1033,30 @@ resource "aws_iam_policy" "dynamodb-screening-write" {
 POLICY
 }
 
+# policy to allow reading from/writing to docusign table
+resource "aws_iam_policy" "dynamodb-ds-read-write" {
+  name = "pvs-${var.env}-dynamodb-ds-read-write"
+  path = "/policy/dynamodb/ds/all/"
+  description = "Allows reading from/writing to dynamodb docusign table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.ds-table.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow sns publishing
 resource "aws_iam_policy" "sns-publish" {
   name = "pvs-${var.env}-sns-publish"
@@ -1384,10 +1406,12 @@ resource "aws_ssm_parameter" "lambda-earnings-role" {
   value = "${aws_iam_role.lambda-earnings.arn}"
 }
 
-resource "aws_iam_role" "lambda-screening" {
-  name = "pvs-${var.env}-lambda-screening"
-  path = "/role/lambda/screening/"
-  description = "Role for lambda function that handles screening survey"
+# Policy for unregistered users for things like screening survey,
+# docusign signing of consent form, registration, etc.
+resource "aws_iam_role" "lambda-unregistered" {
+  name = "pvs-${var.env}-lambda-unregistered"
+  path = "/role/lambda/unregistered/"
+  description = "Role for lambda function that handles unregistered users"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1406,16 +1430,17 @@ resource "aws_iam_role" "lambda-screening" {
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-screening-write.arn,
     aws_iam_policy.dynamodb-potential-participants-write.arn,
+    aws_iam_policy.dynamodb-ds-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
 }
 
 # save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-screening-role" {
-  name = "/pvs/${var.env}/role/lambda/screening"
-  description = "ARN for lambda-screening role"
+resource "aws_ssm_parameter" "lambda-unregistered-role" {
+  name = "/pvs/${var.env}/role/lambda/unregistered"
+  description = "ARN for lambda-unregistered role"
   type = "SecureString"
-  value = "${aws_iam_role.lambda-screening.arn}"
+  value = "${aws_iam_role.lambda-unregistered.arn}"
 }
 
 resource "aws_iam_role_policy" "lambda-role-assumption" {

@@ -21,6 +21,45 @@ const noAccess = {
     body: "You do not have permission to access this information"
 };
 
+const badRequest = {
+    statusCode: 400,
+    body: "Malformed request"
+}
+
+
+exports.signingDone = async(event) => {
+    const isValid = (param) => (param && param.trim() !== "")
+    ["envelopeId", "name", "email"].forEach( (param) => {
+        if (!isValid(event.queryStringParameters[param])) return badRequest;
+    });
+
+    try {
+        const docClient = new AWS.DynamoDB.DocumentClient({
+            endpoint: dynamoEndpoint,
+            apiVersion: "2012-08-10",
+            region: region,
+        });
+    
+        const db = new Db();
+        db.docClient = docClient;
+
+        const envelopeId = event.queryStringParameters.envelopeId;
+        const name = event.queryStringParameters.name;
+        const email = event.queryStringParameters.email;
+        await db.saveDsSigningInfo(envelopeId, name, email);
+        return {
+            statusCode: 301,
+            headers: {
+                Location: "https://www.google.com"
+                // Location: `${awsSettings.regLink}?id=${envelopeId}`
+            }
+        };
+    } catch (err) {
+        console.error(err);
+        throw(err);
+    }
+}
+
 exports.callback = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
     if (!userRole) return noAccess;

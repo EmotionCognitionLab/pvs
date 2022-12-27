@@ -319,6 +319,20 @@ functions:
       patterns:
         - 'admin-api/docusign/*.js'
 
+  ds-signing-done:
+    handler: admin-api/docusign/docusign.signingDone
+    events:
+      - httpApi:
+          path: /docusign/done
+          method: GET
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      REGION: ${self:provider.region}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
+    package:
+      patterns:
+        - 'admin-api/docusign/*.js'
+
   earnings:
     handler: earnings/earnings.handler
     events:
@@ -342,7 +356,7 @@ functions:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       SCREENING_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/screening}
       POTENTIAL_PARTICIPANTS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/potential/participants}
-    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/screening}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
     package:
       patterns:
         - 'screening/*.js'
