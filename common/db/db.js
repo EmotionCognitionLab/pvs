@@ -537,6 +537,41 @@ export default class Db {
         }
     }
 
+    async saveDsSigningInfo(envelopeId, name, email) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { envelopeId: envelopeId },
+            UpdateExpression: "set #name = :name, #email = :email",
+            ExpressionAttributeNames: {
+                "#name": "name",
+                "#email": "email"
+            },
+            ExpressionAttributeValues: {
+                ":name": name,
+                ":email": email
+            }
+        };
+        try {
+            await this.update(params);
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async getDsSigningInfo(envelopeId) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { envelopeId: envelopeId }
+        };
+        try {
+            return await this.query(params);
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
     async query(params) {
         return this.dynamoOp(params, 'query');
     }
