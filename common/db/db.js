@@ -562,7 +562,8 @@ export default class Db {
     async getDsSigningInfo(envelopeId) {
         const params = {
             TableName: this.dsTable,
-            Key: { envelopeId: envelopeId }
+            KeyConditionExpression: `envelopeId = :envelopeId` ,
+            ExpressionAttributeValues: { ":envelopeId": envelopeId }
         };
         try {
             return await this.query(params);

@@ -137,6 +137,11 @@ export default class ApiClient {
         return await this.doFetch(url, "get", "There was an error completing the Docusign authentication process");
     }
 
+    async getDsSigningInfo(envelopeId) {
+        const url = `${awsSettings.DsApiUrl}?envelopeId=${envelopeId}`;
+        return await this.doFetch(url, "get", "There was an error fetching the consent form details");
+    }
+
     async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,

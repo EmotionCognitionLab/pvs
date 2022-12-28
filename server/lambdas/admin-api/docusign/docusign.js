@@ -18,12 +18,18 @@ dsClient.setOAuthBasePath(awsSettings.DsOAuthUri.replace('https://', ''));
 
 const noAccess = {
     statusCode: 401,
-    body: "You do not have permission to access this information"
+    body: "You do not have permission to access this information",
+    headers: {
+        "Access-Control-Allow-Origin": "*"
+    }
 };
 
 const badRequest = {
     statusCode: 400,
-    body: "Malformed request"
+    body: "Malformed request",
+    headers: {
+        "Access-Control-Allow-Origin": "*"
+    }
 }
 
 
@@ -54,6 +60,36 @@ exports.signingDone = async(event) => {
                 // Location: `${awsSettings.regLink}?id=${envelopeId}`
             }
         };
+    } catch (err) {
+        console.error(err);
+        throw(err);
+    }
+}
+
+exports.getSigningInfo = async(event) => {
+    const envelopeId = event.queryStringParameters.envelopeId;
+    if (!envelopeId || envelopeId.trim() === "") return badRequest;
+
+    try {
+        const docClient = new AWS.DynamoDB.DocumentClient({
+            endpoint: dynamoEndpoint,
+            apiVersion: "2012-08-10",
+            region: region,
+        });
+    
+        const db = new Db();
+        db.docClient = docClient;
+
+        const results = await db.getDsSigningInfo(envelopeId);
+        console.log(JSON.stringify(results));
+        return {
+            statusCode: 200,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify(results.Items)
+        }
     } catch (err) {
         console.error(err);
         throw(err);

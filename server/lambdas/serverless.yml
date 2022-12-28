@@ -333,6 +333,20 @@ functions:
       patterns:
         - 'admin-api/docusign/*.js'
 
+  ds-get-signing-info:
+    handler: admin-api/docusign/docusign.getSigningInfo
+    events:
+      - httpApi:
+          path: /docusign/signingInfo
+          method: GET
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      REGION: ${self:provider.region}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
+    package:
+      patterns:
+        - 'admin-api/docusign/*.js'
+
   earnings:
     handler: earnings/earnings.handler
     events:
