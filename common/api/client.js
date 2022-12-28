@@ -142,6 +142,16 @@ export default class ApiClient {
         return await this.doFetch(url, "get", "There was an error fetching the consent form details");
     }
 
+    async registerUser(envelopeId, phone, password) {
+        const url = `${awsSettings.RegistrationApiUrl}`;
+        const params = {
+            envelopeId: envelopeId,
+            phone: phone,
+            password: password
+        };
+        return await this.doFetch(url, "post", "An error occurred during registration", params);
+    }
+
     async doFetch(url, method, errPreamble, body = null) {
         const init = {
             method: method,
