@@ -8,6 +8,7 @@ module.exports = {
         'admin/docusign': 'admin/docusign/docusign.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
+        'register': 'register/index.js',
         'screening': 'screening/screening.js',
         'login': 'login/login.js',
         'logout': 'logout/logout.js',
@@ -36,6 +37,12 @@ module.exports = {
             filename: 'admin/download/index.html',
             template: 'admin/download/index.ejs',
             chunks: ['admin/download'],
+        }),
+        new HtmlWebpackPlugin({
+            title: 'Register',
+            filename: 'register/index.html',
+            template: 'register/index.ejs',
+            chunks: ['register'],
         }),
         new HtmlWebpackPlugin({
             title: 'Daily Tasks',
