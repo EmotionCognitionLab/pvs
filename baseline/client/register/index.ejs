@@ -7,7 +7,7 @@
     <body>
         <div id="errors" class="hidden"></div>
         <div id="loading">Loading...</div>
-        <div id="content" class="hidden">
+        <div id="registration-form" class="hidden">
             <p class="header">Thanks for completing the HeartBEAM study consent form! The next step is to create an account on the study website:</p>
             <form novalidate>
                 <input type="hidden" name="envelopeId" value="" />
@@ -34,6 +34,17 @@
                 </span>
                 <br/>
                 <button id="submit-button" type="submit">Sign up</button>
+            </form>
+        </div>
+        <div id="email-verification-form" class="hidden">
+            <p>
+                This is not yet implemented, but if we need to handle an email verification code this is where we would do it. If not, then this page would tell you that your registration was successful and what the next steps are.
+            </p>
+            <form>
+                <label for="verification-code">Verification code:
+                    <input type="text" id="verification-code" name="code" required />
+                </label>
+                <button id="email-verifiy-submit-button" type="submit">Submit</button>
             </form>
         </div>
     </body>

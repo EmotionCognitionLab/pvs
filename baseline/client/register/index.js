@@ -27,23 +27,20 @@ async function init() {
         return;
     }
 
-    document.getElementById("submit-button").addEventListener('click', (event) => {
-        if (!formIsValid()) {
-            event.preventDefault();
-        }
-        console.debug('no errors; this is where we would submit the form');
+    document.getElementById("submit-button").addEventListener('click', async (event) => {
+        event.preventDefault();
+        await registerUser(client, envelopeId);
     });
-
 
     const name = signingInfo[0].name;
     setName(name);
     const email = signingInfo[0].email;
     setEmail(email);
     setEnvelopeId(envelopeId);
-    showForm();
+    showRegForm();
 }
 
-function formIsValid() {
+function registrationFormIsValid() {
     let isValid = true;
 
     const phone = document.getElementById("phone");
@@ -94,14 +91,40 @@ function formIsValid() {
     return isValid;
 }
 
-function showForm() {
+async function registerUser(client, envelopeId) {
+    if (!registrationFormIsValid()) {
+        return;
+    }
+
+    let phone = document.getElementById("phone").value;
+    // phone format is +12135551212
+    if (!phone.startsWith("1")) {
+        phone = "1" + phone;
+    }
+    phone = "+" + phone;
+
+    const password = document.getElementById("password").value;
+    try {
+        await client.registerUser(envelopeId, phone, password);
+        showEmailVerificationForm();
+    } catch (err) {
+        showError(err.message);
+    }
+}
+
+function showRegForm() {
     document.getElementById("loading").classList.add("hidden");
-    document.getElementById("content").classList.remove("hidden");
+    document.getElementById("registration-form").classList.remove("hidden");
+}
+
+function showEmailVerificationForm() {
+    document.getElementById("registration-form").classList.add("hidden");
+    document.getElementById("email-verification-form").classList.remove("hidden");
 }
  
 function showError(errMsg) {
     const errDiv = document.getElementById("errors");
-    errDiv.innerHTML = `Please contact the study administrator at uscheartbeam@gmail.com 
+    errDiv.innerHTML = `Something has gone wrong. Please contact the study administrator at uscheartbeam@gmail.com 
     and give them your name, email address, and the following error message: ${errMsg}`;
     errDiv.classList.remove("hidden");
 }
