@@ -541,14 +541,16 @@ export default class Db {
         const params = {
             TableName: this.dsTable,
             Key: { envelopeId: envelopeId },
-            UpdateExpression: "set #name = :name, #email = :email",
+            UpdateExpression: "set #name = :name, #email = :email, #dateTime = :dateTime",
             ExpressionAttributeNames: {
                 "#name": "name",
-                "#email": "email"
+                "#email": "email",
+                "#dateTime": "dateTime"
             },
             ExpressionAttributeValues: {
                 ":name": name,
-                ":email": email
+                ":email": email,
+                ":dateTime": (new Date()).toISOString()
             }
         };
         try {
