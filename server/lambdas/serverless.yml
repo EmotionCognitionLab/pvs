@@ -360,6 +360,19 @@ functions:
       patterns:
         - 'earnings/*.js'
 
+  register:
+    handler: register/register.signUp
+    events:
+      - httpApi:
+          path: /register
+          method: POST
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
+    package:
+      patterns:
+        - 'register/*.js'
+
   screening:
     handler: screening/screening.handler
     events:

@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "devDependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.238.0",
     "@aws-sdk/client-dynamodb": "^3.49.0",
     "@aws-sdk/client-s3": "^3.49.0",
     "@aws-sdk/client-sts": "^3.49.0",
