@@ -1137,6 +1137,28 @@ resource "aws_iam_policy" "dynamodb-earnings-write" {
 POLICY
 }
 
+# policy to allow use of SQS queues
+resource "aws_iam_policy" "sqs-registration-read-write" {
+  name = "pvs-${var.env}-registration-sqs-read-write"
+  path = "/policy/sqs/registration/all/"
+  description = "Allows reading from/writing to the registration and dead letter sqs queues"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [ "sqs:*" ],
+      "Resource": [
+        "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.registration-email.name}",
+        "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.deadletter.name}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
 # IAM roles
 resource "aws_iam_role" "lambda-ses-process" {
   name = "pvs-${var.env}-lambda-ses-process"
@@ -1431,6 +1453,7 @@ resource "aws_iam_role" "lambda-unregistered" {
     aws_iam_policy.dynamodb-screening-write.arn,
     aws_iam_policy.dynamodb-potential-participants-write.arn,
     aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.sqs-registration-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
 }
@@ -1441,6 +1464,40 @@ resource "aws_ssm_parameter" "lambda-unregistered-role" {
   description = "ARN for lambda-unregistered role"
   type = "SecureString"
   value = "${aws_iam_role.lambda-unregistered.arn}"
+}
+
+resource "aws_iam_role" "lambda-sqs-process" {
+  name = "pvs-${var.env}-lambda-sqs-process"
+  path = "/role/lambda/sqs/process/"
+  description = "Role for lambda function(s) invoked from SQS queues"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action =  [
+          "sts:AssumeRole"
+        ]
+      }
+    ]
+  })
+
+  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
+    aws_iam_policy.dynamodb-user-read.arn,
+    aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.sqs-registration-read-write.arn
+  ]
+}
+
+# save above IAM role to SSM so serverless can reference it
+resource "aws_ssm_parameter" "lambda-sqs-role" {
+  name = "/pvs/${var.env}/role/lambda/sqs/process"
+  description = "ARN for lambda role to process messages received from SQS"
+  type = "SecureString"
+  value = "${aws_iam_role.lambda-sqs-process.arn}"
 }
 
 resource "aws_iam_role_policy" "lambda-role-assumption" {
@@ -1718,6 +1775,7 @@ resource "aws_cloudwatch_log_metric_filter" "console-error" {
 # is changed
 # https://medium.com/@raghuram.arumalla153/aws-sns-topic-subscription-with-email-protocol-using-terraform-ed05f4f19b73
 # https://github.com/rarumalla1/terraform-projects/tree/master/aws-sns-email-subscription-terraform-using-command
+# TODO rename this just "errors" - it's used for multiple errors sources, not just console
 resource "aws_sns_topic" "console-errors" {
   name = "pvs-${var.env}-console-errors-topic"
   provisioner "local-exec" {
@@ -1741,4 +1799,61 @@ resource "aws_cloudwatch_metric_alarm" "console-error-alarm" {
   alarm_actions = [aws_sns_topic.console-errors.arn]
   datapoints_to_alarm = 1
   treat_missing_data = "notBreaching"
+}
+
+# SQS dead-letter queue
+resource "aws_sqs_queue" "deadletter" {
+  name = "pvs-${var.env}-deadletter-queue"
+}
+
+resource "aws_sqs_queue_redrive_allow_policy" "deadletter" {
+  queue_url = aws_sqs_queue.deadletter.id
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns = [aws_sqs_queue.registration-email.arn]
+  })
+}
+
+# SQS queue used to send emails to participants who have signed
+# the study consent form but not yet registered. It has a five-minute
+# delay, after which it triggers a lambda function that checks to see
+# if the participant has already registered and, if not, emails them
+# instructions to do so.
+resource "aws_sqs_queue" "registration-email" {
+  name = "pvs-${var.env}-registration-email-queue"
+  delay_seconds = 300
+  max_message_size = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 20
+  visibility_timeout_seconds = 60
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.deadletter.arn
+    maxReceiveCount = 4
+  })
+}
+
+# save above SQS queue arn to SSM so serverless can reference it
+resource "aws_ssm_parameter" "sqs-registration-email-queue" {
+  name = "/pvs/${var.env}/sqs/registration"
+  description = "URL for registration email SQS queue"
+  type = "SecureString"
+  value = "${aws_sqs_queue.registration-email.url}"
+}
+
+# Cloudwatch alarm for the deadletter queue
+resource "aws_cloudwatch_metric_alarm" "deadletter-queue-alarm" {
+  alarm_name = "pvs-${var.env}-deadletter-queue-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods = 1
+  period = 300
+  metric_name = "ApproximateNumberOfMessagesVisible"
+  namespace = "AWS/SQS"
+  statistic = "Sum"
+  threshold = 0
+  alarm_actions = [aws_sns_topic.console-errors.arn]
+  datapoints_to_alarm = 1
+  treat_missing_data = "notBreaching"
+  dimensions = {
+    "QueueName" = "${aws_sqs_queue.deadletter.name}"
+  }
 }
