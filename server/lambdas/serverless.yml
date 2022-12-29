@@ -104,6 +104,15 @@ functions:
       patterns:
         - 'on-user-verify/*.js'
 
+  confirm-signed-consent-on-signup:
+    handler: on-pre-signup/pre-signup.handler
+    environment:
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
+    package:
+      patterns:
+        - 'on-pre-signup/*.js'
+
   api:
     handler: api/api.handler
     events:
@@ -409,12 +418,24 @@ resources:
         Principal: cognito-idp.amazonaws.com
         SourceArn: ${ssm:/${self:service}/${self:provider.stage}/info/cognito/user-pool/arn}
         FunctionName: ${self:service}-${self:provider.stage}-write-user-on-verify
+    PreSignupTriggerInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        Principal: cognito-idp.amazonaws.com
+        SourceArn: ${ssm:/${self:service}/${self:provider.stage}/info/cognito/user-pool/arn}
+        FunctionName: ${self:service}-${self:provider.stage}-confirm-signed-consent-on-signup
   Outputs:
     PostConfirmationLambdaArn:
       Value: !GetAtt WriteDashuserDashonDashverifyLambdaFunction.Arn
       Export:
         Name: "${self:service}-${self:provider.stage}-post-confirmation-lambda-arn"
       Description: Arn for the post-cognito-verification lambda trigger
+    PreSignupLambdaArn:
+      Value: !GetAtt ConfirmDashsignedDashconsentDashonDashsignupLambdaFunction.Arn
+      Export:
+        Name: "${self:service}-${self:provider.stage}-pre-signup-lambda-arn"
+      Description: Arn for the pre-signup cognito lambda trigger
     BetterSqlite3LambdaLayerQualifiedArn:
       Export:
         Name: "${self:service}-${self:provider.stage}-BetterSqlite3"
@@ -426,6 +447,9 @@ custom:
       - path: /${self:service}/${self:provider.stage}/info/lambdas/write-user-on-verify/arn
         source: PostConfirmationLambdaArn
         description: Arn for the post-cognito-verification lambda trigger
+      - path: /${self:service}/${self:provider.stage}/info/lambdas/confirm-signed-consent-on-signup/arn
+        source: PreSignupLambdaArn
+        description: Arn for the pre-signup cognito lambda trigger
   webpack:
     excludeFiles: "**/__test__/*"
     includeModules:
