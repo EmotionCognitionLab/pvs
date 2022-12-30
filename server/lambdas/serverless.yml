@@ -337,7 +337,7 @@ functions:
     environment:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       REGION: ${self:provider.region}
-      REGISTRATION_SQS_QUEUE: ${ssm:/${self:service}/${self:provider.stage}/sqs/registration}
+      REGISTRATION_SQS_QUEUE: ${ssm:/${self:service}/${self:provider.stage}/sqs/registration/url}
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
     package:
       patterns:
@@ -356,6 +356,24 @@ functions:
     package:
       patterns:
         - 'admin-api/docusign/*.js'
+
+  ds-send-registration-email:
+    handler: register/register.sendEmails
+    events:
+      - sqs:
+          arn: ${ssm:/${self:service}/${self:provider.stage}/sqs/registration/arn}
+          batchSize: 5
+          functionResponseType: ReportBatchItemFailures
+          maximumBatchingWindow: 300
+    environment:
+      EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
+      SES_ENDPOINT: "https://email.${self:provider.region}.amazonaws.com"
+      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
+      REGION: ${self:provider.region}
+    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
+    package:
+      patterns:
+        - 'register/*.js'
 
   earnings:
     handler: earnings/earnings.handler
