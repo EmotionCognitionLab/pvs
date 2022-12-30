@@ -53,11 +53,12 @@ exports.signingDone = async(event) => {
         const name = event.queryStringParameters.name;
         const email = event.queryStringParameters.email;
         await db.saveDsSigningInfo(envelopeId, name, email);
+
+        const dest = `${awsSettings.RegistrationUri}?envelopeId=${envelopeId}`
         return {
             statusCode: 301,
             headers: {
-                Location: "https://www.google.com"
-                // Location: `${awsSettings.regLink}?id=${envelopeId}`
+                Location: dest
             }
         };
     } catch (err) {
