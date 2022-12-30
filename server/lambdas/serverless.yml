@@ -337,6 +337,7 @@ functions:
     environment:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
       REGION: ${self:provider.region}
+      REGISTRATION_SQS_QUEUE: ${ssm:/${self:service}/${self:provider.stage}/sqs/registration}
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
     package:
       patterns:
