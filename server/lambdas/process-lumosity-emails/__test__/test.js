@@ -199,7 +199,7 @@ describe("Processing reports from S3", () => {
                 TableName: usersTable,
                 Key: { userId: lumosAcct.owner },
                 UpdateExpression: 'set stage2Completed = :true, stage2CompletedOn = :today',
-                ExpressionAttributeValues: {':true': true, ':today': todayYyyymmdd() }
+                ExpressionAttributeValues: {':true': true, ':today': dayjs(new Date()).tz('America/Los_Angeles').format('YYYYMMDD') }
             };
             await docClient.update(params).promise();
 
@@ -300,7 +300,8 @@ async function confirmStage2Complete(userId) {
     };
     const res = await docClient.query(qParams).promise();
     expect(res.Items[0].stage2Completed).toBe(true);
-    expect(res.Items[0].stage2CompletedOn).toBe(todayYyyymmdd());
+    const today = dayjs(new Date()).tz('America/Los_Angeles').format('YYYYMMDD');
+    expect(res.Items[0].stage2CompletedOn).toBe(today);
 }
 
 async function runAttachmentLambda() {
