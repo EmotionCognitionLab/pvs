@@ -597,9 +597,7 @@ export default class Db {
             Key: { envelopeId: envelopeId },
             UpdateExpression: "set #emailed = :dateTime",
             ExpressionAttributeNames: {
-                "#emailed": "emailed",
-                "#dateTime": "dateTime"
-            },
+                "#emailed": "emailed"            },
             ExpressionAttributeValues: {
                 ":dateTime": (new Date()).toISOString()
             }
