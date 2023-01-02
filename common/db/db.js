@@ -413,6 +413,22 @@ export default class Db {
         return dynResults.Items[0];
     }
 
+    async getUserByEmail(email) {
+        const params = {
+            TableName: this.usersTable,
+            FilterExpression: "email = :email",
+            ExpressionAttributeValues: { ":email": email }
+        };
+        const dynResults = await this.scan(params);
+        if (dynResults.Items.length === 0) {
+            return {};
+        }
+        if (dynResults.Items.length > 1) {
+            throw new Error(`Found multiple users with email ${email}.`);
+        }
+        return dynResults.Items[0];
+    }
+
     async getIdentityIdForUserId(userId) {
         const baseParams = {
             TableName: this.experimentTable,
@@ -569,6 +585,25 @@ export default class Db {
         };
         try {
             return await this.query(params);
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async saveDsRegInstructionsSent(envelopeId) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { envelopeId: envelopeId },
+            UpdateExpression: "set #emailed = :dateTime",
+            ExpressionAttributeNames: {
+                "#emailed": "emailed"            },
+            ExpressionAttributeValues: {
+                ":dateTime": (new Date()).toISOString()
+            }
+        }
+        try {
+            return await this.update(params);
         } catch (err) {
             this.logger.error(err);
             throw err;

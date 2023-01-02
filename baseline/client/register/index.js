@@ -1,5 +1,6 @@
 import "./style.css";
 import ApiClient from "../../../common/api/client";
+import awsSettings from "../../../common/aws-settings.json";
 
 async function init() {
     hideError();
@@ -106,7 +107,7 @@ async function registerUser(client, envelopeId) {
     const password = document.getElementById("password").value;
     try {
         await client.registerUser(envelopeId, phone, password);
-        showEmailVerificationForm();
+        window.location.href=awsSettings.RedirectUriSignIn;
     } catch (err) {
         showError(err.message);
     }
@@ -115,11 +116,6 @@ async function registerUser(client, envelopeId) {
 function showRegForm() {
     document.getElementById("loading").classList.add("hidden");
     document.getElementById("registration-form").classList.remove("hidden");
-}
-
-function showEmailVerificationForm() {
-    document.getElementById("registration-form").classList.add("hidden");
-    document.getElementById("email-verification-form").classList.remove("hidden");
 }
  
 function showError(errMsg) {

@@ -1450,9 +1450,11 @@ resource "aws_iam_role" "lambda-unregistered" {
   })
 
   managed_policy_arns   = [
+    aws_iam_policy.dynamodb-user-read.arn,
     aws_iam_policy.dynamodb-screening-write.arn,
     aws_iam_policy.dynamodb-potential-participants-write.arn,
     aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.ses-send.arn,
     aws_iam_policy.sqs-registration-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
@@ -1832,12 +1834,19 @@ resource "aws_sqs_queue" "registration-email" {
   })
 }
 
-# save above SQS queue arn to SSM so serverless can reference it
-resource "aws_ssm_parameter" "sqs-registration-email-queue" {
-  name = "/pvs/${var.env}/sqs/registration"
+# save above SQS queue url and arn to SSM so serverless can reference them
+resource "aws_ssm_parameter" "sqs-registration-email-queue-url" {
+  name = "/pvs/${var.env}/sqs/registration/url"
   description = "URL for registration email SQS queue"
   type = "SecureString"
   value = "${aws_sqs_queue.registration-email.url}"
+}
+
+resource "aws_ssm_parameter" "sqs-registration-email-queue-arn" {
+  name = "/pvs/${var.env}/sqs/registration/arn"
+  description = "ARN for registration email SQS queue"
+  type = "SecureString"
+  value = "${aws_sqs_queue.registration-email.arn}"
 }
 
 # Cloudwatch alarm for the deadletter queue

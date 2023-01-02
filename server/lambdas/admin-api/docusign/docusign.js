@@ -1,4 +1,5 @@
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
+import { SQS } from "@aws-sdk/client-sqs"
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import Db from 'db/db.js';
 import awsSettings from "../../../../common/aws-settings.json";
@@ -8,6 +9,7 @@ const docusign = require("docusign-esign");
 
 const region = process.env.REGION;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
+const sqsQueueUrl = process.env.REGISTRATION_SQS_QUEUE;
 const DS_RSA_PRIV = process.env.DS_RSA_PRIV;
 const DS_INT_KEY = process.env.DS_INT_KEY;
 const DS_USER_ID = process.env.DS_USER_ID;
@@ -40,6 +42,7 @@ exports.signingDone = async(event) => {
     });
 
     try {
+        // save details to db
         const docClient = new AWS.DynamoDB.DocumentClient({
             endpoint: dynamoEndpoint,
             apiVersion: "2012-08-10",
@@ -54,9 +57,22 @@ exports.signingDone = async(event) => {
         const email = event.queryStringParameters.email;
         await db.saveDsSigningInfo(envelopeId, name, email);
 
-        const dest = `${awsSettings.RegistrationUri}?envelopeId=${envelopeId}`
+        // put message in SQS queue to trigger delayed email
+        // with registration instructions if they don't
+        // register immediately
+        const sqsClient = new SQS({region: region});
+        await sqsClient.sendMessage({
+            QueueUrl: sqsQueueUrl,
+            MessageBody: JSON.stringify({
+                envelopeId: envelopeId,
+                email: email
+            })
+        });
+
+        // redirect user to registration
+        const dest = `${awsSettings.RegistrationUri}?envelopeId=${envelopeId}`;
         return {
-            statusCode: 301,
+            statusCode: 302,
             headers: {
                 Location: dest
             }

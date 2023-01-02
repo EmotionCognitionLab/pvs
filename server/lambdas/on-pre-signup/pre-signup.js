@@ -22,11 +22,18 @@ exports.handler = async (event, context, callback) => {
             const envId = event.request.clientMetadata.envelopeId;
             const signingInfo = await db.getDsSigningInfo(envId);
             canProceed = signingInfo.Items.length == 1;
-        }
+    }
 
     if (awsSettings.RequireConsentToRegister && !canProceed) {
         callback(new Error(": No signed consent form found."), event);
         return;
+    }
+
+    // verify email - to get to this point it must have already been 
+    // verified by Docusign
+    if (awsSettings.RequireConsentToRegister && event.request.userAttributes.hasOwnProperty("email")) {
+        event.response.autoVerifyEmail = true;
+        event.response.autoConfirmUser = true;
     }
 
     callback(null, event);
