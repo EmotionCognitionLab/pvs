@@ -29,5 +29,12 @@ exports.handler = async (event, context, callback) => {
         return;
     }
 
+    // verify email - to get to this point it must have already been 
+    // verified by Docusign
+    if (awsSettings.RequireConsentToRegister && event.request.userAttributes.hasOwnProperty("email")) {
+        event.response.autoVerifyEmail = true;
+        event.response.autoConfirmUser = true;
+    }
+
     callback(null, event);
 }
