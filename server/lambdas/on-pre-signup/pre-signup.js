@@ -22,7 +22,7 @@ exports.handler = async (event, context, callback) => {
             const envId = event.request.clientMetadata.envelopeId;
             const signingInfo = await db.getDsSigningInfo(envId);
             canProceed = signingInfo.Items.length == 1;
-        }
+    }
 
     if (awsSettings.RequireConsentToRegister && !canProceed) {
         callback(new Error(": No signed consent form found."), event);
