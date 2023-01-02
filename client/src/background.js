@@ -353,7 +353,11 @@ ipcMain.on('create-lumosity-view', async (_event, email, password, userAgent) =>
     lumosityView.setBounds({x: 0, y: 60, width: 1284, height: 593});  // hardcoded!!!
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
-        lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+        // #323 skipping past lumosity might cause the lumosity view to be
+        // removed before the login can be executed
+        if (lumosityView && lumosityView.webContents) {
+          lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+        }
     });
     lumosityView.webContents.loadURL("https://www.lumosity.com/login", {userAgent: userAgent.replace(/heartbeam.* /, '').replace(/Electron.* /, '')});
 });
