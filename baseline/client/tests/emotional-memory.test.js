@@ -1,6 +1,7 @@
 import { EmotionalMemory } from "../emotional-memory/emotional-memory.js";
 import { pressKey } from "./utils.js";
 import "jest-canvas-mock";
+import "regenerator-runtime/runtime";
 
 describe("emotional-memory-learning", () => {
     beforeEach(() => {
@@ -53,7 +54,8 @@ describe("emotional-memory-learning", () => {
 });
 
 describe("emotional-memory-recall", () => {
-    it("results should have as many isRelevant records as responses", () => {
+    global.confirm = () => true; // stub out window.confirm
+    it("results should have at least one result marked isRelevant", () => {
         const responses = ["a", "b", "c"]
         const timeline = (new EmotionalMemory(6)).getTimeline();
         let complete = false;
@@ -61,21 +63,16 @@ describe("emotional-memory-recall", () => {
             timeline,
             on_finish: () => { complete = true; },
         });
-        for (let i = 0; i < responses.length; ++i) {
-            document.querySelector('[type="text"]').value = responses[i];
-            document.querySelector('[type="submit"]').click();
-            if (i < responses.length - 1) {
-                document.querySelector("#jspsych-html-button-response-button-0 button").click();
-            } else {
-                document.querySelector("#jspsych-html-button-response-button-1 button").click();
-            }
+        const field = document.getElementById("jspsych-memory-field-field");
+        for (const r of responses) {
+            field.value = r;
+            field.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter"}));
+            field.dispatchEvent(new KeyboardEvent("keyup", {key: "Enter"}));
         }
+        document.getElementById("jspsych-memory-field-button").click();
         expect(complete).toBe(true);
         const relevantData = jsPsych.data.get().filter({isRelevant: true}).values();
-        expect(relevantData.length).toEqual(responses.length);
-        for (let i = 0; i < relevantData.length; ++i) {
-            expect(relevantData[i].response.Q0).toBe(responses[i]);
-        }
+        expect(relevantData[0].response).toEqual(responses);
     });
 });
 
