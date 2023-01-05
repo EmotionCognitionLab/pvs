@@ -462,7 +462,7 @@ resource "aws_ses_active_receipt_rule_set" "main" {
 }
 
 resource "aws_ses_receipt_rule" "save-to-s3" {
-  name          = "save-to-s3"
+  name          = "${var.env}-save-to-s3"
   rule_set_name = "pvs-ses-rules"
   recipients    = ["lumosityreports@heartbeamstudy.org"]
   enabled       = true
