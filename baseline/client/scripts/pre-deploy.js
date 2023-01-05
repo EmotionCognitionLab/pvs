@@ -71,7 +71,7 @@ function main() {
 
     if (!branchOk()) {
         const curBranch = getBranch();
-        console.log(`You are on brawnch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
+        console.log(`You are on branch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
         process.exit(4);
     }
 
