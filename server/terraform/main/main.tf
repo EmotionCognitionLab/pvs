@@ -563,7 +563,7 @@ POLICY
 resource "aws_iam_policy" "s3-read-experiment-data" {
   name = "pvs-${var.env}-s3-read-experiment-data"
   path = "/policy/s3/experimentData/read/"
-  description = "Allows writing data to participant's own s3 folder"
+  description = "Allows reading data from participant's own s3 folder"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
