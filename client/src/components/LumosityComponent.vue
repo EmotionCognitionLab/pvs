@@ -1,7 +1,7 @@
 <template>
     <div>
         <header>
-            <img v-bind:src="require('../assets/logo.png')" id="logo"> After completing the Lumosity games below, please click <span @click="leave">here</span>.
+            <img v-bind:src="require('../assets/logo.png')" id="logo"> After completing the brain games below, please click <span @click="leave">here</span>.
         </header>
     </div>
 </template>
