@@ -176,25 +176,6 @@ resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
   value = "${aws_dynamodb_table.experiment-data-table.name}"
 }
 
-resource "aws_dynamodb_table" "daily-regimes-table" {
-  name           = "pvs-${var.env}-daily-regimes"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "identityId"
-  range_key      = "date"
-
-  attribute {
-    name = "identityId"
-    type = "S"
-  }
-
-  attribute {
-    name = "date"
-    type = "S"
-  }
-}
-
 resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
@@ -629,43 +610,6 @@ resource "aws_iam_policy" "dynamodb-read-experiment-data" {
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
-      ],
-      "Condition": {
-        "ForAllValues:StringEquals": {
-          "dynamodb:LeadingKeys": [
-            "$${cognito-identity.amazonaws.com:sub}"
-          ]
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
-
-# Policy to allow authenticated cognito users to read/write
-# from/to the daily regimes table, but only rows where
-# the hash key is their cognito identity id.
-resource "aws_iam_policy" "dynamodb-read-write-daily-regimes" {
-  name = "pvs-${var.env}-dynamodb-read-write-daily-regimes"
-  path = "/policy/dynamodb/regimes/readwrite/"
-  description = "Allows authenticated users to read/write their own data from/to dynamodb daily regimes table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:Query",
-        "dynamodb:GetItem",
-        "dynamodb:BatchGetItem",
-        "dynamodb:PutItem",
-        "dynamodb:BatchWriteItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.daily-regimes-table.name}"
       ],
       "Condition": {
         "ForAllValues:StringEquals": {
@@ -1260,7 +1204,6 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn,
       aws_iam_policy.dynamodb-read-experiment-data.arn,
-      aws_iam_policy.dynamodb-read-write-daily-regimes.arn,
       aws_iam_policy.s3-write-experiment-data.arn,
       aws_iam_policy.s3-read-experiment-data.arn
   ]
