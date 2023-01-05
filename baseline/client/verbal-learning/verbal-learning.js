@@ -206,6 +206,7 @@ VerbalLearning.remember = stimulus => ({
     type: "memory-field",
     stimulus: stimulus,
     button_label: "Stop",
+    confirm_text: "Click OK if you've thought of all the words you can. Click cancel if you can remember more.",
     data: { isRelevant: true },
 });
 

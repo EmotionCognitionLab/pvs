@@ -3,6 +3,7 @@ import "@adp-psych/jspsych/plugins/jspsych-html-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-image-keyboard-response.js";
 import "@adp-psych/jspsych/plugins/jspsych-survey-text.js";
 import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
+import "js/jspsych-memory-field.js";
 import "@adp-psych/jspsych/css/jspsych.css";
 import "css/common.css";
 import "./style.css";
@@ -48,7 +49,7 @@ export class EmotionalMemory {
     }
 
     getTimelineRecall() {
-        return [this.constructor.recallLoop];
+        return [this.constructor.recallTrial];
     }
 
     getTimeline() {
@@ -89,27 +90,10 @@ EmotionalMemory.learningRatingTrial = imagePath => ({
     },
 });
 
-EmotionalMemory.recallLoop = {
-    timeline: [
-        {
-            type: "survey-text",
-            preamble: recall_instruction_html,
-            questions: [{ prompt: "" }],
-            data: { isRelevant: true },
-        },
-        {
-            type: "html-button-response",
-            stimulus: "",
-            choices: [
-                "Describe another image",
-                "Stop describing",
-            ],
-        },
-    ],
-    loop_function: data => {
-        const [trialData] = data.filter({trial_type: "html-button-response"}).values().slice(-1);
-        return trialData.response === 0;
-    }
+EmotionalMemory.recallTrial = {
+    type: "memory-field",
+    stimulus: recall_instruction_html,
+    data: { isRelevant: true },
 };
 
 
