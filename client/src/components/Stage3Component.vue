@@ -62,7 +62,7 @@
             <br/>
             <button class="button" @click="day5VidDone">Continue</button>
         </div>
-        <div :class="{hidden: sessionDone || dayDone || !lumosityDone || firstTimeStep < 5 || showDayFiveVid}">
+        <div :class="{hidden: reloadNeeded || sessionDone || dayDone || !lumosityDone || firstTimeStep < 5 || showDayFiveVid}">
             <PacedBreathingComponent :showScore="true" :startRegimes="regimes" :condition="condition" @pacerFinished="pacerFinished" />
         </div>
         <div class="instruction" v-if="sessionDone && !dayDone">
@@ -89,6 +89,11 @@
                 </template>
             </UploadComponent>
         </div>
+        <div class="instruction" v-else-if="reloadNeeded">
+            It looks like HeartBEAM has been left running overnight. Please quit and restart before resuming your practice.
+            <br/>
+            <button class="button" @click="quit">Quit</button>
+        </div>
     </div>
     <div class="instruction" v-else>
         One moment while we load your data...
@@ -102,6 +107,7 @@ import PacedBreathingComponent from './PacedBreathingComponent.vue'
 import UploadComponent from './UploadComponent.vue'
 import LumosityComponent from './LumosityComponent.vue'
 import { useLumosityHelper, completedLumosity } from '../lumosity-helper.js'
+import { yyyymmddString } from '../utils'
 
 const regimes=ref([])
 const sessionDone = ref(false)
@@ -123,6 +129,9 @@ const firstTimeStep = computed(() => {
     return firstTimePage.value
 })
 const showDayFiveVid = ref(false)
+let startDay = yyyymmddString(new Date())
+let dateCheckInterval
+let reloadNeeded = ref(false)
 
 async function setRegimes() {
     const sessRegimes = await window.mainAPI.regimesForSession(condition.value, 3)
@@ -143,6 +152,15 @@ onBeforeMount(async() => {
     const data = await apiClient.getSelf()
     condition.value = data.condition.assigned
     await setRegimes()
+    dateCheckInterval = setInterval(() => {
+        const today = yyyymmddString(new Date());
+        if (today != startDay) {
+            // they've crossed into a new day
+            // force them to quit the app
+            reloadNeeded.value = true
+            clearInterval(dateCheckInterval)
+        }
+    }, 60000);
 })
 
 async function shouldShowDayFiveVid() {
