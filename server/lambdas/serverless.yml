@@ -309,25 +309,6 @@ functions:
       patterns:
         - 'reminders/*.js'
 
-  ds-oauth-callback:
-    handler: admin-api/docusign/docusign.callback
-    events:
-      - httpApi:
-          path: /admin/docusign/callback
-          method: GET
-          authorizer: serviceAuthorizer
-    environment:
-      DS_BASE_PATH: ${self:custom.dsBasePath.${self:provider.stage}}
-      DS_BUCKET: ${ssm:/${self:service}/${self:provider.stage}/info/lambda/ds/bucket}
-      DS_CLIENT_ID: ${env:DS_CLIENT_ID}
-      DS_CLIENT_SECRET: ${env:DS_CLIENT_SECRET}
-      DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
-      REGION: ${self:provider.region}
-    role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda}
-    package:
-      patterns:
-        - 'admin-api/docusign/*.js'
-
   ds-signing-done:
     handler: docusign/docusign.signingDone
     events:
