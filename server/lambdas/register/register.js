@@ -1,28 +1,11 @@
-import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
-import { SES } from '@aws-sdk/client-ses'
-
+import { dynamoDocClient, sesClient, cognitoClient } from "./aws-clients.js";
 import Db from 'db/db.js';
 import awsSettings from "../../../common/aws-settings.json";
 
-const AWS = require("aws-sdk");
-
-const region = process.env.REGION;
-const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
-const sesEndpoint = process.env.SES_ENDPOINT;
 const emailSender = process.env.EMAIL_SENDER;
 
-// get name, email that were used to sign consent form
-const docClient = new AWS.DynamoDB.DocumentClient({
-    endpoint: dynamoEndpoint,
-    apiVersion: "2012-08-10",
-    region: region,
-});
-
 const db = new Db();
-db.docClient = docClient;
-
-const ses = new SES({endpoint: sesEndpoint, region: region});
-
+db.docClient = dynamoDocClient;
 
 exports.signUp = async (event) => {
     try {
@@ -31,11 +14,11 @@ exports.signUp = async (event) => {
         const envelopeId = props.envelopeId;
         const password = props.password;
         const phone = props.phone;
-        [envelopeId, password, phone].forEach(i => {
+        for (const i of [envelopeId, password, phone]) {
             if (!i || i.trim().length == 0) {
                 return errResponse(400, "One or more required parameters are missing.");
             }
-        });
+        };
         if (password.length < 12) {
             return errResponse(400, "Password must be at least 12 characters.")
         }
@@ -52,7 +35,6 @@ exports.signUp = async (event) => {
         const email = signingInfo.Items[0].email;
 
         // call cognito to register user
-        const client = new CognitoIdentityProvider({ region: region });
         const params = {
             ClientId: awsSettings.ClientId,
             ClientMetadata: {
@@ -76,7 +58,7 @@ exports.signUp = async (event) => {
             ]
         }
 
-        await client.signUp(params);
+        await cognitoClient.signUp(params);
 
         return {
             statusCode: 200,
@@ -135,7 +117,7 @@ begin the study. Please do that by clicking this link:
 ${awsSettings.RegistrationUri}?envelopeId=${envelopeId}`;
 
 async function sendEmail(envelopeId, email) {
-    await ses.sendEmail({
+    await sesClient.sendEmail({
         Destination: {
             ToAddresses: [email]
         },
