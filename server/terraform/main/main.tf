@@ -229,33 +229,6 @@ resource "aws_dynamodb_table" "consent-table" {
   }
 }
 
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-consent-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/consent"
-  description = "Dynamo table holding user consent details"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.consent-table.name}"
-}
-
-resource "aws_dynamodb_table" "ds-table" {
-  name           = "pvs-${var.env}-ds"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "envelopeId"
-
-  attribute {
-    name = "envelopeId"
-    type = "S"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-ds-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/ds"
-  description = "Dynamo table holding user docusign details"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.ds-table.name}"
-}
-
 resource "aws_dynamodb_table" "lumos-acct-table" {
   name           = "pvs-${var.env}-lumos-acct"
   billing_mode   = "PROVISIONED"
@@ -1020,8 +993,8 @@ POLICY
 }
 
 # policy to allow reading from/writing to docusign table
-resource "aws_iam_policy" "dynamodb-ds-read-write" {
-  name = "pvs-${var.env}-dynamodb-ds-read-write"
+resource "aws_iam_policy" "dynamodb-consent-read-write" {
+  name = "pvs-${var.env}-dynamodb-consent-read-write"
   path = "/policy/dynamodb/ds/all/"
   description = "Allows reading from/writing to dynamodb docusign table"
   policy = <<POLICY
@@ -1035,7 +1008,7 @@ resource "aws_iam_policy" "dynamodb-ds-read-write" {
         "dynamodb:Query"
       ],
       "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.ds-table.name}"
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.consent-table.name}"
       ]
     }
   ]
@@ -1439,7 +1412,7 @@ resource "aws_iam_role" "lambda-unregistered" {
     aws_iam_policy.dynamodb-user-read.arn,
     aws_iam_policy.dynamodb-screening-write.arn,
     aws_iam_policy.dynamodb-potential-participants-write.arn,
-    aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.dynamodb-consent-read-write.arn,
     aws_iam_policy.ses-send.arn,
     aws_iam_policy.sqs-registration-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
@@ -1475,7 +1448,7 @@ resource "aws_iam_role" "lambda-sqs-process" {
 
   managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
     aws_iam_policy.dynamodb-user-read.arn,
-    aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.dynamodb-consent-read-write.arn,
     aws_iam_policy.sqs-registration-read-write.arn
   ]
 }
