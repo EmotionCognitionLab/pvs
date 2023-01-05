@@ -521,20 +521,6 @@ resource "aws_ssm_parameter" "datafiles-bucket" {
   value = "${aws_s3_bucket.datafiles-bucket.bucket}"
 }
 
-# S3 bucket for docusign
-resource "aws_s3_bucket" "ds-bucket" {
-  bucket = "${var.ds-bucket}"
-  acl = "private"
-}
-
-# save above bucket name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "ds-bucket" {
-  name = "/pvs/${var.env}/info/lambda/ds/bucket"
-  description = "Bucket for files related to Docusign"
-  type = "SecureString"
-  value = "${aws_s3_bucket.ds-bucket.bucket}"
-}
-
 # S3 bucket for participant data
 resource "aws_s3_bucket" "data-bucket" {
   bucket = "${var.data-bucket}"
@@ -1558,24 +1544,6 @@ resource "aws_iam_role" "study-admin" {
       }
     ]
   })
-
-  inline_policy {
-    name = "pvs-${var.env}-ds-bucket-read"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "s3:GetObject"
-          ]
-          Resource = [
-            "${aws_s3_bucket.ds-bucket.arn}/*"
-          ]
-        }
-      ]
-    })
-  }
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
