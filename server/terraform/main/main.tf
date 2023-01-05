@@ -143,6 +143,9 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
   range_key      = "experimentDateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "identityId"
@@ -182,6 +185,9 @@ resource "aws_dynamodb_table" "users-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "userId"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -203,6 +209,9 @@ resource "aws_dynamodb_table" "consent-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "envelopeId"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "envelopeId"
@@ -216,6 +225,9 @@ resource "aws_dynamodb_table" "lumos-acct-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "email"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "email"
@@ -236,6 +248,9 @@ resource "aws_dynamodb_table" "segments-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "humanId"
   range_key = "endDateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "humanId"
@@ -261,6 +276,9 @@ resource "aws_dynamodb_table" "lumos-plays-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "userId"
   range_key      = "dateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -286,6 +304,9 @@ resource "aws_dynamodb_table" "earnings-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "userId"
   range_key      = "typeDate"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -310,6 +331,9 @@ resource "aws_dynamodb_table" "potential-participants-table" {
   name           = "pvs-${var.env}-potential-participants"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "email"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "email"
@@ -329,6 +353,9 @@ resource "aws_dynamodb_table" "screening-table" {
   name           = "pvs-${var.env}-screening"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "status"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "status"
