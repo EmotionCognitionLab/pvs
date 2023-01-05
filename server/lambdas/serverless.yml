@@ -329,7 +329,7 @@ functions:
         - 'admin-api/docusign/*.js'
 
   ds-signing-done:
-    handler: admin-api/docusign/docusign.signingDone
+    handler: docusign/docusign.signingDone
     events:
       - httpApi:
           path: /docusign/done
@@ -341,10 +341,10 @@ functions:
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
     package:
       patterns:
-        - 'admin-api/docusign/*.js'
+        - 'docusign/*.js'
 
   ds-get-signing-info:
-    handler: admin-api/docusign/docusign.getSigningInfo
+    handler: docusign/docusign.getSigningInfo
     events:
       - httpApi:
           path: /docusign/signingInfo
@@ -355,7 +355,7 @@ functions:
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/unregistered}
     package:
       patterns:
-        - 'admin-api/docusign/*.js'
+        - 'docusign/*.js'
 
   ds-send-registration-email:
     handler: register/register.sendEmails

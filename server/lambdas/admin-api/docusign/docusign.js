@@ -1,6 +1,4 @@
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
-import { SQS } from "@aws-sdk/client-sqs"
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import Db from 'db/db.js';
 import awsSettings from "../../../../common/aws-settings.json";
 
@@ -9,7 +7,7 @@ const docusign = require("docusign-esign");
 
 const region = process.env.REGION;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
-const sqsQueueUrl = process.env.REGISTRATION_SQS_QUEUE;
+
 const DS_RSA_PRIV = process.env.DS_RSA_PRIV;
 const DS_INT_KEY = process.env.DS_INT_KEY;
 const DS_USER_ID = process.env.DS_USER_ID;
@@ -25,93 +23,6 @@ const noAccess = {
         "Access-Control-Allow-Origin": "*"
     }
 };
-
-const badRequest = {
-    statusCode: 400,
-    body: "Malformed request",
-    headers: {
-        "Access-Control-Allow-Origin": "*"
-    }
-}
-
-
-exports.signingDone = async(event) => {
-    const isValid = (param) => (param && param.trim() !== "")
-    ["envelopeId", "name", "email"].forEach( (param) => {
-        if (!isValid(event.queryStringParameters[param])) return badRequest;
-    });
-
-    try {
-        // save details to db
-        const docClient = new AWS.DynamoDB.DocumentClient({
-            endpoint: dynamoEndpoint,
-            apiVersion: "2012-08-10",
-            region: region,
-        });
-    
-        const db = new Db();
-        db.docClient = docClient;
-
-        const envelopeId = event.queryStringParameters.envelopeId;
-        const name = event.queryStringParameters.name;
-        const email = event.queryStringParameters.email;
-        await db.saveDsSigningInfo(envelopeId, name, email);
-
-        // put message in SQS queue to trigger delayed email
-        // with registration instructions if they don't
-        // register immediately
-        const sqsClient = new SQS({region: region});
-        await sqsClient.sendMessage({
-            QueueUrl: sqsQueueUrl,
-            MessageBody: JSON.stringify({
-                envelopeId: envelopeId,
-                email: email
-            })
-        });
-
-        // redirect user to registration
-        const dest = `${awsSettings.RegistrationUri}?envelopeId=${envelopeId}`;
-        return {
-            statusCode: 302,
-            headers: {
-                Location: dest
-            }
-        };
-    } catch (err) {
-        console.error(err);
-        throw(err);
-    }
-}
-
-exports.getSigningInfo = async(event) => {
-    const envelopeId = event.queryStringParameters.envelopeId;
-    if (!envelopeId || envelopeId.trim() === "") return badRequest;
-
-    try {
-        const docClient = new AWS.DynamoDB.DocumentClient({
-            endpoint: dynamoEndpoint,
-            apiVersion: "2012-08-10",
-            region: region,
-        });
-    
-        const db = new Db();
-        db.docClient = docClient;
-
-        const results = await db.getDsSigningInfo(envelopeId);
-        console.log(JSON.stringify(results));
-        return {
-            statusCode: 200,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Content-type": "application/json"
-            },
-            body: JSON.stringify(results.Items)
-        }
-    } catch (err) {
-        console.error(err);
-        throw(err);
-    }
-}
 
 exports.callback = async(event) => {
     const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
