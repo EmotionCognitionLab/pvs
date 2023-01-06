@@ -158,11 +158,17 @@ function showError(err, msg) {
 }
 
 function handleLogin() {
+    const scopes = ['openid'];
+    const queryParams = new URLSearchParams(window.location.search.substring(1));
+    const needsValidation = queryParams.get("needsValidation");
+    if (needsValidation === "1") scopes.push('aws.cognito.signin.user.admin');
     let cognitoAuth = getAuth(loginSuccess, 
-        (err) => showError(err, 'There was an error logging you in.')
+        (err) => showError(err, 'There was an error logging you in.'),
+        null,
+        scopes
     );
     const curUrl = window.location.href;
-    if (curUrl.indexOf('?') > -1) {
+    if (queryParams.get("code")) {
         cognitoAuth.parseCognitoWebResponse(curUrl);
     } else {
         cognitoAuth.getSession();

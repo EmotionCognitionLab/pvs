@@ -107,7 +107,7 @@ async function registerUser(client, envelopeId) {
     const password = document.getElementById("password").value;
     try {
         await client.registerUser(envelopeId, phone, password);
-        window.location.href=awsSettings.RedirectUriSignIn;
+        window.location.href=`${awsSettings.RedirectUriSignIn}?needsValidation=1`;
     } catch (err) {
         showError(err.message);
     }
