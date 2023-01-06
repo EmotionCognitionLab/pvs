@@ -24,6 +24,7 @@ import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SleepSurvey } from "../sleep-survey/sleep-survey.js";
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
 import { Video } from "../video/video.js";
 import version from "../version.json";
@@ -36,13 +37,13 @@ import ApiClient from "../../../common/api/client.js";
 const set1 = ["video", "mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
 const set2 = ["physical-activity", "pattern-separation-learning", "demographics",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
-const set4 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall", "emotional-memory"];
+const set4 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];
 const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "daily-stressors", "verbal-learning-recall"];
 const set6 = ["mood-memory", "emotional-memory", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall", "video"];
 const set7 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
 const set8 = ["pattern-separation-learning",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set9 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
-const set10 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall", "emotional-memory"];
+const set10 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];
 const set11 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "daily-stressors", "verbal-learning-recall"];
 const set12 = ["mood-memory", "emotional-memory", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
 
@@ -292,6 +293,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, true);
         case "physical-activity":
             return new PhysicalActivity();
+        case "sleep-survey":
+            return new SleepSurvey();
         case "spatial-orientation":
             return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
