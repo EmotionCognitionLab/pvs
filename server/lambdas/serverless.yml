@@ -462,5 +462,5 @@ custom:
     prod: 'https://www.docusign.net/restapi'
   siteUrl:
     dev: 'https://dev.heartbeamstudy.org'
-    prod: 'https://heartbeamstudy.org'
+    prod: 'https://www.heartbeamstudy.org'
 
