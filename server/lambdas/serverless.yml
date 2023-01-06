@@ -300,7 +300,7 @@ functions:
             reminderType: preBaseline
         
     environment:
-      SITE_URL: "https://dev.heartbeamstudy.org/daily-tasks/"
+      SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"
       REGION: ${self:provider.region}
       EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
       SNS_ENDPOINT: "https://sns.${self:provider.region}.amazonaws.com"
@@ -460,4 +460,7 @@ custom:
   dsBasePath:
     dev: 'https://demo.docusign.net/restapi'
     prod: 'https://www.docusign.net/restapi'
+  siteUrl:
+    dev: 'https://dev.heartbeamstudy.org'
+    prod: 'https://heartbeamstudy.org'
 
