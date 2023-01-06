@@ -158,7 +158,6 @@ function showError(err, msg) {
 }
 
 function handleLogin() {
-    console.debug('in handleLogin');
     const scopes = ['openid'];
     const queryParams = new URLSearchParams(window.location.search.substring(1));
     const needsValidation = queryParams.get("needsValidation");
@@ -169,12 +168,9 @@ function handleLogin() {
         scopes
     );
     const curUrl = window.location.href;
-    console.debug("curUrl.indexOf('?') > -1", curUrl.indexOf('?') > -1);
     if (queryParams.get("code")) {
-        console.debug("going to call parseCognitoWebResponse");
         cognitoAuth.parseCognitoWebResponse(curUrl);
     } else {
-        console.debug("going to call getSession");
         cognitoAuth.getSession();
     }
 }
@@ -184,6 +180,5 @@ document.addEventListener('DOMContentLoaded', () => {
         () => { confirmPhoneVerificationCode(phoneVerificationSuccess, phoneVerificationFailure); }
     );
     document.getElementById(skipPhoneVerificationId).addEventListener('click', goToDailyTasks);
-    console.debug('in DOMContentLoaded event, about to call handleLogin');
     handleLogin();
 });
