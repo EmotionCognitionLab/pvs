@@ -143,6 +143,9 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
   range_key      = "experimentDateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "identityId"
@@ -176,31 +179,15 @@ resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
   value = "${aws_dynamodb_table.experiment-data-table.name}"
 }
 
-resource "aws_dynamodb_table" "daily-regimes-table" {
-  name           = "pvs-${var.env}-daily-regimes"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "identityId"
-  range_key      = "date"
-
-  attribute {
-    name = "identityId"
-    type = "S"
-  }
-
-  attribute {
-    name = "date"
-    type = "S"
-  }
-}
-
 resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "userId"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -222,38 +209,14 @@ resource "aws_dynamodb_table" "consent-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "envelopeId"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "envelopeId"
     type = "S"
   }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-consent-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/consent"
-  description = "Dynamo table holding user consent details"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.consent-table.name}"
-}
-
-resource "aws_dynamodb_table" "ds-table" {
-  name           = "pvs-${var.env}-ds"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "envelopeId"
-
-  attribute {
-    name = "envelopeId"
-    type = "S"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-ds-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/ds"
-  description = "Dynamo table holding user docusign details"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.ds-table.name}"
 }
 
 resource "aws_dynamodb_table" "lumos-acct-table" {
@@ -262,6 +225,9 @@ resource "aws_dynamodb_table" "lumos-acct-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "email"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "email"
@@ -282,6 +248,9 @@ resource "aws_dynamodb_table" "segments-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "humanId"
   range_key = "endDateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "humanId"
@@ -307,6 +276,9 @@ resource "aws_dynamodb_table" "lumos-plays-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "userId"
   range_key      = "dateTime"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -332,6 +304,9 @@ resource "aws_dynamodb_table" "earnings-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "userId"
   range_key      = "typeDate"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "userId"
@@ -356,6 +331,9 @@ resource "aws_dynamodb_table" "potential-participants-table" {
   name           = "pvs-${var.env}-potential-participants"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "email"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "email"
@@ -375,6 +353,9 @@ resource "aws_dynamodb_table" "screening-table" {
   name           = "pvs-${var.env}-screening"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "status"
+  point_in_time_recovery {
+    enabled = "${terraform.workspace == "prod" ? true : false}"
+  }
 
   attribute {
     name = "status"
@@ -472,17 +453,17 @@ resource "aws_s3_bucket_policy" "receive" {
 
 # SES rules to write email to bucket
 resource "aws_ses_receipt_rule_set" "main" {
-  rule_set_name = "pvs-${var.env}-ses-rules"
+  rule_set_name = "pvs-ses-rules"
 }
 
 resource "aws_ses_active_receipt_rule_set" "main" {
-  rule_set_name = "pvs-${var.env}-ses-rules"
+  rule_set_name = "pvs-ses-rules"
   depends_on = [aws_ses_receipt_rule_set.main]
 }
 
 resource "aws_ses_receipt_rule" "save-to-s3" {
-  name          = "save-to-s3"
-  rule_set_name = "pvs-${var.env}-ses-rules"
+  name          = "${var.env}-save-to-s3"
+  rule_set_name = "pvs-ses-rules"
   recipients    = ["lumosityreports@heartbeamstudy.org"]
   enabled       = true
   scan_enabled  = true
@@ -519,20 +500,6 @@ resource "aws_ssm_parameter" "datafiles-bucket" {
   description = "Bucket for temporary storage of downloadable research results"
   type = "SecureString"
   value = "${aws_s3_bucket.datafiles-bucket.bucket}"
-}
-
-# S3 bucket for docusign
-resource "aws_s3_bucket" "ds-bucket" {
-  bucket = "${var.ds-bucket}"
-  acl = "private"
-}
-
-# save above bucket name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "ds-bucket" {
-  name = "/pvs/${var.env}/info/lambda/ds/bucket"
-  description = "Bucket for files related to Docusign"
-  type = "SecureString"
-  value = "${aws_s3_bucket.ds-bucket.bucket}"
 }
 
 # S3 bucket for participant data
@@ -596,7 +563,7 @@ POLICY
 resource "aws_iam_policy" "s3-read-experiment-data" {
   name = "pvs-${var.env}-s3-read-experiment-data"
   path = "/policy/s3/experimentData/read/"
-  description = "Allows writing data to participant's own s3 folder"
+  description = "Allows reading data from participant's own s3 folder"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -670,43 +637,6 @@ resource "aws_iam_policy" "dynamodb-read-experiment-data" {
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.experiment-data-table.name}"
-      ],
-      "Condition": {
-        "ForAllValues:StringEquals": {
-          "dynamodb:LeadingKeys": [
-            "$${cognito-identity.amazonaws.com:sub}"
-          ]
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
-
-# Policy to allow authenticated cognito users to read/write
-# from/to the daily regimes table, but only rows where
-# the hash key is their cognito identity id.
-resource "aws_iam_policy" "dynamodb-read-write-daily-regimes" {
-  name = "pvs-${var.env}-dynamodb-read-write-daily-regimes"
-  path = "/policy/dynamodb/regimes/readwrite/"
-  description = "Allows authenticated users to read/write their own data from/to dynamodb daily regimes table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:Query",
-        "dynamodb:GetItem",
-        "dynamodb:BatchGetItem",
-        "dynamodb:PutItem",
-        "dynamodb:BatchWriteItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.daily-regimes-table.name}"
       ],
       "Condition": {
         "ForAllValues:StringEquals": {
@@ -1034,8 +964,8 @@ POLICY
 }
 
 # policy to allow reading from/writing to docusign table
-resource "aws_iam_policy" "dynamodb-ds-read-write" {
-  name = "pvs-${var.env}-dynamodb-ds-read-write"
+resource "aws_iam_policy" "dynamodb-consent-read-write" {
+  name = "pvs-${var.env}-dynamodb-consent-read-write"
   path = "/policy/dynamodb/ds/all/"
   description = "Allows reading from/writing to dynamodb docusign table"
   policy = <<POLICY
@@ -1049,7 +979,7 @@ resource "aws_iam_policy" "dynamodb-ds-read-write" {
         "dynamodb:Query"
       ],
       "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.ds-table.name}"
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.consent-table.name}"
       ]
     }
   ]
@@ -1301,7 +1231,6 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn,
       aws_iam_policy.dynamodb-read-experiment-data.arn,
-      aws_iam_policy.dynamodb-read-write-daily-regimes.arn,
       aws_iam_policy.s3-write-experiment-data.arn,
       aws_iam_policy.s3-read-experiment-data.arn
   ]
@@ -1453,7 +1382,7 @@ resource "aws_iam_role" "lambda-unregistered" {
     aws_iam_policy.dynamodb-user-read.arn,
     aws_iam_policy.dynamodb-screening-write.arn,
     aws_iam_policy.dynamodb-potential-participants-write.arn,
-    aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.dynamodb-consent-read-write.arn,
     aws_iam_policy.ses-send.arn,
     aws_iam_policy.sqs-registration-read-write.arn,
     aws_iam_policy.cloudwatch-write.arn
@@ -1489,7 +1418,7 @@ resource "aws_iam_role" "lambda-sqs-process" {
 
   managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
     aws_iam_policy.dynamodb-user-read.arn,
-    aws_iam_policy.dynamodb-ds-read-write.arn,
+    aws_iam_policy.dynamodb-consent-read-write.arn,
     aws_iam_policy.sqs-registration-read-write.arn
   ]
 }
@@ -1558,24 +1487,6 @@ resource "aws_iam_role" "study-admin" {
       }
     ]
   })
-
-  inline_policy {
-    name = "pvs-${var.env}-ds-bucket-read"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "s3:GetObject"
-          ]
-          Resource = [
-            "${aws_s3_bucket.ds-bucket.arn}/*"
-          ]
-        }
-      ]
-    })
-  }
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn

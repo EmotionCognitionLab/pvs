@@ -84,7 +84,8 @@ functions:
       SEGMENTS_TABLE: ${ssm:/${self:service}/${self:provider.stage}/info/dynamo/table/segments}
     layers:
       # - !Ref BetterSqlite3LambdaLayer
-      - arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:BetterSqlite3:4
+      # - arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:BetterSqlite3:4
+      - arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:BetterSqlite3:8
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/sqlite/process}
     package:
       patterns:
@@ -267,7 +268,7 @@ functions:
     handler: reminders/reminders.handler
     events:
       - schedule:
-          name: "pre-baseline-6am-email-reminder"
+          name: "${self:provider.stage}-pre-baseline-6am-email-reminder"
           rate: cron(0 14 * * ? *)
           input:
             commType: email
@@ -280,19 +281,19 @@ functions:
             commType: sms
             reminderType: preBaseline
       - schedule:
-          name: "home-training-11am-email-reminder"
+          name: "${self:provider.stage}-home-training-11am-email-reminder"
           rate: cron(0 19 * * ? *)
           input:
             commType: email
             reminderType: homeTraining
       - schedule:
-          name: "home-training-730pm-sms-reminder"
+          name: "${self:provider.stage}-home-training-730pm-sms-reminder"
           rate: cron(30 3 * * ? *)
           input:
             commType: sms
             reminderType: homeTraining
       - schedule:
-          name: "pre-baseline-4pm-email-reminder"
+          name: "${self:provider.stage}-pre-baseline-4pm-email-reminder"
           rate: cron(0 0 * * ? *)
           input:
             commType: email
@@ -360,7 +361,7 @@ functions:
     handler: earnings/earnings.handler
     events:
       - schedule:
-          name: "2AM-earnings-calculation"
+          name: "${self:provider.stage}-2AM-earnings-calculation"
           rate: cron(0 10 * * ? *)
     environment:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
