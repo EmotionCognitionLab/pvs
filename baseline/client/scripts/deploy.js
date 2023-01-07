@@ -56,7 +56,7 @@ function invalidateCloudFrontDistribution(distId) {
                     '/login/*',
                     '/admin/*',
                     '/screening/*',
-		    '/register/*'
+                    '/register/*'
                 ]
             }
         }
