@@ -107,6 +107,7 @@ export async function processreports(event) {
       const userId = await getUserIdForLumosEmail(em);
       if (!userId) {
         console.error(`Error: no user account found for lumosity email ${em}.`);
+        continue;
       }
      
       const lastPlay = userId ? await lastPlayDate(userId) : '1970-01-01 00:00:00';
@@ -122,7 +123,6 @@ export async function processreports(event) {
     // find all the users that have new lumos data and save it to dynamo
     const newPlayData = playsData.filter(r => 
       email2UserInfoMap[r.email] && 
-      email2UserInfoMap[r.email].userId &&
       r.dateTime > email2UserInfoMap[r.email].lastPlay
     )
     .map(r => {
@@ -135,7 +135,7 @@ export async function processreports(event) {
     // stage2Completed is true when a user has played each of the available games at least twice
     // and has done a total of at least 31 plays
     const stage2StatusMap = {};
-    for (const email of emails) {
+    for (const email of Object.keys(email2UserInfoMap)) {
       const forEmail = playsData.filter(r => r.email === email);
       let twoPlays = true;
       let totalPlays = 0;

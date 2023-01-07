@@ -13,7 +13,7 @@ const AWS = require('aws-sdk');
 const s3Client = new AWS.S3({endpoint: process.env.S3_ENDPOINT, apiVersion: '2006-03-01',
     s3ForcePathStyle: true});
 const docClient = new AWS.DynamoDB.DocumentClient({endpoint: process.env.DYNAMO_ENDPOINT, apiVersion: '2012-08-10', region: process.env.REGION});
-
+import Db from '../../../../common/db/db.js';
 
 const originPrefix = 'emails';
 const emailKey = `${originPrefix}/7pweiur83jfjeif`;
@@ -247,6 +247,43 @@ describe("Processing reports from S3", () => {
             
             const expectedPlays = [{game: playsData[0].game_name, userId: lumosAcct.owner, dateTime: toLATime(playsData[0].created_at), lpi: playsData[0].game_lpi, multiPlay: false}];
             await confirmPlaysWritten(expectedPlays);
+        });
+
+        test("should not try to update the stage2Completed status for the unknown user", async () => {
+            const dbSpy = jest.spyOn(Db.prototype, 'updateUser');
+            const allGames = [
+                'Word Bubbles Web',
+                'Memory Match Web',
+                'Penguin Pursuit Web',
+                'Color Match Web',
+                'Raindrops Web',
+                'Brain Shift Web',
+                'Familiar Faces Web',
+                'Pirate Passage Web',
+                'Ebb and Flow Web',
+                'Lost in Migration Web',
+                'Tidal Treasures Web',
+                'Splitting Seeds Web'
+              ];
+
+            const randMaxNoZero = (max) => Math.floor((Math.random() * (max - 1)) + 1).toString().padStart(2, '0');
+            const randCreatedAt = () => `2022-${randMaxNoZero(12)}-${randMaxNoZero(28)} ${randMaxNoZero(23)}:${randMaxNoZero(59)}:${randMaxNoZero(59)}`;
+            // for stage2Completed to be true every game in allGames must be played at least twice,
+            // and a total of >=31 games must be played, so just loop through allGames 3 times to
+            // get a total of 36 games played
+            const playsData = [0,1,2].map( () => {
+                return allGames.flatMap(g => {
+                    return [
+                        { email_address: lumosAcct.email, game_name: g, created_at: randCreatedAt(), game_lpi: 492 },
+                        { email_address: 'heartbeam79@example.com', game_name: g, created_at: randCreatedAt(), game_lpi: 328}
+                    ];
+                });
+            }).flatMap(a => a);
+            await processGameReport(playsData);
+           
+            confirmStage2Complete(lumosAcct.owner);
+            expect(dbSpy).toHaveBeenCalledTimes(1);
+            expect(dbSpy.mock.calls[0][0]).toEqual(lumosAcct.owner);
         });
     });
 });
