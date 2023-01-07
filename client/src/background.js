@@ -17,6 +17,7 @@ import awsSettings from '../../common/aws-settings.json'
 import { Logger } from '../../common/logger/logger.js'
 import { SessionStore } from './session-store.js'
 import ApiClient from '../../common/api/client.js'
+import version from "../version.json";
 import fetch from 'node-fetch'
 // fetch is defined in browsers, but not node
 // substitute node-fetch here
@@ -29,6 +30,12 @@ protocol.registerSchemesAsPrivileged([
 
 // use electron-unhandled to catch unhandled errors/promise rejections
 unhandled()
+
+app.setAboutPanelOptions({
+  applicationName: "HeartBEAM",
+  applicationVersion: version.v,
+  iconPath: asssetsPath() + "logo.png"
+})
 
 let mainWin = null
 
@@ -156,6 +163,17 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
+function asssetsPath() {
+  if (process.env.NODE_ENV === 'production') {
+    if (process.platform === 'darwin') {
+      return path.join(path.dirname(app.getPath('exe')), '../src/assets/')
+    }
+    return path.join(path.dirname(app.getPath('exe')), '/src/assets/')
+  } else {
+    return path.join(app.getAppPath(), '../src/assets/')
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -171,16 +189,7 @@ app.on('ready', async () => {
 
   // register protocol to handle image loading
   protocol.registerFileProtocol('image', (req, callback) => {
-    let prefix;
-    if (process.env.NODE_ENV === 'production') {
-      if (process.platform === 'darwin') {
-        prefix = path.join(path.dirname(app.getPath('exe')), '../src/assets/')
-      } else {
-        prefix = path.join(path.dirname(app.getPath('exe')), '/src/assets/')
-      }
-    } else {
-      prefix = path.join(app.getAppPath(), '../src/assets/')
-    }
+    const prefix = asssetsPath();
     const url = req.url.replace('image://', prefix)
     try {
       return callback(url)
