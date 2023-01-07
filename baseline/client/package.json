@@ -44,6 +44,7 @@
     "aws-sdk": "^2.937.0",
     "babel-jest": "^27.0.6",
     "css-loader": "^5.2.6",
+    "deploytools": "file:../../common/deploytools",
     "eslint": "^8.1.0",
     "eslint-plugin-jest": "^25.2.2",
     "html-loader": "^2.1.2",

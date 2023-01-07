@@ -11,8 +11,7 @@
  * Usage: node pre-deploy.js [target env]
  * ...where [target env] is most likely 'dev' or 'prod'.
  */
-const { spawnSync } = require('child_process');
-const path = require('path');
+ const { getBranch, getUncommittedFiles, getUnpushedFiles, envSettingsOk,  branchOk} = require("deploytools");
 
 const deployableBranches = ['prod'];
 
@@ -22,34 +21,6 @@ const settingsFiles = {
     'deploy': '../../../common/aws-settings.json'
 };
 
-function getUncommittedFiles() {
-    const git = spawnSync('git', ['ls-files', '--modified', '--other', '--exclude-standard']);
-    return git.stdout.toString().split('\n');
-}
-
-function getUnpushedFiles() {
-    const git = spawnSync('git', ['rev-list', 'HEAD', '^origin']);
-    return git.stdout.toString();
-}
-
-function getBranch() {
-    const git = spawnSync('git', ['branch', '--show-current']);
-    return git.stdout.toString().trimEnd();
-}
-
-function branchOk() {
-    const branch = getBranch();
-    return deployableBranches.includes(branch);
-}
-
-function envSettingsOk(env) {
-    const envFile = settingsFiles[env];
-    if (!envFile) {
-        throw new Error(`No settings file found for ${env}.`);
-    }
-    const diff = spawnSync('diff', [path.join(__dirname, envFile), path.join(__dirname, settingsFiles['deploy'])]);
-    return diff.stdout.toString().length === 0 && diff.stderr.toString().length === 0;
-}
 
 function main() {
     const uncommitted = getUncommittedFiles();
@@ -64,12 +35,12 @@ function main() {
         process.exit(2);
     }
 
-    if (!envSettingsOk(process.argv[2])) {
+    if (!envSettingsOk(process.argv[2], settingsFiles)) {
         console.log(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
         process.exit(3);
     }
 
-    if (!branchOk()) {
+    if (!branchOk(deployableBranches)) {
         const curBranch = getBranch();
         console.log(`You are on branch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
         process.exit(4);
