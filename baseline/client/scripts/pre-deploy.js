@@ -1,5 +1,5 @@
 'use strict';
-
+const path = require('path');
 /**
  * Checks to make sure that the following are true. Exits with non-zero exit code if any are false:
  * 
@@ -16,9 +16,9 @@
 const deployableBranches = ['prod'];
 
 const settingsFiles = {
-    'dev': '../../../common/aws-settings.dev.json',
-    'prod': '../../../common/aws-settings.prod.json',
-    'deploy': '../../../common/aws-settings.json'
+    'dev': path.join(__dirname, '../../../common/aws-settings.dev.json'),
+    'prod': path.join(__dirname, '../../../common/aws-settings.prod.json'),
+    'deploy': path.join(__dirname, '../../../common/aws-settings.json')
 };
 
 

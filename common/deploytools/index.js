@@ -38,7 +38,7 @@ function envSettingsOk(env, envConfigFileMap) {
     if (!envFile) {
         throw new Error(`No settings file found for ${env}.`);
     }
-    const diff = spawnSync('diff', [path.join(__dirname, envFile), path.join(__dirname, envConfigFileMap['deploy'])]);
+    const diff = spawnSync('diff', [envFile, envConfigFileMap['deploy']]);
     return diff.stdout.toString().length === 0 && diff.stderr.toString().length === 0;
 }
 
