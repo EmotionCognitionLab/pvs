@@ -7,10 +7,10 @@
  * file to git, creates a git tag with that version and optionally
  * pushes the version file (and new tag) to the remote repository.
 */
-
+const path = require('path');
 const { spawnSync } = require('child_process');
 const { gitTagVersion, getCurVersionFromFile } = require('deploytools');
-const versionFile = 'version.json';
+const versionFile = path.join(__dirname, 'version.json');
 
 const prompt = require('prompt');
 // Turn off some defaults in the prompt framework
