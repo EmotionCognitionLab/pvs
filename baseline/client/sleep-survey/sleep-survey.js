@@ -58,6 +58,7 @@ SleepSurvey.questionnaire = () => {
                 labels: [
                     "Extremely alert",
                     "Very alert",
+                    "Alert",
                     "Rather alert",
                     "Neither alert nor sleepy",
                     "Some signs of sleepiness",
