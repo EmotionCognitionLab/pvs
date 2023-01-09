@@ -10,7 +10,7 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { gitTagVersion, getCurVersionFromFile } = require('deploytools');
-const versionFile = path.join(__dirname, 'version.json');
+const versionFile = path.join(__dirname, '../version.json');
 
 const prompt = require('prompt');
 // Turn off some defaults in the prompt framework
