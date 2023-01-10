@@ -1,5 +1,5 @@
 'use strict';
-
+const path = require('path');
 /** 
  * Usage: version-deploy.js
  * 
@@ -12,7 +12,7 @@ const prompt = require('prompt');
 prompt.message = '';
 prompt.delimiter = '';
 
-const versionFile = 'version.json';
+const versionFile = path.join(__dirname, '../version.json');
 
 const curGitVersion = getCurGitVersion('[0-9]*');
 const patch = incrementVersion(curGitVersion, 'patch');
