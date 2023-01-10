@@ -44,13 +44,16 @@ function envSettingsOk(env, envConfigFileMap) {
 
 /**
  * Checks git for the latest tag starting with prefix.
- * @param {string} prefix The prefix for the type of version tag you're interested in, e.g. "base-app-". Can be a limited regex, e.g. "[0-9]*" to limit it to tags that start with numbers.
+ * @param {string} prefix The prefix for the type of version tag you're interested in, e.g. "base-app-". Can use limited regex patterns, and will always get '*' appended to it.
  * @returns 
  */
 function getCurGitVersion(prefix) {
-    const git = spawnSync('git', ['tag', '-l', '--sort=v:refname', prefix]);
+    const prefixPat = prefix + '*';
+    const git = spawnSync('git', ['tag', '-l', '--sort=v:refname', prefixPat]);
     if (git.stdout.toString() === '') return '0.0.0';
-    return git.stdout.toString().split('\n').filter(f => f !== '').pop();
+    let tag = git.stdout.toString().split('\n').filter(f => f !== '').pop();
+    if (prefix) tag = tag.replace(prefix, '');
+    return tag;
 }
 
 function getCurVersionFromFile(versionFile) {
@@ -136,10 +139,46 @@ function runWithErrorHandling(cmd, cmdArgs) {
  * Commits versionFile to git, reads version from it and creates git tag with that version.
  * @param {string} versionFile 
  */
-function gitTagVersion(versionFile) {
-    const curVersion = getCurVersionFromFile(versionFile);
+function gitTagVersion(versionFile, prefix) {
+    let curVersion = getCurVersionFromFile(versionFile);
+    if (prefix) curVersion = prefix + curVersion;
     runWithErrorHandling('git', ['commit', '-m', `Updating baseline/client version to ${curVersion}`, versionFile]);
     runWithErrorHandling('git', ['tag', '-a', curVersion, '-m', `Bumping to version ${curVersion}`]);
+}
+
+/**
+ * Checks to make sure that the following are true. Throw an error if any are false:
+ * 
+ *  * There are no untracked files in the current directory hierarchy
+ *  * There are no uncommitted files in the current directory hierarchy
+ *  * There are no staged but unpushed commits
+ *  * All of the values in aws-settings are approprite for the target deployment environment.
+ * @param {string} targetEnv The environment you're trying to deploy to, e.g. 'dev', 'prod', 'qa', etc.
+ * @param {Object} settingsFiles Map of environment -> config file for environment. Must include 
+ * @param {Array<string} deployableBranches 
+ * @returns 
+ */
+function preDeployCheckOK(targetEnv, settingsFiles, deployableBranches) {
+    const uncommitted = getUncommittedFiles();
+    if (uncommitted.length !== 0 && uncommitted[0] !== '') {
+        throw new Error(`Found uncommitted files. Please remove or commit before deploying:\n ${uncommitted.join(", ")}`);
+    }
+
+    const unpushed = getUnpushedFiles();
+    if (unpushed.length !== 0) {
+        throw new Error(`Unpushed commits exist. Please push before deploying.`);
+    }
+
+    if (!envSettingsOk(targetEnv, settingsFiles)) {
+        throw new Error(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
+    }
+
+    if (!branchOk(deployableBranches)) {
+        const curBranch = getBranch();
+        throw new Error(`You are on branch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
+    }
+
+    return true;
 }
 
 module.exports = { 
@@ -153,5 +192,6 @@ module.exports = {
     incrementVersion,
     requestVersion,
     writeVersionFile,
-    gitTagVersion
+    gitTagVersion,
+    preDeployCheckOK
 }

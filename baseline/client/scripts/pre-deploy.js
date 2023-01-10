@@ -11,7 +11,7 @@ const path = require('path');
  * Usage: node pre-deploy.js [target env]
  * ...where [target env] is most likely 'dev' or 'prod'.
  */
- const { getBranch, getUncommittedFiles, getUnpushedFiles, envSettingsOk,  branchOk} = require("deploytools");
+ const { preDeployCheckOK } = require("deploytools");
 
 const deployableBranches = ['prod'];
 
@@ -21,32 +21,9 @@ const settingsFiles = {
     'deploy': path.join(__dirname, '../../../common/aws-settings.json')
 };
 
-
-function main() {
-    const uncommitted = getUncommittedFiles();
-    if (uncommitted.length !== 0 && uncommitted[0] !== '') {
-        console.log(`Found uncommitted files. Please remove or commit before deploying:\n ${uncommitted.join(", ")}`);
-        process.exit(1);
-    }
-
-    const unpushed = getUnpushedFiles();
-    if (unpushed.length !== 0) {
-        console.log(`Unpushed commits exist. Please push before deploying.`);
-        process.exit(2);
-    }
-
-    if (!envSettingsOk(process.argv[2], settingsFiles)) {
-        console.log(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
-        process.exit(3);
-    }
-
-    if (!branchOk(deployableBranches)) {
-        const curBranch = getBranch();
-        console.log(`You are on branch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
-        process.exit(4);
-    }
-
-    process.exit(0);
+try {
+    if (preDeployCheckOK(process.argv[2], settingsFiles, deployableBranches)) process.exit(0);
+} catch (err) {
+    console.error(err);
+    process.exit(1);
 }
-
-main();
