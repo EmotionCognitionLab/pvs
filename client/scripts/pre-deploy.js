@@ -15,9 +15,9 @@ const { preDeployCheckOK } = require('deploytools')
 const deployableBranches = ['prod'];
 
 const settingsFiles = {
-    'dev': path.join(__dirname, '../../../common/aws-settings.dev.json'),
-    'prod': path.join(__dirname, '../../../common/aws-settings.prod.json'),
-    'deploy': path.join(__dirname, '../../../common/aws-settings.json')
+    'dev': path.join(__dirname, '../../common/aws-settings.dev.json'),
+    'prod': path.join(__dirname, '../../common/aws-settings.prod.json'),
+    'deploy': path.join(__dirname, '../../common/aws-settings.json')
 };
 
 try {
