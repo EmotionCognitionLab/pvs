@@ -5,6 +5,10 @@ jest.mock('fs/promises', () => ({
     mkdir: jest.fn(() => {})
 }));
 
+jest.mock('electron', () => {
+    return { ipcMain: { on: jest.fn(), handle: jest.fn() }}
+});
+
 import { mkdir } from 'fs/promises';
 
 let db;
