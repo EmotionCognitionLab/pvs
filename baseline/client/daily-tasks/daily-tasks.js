@@ -444,7 +444,11 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     tasks[taskIdx].on_timeline_finish = () => {
         const computerDetails = browserCheck.fetchCurrentProfile();
         saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent, screen: computerDetails[browserCheck.screenSizeKey], v: version.v}]);
-        if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+        
+        // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+        // check for startNewSetQuery b/c that means that we've been passed a set of tasks that
+        // spans multiple sets
+        if (taskIdx === tasks.length - 2 || tasks[taskIdx + 1].taskName === startNewSetQuery) {
             saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
         } 
         if (taskIdx < tasks.length - 1) {
