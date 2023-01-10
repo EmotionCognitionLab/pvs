@@ -100,6 +100,58 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toEqual(expect.arrayContaining(secondSetTasks));
     });
 
+    it("saves a set-finished record when you finish a set that is followed by the chance to start another set", () => {
+        const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
+        const doneTasksIdx = 3;
+        const startSet = 1;
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
+            setStartedTime: fourHoursAgo.toISOString(),
+            setNum: startSet
+        }]);
+        const saveResultsMock = jest.fn();
+        const results = dailyTasks.getSetAndTasks(input, saveResultsMock);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toContain(dailyTasks.startNewSetQuery);
+
+        const lastTaskFirstSetIdx = dailyTasks.allSets[0].slice(doneTasksIdx).length - 1;
+        dailyTasks.runTask(results.remainingTasks, lastTaskFirstSetIdx, saveResultsMock);
+        expect(results.remainingTasks[lastTaskFirstSetIdx].on_timeline_finish).toBeDefined();
+        results.remainingTasks[lastTaskFirstSetIdx].on_timeline_finish();
+        expect(saveResultsMock).toHaveBeenCalled();
+        const taskNames = saveResultsMock.mock.calls.map(c => c[0]);
+        expect(taskNames).toContain(dailyTasks.setFinished);
+        for (const call of saveResultsMock.mock.calls) {
+            if (call[0] === dailyTasks.setFinished) expect(call[1][0]).toEqual({setNum: startSet});
+        }
+    });
+
+    it("saves a set-finished record when you finish a set that was immediately preceded by another set", () => {
+        const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
+        const doneTasksIdx = 3;
+        const startSet = 1;
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
+            setStartedTime: fourHoursAgo.toISOString(),
+            setNum: startSet
+        }]);
+        const saveResultsMock = jest.fn();
+        const results = dailyTasks.getSetAndTasks(input, saveResultsMock);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).toContain(dailyTasks.startNewSetQuery);
+
+        const lastTaskSecondSetIdx = results.remainingTasks.length - 2; // -2 b/c the last one is just "done-for-today"
+        dailyTasks.runTask(results.remainingTasks, lastTaskSecondSetIdx, saveResultsMock);
+        expect(results.remainingTasks[lastTaskSecondSetIdx].on_timeline_finish).toBeDefined();
+        results.remainingTasks[lastTaskSecondSetIdx].on_timeline_finish();
+        expect(saveResultsMock).toHaveBeenCalled();
+        const taskNames = saveResultsMock.mock.calls.map(c => c[0]);
+        expect(taskNames).toContain(dailyTasks.setFinished);
+        for (const call of saveResultsMock.mock.calls) {
+            if (call[0] === dailyTasks.setFinished) expect(call[1][0]).toEqual({setNum: startSet + 1});
+        }
+    });
+
     it("does not give you the option to start a new set if you're finishing a set that you started less than three hours ago", () => {
         const twoHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 2));
         const doneTasksIdx = 4;
