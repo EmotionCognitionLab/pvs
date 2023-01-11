@@ -98,6 +98,7 @@ async function registerUser(client, envelopeId) {
     }
 
     let phone = document.getElementById("phone").value;
+    phone = phone.replaceAll(/[^0-9]+/g, "");
     // phone format is +12135551212
     if (!phone.startsWith("1")) {
         phone = "1" + phone;
