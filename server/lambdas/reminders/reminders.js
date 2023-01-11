@@ -3,7 +3,8 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
-import { format } from 'date-fns-tz';
+import { format, utcToZonedTime } from 'date-fns-tz';
+import { isAfter } from 'date-fns';
 import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
@@ -57,6 +58,12 @@ async function sendPreBaselineReminders(commType) {
     try {
         const incompleteUsers = await db.getBaselineIncompleteUsers('pre');
         for (const u of incompleteUsers) {
+            if (u.startDate) {
+                const now = utcToZonedTime(new Date(), 'America/Los_Angeles');
+                // startDate is YYYY-MM-DD string
+                const zonedStart = utcToZonedTime(new Date(u.startDate), 'America/Los_Angeles');
+                if (isAfter(zonedStart, now)) continue
+            }
             const sets = await db.getSetsForUser(u.userId);
             const baselineDone = await hasCompletedBaseline(sets);
             if (baselineDone) {

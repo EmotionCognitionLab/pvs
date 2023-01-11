@@ -1,6 +1,7 @@
 'use strict';
 
 import { format, utcToZonedTime } from 'date-fns-tz';
+import { add, sub } from 'date-fns';
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
@@ -106,6 +107,23 @@ describe("reminders", () => {
             expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
             expect(mockUpdateUser).toHaveBeenCalledWith(user.userId, { 'preComplete': true });
         });
+    });
+
+    it("should not remind someone whose start date is in the future", async () => {
+        const lateStarter = Object.assign({}, user);
+        lateStarter.startDate = format(add(new Date(), {days: 5}), 'yyyy-MM-dd');
+        mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [lateStarter]);
+        await handler({commType: 'email', reminderType: 'preBaseline'});
+        expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    it("should remind someone whose start date is in the past", async () => {
+        const alreadyStarted = Object.assign({}, user);
+        alreadyStarted.startDate = format(sub(new Date(), {days: 5}), 'yyyy-MM-dd');
+        mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [alreadyStarted]);
+        await handler({commType: 'email', reminderType: 'preBaseline'});
+        expect(mockSendEmail).toHaveBeenCalled();
+        expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).toStrictEqual([alreadyStarted.email]);
     });
 
     it("should not remind people who have done a set today", async () => {
