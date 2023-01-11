@@ -129,11 +129,11 @@ describe("reminders", () => {
     it("should not remind people who have done a set today", async () => {
         const now = new Date();
         const today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
+        const past = format(sub(now, {days: 11}), 'yyyy-MM-dd');
         mockGetSetsForUser.mockImplementationOnce(() => [ 
             { identityId: identityId, experiment: 'set-started', dateTime: today }, 
-            { identityId: identityId, experiment: 'set-finished', dateTime: today }, 
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {} 
-        ]);
+            { identityId: identityId, experiment: 'set-finished', dateTime: today }
+        ].concat(Array(10).fill({identityId: identityId, experiment: 'set-started', dateTime: past})));
         
         await handler({commType: 'email', reminderType: 'preBaseline'});
         expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
