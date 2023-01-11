@@ -7,6 +7,7 @@ import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
+import version from '../version.json'
 import { yyyymmddNumber } from './utils.js';
 import * as path from 'path'
 
@@ -211,6 +212,16 @@ function saveRegimesForDay(regimes, date) {
     });
 }
 
+function checkVersion() {
+    const curVerStmt = db.prepare('SELECT version from version ORDER BY date_time DESC LIMIT 1');
+    const res = curVerStmt.get();
+    if (!res || res.version !== version.v) {
+        const updateVerStmt = db.prepare('INSERT INTO version(version, date_time) VALUES(?, ?)');
+        const dateTime = (new Date()).toISOString();
+        updateVerStmt.run(version.v, dateTime);
+    }
+}
+
 // import this module into itself so that we can mock
 // certain calls in test
 // https://stackoverflow.com/questions/51269431/jest-mock-inner-function
@@ -255,6 +266,10 @@ async function initBreathDb(serializedSession) {
         const createRestSegmentsTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS rest_segments(id INTEGER PRIMARY KEY, end_date_time INTEGER NOT NULL, avg_coherence FLOAT, stage INTEGER NOT NULL)');
         createRestSegmentsTableStmt.run();
         insertRestSegmentStmt = db.prepare('INSERT INTO rest_segments(end_date_time, avg_coherence, stage) VALUES(?, ?, ?)');
+
+        const createVersionTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS version(version TEXT PRIMARY KEY, date_time TEXT NOT NULL)');
+        createVersionTableStmt.run();
+        checkVersion();
 
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
