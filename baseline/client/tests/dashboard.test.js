@@ -1,6 +1,7 @@
 import { Dashboard } from "admin/dashboard/dashboard.js";
 import { MockClient } from "./mock-client.js";
 import { fakeUsers as users } from "./fakes.js";
+import dayjs from 'dayjs';
 
 function expectRowMatches(row, user) {
     const [
@@ -48,6 +49,15 @@ function expectRowMatches(row, user) {
     expect(droppedCell.querySelector("input").checked).toBe(Boolean(user.progress?.dropped));
 }
 
+const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => true);
+
+const getDashboardElements = () => ({
+    wrapper: document.querySelector("#wrapper"),
+    error: document.querySelector("#error"),
+    table: document.querySelector("#table"),
+    details: document.querySelector("#details"),
+});
+
 describe("dashboard", () => {
     beforeEach(() => {
         jest.useFakeTimers("legacy");
@@ -70,14 +80,10 @@ describe("dashboard", () => {
         dashboardWrapper.appendChild(dashLink);
         document.body.appendChild(dashboardWrapper);
     });
-    const getDashboardElements = () => ({
-        wrapper: document.querySelector("#wrapper"),
-        error: document.querySelector("#error"),
-        table: document.querySelector("#table"),
-        details: document.querySelector("#details"),
-    });
+    
     afterEach(() => {
         document.querySelector("body > div").remove();
+        alertSpy.mockClear();
     });
 
     it("cells display correct data", async () => {
@@ -199,6 +205,37 @@ describe("dashboard", () => {
         confirmSpy.mockRestore();
     });
 
+    it("checks to make sure a new start date is in YYYY-MM-DD format", async () => {
+        await testStartDateChangeValidation("Monday, January 19th", "1d84a646-db05-4093-8be5-41d1de595a6b", "The start date must be in YYYY-MM-DD format.");
+    });
+
+    it("checks to make sure a new start date is at least two days in the future", async () => {
+        await testStartDateChangeValidation(dayjs().format("YYYY-MM-DD"), "1d84a646-db05-4093-8be5-41d1de595a6b", "The start date must be between two days and one year in the future.");
+    });
+
+    it("checks to make sure a new start date is no more than one year in the future", async () => {
+        await testStartDateChangeValidation(dayjs().add(368, "days").format("YYYY-MM-DD"), "1d84a646-db05-4093-8be5-41d1de595a6b", "The start date must be between two days and one year in the future.");
+    });
+
+    it("updates the user's start date when the new start date is valid", async () => {
+        const mc = new MockClient(users);
+        const mcSpy = jest.spyOn(mc, "updateUser");
+        const ajId = "1d84a646-db05-4093-8be5-41d1de595a6b";
+        const date = dayjs().add(10, "days").format("YYYY-MM-DD");
+        await changeStartDate(date, ajId, mc);
+        expect(mcSpy).toHaveBeenCalledTimes(1);
+        expect(mcSpy.mock.calls[0][0]).toEqual(ajId);
+        expect(mcSpy.mock.calls[0][1]).toEqual({startDate: date});
+    });
+
+    it("alerts the user when the start date has been updated successfully", async () => {
+        const mc = new MockClient(users);
+        const date = dayjs().add(10, "days").format("YYYY-MM-DD");
+        await changeStartDate(date, "1d84a646-db05-4093-8be5-41d1de595a6b", mc);
+        expect(alertSpy).toHaveBeenCalledTimes(1);
+        expect(alertSpy.mock.calls[0][0]).toEqual(`Start date set to ${date}.`);
+    });
+
     async function clickVisitCheckbox(mockClient, userId, visitNum, expectedPreClickState, expectedPostClickState) {
         const userRow = document.querySelector(`[data-user-id="${userId}"]`);
         const [_, __, visit1Cell, visit2Cell, ___, visit3Cell, visit4Cell, visit5Cell, ...____] = userRow.querySelectorAll("td");
@@ -232,3 +269,26 @@ describe("dashboard", () => {
         return whichVisitCell;
     }
 });
+
+async function testStartDateChangeValidation(newDate, userId, expectedErrMsg) {
+    const mc = new MockClient(users);
+    await changeStartDate(newDate, userId, mc);
+    expect(alertSpy).toHaveBeenCalledTimes(1);
+    expect(alertSpy.mock.calls[0][0]).toEqual(expectedErrMsg);
+}
+
+async function changeStartDate(newDate, userId, client) {
+    const {_, __, table, ___} = getDashboardElements();
+    const dash = new Dashboard(table, client);
+    await dash.refreshRecords();
+    const event = {
+        target: {
+            value: newDate,
+            dataset: {
+                orig: "",
+                userId: userId
+            }
+        }
+    };
+    await dash.handleStartDateChange(event);
+}

@@ -1,5 +1,8 @@
 import "../../../../common/pay-info/style.css";
 import { Payboard } from "pay-info";
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+dayjs.extend(customParseFormat);
 
 export class Dashboard {
     constructor(tbody, client) {
@@ -81,6 +84,11 @@ export class Dashboard {
             elem.textContent = item;
             return elem;
         });
+        // add editable start date
+        const startDateDiv = document.createElement("div");
+        const startDateStr = user.startDate ? user.startDate : "";
+        startDateDiv.innerHTML = `Start Date: <input type="text" name="startDate" data-orig="${startDateStr}" data-user-id="${userId}" value="${startDateStr}" placeholder="YYYY-MM-DD">`;
+        divs.push(startDateDiv);
         // add user earnings to user detail display
         const payboardErrs = document.createElement("div");
         const payboardDiv = document.createElement("div");
@@ -109,6 +117,29 @@ export class Dashboard {
         deetsDiv.classList.remove("hidden");
     }
 
+    async handleStartDateChange(event) {
+        const startDate = dayjs(event.target.value, "YYYY-MM-DD", true);
+        if (!startDate.isValid()) {
+            alert("The start date must be in YYYY-MM-DD format.");
+            return;
+        }
+        const twoDays = dayjs().add(2, 'days');
+        const oneYear = dayjs().add(1, 'year');
+        if (startDate.isBefore(twoDays) || startDate.isAfter(oneYear)) {
+            alert("The start date must be between two days and one year in the future.");
+            return;
+        }
+
+        const startStr = startDate.format("YYYY-MM-DD");
+        const userId = event.target.dataset.userId;
+        await this.client.updateUser(userId, {startDate: startStr});
+        event.target.dataset.orig = startStr;
+        const userRec = this.records.get(userId).user;
+        userRec.startDate = startStr;
+        this.records.get(userId).user = userRec;
+        alert(`Start date set to ${startStr}.`);
+    }
+
     listen() {
         // add checkbox click event listener to table body
         this.tbody.addEventListener("click", async event => {
@@ -131,6 +162,15 @@ export class Dashboard {
             if (!deetsDiv.classList.contains("hidden")) {
                 deetsDiv.classList.add("hidden");
             }
+        });
+
+        // handle changes to start date in the user details div
+        Dashboard.getUserDetailsDiv().addEventListener("change", async (event) => {
+            if (event.target.name !== "startDate") {
+                event.stopPropagation();
+                return false;
+            }
+            if (event.target.value !== event.target.dataset.orig) await this.handleStartDateChange(event);
         });
 
         // handle clicks on potential participants link

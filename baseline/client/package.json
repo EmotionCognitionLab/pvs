@@ -12,6 +12,7 @@
     "@adp-psych/jspsych": "^6.3.1",
     "api": "file:../../common/api",
     "auth": "file:../../common/auth",
+    "dayjs": "^1.11.7",
     "db": "file:../../common/db",
     "logger": "file:../../common/logger",
     "pay-info": "file:../../common/pay-info",
