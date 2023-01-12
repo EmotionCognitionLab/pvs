@@ -380,6 +380,10 @@ resource "aws_dynamodb_table_item" "screening-ineligible" {
   "status": {"S": "ineligible"}
 }
 ITEM
+
+  lifecycle {
+    ignore_changes = [item]
+  }
 }
 
 # save above table name to SSM so serverless can reference it
