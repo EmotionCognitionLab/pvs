@@ -6,6 +6,7 @@ import "@adp-psych/jspsych/css/jspsych.css";
 import "css/jspsych-survey-multi-choice-patch.css";
 import "css/common.css";
 import { Logger } from "logger/logger.js";
+import awsSettings from "../../../common/aws-settings.json";
 
 export class Screening {
 
@@ -116,7 +117,7 @@ export class Screening {
 
     async saveNotEligibile() {
         try {
-            await fetch(Screening.url, {
+            await fetch(awsSettings.ScreeningApiUrl, {
                 method: "post",
                 mode: "cors",
                 cache: "no-cache",
@@ -144,7 +145,7 @@ export class Screening {
                 date: (new Date()).toLocaleString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric'})
             };
 
-            await fetch(Screening.url, {
+            await fetch(awsSettings.ScreeningApiUrl, {
                 method: "post",
                 mode: "cors",
                 cache: "no-cache",
@@ -492,8 +493,6 @@ Screening.mriQuestions = [
         ok: "no"
     },
 ];
-
-Screening.url = "https://93mm1d1bce.execute-api.us-west-2.amazonaws.com/screening";
 
 if (window.location.href.includes(Screening.taskName)) {
     jsPsych.init({
