@@ -95,7 +95,7 @@ exports.getPotential = async(event) => {
         const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
         const docClient = DynamoDBDocumentClient.from(dbClient);
         const dynResults = await docClient.send(scan);
-        return dynResults.Items;
+        return dynResults.Items.sort((i, j) => i.date < j.date ? -1 : i.date > j.date ? 1 : 0);
         
     } catch (err) {
         console.error(err);
