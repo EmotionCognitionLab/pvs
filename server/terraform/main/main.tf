@@ -331,12 +331,18 @@ resource "aws_dynamodb_table" "potential-participants-table" {
   name           = "pvs-${var.env}-potential-participants"
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "email"
+  range_key      = "date"
   point_in_time_recovery {
     enabled = "${terraform.workspace == "prod" ? true : false}"
   }
 
   attribute {
     name = "email"
+    type = "S"
+  }
+
+  attribute {
+    name = "date"
     type = "S"
   }
 }

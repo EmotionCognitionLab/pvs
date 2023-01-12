@@ -135,6 +135,7 @@ export class Screening {
 
     async savePotentialParticipant(data) {
         try {
+            const date = new Date();
             const participantInfo = {
                 status: "eligible",
                 "first-name": data[0].response["first-name"],
@@ -142,7 +143,7 @@ export class Screening {
                 email: data[0].response.email,
                 phone: data[0].response.phone,
                 gender: data[0].response.gender,
-                date: (new Date()).toLocaleString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric'})
+                date: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2,0)}-${date.getDate().toString().padStart(2, 0)}`
             };
 
             await fetch(awsSettings.ScreeningApiUrl, {
