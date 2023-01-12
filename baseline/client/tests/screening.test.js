@@ -2,6 +2,7 @@ require("@adp-psych/jspsych/jspsych.js");
 import { Screening } from "../screening/screening.js";
 import fetch from 'jest-mock-fetch';
 global.fetch = fetch;
+import awsSettings from '../../../common/aws-settings.json';
 
 jest.mock('../../../common/logger/Logger', () => {
     return {
@@ -137,10 +138,11 @@ describe("Screening Survey", () => {
             fillSurveyForm(Screening.mriQuestions);
             await submitForm();
             expect(document.body.innerHTML).toEqual(expect.stringContaining("you are eligible to participate"));
-            const dateStr = (new Date()).toLocaleString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric'});
+            const date = new Date();
+            const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2,0)}-${date.getDate().toString().padStart(2, 0)}`;
             const expected = Object.assign({}, participantInfo);
             expected.date = dateStr;
-            expect(fetch).toHaveBeenCalledWith(Screening.url, {
+            expect(fetch).toHaveBeenCalledWith(awsSettings.ScreeningApiUrl, {
                 method: "post",
                 mode: "cors",
                 cache: "no-cache",
@@ -247,7 +249,7 @@ async function checkEligibility(promptInfo, reloadFn) {
         } catch (err) {
             console.error('error submitting form', err);
         }
-        expect(fetch).toHaveBeenCalledWith(Screening.url, {
+        expect(fetch).toHaveBeenCalledWith(awsSettings.ScreeningApiUrl, {
             method: "post",
             mode: "cors",
             cache: "no-cache",
