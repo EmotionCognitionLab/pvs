@@ -3,7 +3,7 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
-import { format } from 'date-fns-tz';
+import { format, utcToZonedTime } from 'date-fns-tz';
 import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
@@ -82,7 +82,7 @@ async function sendHomeTraininingReminders(commType) {
     try {
         const baselineDoneUsers = await db.getHomeTrainingInProgressUsers();
         for (const u of baselineDoneUsers) {
-            const segments = await db.segmentsForUserAndDay(u.humanId, new Date());
+            const segments = await db.segmentsForUserAndDay(u.humanId, utcToZonedTime(new Date(), 'America/Los_Angeles'));
             if (segments.length === 0) {
                 usersToRemind.push(u);
                 continue;
