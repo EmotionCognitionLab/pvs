@@ -277,7 +277,7 @@ describe("home training reminders", () => {
         await handler({commType: 'sms', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
         expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(phoneUser.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe((new Date()).toString().substring(0, 15));
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(utcToZonedTime((new Date()), 'America/Los_Angeles').toString().substring(0, 15));
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).toHaveBeenCalled();
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(phoneUser.phone_number)
@@ -288,7 +288,7 @@ describe("home training reminders", () => {
         await handler({commType: 'email', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
         expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(user.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe((new Date()).toString().substring(0, 15));
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(utcToZonedTime((new Date()), 'America/Los_Angeles').toString().substring(0, 15));
     }
 
     it("should not be sent if a stage 1 segment has been done today", async() => {
