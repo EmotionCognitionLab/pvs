@@ -136,7 +136,7 @@ PatternSeparation.learningStimulus = (isShoebox, isPractice=false) => {
             isLearning: true
         },
         response_ends_trial: false,
-        trial_duration: 2500,
+        trial_duration: 3000,
         render_on_canvas: false,
         stimulus_width: 800,
         maintain_aspect_ratio: true

@@ -120,7 +120,7 @@ describe("PatternSeparation learning phase", () => {
         expect(document.getElementsByTagName("img").length).toBe(0);
     });
 
-    it("should keep learning stimuli on the screen for 2500ms during the actual (non-practice) test", () => {
+    it("should keep learning stimuli on the screen for 3000ms during the actual (non-practice) test", () => {
         pressKey(" ");
         pressKey(" ");
         for (let i=0; i<stimuli["Practice"].length * 2; i++) {
@@ -132,7 +132,7 @@ describe("PatternSeparation learning phase", () => {
         }
         pressKey(" ");
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
-        jest.advanceTimersByTime(2499);
+        jest.advanceTimersByTime(2999);
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
         jest.advanceTimersByTime(2);
         expect(document.getElementsByTagName("img").length).toBe(0);
