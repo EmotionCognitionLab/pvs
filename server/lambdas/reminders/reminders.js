@@ -3,8 +3,13 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
-import { format, utcToZonedTime } from 'date-fns-tz';
-import { isAfter } from 'date-fns';
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
@@ -59,10 +64,10 @@ async function sendPreBaselineReminders(commType) {
         const incompleteUsers = await db.getBaselineIncompleteUsers('pre');
         for (const u of incompleteUsers) {
             if (u.startDate) {
-                const now = utcToZonedTime(new Date(), 'America/Los_Angeles');
+                const now = dayjs().tz('America/Los_Angeles');
                 // startDate is YYYY-MM-DD string
-                const zonedStart = utcToZonedTime(new Date(u.startDate), 'America/Los_Angeles');
-                if (isAfter(zonedStart, now)) continue
+                const zonedStart = dayjs(u.startDate, 'YYYY-MM-DD').tz('America/Los_Angeles');
+                if (zonedStart.isAfter(now)) continue;
             }
             const sets = await db.getSetsForUser(u.userId);
             const baselineDone = await hasCompletedBaseline(sets);
@@ -89,7 +94,7 @@ async function sendHomeTraininingReminders(commType) {
     try {
         const baselineDoneUsers = await db.getHomeTrainingInProgressUsers();
         for (const u of baselineDoneUsers) {
-            const segments = await db.segmentsForUserAndDay(u.humanId, utcToZonedTime(new Date(), 'America/Los_Angeles'));
+            const segments = await db.segmentsForUserAndDay(u.humanId, dayjs().tz('America/Los_Angeles').toDate());
             if (segments.length === 0) {
                 usersToRemind.push(u);
                 continue;
@@ -157,11 +162,11 @@ async function hasCompletedBaseline(sets) {
 }
 
 function hasDoneSetToday(sets) {
-    const todayYMD = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
+    const todayYMD = dayjs().tz('America/Los_Angeles').format('YYYY-MM-DD');
     let setStartedToday = false;
     let setFinishedToday = false;
     sets.forEach(set => {
-        const setDate = format(new Date(set.dateTime), 'yyyy-MM-dd', { timeZone: 'America/Los_Angeles'});
+        const setDate = dayjs(set.dateTime).tz('America/Los_Angeles').format('YYYY-MM-DD');
         if (set.experiment === 'set-started' && setDate === todayYMD) setStartedToday = true;
         if (set.experiment === 'set-finished' && setDate === todayYMD) setFinishedToday = true;
     });

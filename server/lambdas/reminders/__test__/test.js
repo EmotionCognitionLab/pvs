@@ -1,7 +1,11 @@
 'use strict';
 
-import { format, utcToZonedTime } from 'date-fns-tz';
-import { add, sub } from 'date-fns';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
@@ -111,7 +115,7 @@ describe("reminders", () => {
 
     it("should not remind someone whose start date is in the future", async () => {
         const lateStarter = Object.assign({}, user);
-        lateStarter.startDate = format(add(new Date(), {days: 5}), 'yyyy-MM-dd');
+        lateStarter.startDate = dayjs().add(5, 'days').format('YYYY-MM-DD');
         mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [lateStarter]);
         await handler({commType: 'email', reminderType: 'preBaseline'});
         expect(mockSendEmail).not.toHaveBeenCalled();
@@ -119,7 +123,7 @@ describe("reminders", () => {
 
     it("should remind someone whose start date is in the past", async () => {
         const alreadyStarted = Object.assign({}, user);
-        alreadyStarted.startDate = format(sub(new Date(), {days: 5}), 'yyyy-MM-dd');
+        alreadyStarted.startDate = dayjs().subtract(5, 'days').format('YYYY-MM-DD');
         mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [alreadyStarted]);
         await handler({commType: 'email', reminderType: 'preBaseline'});
         expect(mockSendEmail).toHaveBeenCalled();
@@ -128,11 +132,10 @@ describe("reminders", () => {
 
     it("should not remind people who have done a set today", async () => {
         const now = new Date();
-        const today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, 0)}-${now.getDate().toString().padStart(2, 0)}`;
-        const past = format(sub(now, {days: 11}), 'yyyy-MM-dd');
+        const past = dayjs(now).subtract(11, 'days').format('YYYY-MM-DD');
         mockGetSetsForUser.mockImplementationOnce(() => [ 
-            { identityId: identityId, experiment: 'set-started', dateTime: today }, 
-            { identityId: identityId, experiment: 'set-finished', dateTime: today }
+            { identityId: identityId, experiment: 'set-started', dateTime: now.toISOString() }, 
+            { identityId: identityId, experiment: 'set-finished', dateTime: now.toISOString() }
         ].concat(Array(10).fill({identityId: identityId, experiment: 'set-started', dateTime: past})));
         
         await handler({commType: 'email', reminderType: 'preBaseline'});
@@ -245,8 +248,8 @@ describe('hasDoneSetToday', () => {
     });
 
     it("should return false if the YYYY-MM-DD matches today but the fact that it's UTC means that it was really yesterday", () => {
-        const yyyyMMdd = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
-        const localYesterday = utcToZonedTime(new Date(`${yyyyMMdd}T02:03:45.678Z`), 'America/Los_Angeles'); // UTC YMD of today, but time of 2:03AM means that it was really yesterday in LA
+        const yyyyMMdd = dayjs().tz('America/Los_Angeles').format('YYYY-MM-DD');
+        const localYesterday = dayjs(`${yyyyMMdd}T02:03:45.678Z`).tz('America/Los_Angeles').toDate();  // UTC YMD of today, but time of 2:03AM means that it was really yesterday in LA
         const sets = [ { experiment: 'set-started', dateTime: localYesterday }, { experiment: 'set-finished', dateTime: localYesterday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeFalsy();
@@ -254,8 +257,8 @@ describe('hasDoneSetToday', () => {
 
     it("should return true if the YYYY-MM-DD matches tomorrow but the fact that it's UTC means that it was really today", () => {
         const tomorrow = new Date(Date.now() + (1000 * 60 * 60 * 24));
-        const tomorrowYMD = format(tomorrow, 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
-        const localToday = utcToZonedTime(new Date(`${tomorrowYMD}T02:34:56.789Z`), 'America/Los_Angeles'); // UTC YMD of tomorrow, but time of 2:34AM means that it was really today in LA
+        const tomorrowYMD = dayjs(tomorrow).tz('America/Los_Angeles').format('YYYY-MM-DD');
+        const localToday = dayjs(`${tomorrowYMD}T02:34:56.789Z`).tz('America/Los_Angeles').toDate(); // UTC YMD of tomorrow, but time of 2:34AM means that it was really today in LA
         const sets = [ { experiment: 'set-started', dateTime: localToday }, { experiment: 'set-finished', dateTime: localToday }];
         const res = hasDoneSetToday(sets);
         expect(res).toBeTruthy();
@@ -277,7 +280,7 @@ describe("home training reminders", () => {
         await handler({commType: 'sms', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
         expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(phoneUser.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(utcToZonedTime((new Date()), 'America/Los_Angeles').toString().substring(0, 15));
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).toHaveBeenCalled();
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(phoneUser.phone_number)
@@ -288,7 +291,7 @@ describe("home training reminders", () => {
         await handler({commType: 'email', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
         expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(user.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(utcToZonedTime((new Date()), 'America/Los_Angeles').toString().substring(0, 15));
+        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
     }
 
     it("should not be sent if a stage 1 segment has been done today", async() => {
