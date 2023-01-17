@@ -292,13 +292,14 @@ export default class Db {
         }
     }
 
-    async segmentsForUser(humanId, sinceDate = new Date(0)) {
-        const sinceDateEpoch = Math.floor(sinceDate.getTime() / 1000);
+    async segmentsForUser(humanId, startDate = new Date(0), endDate = new Date(1000 * 60 * 60 * 24 * 365 * 1000)) {
+        const startDateEpoch = Math.floor(startDate.getTime() / 1000);
+        const endDateEpoch = Math.floor(endDate.getTime() / 1000);
         try {
             const params = {
                 TableName: this.segmentsTable,
-                KeyConditionExpression: 'humanId = :hId and endDateTime >= :dt',
-                ExpressionAttributeValues: { ':hId': humanId, ':dt': sinceDateEpoch }
+                KeyConditionExpression: 'humanId = :hId and endDateTime >= :st and endDateTime <= :et',
+                ExpressionAttributeValues: { ':hId': humanId, ':st': startDateEpoch, ':et': endDateEpoch }
             };
 
             const results = await this.query(params);
