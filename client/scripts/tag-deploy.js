@@ -39,8 +39,9 @@ function requestYesNo(msg) {
     });
 }
 
-console.log(`Current version is ${getCurVersionFromFile(versionFile)}`);
-gitTagVersion(versionFile, 'app-');
+const curVer = getCurVersionFromFile(versionFile);
+console.log(`Current version is ${curVer}`);
+gitTagVersion(versionFile, 'app-', `Updating client version to ${curVer}`);
 
 requestYesNo('Push new version (and version tag) to remote repository? (Y/N):')
 .then(answer => {

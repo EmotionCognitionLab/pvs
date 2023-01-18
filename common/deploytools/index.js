@@ -139,10 +139,10 @@ function runWithErrorHandling(cmd, cmdArgs) {
  * Commits versionFile to git, reads version from it and creates git tag with that version.
  * @param {string} versionFile 
  */
-function gitTagVersion(versionFile, prefix) {
+function gitTagVersion(versionFile, prefix, commitMsg) {
     let curVersion = getCurVersionFromFile(versionFile);
     if (prefix) curVersion = prefix + curVersion;
-    runWithErrorHandling('git', ['commit', '-m', `Updating baseline/client version to ${curVersion}`, versionFile]);
+    runWithErrorHandling('git', ['commit', '-m', commitMsg, versionFile]);
     runWithErrorHandling('git', ['tag', '-a', curVersion, '-m', `Bumping to version ${curVersion}`]);
 }
 
