@@ -10,8 +10,8 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "test": "ELECTRON_RUN_AS_NODE=true ./node_modules/.bin/electron ./node_modules/.bin/jest",
-    "predeploy": "node scripts/pre-deploy.js $npm_config_env && node scripts/version-deploy.js && npm run test && yarn electron:build",
+    "test": "node -e \"process.env.ELECTRON_RUN_AS_NODE=true; const path=require('path'); const electron=path.join(__dirname, './node_modules/.bin/electron'); const jest=path.join(__dirname, './node_modules/jest/bin/jest.js'); require('child_process').execSync(`${electron} ${jest}`, {env: process.env, stdio: 'inherit'})\"",
+    "predeploy": "node -e \"require('child_process').execSync(`node scripts/pre-deploy.js ${process.env.npm_config_env}`, {stdio: 'inherit'})\" && node scripts/version-deploy.js && npm run test && yarn electron:build",
     "deploy": "node scripts/tag-deploy.js"
   },
   "jest": {
@@ -27,7 +27,6 @@
     "amazon-cognito-auth-js": "^1.3.3",
     "better-sqlite3": "^7.5.1",
     "core-js": "^3.6.5",
-    "deploytools": "file:../common/deploytools",
     "electron-unhandled": "^4.0.1",
     "lodash": "^4.17.21",
     "mathjs": "^10.5.3",
@@ -45,6 +44,7 @@
     "@vue/compiler-sfc": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^28.1.0",
+    "deploytools": "file:../common/deploytools",
     "electron": "^12.0.0",
     "electron-builder": "23.0.2",
     "electron-devtools-installer": "^3.1.0",
