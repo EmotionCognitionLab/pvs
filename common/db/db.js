@@ -268,30 +268,6 @@ export default class Db {
         }
     }
 
-    /**
-     * Gets breathing segments done by the given user on the given day.
-     * @param {string} humanId The 7-character humanId for the user
-     * @param {Date} day Date object representing the day the query should cover.
-     * @returns Breathing segments done by the given user on the given day.
-     */
-    async segmentsForUserAndDay(humanId, day) {
-        try {
-            const dayStart = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate())).getTime() / 1000);
-            const dayEnd = Math.floor((new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59)).getTime() / 1000);
-            const params = {
-                TableName: this.segmentsTable,
-                KeyConditionExpression: 'humanId = :hId and endDateTime BETWEEN :ds and :de',
-                ExpressionAttributeValues: { ':hId': humanId, ':ds': dayStart, ':de': dayEnd }
-            };
-
-            const results = await this.query(params);
-            return results.Items;
-        } catch (err) {
-            this.logger.error(err);
-            throw err;
-        }
-    }
-
     async segmentsForUser(humanId, startDate = new Date(0), endDate = new Date(1000 * 60 * 60 * 24 * 365 * 1000)) {
         const startDateEpoch = Math.floor(startDate.getTime() / 1000);
         const endDateEpoch = Math.floor(endDate.getTime() / 1000);
