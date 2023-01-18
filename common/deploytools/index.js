@@ -170,7 +170,7 @@ function preDeployCheckOK(targetEnv, settingsFiles, deployableBranches) {
     }
 
     if (!envSettingsOk(targetEnv, settingsFiles)) {
-        throw new Error(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${process.argv[2]}. Deployment halted.`);
+        throw new Error(`The settings in ${settingsFiles['deploy']} are not as expected for deploying to ${targetEnv}. Deployment halted.`);
     }
 
     if (!branchOk(deployableBranches)) {
