@@ -12,7 +12,7 @@ const { preDeployCheckOK } = require('deploytools')
  * Usage: node pre-deploy.js [target env]
  * ...where [target env] is most likely 'dev' or 'prod'.
  */
-const deployableBranches = ['prod'];
+const deployableBranches = process.argv[2] === 'dev' ? ['prod', 'main'] : ['prod'];
 
 const settingsFiles = {
     'dev': path.join(__dirname, '../../common/aws-settings.dev.json'),
