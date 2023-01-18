@@ -10,8 +10,8 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "test": "ELECTRON_RUN_AS_NODE=true ./node_modules/.bin/electron ./node_modules/.bin/jest",
-    "predeploy": "node scripts/pre-deploy.js $npm_config_env && node scripts/version-deploy.js && npm run test && yarn electron:build",
+    "test": "node -e \"process.env.ELECTRON_RUN_AS_NODE=true; const path=require('path'); const electron=path.join(__dirname, './node_modules/.bin/electron'); const jest=path.join(__dirname, './node_modules/jest/bin/jest.js'); require('child_process').execSync(`${electron} ${jest}`, {env: process.env, stdio: 'inherit'})\"",
+    "predeploy": "node -e \"require('child_process').execSync(`node scripts/pre-deploy.js ${process.env.npm_config_env}`, {stdio: 'inherit'})\" && node scripts/version-deploy.js && npm run test && yarn electron:build",
     "deploy": "node scripts/tag-deploy.js"
   },
   "jest": {
