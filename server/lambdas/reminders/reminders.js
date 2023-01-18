@@ -94,7 +94,9 @@ async function sendHomeTraininingReminders(commType) {
     try {
         const baselineDoneUsers = await db.getHomeTrainingInProgressUsers();
         for (const u of baselineDoneUsers) {
-            const segments = await db.segmentsForUserAndDay(u.humanId, dayjs().tz('America/Los_Angeles').toDate());
+            const todayStart = dayjs().tz('America/Los_Angeles').startOf('day').toDate();
+            const todayEnd = dayjs().tz('America/Los_Angeles').endOf('day').toDate();
+            const segments = await db.segmentsForUser(u.humanId, todayStart, todayEnd);
             if (segments.length === 0) {
                 usersToRemind.push(u);
                 continue;

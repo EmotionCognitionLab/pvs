@@ -13,7 +13,7 @@ const user =  { userId: '123abc', humanId: 'BigIdea', email: 'nobody@example.com
 const mockGetBaselineIncompleteUsers = jest.fn(() => [ user ]);
 const mockGetHomeTrainingInProgressUsers = jest.fn(() => [ user ]);
 const mockGetResultsForCurrentUser = jest.fn(() => []);
-const mockSegmentsForUserAndDay = jest.fn(() => []);
+const mockSegmentsForUser = jest.fn(() => []);
 const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
@@ -21,7 +21,7 @@ const mockUpdateUser = jest.fn(() => {});
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUserAndDay, mockUpdateUser, mockSendEmail, mockSnsPublish];
+const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockSendEmail, mockSnsPublish];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -47,7 +47,7 @@ jest.mock('db/db', () => {
             getSetsForUser: (userId) => mockGetSetsForUser(userId),
             updateUser: (userId, updates) => mockUpdateUser(userId, updates),
             getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
-            segmentsForUserAndDay: (humanId, date) => mockSegmentsForUserAndDay(humanId, date)
+            segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate)
         };
     });
 });
@@ -268,7 +268,7 @@ describe('hasDoneSetToday', () => {
 describe("home training reminders", () => {
 
     afterEach(() => {
-        mockSegmentsForUserAndDay.mockClear();
+        mockSegmentsForUser.mockClear();
         mockGetHomeTrainingInProgressUsers.mockClear();
         mockSendEmail.mockClear();
         mockSnsPublish.mockClear();
@@ -279,19 +279,19 @@ describe("home training reminders", () => {
         mockGetHomeTrainingInProgressUsers.mockImplementationOnce(() => [phoneUser]);
         await handler({commType: 'sms', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(phoneUser.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
+        expect(mockSegmentsForUser.mock.calls[0][0]).toBe(phoneUser.humanId);
+        expect(mockSegmentsForUser.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).toHaveBeenCalled();
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(phoneUser.phone_number)
     });
 
     async function testWithSegments(segments) {
-        mockSegmentsForUserAndDay.mockImplementationOnce((hId, day) => segments);
+        mockSegmentsForUser.mockImplementationOnce((hId, day) => segments);
         await handler({commType: 'email', reminderType: 'homeTraining'});
         expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][0]).toBe(user.humanId);
-        expect(mockSegmentsForUserAndDay.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
+        expect(mockSegmentsForUser.mock.calls[0][0]).toBe(user.humanId);
+        expect(mockSegmentsForUser.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
     }
 
     it("should not be sent if a stage 1 segment has been done today", async() => {
