@@ -170,6 +170,16 @@ describe("reminders", () => {
         expect(mockSnsPublish).not.toHaveBeenCalled();
         expect(mockSendEmail).not.toHaveBeenCalled();
     });
+
+    it("should not send a reminder to someone who has dropped out", async () => {
+        const droppedUser = { userId: '123abc', email: 'nobody@example.com', progress: { dropped: true }};
+        mockGetBaselineIncompleteUsers.mockImplementationOnce(() => [droppedUser]);
+        await handler({commType: 'email', reminderType: 'preBaseline'});
+        expect(mockGetBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
+        expect(mockGetSetsForUser).toHaveBeenCalledWith(droppedUser.userId);
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+        expect(mockSendEmail).not.toHaveBeenCalled();
+    });
 });
 
 describe("hasCompletedBaseline", () => {
@@ -317,6 +327,17 @@ describe("home training reminders", () => {
         const segments = [0,1,2,3,4].map(() => ({ stage: 3 }));
         await testWithSegments(segments);
         expect(mockSendEmail).toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    it("should not be sent if the participant has dropped out", async () => {
+        const droppedUser =  { userId: '123abc', humanId: 'BigText', email: 'nobody@example.com', progress: { dropped: true }};
+        mockGetHomeTrainingInProgressUsers.mockImplementationOnce(() => [droppedUser]);
+        await handler({commType: 'email', reminderType: 'homeTraining'});
+        expect(mockGetHomeTrainingInProgressUsers).toHaveBeenCalledTimes(1);
+        expect(mockSegmentsForUser.mock.calls[0][0]).toBe(droppedUser.humanId);
+        expect(mockSegmentsForUser.mock.calls[0][1].toString().substring(0, 15)).toBe(dayjs().tz('America/Los_Angeles').toDate().toString().substring(0, 15));
+        expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).not.toHaveBeenCalled();
     });
 });

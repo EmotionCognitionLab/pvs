@@ -132,13 +132,15 @@ async function deliverReminders(recipients, commType, msg) {
     let sentCount = 0;
     let sends;
 
+    const validRecipients = recipients.filter(r => !r.progress || (r.progress && !r.progress.dropped));
+
     if (commType === "email") {
-        sends = recipients.map(async u => {
+        sends = validRecipients.map(async u => {
             await sendEmail(u.email, msg);
             sentCount++;
         });
     } else if (commType === "sms") {
-        sends = recipients.filter(u => u.phone_number_verified).map(async u => {
+        sends = validRecipients.filter(u => u.phone_number_verified).map(async u => {
             await sendSMS(u.phone_number, msg);
             sentCount++;
         });
