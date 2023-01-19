@@ -274,7 +274,7 @@ export default class Db {
         try {
             const params = {
                 TableName: this.segmentsTable,
-                KeyConditionExpression: 'humanId = :hId and endDateTime >= :st and endDateTime <= :et',
+                KeyConditionExpression: 'humanId = :hId and endDateTime between :st and :et',
                 ExpressionAttributeValues: { ':hId': humanId, ':st': startDateEpoch, ':et': endDateEpoch }
             };
 
