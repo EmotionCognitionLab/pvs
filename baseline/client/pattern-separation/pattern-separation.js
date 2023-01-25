@@ -33,13 +33,19 @@ export class PatternSeparation {
                 this.constructor.preload(images),
                 this.constructor.instruction(introduction_html),
                 this.constructor.instruction(practice_instructions_html),
+                this.constructor.shoeboxPrompt, 
                 { 
-                    timeline: [this.constructor.learningStimulus(true, true), this.constructor.answerFasterNode],
-                    timeline_variables: practiceLearningVariables
+                    timeline: [
+                        this.constructor.learningStimulus(true, true), 
+                        this.constructor.answerFasterNode
+                    ], timeline_variables: practiceLearningVariables
                 },
+                this.constructor.handCarryPrompt, 
                 {
-                    timeline: [this.constructor.learningStimulus(false, true), this.constructor.answerFasterNode],
-                    timeline_variables: practiceLearningVariables
+                timeline: [
+                        this.constructor.learningStimulus(false, true), 
+                        this.constructor.answerFasterNode
+                    ], timeline_variables: practiceLearningVariables
                 },
                 this.constructor.instruction(recall_instructions_html),
                 {
@@ -47,13 +53,19 @@ export class PatternSeparation {
                     timeline_variables: practiceRecallVariables
                 },
                 this.constructor.instruction(actual_instructions_html),
-                {
-                    timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
-                    timeline_variables: actualLearningVariables
+                this.constructor.shoeboxPrompt,
+               {
+                    timeline: [
+                        this.constructor.learningStimulus(true, false),
+                        this.constructor.answerFasterNode
+                    ], timeline_variables: actualLearningVariables
                 },
+                this.constructor.handCarryPrompt, 
                 {
-                    timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
-                    timeline_variables: actualLearningVariables
+                    timeline: [
+                        this.constructor.learningStimulus(false, false),
+                        this.constructor.answerFasterNode
+                    ], timeline_variables: actualLearningVariables
                 }
             ];
         } else {
@@ -61,10 +73,12 @@ export class PatternSeparation {
                 this.constructor.preload(images),
                 this.constructor.instruction(introduction_html),
                 this.constructor.instruction(actual_instructions_html),
+                this.constructor.shoeboxPrompt,
                 {
                     timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
                     timeline_variables: actualLearningVariables
                 },
+                this.constructor.handCarryPrompt,
                 {
                     timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
                     timeline_variables: actualLearningVariables
@@ -182,6 +196,18 @@ PatternSeparation.answerFasterNode = {
     conditional_function: function() {
         return jsPsych.data.get().last(1).values()[0].response === null;
     }
+};
+
+PatternSeparation.shoeboxPrompt = {
+    type: "html-keyboard-response",
+    stimulus: `<h2>Round 1</h2><div>Will the object fit inside a lady's medium shoe box?</div><em>Please press the space bar to continue</em>`,
+    choices: [" "]
+};
+
+PatternSeparation.handCarryPrompt = {
+    type: "html-keyboard-response",
+    stimulus: `<h2>Round 2</h2><div>Can you carry the object across the room using only your right hand?</div><em>Please press the space bar to continue</em>`,
+    choices: [" "]
 };
 
 PatternSeparation.preload = (images) => {
