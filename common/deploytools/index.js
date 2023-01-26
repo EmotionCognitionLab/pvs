@@ -12,8 +12,8 @@ function getUncommittedFiles() {
     return git.stdout.toString().split('\n');
 }
 
-function getUnpushedFiles() {
-    const git = spawnSync('git', ['rev-list', 'HEAD', '^origin']);
+function getUnpushedFiles(branch) {
+    const git = spawnSync('git', ['rev-list', 'HEAD', `^origin/${branch}`]);
     return git.stdout.toString();
 }
 
@@ -164,7 +164,8 @@ function preDeployCheckOK(targetEnv, settingsFiles, deployableBranches) {
         throw new Error(`Found uncommitted files. Please remove or commit before deploying:\n ${uncommitted.join(", ")}`);
     }
 
-    const unpushed = getUnpushedFiles();
+    const curBranch = getBranch();
+    const unpushed = getUnpushedFiles(curBranch);
     if (unpushed.length !== 0) {
         throw new Error(`Unpushed commits exist. Please push before deploying.`);
     }
@@ -174,7 +175,6 @@ function preDeployCheckOK(targetEnv, settingsFiles, deployableBranches) {
     }
 
     if (!branchOk(deployableBranches)) {
-        const curBranch = getBranch();
         throw new Error(`You are on branch ${curBranch}, which is not a permitted deployment branch.\nPlease make sure that what you want to deploy is on a deployment branch and switch to it.`);
     }
 
