@@ -66,7 +66,7 @@ async function sendPreBaselineReminders(commType) {
             if (u.startDate) {
                 const now = dayjs().tz('America/Los_Angeles');
                 // startDate is YYYY-MM-DD string
-                const zonedStart = dayjs(u.startDate, 'YYYY-MM-DD').tz('America/Los_Angeles');
+                const zonedStart = dayjs(u.startDate, 'YYYY-MM-DD').tz('America/Los_Angeles', true);
                 if (zonedStart.isAfter(now)) continue;
             }
             const sets = await db.getSetsForUser(u.userId);
