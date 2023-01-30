@@ -80,10 +80,11 @@ describe("Generating regimes for days 5+", () => {
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const closestToRestRegime = regimeStats.reduce((prev, cur) => {
-            return Math.abs(cur.avg_coherence - avgRestCoherence) < Math.abs(prev.avg_coherence - avgRestCoherence) ? cur : prev;
+            return Math.abs(cur.mean - avgRestCoherence) < Math.abs(prev.mean - avgRestCoherence) ? cur : prev;
             },
-            {avg_coherence: Number.MAX_SAFE_INTEGER}
+            {mean: Number.MAX_SAFE_INTEGER}
         );
+        expect(closestToRestRegime.id).toBe(1);
         const res = generateRegimesForDay(forTesting.condB, 6);
         expect(res.length).toBe(6);
         expect(res.every(r => r.id === closestToRestRegime.id)).toBeTruthy();
@@ -303,6 +304,7 @@ describe("Generating regimes for days 5+", () => {
 });
 
 import { getRegimesForDay, getSegmentsAfterDate, getTrainingDayCount } from '../src/breath-data';
+import { rightArithShift } from "mathjs";
 
 /**
  * Given a list of regimes, return those that can be completed within durationMs.
