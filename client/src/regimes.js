@@ -227,9 +227,9 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
                 // this is possible, though unlikely, in condition b
                 console.warn('Found 0 possible regimes for training in condition b; picking regime with coherence closest to rest.');
                 const closestToRest = regimeStats.reduce((prev, cur) => {
-                    return Math.abs(cur.avg_coherence - targetAvgCoherence) < Math.abs(prev.avg_coherence - targetAvgCoherence) ? cur : prev;
+                    return Math.abs(cur.mean - targetAvgCoherence) < Math.abs(prev.mean - targetAvgCoherence) ? cur : prev;
                 },
-                {avg_coherence: Number.MAX_SAFE_INTEGER}
+                {mean: Number.MAX_SAFE_INTEGER}
                 );
                 const closestRegime = lookupRegime(closestToRest.id);
                 if (!closestRegime) {
