@@ -2,7 +2,15 @@
 
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "css/common.css";
+
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Demographics } from "../demographics/demographics.js";
 import { EmotionalMemory } from "../emotional-memory/emotional-memory.js";
@@ -406,6 +414,17 @@ async function doAll(session) {
     try {
         const client = new ApiClient(session);
         const user = await client.getSelf();
+        if (user.startDate) {
+            const start = dayjs(user.startDate).tz('America/Los_Angeles', true);
+            const now = dayjs().tz('America/Los_Angeles');
+            if (start.isAfter(now)) {
+                // show 'come back later' message
+                jsPsych.init({
+                    timeline: [returnOnStartDateMessage(start.format('MM/DD/YYYY'))]
+                });
+                return;
+            }
+        }
         homeComplete = user.homeComplete || false;
         db = new Db({session: session});
         // pre-fetch all results before doing browser check to avoid
@@ -550,6 +569,12 @@ const generalProgressMessage = (setNum) => ({
     choices: [" "]
 });
 
+
+const returnOnStartDateMessage = (startDateStr) => ({
+    type: "html-button-response",
+    stimulus: `You are currently scheduled to start the HeartBEAM experiment on ${startDateStr}. Please come back then to begin your assessment.`,
+    choices: []
+});
 
 if (window.location.href.includes("daily-tasks")) {
     init();
