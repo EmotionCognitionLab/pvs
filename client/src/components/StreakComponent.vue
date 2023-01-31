@@ -3,6 +3,8 @@
         <h2>Welcome, {{ userName }}! </h2>
         <h3>Number of days you completed home training</h3>
         <img v-for="(badge, idx) in sessionBadges" :key="idx" :src="'image://' + badge">
+        <div>{{lumosBonusMsg}}</div>
+        <div>{{breathBonusMsg}}</div>
         <div><button id="continue" class="button" @click="goToTasks">Continue to today's session</button></div>
     </div>
 </template>
@@ -11,11 +13,14 @@ import { ref, onBeforeMount } from '@vue/runtime-core'
 import { useRouter } from "vue-router";
 import { yyyymmddString } from '../utils.js';
 import ApiClient from '../../../common/api/client.js'
+import { earningsTypes } from '../../../common/types/types.js';
 import { SessionStore } from '../session-store'
 
 const router = useRouter();
 const userName = ref(null)
 const sessionBadges = ref([])
+const lumosBonusMsg = ref("")
+const breathBonusMsg = ref("")
 
 onBeforeMount(async() => {
     const startDate = new Date(1970, 0, 1)
@@ -31,6 +36,11 @@ onBeforeMount(async() => {
     const apiClient = new ApiClient(sess)
     const data = await apiClient.getSelf()
     userName.value = data.name.split(' ')[0]
+    const lumosBonusEarnings = await apiClient.getEarningsForSelf(earningsTypes.LUMOS_BONUS)
+    const breathBonusEarnings = await apiClient.getEarningsForSelf(earningsTypes.BREATH_BONUS)
+    // earnings are returned with latest last, so .slice(-1)[0] gives us most recent
+    lumosBonusMsg.value = await lumosBonusAchieved(lumosBonusEarnings.slice(-1)[0])
+    breathBonusMsg.value = await breathBonusAchieved(breathBonusEarnings.slice(-1)[0], data.condition.assigned)
 })
 
 function sessionImages(numCompleteDays) {
@@ -65,6 +75,38 @@ function segmentCountByDay(segments) {
 
 function goToTasks() {
     router.push({path: '/current-stage'})
+}
+
+async function lumosBonusAchieved(lastLumosBonusEarnings) {
+    if (!lastLumosBonusEarnings) return ""
+
+    const lastBonusDate = Math.round(new Date(lastLumosBonusEarnings.date).getTime() / 1000)
+    const lastBonusDisplayedDate = await window.mainAPI.getLastShownDateTimeForBonusType(earningsTypes.LUMOS_BONUS)
+    if (lastBonusDate > lastBonusDisplayedDate) {
+        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.LUMOS_BONUS, Math.round(Date.now() / 1000))
+        return "Congratulations! You've earned a $2 bonus for improving your brain game scores this past week. Keep it up!"
+    }
+
+    return ""
+}
+
+async function breathBonusAchieved(lastBreathBonusEarnings, condition) {
+    if (!lastBreathBonusEarnings) return ""
+
+    const lastBonusDate = new Date(lastBreathBonusEarnings.date).getTime() / 1000
+    const lastBonusDisplayedDate = await window.mainAPI.getLastShownDateTimeForBonusType(earningsTypes.BREATH_BONUS)
+    if (lastBonusDate > lastBonusDisplayedDate) {
+        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.BREATH_BONUS, Math.round(Date.now() / 1000))
+        let adjective = ""
+        if (condition === 'A') {
+            adjective = "relaxed"
+        } else {
+            adjective = "alert"
+        }
+        return `Great job! Your heart rate data indicate you were even more ${adjective} than usual during yesterday's breathing practice. You've earned a $1 bonus.`
+    }
+
+    return ""
 }
 
 </script>
