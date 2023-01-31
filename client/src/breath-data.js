@@ -9,6 +9,7 @@ import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
 import version from '../version.json'
 import { yyyymmddNumber } from './utils.js';
+import { earningsTypes } from '../../common/types/types.js';
 import * as path from 'path'
 
 let db;
@@ -165,6 +166,25 @@ function getPacedBreathingDays(stage) {
     return getTrainingDays(false, true, stage);
 }
 
+function getLastShownDateTimeForBonusType(bonusType) {
+    if (bonusType !== earningsTypes.BREATH_BONUS && bonusType !== earningsTypes.LUMOS_BONUS) {
+        throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
+    }
+
+    const stmt = db.prepare('SELECT msg_last_shown_date_time FROM bonus_msg_display_dates WHERE bonus_type = ?');
+    const res = stmt.get(bonusType);
+    return res.msg_last_shown_date_time;
+}
+
+function setLastShownDateTimeForBonusType(bonusType, lastShownDateTime) {
+    if (bonusType !== earningsTypes.BREATH_BONUS && bonusType !== earningsTypes.LUMOS_BONUS) {
+        throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
+    }
+
+    const stmt = db.prepare('UPDATE bonus_msg_display_dates SET msg_last_shown_date_time = ? WHERE bonus_type = ?');
+    stmt.run(lastShownDateTime, bonusType);
+}
+
 function setRegimeBestCnt(regimeId, count) {
     const updateStmt = db.prepare('UPDATE regimes set is_best_cnt = ? where id = ?');
     const res = updateStmt.run(count, regimeId);
@@ -222,6 +242,19 @@ function checkVersion() {
     }
 }
 
+function initBonusMsgTable() {
+    const checkTypesStmt = db.prepare('SELECT bonus_type from bonus_msg_display_dates');
+    const res = checkTypesStmt.all();
+    const allTypes = res.map(r => r.bonus_type);
+    const initStmt = db.prepare('INSERT INTO bonus_msg_display_dates(bonus_type, msg_last_shown_date_time) VALUES(? , 0)');
+    if (!allTypes.includes(earningsTypes.LUMOS_BONUS)) {
+        initStmt.run(earningsTypes.LUMOS_BONUS);
+    }
+    if (!allTypes.includes(earningsTypes.BREATH_BONUS)) {
+        initStmt.run(earningsTypes.BREATH_BONUS);
+    }
+}
+
 // import this module into itself so that we can mock
 // certain calls in test
 // https://stackoverflow.com/questions/51269431/jest-mock-inner-function
@@ -271,6 +304,10 @@ async function initBreathDb(serializedSession) {
         createVersionTableStmt.run();
         checkVersion();
 
+        const createBonusMsgTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS bonus_msg_display_dates(id INTEGER PRIMARY KEY, bonus_type TEXT NOT NULL UNIQUE, msg_last_shown_date_time INTEGER NOT NULL)');
+        createBonusMsgTableStmt.run();
+        initBonusMsgTable();
+
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
         regimeByIdStmt = db.prepare('SELECT * from regimes where id = ?');
@@ -308,6 +345,8 @@ export {
     setRegimeBestCnt,
     getSegmentsAfterDate,
     getTrainingDayCount,
-    saveRegimesForDay
+    saveRegimesForDay,
+    getLastShownDateTimeForBonusType,
+    setLastShownDateTimeForBonusType
 }
 export const forTesting = { initBreathDb, downloadDatabase, createSegment }

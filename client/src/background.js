@@ -9,7 +9,7 @@ import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { yyyymmddNumber, yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays, getSegmentsAfterDate } from './breath-data'
+import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays, getSegmentsAfterDate, getLastShownDateTimeForBonusType, setLastShownDateTimeForBonusType } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -445,6 +445,14 @@ ipcMain.handle('set-stage', async(_event, stage) => {
 
 ipcMain.handle('paced-breathing-days', (_event, stage) => {
   return getPacedBreathingDays(stage);
+});
+
+ipcMain.handle('get-last-shown-date-time-for-bonus-type', (_event, bonusType) => {
+  return getLastShownDateTimeForBonusType(bonusType);
+});
+
+ipcMain.handle('set-last-shown-date-time-for-bonus-type', (_event, bonusType, lastShownDateTime) => {
+  return setLastShownDateTimeForBonusType(bonusType, lastShownDateTime);
 });
 
 ipcMain.handle('quit', () => {

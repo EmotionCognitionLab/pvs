@@ -51,7 +51,7 @@ export default class ApiClient {
 
     async getEarningsForSelf(earningsType) {
         let url = `${awsSettings.UserApiUrl}/earnings/`;
-        if (earningsType) url += 'earningsType';
+        if (earningsType) url += earningsType;
         return await this.doFetch(url, "get", "There was an error retrieving the earnings for the user");
     }
 
