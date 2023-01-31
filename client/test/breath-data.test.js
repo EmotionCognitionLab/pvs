@@ -64,11 +64,11 @@ describe("Breathing data functions", () => {
         expect(path).toBe(":memory:");
     });
 
-    it("should set the msg_last_shown date to 0 for the lumosity and breath bonuses", () => {
-        const stmt = db.prepare('select bonus_type, msg_last_shown from bonus_msg_display_dates');
+    it("should set the msg_last_shown_date_time to 0 for the lumosity and breath bonuses", () => {
+        const stmt = db.prepare('select bonus_type, msg_last_shown_date_time from bonus_msg_display_dates');
         const res = stmt.all();
-        expect(res).toContainEqual({ bonus_type: earningsTypes.LUMOS_BONUS, msg_last_shown: 0 });
-        expect(res).toContainEqual({ bonus_type: earningsTypes.BREATH_BONUS, msg_last_shown: 0 });
+        expect(res).toContainEqual({ bonus_type: earningsTypes.LUMOS_BONUS, msg_last_shown_date_time: 0 });
+        expect(res).toContainEqual({ bonus_type: earningsTypes.BREATH_BONUS, msg_last_shown_date_time: 0 });
     });
 
     it("should insert a row for a regime that doesn't exist when getRegimeId is called", () => {
