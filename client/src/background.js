@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, BrowserView, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, BrowserView, ipcMain, Menu } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import unhandled from 'electron-unhandled'
@@ -9,7 +9,7 @@ import emwave from './emwave'
 import s3Utils from './s3utils.js'
 import { yyyymmddNumber, yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
-import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays } from './breath-data'
+import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays, getSegmentsAfterDate, getLastShownDateTimeForBonusType, setLastShownDateTimeForBonusType } from './breath-data'
 import { getRegimesForSession } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
@@ -17,6 +17,7 @@ import awsSettings from '../../common/aws-settings.json'
 import { Logger } from '../../common/logger/logger.js'
 import { SessionStore } from './session-store.js'
 import ApiClient from '../../common/api/client.js'
+import version from "../version.json";
 import fetch from 'node-fetch'
 // fetch is defined in browsers, but not node
 // substitute node-fetch here
@@ -29,6 +30,12 @@ protocol.registerSchemesAsPrivileged([
 
 // use electron-unhandled to catch unhandled errors/promise rejections
 unhandled()
+
+app.setAboutPanelOptions({
+  applicationName: "HeartBEAM",
+  applicationVersion: version.v,
+  iconPath: asssetsPath() + "logo.png"
+})
 
 let mainWin = null
 
@@ -59,6 +66,88 @@ async function createWindow() {
   return win
 }
 
+const EARNINGS_MENU_ID = 'earnings'
+const TRAINING_MENU_ID = 'training'
+
+function buildMenuTemplate(window) {
+  const isMac = process.platform === 'darwin'
+  const isDev = isDevelopment && !process.env.IS_TEST
+
+  return [
+    // { role: 'appMenu' }
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] : []),
+    // { role: 'fileMenu' }
+    {
+      label: 'File',
+      submenu: [
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    // { role: 'editMenu' }
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'copy' },
+        ...(isMac ? [
+          { role: 'pasteAndMatchStyle' },
+          { role: 'delete' },
+          { role: 'selectAll' },
+          { type: 'separator' },
+          {
+            label: 'Speech',
+            submenu: [
+              { role: 'startSpeaking' },
+              { role: 'stopSpeaking' }
+            ]
+          }
+        ] : [ ])
+      ]
+    },
+    // { role: 'viewMenu' }
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+        { type: 'separator' },
+        { label: 'Earnings', id: EARNINGS_MENU_ID, click: () => window.webContents.send('show-earnings')},
+        { label: 'Daily Training', id: TRAINING_MENU_ID, click: () => window.webContents.send('show-tasks')}
+      ]
+    },
+    // { role: 'windowMenu' }
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        ...(isMac ? [
+          { type: 'separator' },
+          { role: 'front' },
+          { type: 'separator' },
+          { role: 'window' }
+        ] : [
+          { role: 'close' }
+        ])
+      ]
+    }
+  ]
+}
+
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
@@ -74,6 +163,17 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
+function asssetsPath() {
+  if (process.env.NODE_ENV === 'production') {
+    if (process.platform === 'darwin') {
+      return path.join(path.dirname(app.getPath('exe')), '../src/assets/')
+    }
+    return path.join(path.dirname(app.getPath('exe')), '/src/assets/')
+  } else {
+    return path.join(app.getAppPath(), '../src/assets/')
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -86,11 +186,40 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
-  emwave.startEmWave()
-  mainWin = await createWindow()
-  mainWin.webContents.send('get-current-user')
-  emwave.createClient(mainWin)
-  emwave.hideEmWave()
+
+  // register protocol to handle image loading
+  protocol.registerFileProtocol('image', (req, callback) => {
+    const prefix = asssetsPath();
+    const url = req.url.replace('image://', prefix)
+    try {
+      return callback(url)
+    } catch (err) {
+      console.error(`Failed to load image ${req.url}`, err)
+      return callback(404)
+    }
+  })
+
+  await emwave.startEmWave()
+
+  // give emwave some time to start,
+  // them create window and menus
+  setTimeout(async () => {
+    mainWin = await createWindow()
+    const menuTmpl = buildMenuTemplate(mainWin)
+    const menu = Menu.buildFromTemplate(menuTmpl)
+    Menu.setApplicationMenu(menu)
+    mainWin.webContents.send('get-current-user')
+    emwave.createClient(mainWin)
+    mainWin.setFullScreen(true)
+    mainWin.show()
+    emwave.hideEmWave()
+  }, 5000)
+})
+
+ipcMain.handle('disable-menus', () => {
+  const m = Menu.getApplicationMenu()
+  m.getMenuItemById(EARNINGS_MENU_ID).enabled = false
+  m.getMenuItemById(TRAINING_MENU_ID).enabled = false
 })
 
 // Prevent multiple instances of the app
@@ -233,7 +362,11 @@ ipcMain.on('create-lumosity-view', async (_event, email, password, userAgent) =>
     lumosityView.setBounds({x: 0, y: 60, width: 1284, height: 593});  // hardcoded!!!
     // handle first login page load
     lumosityView.webContents.once("did-finish-load", () => {
-        lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+        // #323 skipping past lumosity might cause the lumosity view to be
+        // removed before the login can be executed
+        if (lumosityView && lumosityView.webContents) {
+          lumosityView.webContents.executeJavaScript(lumosityLoginJS(email, password));
+        }
     });
     lumosityView.webContents.loadURL("https://www.lumosity.com/login", {userAgent: userAgent.replace(/heartbeam.* /, '').replace(/Electron.* /, '')});
 });
@@ -287,66 +420,9 @@ ipcMain.handle('get-paced-breathing-days', (_event, stage) => {
   return getPacedBreathingDays(stage);
 });
 
-/**
- * Stage 2 is complete when the user has played each of the 12 Lumosity games at least 3 times.
- * @returns {object} {complete: true|false, completedOn: yyyymmdd string 
- * representing the date the user last reported playing lumosity, or null if 
- * complete is false}
- */
- async function stage2Complete(session) {
-  const apiClient = new ApiClient(session);
-  const data = await apiClient.getSelf();
-  if (!data.lumosGames || data.lumosGames.length < 12) return { complete: false, completedOn: null };
-
-  const allGames = [
-    'Word Bubbles Web',
-    'Memory Match Web',
-    'Penguin Pursuit Web',
-    'Color Match Web',
-    'Raindrops Web',
-    'Brain Shift Web',
-    'Familiar Faces Web',
-    'Pirate Passage Web',
-    'Ebb and Flow Web',
-    'Lost in Migration Web',
-    'Tidal Treasures Web',
-    'Splitting Seeds Web'
-  ];
-
-  // data.lumosGames is
-  // [
-  //   {'Game 1 name': [numPlays, dateOfThirdPlay]},
-  //   {'Game 2 name': [numPlays, dateOfThirdPlay]},
-  //   ...
-  // ]
-  const gamesPlayed = data.lumosGames.map(i => Object.keys(i)).flatMap(r => r);
-  const gameDataObj = {};
-  const thirdPlayDates = [];
-  data.lumosGames.forEach(i => {
-    const entries = Object.entries(i);
-    gameDataObj[entries[0][0]] = entries[0][1][0];
-    thirdPlayDates.push(Date.parse(entries[0][1][1] + ' GMT'))
-  });
-
-  for (const game of allGames) {
-    if (!gamesPlayed.includes(game) || gameDataObj[game] < 3) return { complete: false, completedOn: null }
-  }
-
-  const completedOn = Math.max(...thirdPlayDates);
-  let completedOnDate = '1970-01-01'
-  if (completedOn) {
-    completedOnDate = yyyymmddString(new Date(completedOn));
-  } else {
-    console.error(`Expected a valid completed on date for lumosity games, but got "${completedOn}"`);
-  }
-  
-  return { complete: true, completedOn: completedOnDate };
-}
-
-ipcMain.handle('is-stage-2-complete', async(_event, session) => {
-  const res = await stage2Complete(SessionStore.buildSession(session))
-  return res
-})
+ipcMain.handle('get-segments-after-date', (_event, date, stage) => {
+  return getSegmentsAfterDate(date, stage);
+});
 
 async function stage1Complete() {
   const restBreathingDays = getRestBreathingDays(1);
@@ -365,6 +441,18 @@ ipcMain.handle('is-stage-1-complete', async(_event) => {
 
 ipcMain.handle('set-stage', async(_event, stage) => {
   emwave.setStage(stage);
+});
+
+ipcMain.handle('paced-breathing-days', (_event, stage) => {
+  return getPacedBreathingDays(stage);
+});
+
+ipcMain.handle('get-last-shown-date-time-for-bonus-type', (_event, bonusType) => {
+  return getLastShownDateTimeForBonusType(bonusType);
+});
+
+ipcMain.handle('set-last-shown-date-time-for-bonus-type', (_event, bonusType, lastShownDateTime) => {
+  return setLastShownDateTimeForBonusType(bonusType, lastShownDateTime);
 });
 
 ipcMain.handle('quit', () => {

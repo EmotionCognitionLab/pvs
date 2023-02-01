@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
@@ -10,27 +9,19 @@ import LoginComponent from './components/LoginComponent.vue'
 import LumosityComponent from './components/LumosityComponent.vue'
 import Stage3Component from './components/Stage3Component.vue'
 import Stage2Component from './components/Stage2Component.vue'
+import EarningsComponent from './components/EarningsComponent.vue'
+import StreakComponent from './components/StreakComponent.vue'
 import DoneTodayComponent from './components/DoneTodayComponent.vue'
 import OauthRedirectComponent from './components/OauthRedirectComponent'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
+import ApiClient from '../../common/api/client.js'
 import { SessionStore } from './session-store'
 import { yyyymmddString } from './utils'
 
 async function stage1Complete() {
-    const res = await ipcRenderer.invoke('is-stage-1-complete')
-    return res
+    return await window.mainAPI.isStage1Complete()
 }
-
-async function stage2Complete() {
-    const sess = await SessionStore.getRendererSession()
-    const res = await ipcRenderer.invoke('is-stage-2-complete', sess)
-    return res
-}
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled promise rejection: ', promise, 'reason: ', reason)
-})
 
 const routes = [
     { path: '/setup', component: SetupComponent, props: {loggedIn: false} },
@@ -39,11 +30,13 @@ const routes = [
     { path: '/signin', component: LoginComponent, name: 'signin', props: true },
     { path: '/login/index.html', component: OauthRedirectComponent }, // to match the oauth redirect we get
     { path: '/stage3', component: Stage3Component },
+    { path: '/earnings', component: EarningsComponent },
+    { path: '/streak', component: StreakComponent },
     { path: '/lumos', component: LumosityComponent },
     { path: '/stage2', component: Stage2Component },
     { path: '/donetoday', component: DoneTodayComponent},
     { path: '/current-stage', beforeEnter: chooseStage},
-    { path: '/', beforeEnter: chooseStage }
+    { path: '/', beforeEnter: streakOrSetup }
 ]
 
 const noAuthRoutes = ['/signin', '/login/index.html', '/setup', '/', '/index.html']
@@ -52,6 +45,20 @@ const router = createRouter({
     history: process.env.IS_ELECTRON ? createWebHashHistory() : createWebHistory(),
     routes: routes
 })
+
+function streakOrSetup() {
+    // no-auth check to see if they've even started assignment to condition
+    if (window.localStorage.getItem('HeartBeam.isConfigured') !== 'true') {
+        return {path: '/setup'}
+    }
+    // if they've at least been assigned to condition, they need to log in
+    // for us to be able to show the streak page
+    if (!isAuthenticated()) {
+        return { name: 'signin', query: { postLoginPath: '/streak' }}
+    }
+
+    return {path: '/streak'}
+}
 
 async function chooseStage() {
     const todayYMD = yyyymmddString(new Date());
@@ -74,13 +81,15 @@ async function chooseStage() {
         return {path: '/donetoday'}
     }
 
-    const stage2Status = await stage2Complete()
-    if (!stage2Status.complete) return {path: '/stage2'}
-    if (stage2Status.completedOn != todayYMD) {
-        return {path: '/stage3'}
-    } else {
-        return {path: '/donetoday'}
-    }
+    const sess = await SessionStore.getRendererSession()
+    const apiClient = new ApiClient(sess)
+    const data = await apiClient.getSelf()
+    if (!data.stage2Completed) return {path: '/stage2'}
+    // the data on which stage2 completion is judged
+    // are from the previous day, so we assume
+    // that if they're finished with stage 2 they
+    // must not have finished it today
+    return {path: '/stage3'}
 }
 
 // use navigation guards to handle authentication
@@ -94,7 +103,7 @@ router.beforeEach(async (to) => {
         const cognitoAuth = getAuth()
         cognitoAuth.userhandler = {
             onSuccess: session => {
-                ipcRenderer.invoke('login-succeeded', session)
+                window.mainAPI.loginSucceeded(session)
                 SessionStore.session = session
             },
             onFailure: err => console.error(err)
@@ -105,6 +114,13 @@ router.beforeEach(async (to) => {
     return true
 })
 
+window.mainAPI.onShowEarnings(() => {
+    router.push({path: '/earnings'});
+})
+
+window.mainAPI.onShowTasks(() => {
+    router.push({path: '/current-stage'});
+})
 
 const app = createApp(App)
 app.use(router)

@@ -1,6 +1,10 @@
 import { Payboard, PaymentStatus } from "../pay-info.js";
 import { MockClient } from "../../../baseline/client/tests/mock-client.js";
-import { fakeUsers as users, fakeResults as results } from "../../../baseline/client/tests/fakes.js";
+import { fakeUsers as users, fakeResults as results, fakeSetFinishedResults as setFinishedResults } from "../../../baseline/client/tests/fakes.js";
+
+const mockDb = (results) => {
+    getExperimentResultsForCurrentUser: () => results;
+}
 
 function expectPayboardMatches(payboard, user, sets) {
     const nameSpan = payboard.rootDiv.querySelector(".pay-info-name");
@@ -135,7 +139,7 @@ describe("Payboard", () => {
         async user => {
             const {root, error} = getPayboardElements();
             const mc = new MockClient(users, results);
-            const payboard = new Payboard(root, error, mc, user.userId, true);
+            const payboard = new Payboard(root, error, mc, mockDb(setFinishedResults), user.userId, true);
             await payboard.refresh();
             expectPayboardMatches(payboard, user, await mc.getSetsForUser(user.userId));
         },
@@ -146,7 +150,7 @@ describe("Payboard", () => {
         // create payboard without changes
         const mc = new MockClient(users, results);
         const {root, error} = getPayboardElements();
-        const payboard = new Payboard(root, error, mc, twiId, true);
+        const payboard = new Payboard(root, error, mc, mockDb(setFinishedResults), twiId, true);
         await payboard.refresh();
         expectPayboardMatches(payboard, mc.users.get(twiId), await mc.getSetsForUser(twiId));
         // unset Twilight's mriT2 progress
@@ -166,7 +170,7 @@ describe("Payboard", () => {
     it("dropdown select appears with admin privileges", async () => {
         const mc = new MockClient(users, results);
         const {root, error} = getPayboardElements();
-        const payboard = new Payboard(root, error, mc, users[0].userId, true);
+        const payboard = new Payboard(root, error, mc, mockDb(setFinishedResults), users[0].userId, true);
         await payboard.refresh();
         expect(document.querySelector("select")).not.toBeNull();
     });
@@ -175,7 +179,7 @@ describe("Payboard", () => {
         const twiId = users[0].userId;
         const mc = new MockClient(users, results);
         const {root, error} = getPayboardElements();
-        const payboard = new Payboard(root, error, mc, twiId, true);
+        const payboard = new Payboard(root, error, mc, mockDb(setFinishedResults), twiId, true);
         await payboard.refresh();
         const select = document.querySelector("select");
         // set Twi's paymentStatus from not yet processed to processed
@@ -202,7 +206,7 @@ describe("Payboard", () => {
             throw new Error("oops");
         };
         const {root, error} = getPayboardElements();
-        const payboard = new Payboard(root, error, mc, twiId, true);
+        const payboard = new Payboard(root, error, mc, mockDb(setFinishedResults), twiId, true);
         await payboard.refresh();
         const select = document.querySelector("select");
         expect(select.value).toBe(PaymentStatus.NOT_YET_PROCESSED);

@@ -16,7 +16,7 @@
         },
         {
             "pic": 12,
-            "words": ["indifferent","embarrassed","sceptical","dispirited"]
+            "words": ["indifferent","embarrassed","skeptical","dispirited"]
         },
         {
             "pic": 35,
@@ -136,6 +136,162 @@
         }
     ],
     "Set6": [
+        {
+            "pic": 6,
+            "words": ["aghast","fantasizing","impatient","alarmed"]
+        },
+        {
+            "pic": 24,
+            "words": ["pensive","irritated","excited","hostile"]
+        },
+        {
+            "pic": 30,
+            "words": ["grateful","flirtatious","hostile","disappointed"]
+        },
+        {
+            "pic": 2,
+            "words": ["terrified","upset","arrogant","annoyed"]
+        },
+        {
+            "pic": 28,
+            "words": ["interested","joking","affectionate","contented"]
+        },
+        {
+            "pic": 14,
+            "words": ["irritated","disappointed","depressed","accusing"]
+        }
+    ],
+    "Set7": [
+        {
+            "pic": 25,
+            "words": ["panicked","incredulous","despondent","interested"]
+        },
+        {
+            "pic": 36,
+            "words": ["ashamed","nervous","suspicious","indecisive"]
+        },
+        {
+            "pic": 12,
+            "words": ["indifferent","embarrassed","sceptical","dispirited"]
+        },
+        {
+            "pic": 35,
+            "words": ["puzzled","nervous","insisting","contemplative"]
+        },
+        {
+            "pic": 18,
+            "words": ["decisive","amused","aghast","bored"]
+        },
+        {
+            "pic": 31,
+            "words": ["ashamed","confident","joking","dispirited"]
+        }
+    ],
+    "Set8": [
+        {
+            "pic": 22,
+            "words": ["preoccupied","grateful","insisting","imploring"]
+        },
+        {
+            "pic": 10,
+            "words": ["cautious","insisting","bored","aghast"]
+        },
+        {
+            "pic": 17,
+            "words": ["doubtful","affectionate","playful","aghast"]
+        },
+        {
+            "pic": 29,
+            "words": ["impatient","aghast","irritated","reflective"]
+        },
+        {
+            "pic": 27,
+            "words": ["joking","cautious","arrogant","reassuring"]
+        },
+        {
+            "pic": 8,
+            "words": ["despondent","relieved","shy","excited"]
+        }
+    ],
+    "Set9": [
+        {
+            "pic": 32,
+            "words": ["serious","ashamed","bewildered","alarmed"]
+        },
+        {
+            "pic": 9,
+            "words": ["annoyed","hostile","horrified","preoccupied"]
+        },
+        {
+            "pic": 26,
+            "words": ["alarmed","shy","hostile","anxious"]
+        },
+        {
+            "pic": 19,
+            "words": ["arrogant","grateful","sarcastic","tentative"]
+        },
+        {
+            "pic": 34,
+            "words": ["aghast","baffled","distrustful","terrified"]
+        },
+        {
+            "pic": 23,
+            "words": ["contented","apologetic","defiant","curious"]
+        }
+    ],
+    "Set10": [
+        {
+            "pic": 16,
+            "words": ["irritated","thoughtful","encouraging","sympathetic"]
+        },
+        {
+            "pic": 11,
+            "words": ["terrified","amused","regretful","flirtatious"]
+        },
+        {
+            "pic": 4,
+            "words": ["joking","insisting","amused","relaxed"]
+        },
+        {
+            "pic": 1,
+            "words": ["playful","comforting","irritated","bored"]
+        },
+        {
+            "pic": 21,
+            "words": ["embarrassed","fantasizing","confused","panicked"]
+        },
+        {
+            "pic": 15,
+            "words": ["contemplative","flustered","encouraging","amused"]
+        }
+    ],
+    "Set11": [
+        {
+            "pic": 13,
+            "words": ["decisive","anticipating","threatening","shy"]
+        },
+        {
+            "pic": 33,
+            "words": ["embarrassed","guilty","fantasizing","concerned"]
+        },
+        {
+            "pic": 5,
+            "words": ["irritated","sarcastic","worried","friendly"]
+        },
+        {
+            "pic": 7,
+            "words": ["apologetic","friendly","uneasy","dispirited"]
+        },
+        {
+            "pic": 20,
+            "words": ["dominant","friendly","guilty","horrified"]
+        },
+        {
+            "pic": 3,
+            "words": ["joking","flustered","desirous","convinced"]
+        }
+    ],
+    "Set12": [
         {
             "pic": 6,
             "words": ["aghast","fantasizing","impatient","alarmed"]
