@@ -3,13 +3,7 @@
 
 import SES from 'aws-sdk/clients/ses.js';
 import SNS from 'aws-sdk/clients/sns.js';
-
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
+import { format } from 'date-fns-tz';
 import Db from 'db/db.js';
 
 const sesEndpoint = process.env.SES_ENDPOINT;
@@ -25,13 +19,6 @@ const preBaselineMsg = {
     sms: `Don't forget to do the brain challenges every day. Go to ${siteUrl} to do today's set. - Your HeartBEAM Team`,
 }
 
-const homeTrainingMsg = {
-    subject: "A friendly reminder",
-    html: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today.",
-    text: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today.",
-    sms: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today."
-}
-
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
 const sns = new SNS({endpoint: snsEndpoint, apiVersion: '2010-03-31', region: region});
 const db = new Db();
@@ -44,31 +31,17 @@ export async function handler (event) {
         throw new Error(errMsg);
     }
 
-    const reminderType = event.reminderType;
-    if (reminderType === 'preBaseline') {
-        await sendPreBaselineReminders(commType);
-    } else if (reminderType === 'homeTraining') {
-        await sendHomeTraininingReminders(commType);
-    } else {
-        const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
-        console.error(errMsg);
-        throw new Error(errMsg);
-    }
+    await sendPreBaselineReminders(commType);
 }
 
 async function sendPreBaselineReminders(commType) {
     const usersToRemind = [];
     let sentCount = 0;
+    let sends = [];
 
     try {
         const incompleteUsers = await db.getBaselineIncompleteUsers('pre');
         for (const u of incompleteUsers) {
-            if (u.startDate) {
-                const now = dayjs().tz('America/Los_Angeles');
-                // startDate is YYYY-MM-DD string
-                const zonedStart = dayjs(u.startDate, 'YYYY-MM-DD').tz('America/Los_Angeles', true);
-                if (zonedStart.isAfter(now)) continue;
-            }
             const sets = await db.getSetsForUser(u.userId);
             const baselineDone = await hasCompletedBaseline(sets);
             if (baselineDone) {
@@ -79,75 +52,23 @@ async function sendPreBaselineReminders(commType) {
             }
         }
         
-        sentCount = await deliverReminders(usersToRemind, commType, preBaselineMsg);
+        if (commType === "email") {
+            sends = usersToRemind.map(async u => {
+                await sendEmail(u.email, preBaselineMsg);
+                sentCount++;
+            });
+        } else if (commType === "sms") {
+            sends = usersToRemind.filter(u => u.phone_number_verified).map(async u => {
+                await sendSMS(u.phone_number, preBaselineMsg);
+                sentCount++;
+            });
+        }
+        await Promise.all(sends);
 
     } catch (err) {
         console.error(`Error sending ${commType} reminders for pre baseline tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} pre-baseline reminders via ${commType}.`);
-}
-
-async function sendHomeTraininingReminders(commType) {
-    let sentCount = 0;
-    const usersToRemind = [];
-
-    try {
-        const baselineDoneUsers = await db.getHomeTrainingInProgressUsers();
-        for (const u of baselineDoneUsers) {
-            const todayStart = dayjs().tz('America/Los_Angeles').startOf('day').toDate();
-            const todayEnd = dayjs().tz('America/Los_Angeles').endOf('day').toDate();
-            const segments = await db.segmentsForUser(u.humanId, todayStart, todayEnd);
-            if (segments.length === 0) {
-                usersToRemind.push(u);
-                continue;
-            }
-
-            const stages = new Set(segments.map(s => s.stage));
-            if (stages.size > 1) {
-                // this shouldn't happen, since it implies they've done
-                // multiple stages in the same day
-                console.warn(`Exepcted to find only one stage for today for user ${u.userId}, but found `, stages);
-            }
-            // if there are multiples, use the latest (last) one
-            const stagesArr = [...stages];
-            const curStage = stagesArr[stagesArr.length - 1];
-
-            // stage 1 is only one day long and stage 2 only has
-            // one rest breathing segment per day, so if the stage is 1 or
-            // 2 they don't get any reminders b/c they've obviously
-            // already done everything for today
-            if (curStage === 3 && segments.length < 6) {
-                usersToRemind.push(u);
-            }
-        }
-
-        sentCount = await deliverReminders(usersToRemind, commType, homeTrainingMsg);
-    } catch (err) {
-        console.error(`Error sending ${commType} reminders for home training tasks: ${err.message}`, err);
-    }
-    console.log(`Done sending ${sentCount} home training reminders via ${commType}.`);
-}
-
-async function deliverReminders(recipients, commType, msg) {
-    let sentCount = 0;
-    let sends;
-
-    const validRecipients = recipients.filter(r => !r.progress || (r.progress && !r.progress.dropped));
-
-    if (commType === "email") {
-        sends = validRecipients.map(async u => {
-            await sendEmail(u.email, msg);
-            sentCount++;
-        });
-    } else if (commType === "sms") {
-        sends = validRecipients.filter(u => u.phone_number_verified).map(async u => {
-            await sendSMS(u.phone_number, msg);
-            sentCount++;
-        });
-    }
-    await Promise.all(sends);
-
-    return sentCount;
 }
 
 async function hasCompletedBaseline(sets) {
@@ -166,17 +87,18 @@ async function hasCompletedBaseline(sets) {
 }
 
 function hasDoneSetToday(sets) {
-    const todayYMD = dayjs().tz('America/Los_Angeles').format('YYYY-MM-DD');
+    const todayYMD = format(new Date(), 'yyyy-MM-dd', { timezone: 'America/Los_Angeles' });
     let setStartedToday = false;
     let setFinishedToday = false;
     sets.forEach(set => {
-        const setDate = dayjs(set.dateTime).tz('America/Los_Angeles').format('YYYY-MM-DD');
+        const setDate = format(new Date(set.dateTime), 'yyyy-MM-dd', { timeZone: 'America/Los_Angeles'});
         if (set.experiment === 'set-started' && setDate === todayYMD) setStartedToday = true;
         if (set.experiment === 'set-finished' && setDate === todayYMD) setFinishedToday = true;
     });
 
     return setStartedToday && setFinishedToday;
 }
+
 
 /**
  * Sends email message msg to a single recipient

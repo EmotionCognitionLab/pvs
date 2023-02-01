@@ -8,19 +8,16 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         appId: "heartbeam",
-        extraFiles: [
-          {
-            from: 'src/powershell/hide-emwave.ps1',
-            to: 'hide-emwave.ps1'
-          },
-          'src/assets/*.png'
-      ],
+        extraFiles: {
+          from: 'src/powershell/start-emwave-hidden.ps1',
+          to: 'start-emwave-hidden.ps1'
+        },
         productName: "HeartBEAM",
         win: {
           icon: "HeartBEAM-icon.png"
         }
       },
-      nodeIntegration: false,
+      nodeIntegration: true,
       preload: 'src/preload.js',
       externals: [ 'better-sqlite3' ]
     }

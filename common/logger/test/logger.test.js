@@ -99,17 +99,8 @@ describe("Logger", () => {
         jest.advanceTimersByTime(l.pushFrequency);
         expect(mockPutLogEvents.mock.calls.length).toBe(1);
         const messages = mockPutLogEvents.mock.calls[0][0].logEvents.map(le => le.message);
-        expect(messages).toContain(JSON.stringify({message: logMsg + " \n", level: "log", user: "unknown"}));
-        expect(messages).toContain(JSON.stringify({message: errorMsg + " \n", level: "error", user: "unknown"}));
-    });
-
-    it("should log user information if provided", () => {
-        const userId = "some-user-id";
-        const userLogger = new Logger(false, userId);
-        const logMsg = "I am logging from a user";
-        userLogger.log(logMsg);
-        const message = userLogger.logEntries[0].message;
-        expect(message).toContain(JSON.stringify({message: logMsg + " \n", level: "log", user: userId}));
+        expect(messages).toContain(JSON.stringify({message: logMsg + " \n", level: "log"}));
+        expect(messages).toContain(JSON.stringify({message: errorMsg + " \n", level: "error"}));
     });
 
     describe("with mocked Date.now", () => {
@@ -173,8 +164,8 @@ describe("Logger", () => {
             jest.advanceTimersByTime(altLogger.pushFrequency);
             expect(mockPutLogEvents.mock.calls.length).toBe(2);
             const messages = mockPutLogEvents.mock.calls[1][0].logEvents.map(le => le.message);
-            expect(messages).toContain(JSON.stringify({message: msg1 + " \n", level: "log", user: "unknown"}));
-            expect(messages).toContain(JSON.stringify({message: msg2 + " \n", level: "log", user: "unknown"}));
+            expect(messages).toContain(JSON.stringify({message: msg1 + " \n", level: "log"}));
+            expect(messages).toContain(JSON.stringify({message: msg2 + " \n", level: "log"}));
         });
     
         it("should call console.error on a logging failure when override is false", () => {

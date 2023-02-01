@@ -8,8 +8,6 @@ module.exports = {
         'admin/docusign': 'admin/docusign/docusign.js',
         'admin/download': 'admin/download/download.js',
         'daily-tasks': 'daily-tasks/daily-tasks.js',
-        'register': 'register/index.js',
-        'screening': 'screening/screening.js',
         'login': 'login/login.js',
         'logout': 'logout/logout.js',
         'pay-info': 'pay-info-page/index.js',
@@ -39,20 +37,9 @@ module.exports = {
             chunks: ['admin/download'],
         }),
         new HtmlWebpackPlugin({
-            title: 'Register',
-            filename: 'register/index.html',
-            template: 'register/index.ejs',
-            chunks: ['register'],
-        }),
-        new HtmlWebpackPlugin({
             title: 'Daily Tasks',
             filename: 'daily-tasks/index.html',
             chunks: ['daily-tasks'],
-        }),
-        new HtmlWebpackPlugin({
-            title: 'Screening',
-            filename: 'screening/index.html',
-            chunks: ['screening'],
         }),
         new HtmlWebpackPlugin({
             title: 'HeartBEAM Login',

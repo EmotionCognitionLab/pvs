@@ -1,5 +1,6 @@
 <template>
     <div class="instruction-small">
+        We have one remaining task for you today.
         Please breathe following the ball on the screen.
         Breathe in while the ball is moving up and breathe out while the ball is moving down.
         Pause your breathing when the ball is not going up or down.
@@ -14,18 +15,19 @@
             @pacerRegimeChanged="updateRegimeStatus"
             ref="pacer" />
         <TimerComponent :secondsDuration=secondsDuration :showButtons=false :countBy="'minutes'" ref="timer" />
-        <EmWaveListener :showIbi=false :showScore=showScore :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" @pulseSensorSessionEnded="resetPacer" ref="emwaveListener"/>
+        <EmWaveListener :showIbi=false :showScore=true :condition=condition @pulseSensorCalibrated="startPacer" @pulseSensorStopped="stopPacer" @pulseSensorSignalLost="stopPacer" @pulseSensorSignalRestored="resumePacer" @pulseSensorSessionEnded="resetPacer" ref="emwaveListener"/>
     </div>
 </template>
 
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { ref, computed, watch } from '@vue/runtime-core'
     import { pullAt } from 'lodash'
     import PacerComponent from './PacerComponent.vue'
     import TimerComponent from './TimerComponent.vue'
     import EmWaveListener from './EmWaveListener.vue'
 
-    const props = defineProps(['startRegimes', 'condition', 'showScore'])
+    const props = defineProps(['startRegimes', 'condition'])
     const emit = defineEmits(['pacer-started', 'pacer-stopped', 'pacer-finished'])
 
     const pacer = ref(null)
@@ -49,10 +51,9 @@
         emit('pacer-finished')
     }
 
-    async function startPacer() {
+    function startPacer() {
         if (pacer) pacer.value.start = true
         if (timer) timer.value.running = true
-        await window.mainAPI.disableMenus()
         emit('pacer-started')
     }
 
@@ -71,7 +72,7 @@
     async function updateRegimeStatus(startTime, regime) {
         if (inProgressRegime) finishedRegimes.push(inProgressRegime)
         inProgressRegime = regime
-        await window.mainAPI.pacerRegimeChanged(startTime, regime)
+        await ipcRenderer.invoke('pacer-regime-changed', startTime, regime);
     }
 
     function resetPacer() {

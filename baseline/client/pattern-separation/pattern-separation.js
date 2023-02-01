@@ -7,7 +7,7 @@ import "css/common.css";
 import introduction_html from "./frag/introduction.html";
 import practice_instructions_html from "./frag/practice_instructions.html";
 import recall_instructions_html from "./frag/recall_instructions.html";
-import learning_instructions_html from "./frag/learning_instructions.html";
+import actual_instructions_html from "./frag/actual_instructions.html";
 import stimuli from "./stimuli.json";
 import "./style.css";
 
@@ -33,51 +33,38 @@ export class PatternSeparation {
                 this.constructor.preload(images),
                 this.constructor.instruction(introduction_html),
                 this.constructor.instruction(practice_instructions_html),
-                this.constructor.shoeboxPrompt, 
                 { 
-                    timeline: [
-                        this.constructor.learningStimulus(true, true), 
-                        this.constructor.answerFasterNode
-                    ], timeline_variables: practiceLearningVariables
+                    timeline: [this.constructor.learningStimulus(true, true), this.constructor.answerFasterNode],
+                    timeline_variables: practiceLearningVariables
                 },
-                this.constructor.handCarryPrompt, 
                 {
-                timeline: [
-                        this.constructor.learningStimulus(false, true), 
-                        this.constructor.answerFasterNode
-                    ], timeline_variables: practiceLearningVariables
+                    timeline: [this.constructor.learningStimulus(false, true), this.constructor.answerFasterNode],
+                    timeline_variables: practiceLearningVariables
                 },
-                this.constructor.instruction(this.constructor.practiceRecallInstructions),
+                this.constructor.instruction(recall_instructions_html),
                 {
                     timeline: [this.constructor.recallStimulus(true)],
                     timeline_variables: practiceRecallVariables
                 },
-                this.constructor.instruction(this.constructor.set2and8LearningInstructions),
-                this.constructor.shoeboxPrompt,
-               {
-                    timeline: [
-                        this.constructor.learningStimulus(true, false),
-                        this.constructor.answerFasterNode
-                    ], timeline_variables: actualLearningVariables
-                },
-                this.constructor.handCarryPrompt, 
+                this.constructor.instruction(actual_instructions_html),
                 {
-                    timeline: [
-                        this.constructor.learningStimulus(false, false),
-                        this.constructor.answerFasterNode
-                    ], timeline_variables: actualLearningVariables
+                    timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
+                },
+                {
+                    timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
+                    timeline_variables: actualLearningVariables
                 }
             ];
         } else {
             return [
                 this.constructor.preload(images),
-                this.constructor.instruction(this.constructor.otherSetsLearningInstructions),
-                this.constructor.shoeboxPrompt,
+                this.constructor.instruction(introduction_html),
+                this.constructor.instruction(actual_instructions_html),
                 {
                     timeline: [this.constructor.learningStimulus(true, false), this.constructor.answerFasterNode],
                     timeline_variables: actualLearningVariables
                 },
-                this.constructor.handCarryPrompt,
                 {
                     timeline: [this.constructor.learningStimulus(false, false), this.constructor.answerFasterNode],
                     timeline_variables: actualLearningVariables
@@ -92,7 +79,7 @@ export class PatternSeparation {
         
         return [
             this.constructor.preload(images),
-            this.constructor.instruction(this.constructor.actualRecallInstructions),
+            this.constructor.instruction(recall_instructions_html),
             {
                 timeline: [this.constructor.recallStimulus(false)],
                 timeline_variables: actualRecallVariables
@@ -149,7 +136,7 @@ PatternSeparation.learningStimulus = (isShoebox, isPractice=false) => {
             isLearning: true
         },
         response_ends_trial: false,
-        trial_duration: 3000,
+        trial_duration: 2500,
         render_on_canvas: false,
         stimulus_width: 800,
         maintain_aspect_ratio: true
@@ -197,38 +184,12 @@ PatternSeparation.answerFasterNode = {
     }
 };
 
-PatternSeparation.shoeboxPrompt = {
-    type: "html-keyboard-response",
-    stimulus: `<h2>Round 1</h2><div>Will the object fit inside a lady's medium shoe box?</div><em>Please press the space bar to continue</em>`,
-    choices: [" "]
-};
-
-PatternSeparation.handCarryPrompt = {
-    type: "html-keyboard-response",
-    stimulus: `<h2>Round 2</h2><div>Can you carry the object across the room using only your right hand?</div><em>Please press the space bar to continue</em>`,
-    choices: [" "]
-};
-
 PatternSeparation.preload = (images) => {
     return {
         type: "preload",
         images: images
     };
 };
-
-PatternSeparation.buildText = (preamble, fixedText) => 
-    `<h2>Pattern Separation Task</h2>
-    <p>
-    ${preamble}
-    ${fixedText}
-    </p>
-    <em>Please press the space bar to continue</em>
-    `;
-
-PatternSeparation.set2and8LearningInstructions = PatternSeparation.buildText("We will begin the actual task. ", learning_instructions_html);
-PatternSeparation.otherSetsLearningInstructions = PatternSeparation.buildText("You are about to start a new task. In this task, you will be asked to view a series of common objects and remember them for a later memory test.", learning_instructions_html);
-PatternSeparation.practiceRecallInstructions = PatternSeparation.buildText("Now we will practice the memory portion of the task. ", recall_instructions_html);
-PatternSeparation.actualRecallInstructions = PatternSeparation.buildText("You will now be tested on your memory for the objects you saw earlier today. ", recall_instructions_html);
 
 if (window.location.href.includes(PatternSeparation.taskName)) {
     const queryParams = new URLSearchParams(window.location.search.substring(1));

@@ -1,14 +1,14 @@
 <template>
     <div>
         <header>
-            <img v-bind:src="require('../assets/logo.png')" id="logo"> After completing the brain games below, please click <span @click="leave">here</span>.
+            <img v-bind:src="require('../assets/logo.png')" id="logo"> After completing the Lumosity games below, please click <span @click="leave">here</span>.
         </header>
     </div>
 </template>
 
 <script setup>
-    import { onMounted } from '@vue/runtime-core'
-    import { onBeforeRouteLeave } from 'vue-router'
+    import { ipcRenderer } from "electron";
+    import { onMounted } from '@vue/runtime-core';
     import ApiClient from '../../../common/api/client.js'
     import { SessionStore } from '../session-store.js'
 
@@ -26,16 +26,13 @@
             email = lumosCreds.email
             pw = lumosCreds.pw
         }
-        window.mainAPI.createLumosityView(email, pw, navigator.userAgent)
+        ipcRenderer.send("create-lumosity-view", email, pw, navigator.userAgent);
     })
 
-    onBeforeRouteLeave(() => {
-        window.mainAPI.closeLumosityView()
-    })
 
     function leave() {
-        window.mainAPI.closeLumosityView()
-        emit('lumosity-finished')
+        ipcRenderer.send("close-lumosity-view");
+        emit('lumosity-finished');
     }
     
 

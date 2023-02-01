@@ -1,7 +1,7 @@
 import { getAuth, sendPhoneVerificationCode, updateUserAttributes, verifyPhone } from "auth/auth.js";
+import Db from "db/db.js";
 import { validPhoneNumber } from "js/validate.js";
 import './style.css';
-import ApiClient from "../../../common/api/client";
 
 const phoneVerificationFormId = 'phoneVerification';
 const errorMessageId = 'errorMessage';
@@ -83,8 +83,8 @@ function phoneVerificationSuccess() {
     document.getElementById(phoneVerificationSuccessId).classList.remove('hidden');
     document.getElementById('continueButton').addEventListener('click', goToDailyTasks);
     try {
-        const client = new ApiClient(cachedSession);
-        client.updateSelf({"phone_number_verified": true});
+        const db = new Db({session: cachedSession});
+        db.updateSelf({"phone_number_verified": true});
     } catch (err) {
         const idToken = cachedSession.getIdToken().getJwtToken();
         let sub = 'unknown';
@@ -105,10 +105,10 @@ function phoneVerificationFailure(err) {
 
 async function showPhoneConfirmForm() {
     document.getElementById(phoneConfirmMsgId).classList.remove('hidden');
-    const client = new ApiClient(cachedSession);
+    const db = new Db({session: cachedSession});
     let oldPhoneNumber = '';
     try {
-        oldPhoneNumber = (await client.getSelf()).phone_number;
+        oldPhoneNumber = (await db.getSelf()).phone_number;
     } catch (err) {
         document.getElementById(phoneConfirmMsgId).classList.add('hidden');
         document.getElementById(phoneConfirmFieldId).setAttribute('placeholder', '+12125551234');
@@ -131,7 +131,7 @@ async function showPhoneConfirmForm() {
             try {
                 const accessToken = cachedSession.getAccessToken().getJwtToken();
                 updateUserAttributes(accessToken, [{Name: 'phone_number', Value: phoneNumber}], 
-                    async () => await client.updateSelf({'phone_number': phoneNumber}),
+                    async () => await db.updateSelf({'phone_number': phoneNumber}),
                     (err) => showError(err, 'There was a problem updating your phone number. Please try again.')
                 );
             } catch (err) {
@@ -158,17 +158,11 @@ function showError(err, msg) {
 }
 
 function handleLogin() {
-    const scopes = ['openid'];
-    const queryParams = new URLSearchParams(window.location.search.substring(1));
-    const needsValidation = queryParams.get("needsValidation");
-    if (needsValidation === "1") scopes.push('aws.cognito.signin.user.admin');
     let cognitoAuth = getAuth(loginSuccess, 
-        (err) => showError(err, 'There was an error logging you in.'),
-        null,
-        scopes
+        (err) => showError(err, 'There was an error logging you in.')
     );
     const curUrl = window.location.href;
-    if (queryParams.get("code")) {
+    if (curUrl.indexOf('?') > -1) {
         cognitoAuth.parseCognitoWebResponse(curUrl);
     } else {
         cognitoAuth.getSession();

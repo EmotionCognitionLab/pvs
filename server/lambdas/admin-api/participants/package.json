@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
   "dependencies": {
-    "dayjs": "^1.11.6",
     "db": "file:../../../../common/db"
   }
 }

@@ -12,10 +12,6 @@ jsPsych.plugins["memory-field"] = (() => {
                 type: jsPsych.plugins.parameterType.STRING,
                 default: "Stop",
             },
-            confirm_text: {
-                type: jsPsych.plugins.parameterType.STRING,
-                default: "Click OK if you have finished. Click cancel if you can remember more.",
-            },
         },
     };
 
@@ -50,7 +46,7 @@ jsPsych.plugins["memory-field"] = (() => {
         });
         // add button listener
         button.addEventListener("click", () => {
-            const allDone = confirm(trial.confirm_text);
+            const allDone = confirm("Click OK if you've thought of all the words you can. Click cancel if you can remember more.");
             if (allDone) {
                 if (field.value) {
                     memory.push(field.value);

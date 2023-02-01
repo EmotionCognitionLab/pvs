@@ -4,6 +4,7 @@
     </div>
 </template>
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { useRouter } from "vue-router";
     import { getAuth } from '../../../common/auth/auth.js'
     import { SessionStore } from '../session-store.js'
@@ -16,7 +17,7 @@
         onSuccess: (session) => {
             SessionStore.session = session
             emit('login-succeeded')
-            window.mainAPI.loginSucceeded(session)
+            ipcRenderer.invoke('login-succeeded', session)
             const dest = window.sessionStorage.getItem('HeartBeam.postLoginPath') ? window.sessionStorage.getItem('HeartBeam.postLoginPath') : '/'
             window.sessionStorage.removeItem('HeartBeam.postLoginPath')
             router.push({path: dest})

@@ -261,78 +261,9 @@ describe("Assign to condition", () => {
         expect(userRec.condition).not.toBe(null);
         expect(userRec.condition.assigned).toBe('A');
     });
+    
 
     afterEach(async () => {
-        await th.dynamo.deleteTable(process.env.USERS_TABLE);
-    });
-});
-
-describe("assignment to condition tested with many users", () => {
-    const numUsers = 50;
-    let males;
-    let females;
-
-    beforeAll(async() => {
-        await th.dynamo.createTable(process.env.USERS_TABLE, 
-            [{AttributeName: 'userId', KeyType: 'HASH'}], 
-            [{AttributeName: 'userId', AttributeType: 'S'}]
-        );
-
-        const users = [];
-        for (let i = 0; i<numUsers * 2; i++) {
-            users.push({userId: i.toString()})
-        }
-
-        for (const u of users) {
-            await docClient.put({TableName: process.env.USERS_TABLE, Item: u}).promise();
-        }
-        const allUsers = await docClient.scan({TableName: process.env.USERS_TABLE}).promise();
-        expect(allUsers.Count).toBe(users.length);
-
-        const randGender = () => Math.random() < 0.5 ? 'Male' : 'Female';
-
-        for (let i = 0; i<numUsers*2; i++) {
-            const result = await runLambda('/condition', 'POST', buildConditionAssignmentEvent(randGender(), '', users[i].userId));
-            expect(result.statusCode).toBe(200);
-        }
-
-        const result = await docClient.scan({TableName: process.env.USERS_TABLE}).promise();
-        males = result.Items.filter(i => i.condition.assignedSex === 'Male');
-        females = result.Items.filter(i => i.condition.assignedSex === 'Female');
-        expect(males.length + females.length).toEqual(users.length);
-    });
-
-    test("should never assign more than two users in a row to the same condition", async () => {
-        const sortByDate = (a,b) => {
-            if (a.condition.assignedDate > b.condition.assignedDate) return 1;
-            if (a.condition.assignedDate < b.condition.assignedDate) return -1;
-            return 0;
-        }
-        [males, females].forEach(sex => {
-            sex.sort(sortByDate);
-            const conditionStr = sex.map(u => u.condition.assigned).join('');
-            // we should never have more than two of the same condition in a row
-            // so when we join all the conditions together into one long string
-            // they should never have a run of 'AAA...' or 'BBB...'.
-            expect(conditionStr).toEqual(expect.not.stringContaining('AAA'));
-            expect(conditionStr).toEqual(expect.not.stringContaining('BBB'));
-        });
-    });
-
-    test("should have an even number of users assigned to each condition if an even number of users have been created, or a difference of 1 between the numbers for each condition if an odd number of users have been created", async () => {
-        [males, females].forEach(sex => {
-            const condA = sex.filter(u => u.condition.assigned === 'A');
-            const condB = sex.filter(u => u.condition.assigned === 'B');
-            expect(condA.length + condB.length).toEqual(sex.length);
-            if (sex.length % 2 == 0) {
-                expect(condA.length).toEqual(condB.length);
-            } else {
-                expect(Math.abs(condA.length - condB.length)).toEqual(1);
-            }
-        });
-    });
-
-    afterAll(async () => {
         await th.dynamo.deleteTable(process.env.USERS_TABLE);
     });
 });

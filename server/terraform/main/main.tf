@@ -143,9 +143,6 @@ resource "aws_dynamodb_table" "experiment-data-table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "identityId"
   range_key      = "experimentDateTime"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
 
   attribute {
     name = "identityId"
@@ -179,15 +176,31 @@ resource "aws_ssm_parameter" "dynamo-experiment-data-table" {
   value = "${aws_dynamodb_table.experiment-data-table.name}"
 }
 
+resource "aws_dynamodb_table" "daily-regimes-table" {
+  name           = "pvs-${var.env}-daily-regimes"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "identityId"
+  range_key      = "date"
+
+  attribute {
+    name = "identityId"
+    type = "S"
+  }
+
+  attribute {
+    name = "date"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "users-table" {
   name           = "pvs-${var.env}-users"
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "userId"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
 
   attribute {
     name = "userId"
@@ -209,14 +222,40 @@ resource "aws_dynamodb_table" "consent-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "envelopeId"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
 
   attribute {
     name = "envelopeId"
     type = "S"
   }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-consent-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/consent"
+  description = "Dynamo table holding user consent details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.consent-table.name}"
+}
+
+resource "aws_dynamodb_table" "ds-table" {
+  name           = "pvs-${var.env}-ds"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "userId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+}
+
+# save above table name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "dynamo-ds-table" {
+  name = "/pvs/${var.env}/info/dynamo/table/ds"
+  description = "Dynamo table holding user docusign details"
+  type = "SecureString"
+  value = "${aws_dynamodb_table.ds-table.name}"
 }
 
 resource "aws_dynamodb_table" "lumos-acct-table" {
@@ -225,9 +264,6 @@ resource "aws_dynamodb_table" "lumos-acct-table" {
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "email"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
 
   attribute {
     name = "email"
@@ -241,157 +277,6 @@ resource "aws_ssm_parameter" "lumos-acct-table" {
   description = "Dynamo table holding lumosity account info"
   type = "SecureString"
   value = "${aws_dynamodb_table.lumos-acct-table.name}"
-}
-
-resource "aws_dynamodb_table" "segments-table" {
-  name           = "pvs-${var.env}-segments"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "humanId"
-  range_key = "endDateTime"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
-
-  attribute {
-    name = "humanId"
-    type = "S"
-  }
-
-  attribute {
-    name = "endDateTime"
-    type = "N"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "dynamo-segments-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/segments"
-  description = "Dynamo table holding user breathing data"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.segments-table.name}"
-}
-
-resource "aws_dynamodb_table" "lumos-plays-table" {
-  name           = "pvs-${var.env}-lumos-plays"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
-  range_key      = "dateTime"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
-
-  attribute {
-    name = "userId"
-    type = "S"
-  }
-
-  attribute {
-    name = "dateTime"
-    type = "S"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lumos-plays-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/lumosplays"
-  description = "Dynamo table holding lumosity plays info"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.lumos-plays-table.name}"
-}
-
-resource "aws_dynamodb_table" "earnings-table" {
-  name           = "pvs-${var.env}-earnings"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
-  range_key      = "typeDate"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
-
-  attribute {
-    name = "userId"
-    type = "S"
-  }
-
-  attribute {
-    name = "typeDate"
-    type = "S"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "earnings-table" {
-  name = "/pvs/${var.env}/info/dynamo/table/earnings"
-  description = "Dynamo table holding earnings info"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.earnings-table.name}"
-}
-
-resource "aws_dynamodb_table" "potential-participants-table" {
-  name           = "pvs-${var.env}-potential-participants"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "email"
-  range_key      = "date"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
-
-  attribute {
-    name = "email"
-    type = "S"
-  }
-
-  attribute {
-    name = "date"
-    type = "S"
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "potential-participants" {
-  name = "/pvs/${var.env}/info/dynamo/table/potential/participants"
-  description = "Dynamo table holding potential participants info"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.potential-participants-table.name}"
-}
-
-resource "aws_dynamodb_table" "screening-table" {
-  name           = "pvs-${var.env}-screening"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "status"
-  point_in_time_recovery {
-    enabled = "${terraform.workspace == "prod" ? true : false}"
-  }
-
-  attribute {
-    name = "status"
-    type = "S"
-  }
-}
-
-# the screening table will only ever have one row;
-# insert it here
-resource "aws_dynamodb_table_item" "screening-ineligible" {
-  table_name = aws_dynamodb_table.screening-table.name
-  hash_key   = aws_dynamodb_table.screening-table.hash_key
-
-  item = <<ITEM
-{
-  "status": {"S": "ineligible"}
-}
-ITEM
-
-  lifecycle {
-    ignore_changes = [item]
-  }
-}
-
-# save above table name to SSM so serverless can reference it
-resource "aws_ssm_parameter" "screening" {
-  name = "/pvs/${var.env}/info/dynamo/table/screening"
-  description = "Dynamo table holding screening survey data"
-  type = "SecureString"
-  value = "${aws_dynamodb_table.screening-table.name}"
 }
 
 # SES setup, including relevant S3 buckets and IAM settings
@@ -463,17 +348,17 @@ resource "aws_s3_bucket_policy" "receive" {
 
 # SES rules to write email to bucket
 resource "aws_ses_receipt_rule_set" "main" {
-  rule_set_name = "pvs-ses-rules"
+  rule_set_name = "pvs-${var.env}-ses-rules"
 }
 
 resource "aws_ses_active_receipt_rule_set" "main" {
-  rule_set_name = "pvs-ses-rules"
+  rule_set_name = "pvs-${var.env}-ses-rules"
   depends_on = [aws_ses_receipt_rule_set.main]
 }
 
 resource "aws_ses_receipt_rule" "save-to-s3" {
-  name          = "${var.env}-save-to-s3"
-  rule_set_name = "pvs-ses-rules"
+  name          = "save-to-s3"
+  rule_set_name = "pvs-${var.env}-ses-rules"
   recipients    = ["lumosityreports@heartbeamstudy.org"]
   enabled       = true
   scan_enabled  = true
@@ -510,6 +395,20 @@ resource "aws_ssm_parameter" "datafiles-bucket" {
   description = "Bucket for temporary storage of downloadable research results"
   type = "SecureString"
   value = "${aws_s3_bucket.datafiles-bucket.bucket}"
+}
+
+# S3 bucket for docusign
+resource "aws_s3_bucket" "ds-bucket" {
+  bucket = "${var.ds-bucket}"
+  acl = "private"
+}
+
+# save above bucket name to SSM so serverless can reference it
+resource "aws_ssm_parameter" "ds-bucket" {
+  name = "/pvs/${var.env}/info/lambda/ds/bucket"
+  description = "Bucket for files related to Docusign"
+  type = "SecureString"
+  value = "${aws_s3_bucket.ds-bucket.bucket}"
 }
 
 # S3 bucket for participant data
@@ -573,7 +472,7 @@ POLICY
 resource "aws_iam_policy" "s3-read-experiment-data" {
   name = "pvs-${var.env}-s3-read-experiment-data"
   path = "/policy/s3/experimentData/read/"
-  description = "Allows reading data from participant's own s3 folder"
+  description = "Allows writing data to participant's own s3 folder"
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -661,6 +560,43 @@ resource "aws_iam_policy" "dynamodb-read-experiment-data" {
 POLICY
 }
 
+# Policy to allow authenticated cognito users to read/write
+# from/to the daily regimes table, but only rows where
+# the hash key is their cognito identity id.
+resource "aws_iam_policy" "dynamodb-read-write-daily-regimes" {
+  name = "pvs-${var.env}-dynamodb-read-write-daily-regimes"
+  path = "/policy/dynamodb/regimes/readwrite/"
+  description = "Allows authenticated users to read/write their own data from/to dynamodb daily regimes table"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:PutItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.daily-regimes-table.name}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "$${cognito-identity.amazonaws.com:sub}"
+          ]
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 # policy to allow reading/writing to dynamo
 resource "aws_iam_policy" "dynamodb-read-write" {
   name = "pvs-${var.env}-dynamodb-read-write"
@@ -719,30 +655,6 @@ resource "aws_iam_policy" "dynamodb-user-read-write" {
 POLICY
 }
 
-# policy to allow limited reading of dynamo user table
-resource "aws_iam_policy" "dynamodb-user-read" {
-  name = "pvs-${var.env}-dynamodb-user-read"
-  path = "/policy/dynamodb/users/read/all/"
-  description = "Allows limited reading from dynamodb user table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:Query",
-        "dynamodb:Scan"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.users-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
 # policy to allow limited reading/writing of dynamo lumosity account table
 resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
   name = "pvs-${var.env}-dynamodb-lumos-acct-read-write"
@@ -761,30 +673,6 @@ resource "aws_iam_policy" "dynamodb-lumos-acct-read-write" {
       ],
       "Resource": [
         "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-acct-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow limited reading/writing of dynamo lumosity plays table
-resource "aws_iam_policy" "dynamodb-lumos-plays-read-write" {
-  name = "pvs-${var.env}-dynamodb-lumos-plays-read-write"
-  path = "/policy/dynamodb/lumos/plays/all/"
-  description = "Allows limited reading from/writing of dynamodb lumosity plays table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:BatchWriteItem",
-        "dynamodb:Query"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.lumos-plays-table.name}"
       ]
     }
   ]
@@ -854,149 +742,6 @@ resource "aws_iam_policy" "dynamodb-read-all-experiment-data" {
 POLICY
 }
 
-# Policy to allow reading from the segments table
-resource "aws_iam_policy" "dynamodb-read-all-segments" {
-  name = "pvs-${var.env}-dynamodb-read-all-segments"
-  path = "/policy/dynamodb/segments/readAll/"
-  description = "Allows reading all data from Dynamodb segments table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:DescribeTable",
-        "dynamodb:Query",
-        "dynamodb:GetItem",
-        "dynamodb:BatchGetItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.segments-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# Policy to allow writing to the segments table
-resource "aws_iam_policy" "dynamodb-write-all-segments" {
-  name = "pvs-${var.env}-dynamodb-write-all-segments"
-  path = "/policy/dynamodb/segments/writeAll/"
-  description = "Allows writing to the Dynamodb segments table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:PutItem",
-        "dynamodb:BatchWriteItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.segments-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow writing to potential participants table
-resource "aws_iam_policy" "dynamodb-potential-participants-write" {
-  name = "pvs-${var.env}-dynamodb-potential-participants-write"
-  path = "/policy/dynamodb/potential/participants/write/"
-  description = "Allows writing to dynamodb potential participants table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:PutItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.potential-participants-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow reading from potential participants table
-resource "aws_iam_policy" "dynamodb-potential-participants-read" {
-  name = "pvs-${var.env}-dynamodb-potential-participants-read"
-  path = "/policy/dynamodb/potential/participants/read/"
-  description = "Allows reading from dynamodb potential participants table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:Scan"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.potential-participants-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow writing to screening survey table
-resource "aws_iam_policy" "dynamodb-screening-write" {
-  name = "pvs-${var.env}-dynamodb-screening-write"
-  path = "/policy/dynamodb/potential/screening/write/"
-  description = "Allows writing to dynamodb screening table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:UpdateItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.screening-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow reading from/writing to docusign table
-resource "aws_iam_policy" "dynamodb-consent-read-write" {
-  name = "pvs-${var.env}-dynamodb-consent-read-write"
-  path = "/policy/dynamodb/ds/all/"
-  description = "Allows reading from/writing to dynamodb docusign table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:UpdateItem",
-        "dynamodb:Query"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.consent-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
 # policy to allow sns publishing
 resource "aws_iam_policy" "sns-publish" {
   name = "pvs-${var.env}-sns-publish"
@@ -1029,74 +774,6 @@ resource "aws_iam_policy" "ses-send" {
         }
       ]
   })
-}
-
-# policy to allow limited reading of dynamo earnings table
-resource "aws_iam_policy" "dynamodb-earnings-read" {
-  name = "pvs-${var.env}-dynamodb-earnings-read"
-  path = "/policy/dynamodb/earnings/read/"
-  description = "Allows limited reading from dynamodb earnings table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:Query"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.earnings-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow limited writing to dynamo earnings table
-resource "aws_iam_policy" "dynamodb-earnings-write" {
-  name = "pvs-${var.env}-dynamodb-earnings-write"
-  path = "/policy/dynamodb/earnings/write/"
-  description = "Allows limited writing to dynamodb earnings table"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:UpdateItem"
-      ],
-      "Resource": [
-        "arn:aws:dynamodb:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.earnings-table.name}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-# policy to allow use of SQS queues
-resource "aws_iam_policy" "sqs-registration-read-write" {
-  name = "pvs-${var.env}-registration-sqs-read-write"
-  path = "/policy/sqs/registration/all/"
-  description = "Allows reading from/writing to the registration and dead letter sqs queues"
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [ "sqs:*" ],
-      "Resource": [
-        "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.registration-email.name}",
-        "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.deadletter.name}"
-      ]
-    }
-  ]
-}
-POLICY
 }
 
 # IAM roles
@@ -1150,8 +827,7 @@ resource "aws_iam_role" "lambda-ses-process" {
 
   managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
     aws_iam_policy.dynamodb-user-read-write.arn,
-    aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
-    aws_iam_policy.dynamodb-lumos-plays-read-write.arn
+    aws_iam_policy.dynamodb-lumos-acct-read-write.arn
   ]
 }
 
@@ -1161,58 +837,6 @@ resource "aws_ssm_parameter" "lambda-ses-role" {
   description = "ARN for lambda role to process emails received from SES"
   type = "SecureString"
   value = "${aws_iam_role.lambda-ses-process.arn}"
-}
-
-resource "aws_iam_role" "lambda-sqlite-process" {
-  name = "pvs-${var.env}-lambda-sqlite-process"
-  path = "/role/lambda/sqlite/process/"
-  description = "Role for lambda function(s) processing sqlite files uploaded to usr data bucket"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Action =  [
-          "sts:AssumeRole"
-        ]
-      }
-    ]
-  })
-
-  inline_policy {
-    name = "pvs-${var.env}-usr-data-bucket-read"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Effect = "Allow"
-          Action = [
-            "s3:GetObject"
-          ]
-          Resource = [
-            "${aws_s3_bucket.data-bucket.arn}/*"
-          ]
-        }
-      ]
-    })
-  }
-
-  managed_policy_arns = [
-    aws_iam_policy.cloudwatch-write.arn,
-    aws_iam_policy.dynamodb-read-all-segments.arn,
-    aws_iam_policy.dynamodb-write-all-segments.arn
-  ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-sqlite-role" {
-  name = "/pvs/${var.env}/role/lambda/sqlite/process"
-  description = "ARN for lambda role to process sqlite files uploaded to usr data bucket"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-sqlite-process.arn}"
 }
 
 resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
@@ -1241,6 +865,7 @@ resource "aws_iam_role" "dynamodb-experiment-reader-writer" {
   managed_policy_arns   = [
       aws_iam_policy.dynamodb-write-experiment-data.arn,
       aws_iam_policy.dynamodb-read-experiment-data.arn,
+      aws_iam_policy.dynamodb-read-write-daily-regimes.arn,
       aws_iam_policy.s3-write-experiment-data.arn,
       aws_iam_policy.s3-read-experiment-data.arn
   ]
@@ -1313,10 +938,8 @@ resource "aws_iam_role" "lambda" {
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-user-read-write.arn,
-    aws_iam_policy.dynamodb-earnings-read.arn,
     aws_iam_policy.dynamodb-lumos-acct-read-write.arn,
     aws_iam_policy.dynamodb-read-all-experiment-data.arn,
-    aws_iam_policy.dynamodb-potential-participants-read.arn,
     aws_iam_policy.cloudwatch-write.arn
   ]
 }
@@ -1327,118 +950,6 @@ resource "aws_ssm_parameter" "lambda-role" {
   description = "ARN for lambda role"
   type = "SecureString"
   value = "${aws_iam_role.lambda.arn}"
-}
-
-resource "aws_iam_role" "lambda-earnings" {
-  name = "pvs-${var.env}-lambda-earnings"
-  path = "/role/lambda/earnings/"
-  description = "Role for lambda functions that handle earnings"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Action =  [
-          "sts:AssumeRole"
-        ]
-      }
-    ]
-  })
-
-  managed_policy_arns   = [
-    aws_iam_policy.dynamodb-user-read.arn,
-    aws_iam_policy.dynamodb-read-all-segments.arn,
-    aws_iam_policy.dynamodb-read-all-experiment-data.arn,
-    aws_iam_policy.dynamodb-earnings-read.arn,
-    aws_iam_policy.dynamodb-earnings-write.arn,
-    aws_iam_policy.dynamodb-lumos-plays-read-write.arn,
-    aws_iam_policy.cloudwatch-write.arn
-  ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-earnings-role" {
-  name = "/pvs/${var.env}/role/lambda/earnings"
-  description = "ARN for lambda-earnings role"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-earnings.arn}"
-}
-
-# Policy for unregistered users for things like screening survey,
-# docusign signing of consent form, registration, etc.
-resource "aws_iam_role" "lambda-unregistered" {
-  name = "pvs-${var.env}-lambda-unregistered"
-  path = "/role/lambda/unregistered/"
-  description = "Role for lambda function that handles unregistered users"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Action =  [
-          "sts:AssumeRole"
-        ]
-      }
-    ]
-  })
-
-  managed_policy_arns   = [
-    aws_iam_policy.dynamodb-user-read.arn,
-    aws_iam_policy.dynamodb-screening-write.arn,
-    aws_iam_policy.dynamodb-potential-participants-write.arn,
-    aws_iam_policy.dynamodb-consent-read-write.arn,
-    aws_iam_policy.ses-send.arn,
-    aws_iam_policy.sqs-registration-read-write.arn,
-    aws_iam_policy.cloudwatch-write.arn
-  ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-unregistered-role" {
-  name = "/pvs/${var.env}/role/lambda/unregistered"
-  description = "ARN for lambda-unregistered role"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-unregistered.arn}"
-}
-
-resource "aws_iam_role" "lambda-sqs-process" {
-  name = "pvs-${var.env}-lambda-sqs-process"
-  path = "/role/lambda/sqs/process/"
-  description = "Role for lambda function(s) invoked from SQS queues"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Action =  [
-          "sts:AssumeRole"
-        ]
-      }
-    ]
-  })
-
-  managed_policy_arns = [aws_iam_policy.cloudwatch-write.arn,
-    aws_iam_policy.dynamodb-user-read.arn,
-    aws_iam_policy.dynamodb-consent-read-write.arn,
-    aws_iam_policy.sqs-registration-read-write.arn
-  ]
-}
-
-# save above IAM role to SSM so serverless can reference it
-resource "aws_ssm_parameter" "lambda-sqs-role" {
-  name = "/pvs/${var.env}/role/lambda/sqs/process"
-  description = "ARN for lambda role to process messages received from SQS"
-  type = "SecureString"
-  value = "${aws_iam_role.lambda-sqs-process.arn}"
 }
 
 resource "aws_iam_role_policy" "lambda-role-assumption" {
@@ -1497,6 +1008,24 @@ resource "aws_iam_role" "study-admin" {
       }
     ]
   })
+
+  inline_policy {
+    name = "pvs-${var.env}-ds-bucket-read"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "s3:GetObject"
+          ]
+          Resource = [
+            "${aws_s3_bucket.ds-bucket.arn}/*"
+          ]
+        }
+      ]
+    })
+  }
 
   managed_policy_arns   = [
     aws_iam_policy.dynamodb-read-write.arn, aws_iam_policy.cloudwatch-write.arn
@@ -1698,7 +1227,6 @@ resource "aws_cloudwatch_log_metric_filter" "console-error" {
 # is changed
 # https://medium.com/@raghuram.arumalla153/aws-sns-topic-subscription-with-email-protocol-using-terraform-ed05f4f19b73
 # https://github.com/rarumalla1/terraform-projects/tree/master/aws-sns-email-subscription-terraform-using-command
-# TODO rename this just "errors" - it's used for multiple errors sources, not just console
 resource "aws_sns_topic" "console-errors" {
   name = "pvs-${var.env}-console-errors-topic"
   provisioner "local-exec" {
@@ -1722,68 +1250,4 @@ resource "aws_cloudwatch_metric_alarm" "console-error-alarm" {
   alarm_actions = [aws_sns_topic.console-errors.arn]
   datapoints_to_alarm = 1
   treat_missing_data = "notBreaching"
-}
-
-# SQS dead-letter queue
-resource "aws_sqs_queue" "deadletter" {
-  name = "pvs-${var.env}-deadletter-queue"
-}
-
-resource "aws_sqs_queue_redrive_allow_policy" "deadletter" {
-  queue_url = aws_sqs_queue.deadletter.id
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns = [aws_sqs_queue.registration-email.arn]
-  })
-}
-
-# SQS queue used to send emails to participants who have signed
-# the study consent form but not yet registered. It has a five-minute
-# delay, after which it triggers a lambda function that checks to see
-# if the participant has already registered and, if not, emails them
-# instructions to do so.
-resource "aws_sqs_queue" "registration-email" {
-  name = "pvs-${var.env}-registration-email-queue"
-  delay_seconds = 300
-  max_message_size = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 20
-  visibility_timeout_seconds = 60
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.deadletter.arn
-    maxReceiveCount = 4
-  })
-}
-
-# save above SQS queue url and arn to SSM so serverless can reference them
-resource "aws_ssm_parameter" "sqs-registration-email-queue-url" {
-  name = "/pvs/${var.env}/sqs/registration/url"
-  description = "URL for registration email SQS queue"
-  type = "SecureString"
-  value = "${aws_sqs_queue.registration-email.url}"
-}
-
-resource "aws_ssm_parameter" "sqs-registration-email-queue-arn" {
-  name = "/pvs/${var.env}/sqs/registration/arn"
-  description = "ARN for registration email SQS queue"
-  type = "SecureString"
-  value = "${aws_sqs_queue.registration-email.arn}"
-}
-
-# Cloudwatch alarm for the deadletter queue
-resource "aws_cloudwatch_metric_alarm" "deadletter-queue-alarm" {
-  alarm_name = "pvs-${var.env}-deadletter-queue-alarm"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods = 1
-  period = 300
-  metric_name = "ApproximateNumberOfMessagesVisible"
-  namespace = "AWS/SQS"
-  statistic = "Sum"
-  threshold = 0
-  alarm_actions = [aws_sns_topic.console-errors.arn]
-  datapoints_to_alarm = 1
-  treat_missing_data = "notBreaching"
-  dimensions = {
-    "QueueName" = "${aws_sqs_queue.deadletter.name}"
-  }
 }

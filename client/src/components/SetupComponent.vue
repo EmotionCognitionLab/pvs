@@ -29,7 +29,7 @@
             </RestComponent>
         </div>
         <div v-else-if="step==4">
-            <PacedBreathingComponent :showScore="false" :startRegimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]" :condition="'N/A'" @pacerFinished="pacerFinished" @pacerStopped="pacerStopped" />
+            <PacedBreathingComponent :startRegimes="[{durationMs: 300000, breathsPerMinute: 15, randomize: false}]" :condition="'N/A'" @pacerFinished="pacerFinished" @pacerStopped="pacerStopped" />
         </div>
         <div v-else-if="step==5">
             <UploadComponent>
@@ -47,6 +47,7 @@
 </template>
 
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { ref, onBeforeMount } from '@vue/runtime-core';
     import { isAuthenticated } from '../../../common/auth/auth.js'
     import ConditionAssignmentComponent from './ConditionAssignmentComponent.vue'
@@ -66,7 +67,7 @@
     
     
     onBeforeMount(async() => {
-        window.mainAPI.setStage(1)
+        ipcRenderer.invoke('set-stage', 1)
 
         if (!isAuthenticated()) {
             step.value = 1
@@ -76,12 +77,12 @@
             step.value = 2
             return
         }
-        const restBreathingDays = await window.mainAPI.getRestBreathingDays(1)
+        const restBreathingDays = await ipcRenderer.invoke('get-rest-breathing-days', 1)
         if (restBreathingDays.size < 1) {
             step.value = 3
             return
         }
-        const pacedBreathingDays = await window.mainAPI.getPacedBreathingDays(1)
+        const pacedBreathingDays = await ipcRenderer.invoke('get-paced-breathing-days', 1)
         if (pacedBreathingDays.size < 1) {
             step.value = 4
             return
@@ -111,7 +112,7 @@
     }
 
     function quit() {
-        window.mainAPI.quit()
+        ipcRenderer.invoke('quit')
     }
 
 </script>

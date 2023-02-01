@@ -70,41 +70,52 @@ jest.mock('../src/breath-data.js', () => ({
 import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getPracticedRegimeIds, saveRegimesForDay } from '../src/breath-data';
 
 describe("Generating regimes for days 5+", () => {
+    it("should throw an error when the condition is a and no regimes have confidence intervals overlapping the highest mean coherence", () => {
+        const regimeStats = [
+            {id: 1, mean: 2.2, low95CI: 2.6, high95CI: 3.0},
+            {id: 2, mean: 1.7, low95CI: 2.6, high95CI: 3.0},
+            {id: 3, mean: 0.9, low95CI: 2.6, high95CI: 3.0}
+        ];
+        getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
+        expect(() => {
+            generateRegimesForDay(forTesting.condA, 17);
+        }).toThrow();
+    });
+
     it("should return the regime closest to the average rest coherence when the condition is b and no regimes have confidence intervals overlapping the average rest coherence", () => {
         const avgRestCoherence = 2.3;
         getAvgRestCoherence.mockReturnValueOnce(avgRestCoherence);
         const regimeStats = [
-            {id: 1, mean: 2.2, low90CI: 2.6, high90CI: 3.0},
-            {id: 2, mean: 1.7, low90CI: 2.6, high90CI: 3.0},
-            {id: 3, mean: 0.9, low90CI: 2.6, high90CI: 3.0}
+            {id: 1, mean: 2.2, low95CI: 2.6, high95CI: 3.0},
+            {id: 2, mean: 1.7, low95CI: 2.6, high95CI: 3.0},
+            {id: 3, mean: 0.9, low95CI: 2.6, high95CI: 3.0}
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const closestToRestRegime = regimeStats.reduce((prev, cur) => {
-            return Math.abs(cur.mean - avgRestCoherence) < Math.abs(prev.mean - avgRestCoherence) ? cur : prev;
+            return Math.abs(cur.avg_coherence - avgRestCoherence) < Math.abs(prev.avg_coherence - avgRestCoherence) ? cur : prev;
             },
-            {mean: Number.MAX_SAFE_INTEGER}
+            {avg_coherence: Number.MAX_SAFE_INTEGER}
         );
-        expect(closestToRestRegime.id).toBe(1);
         const res = generateRegimesForDay(forTesting.condB, 6);
         expect(res.length).toBe(6);
         expect(res.every(r => r.id === closestToRestRegime.id)).toBeTruthy();
     });
 
-    it("should generate two new regimes when the condition is a and zero regimes have a confidence interval overlapping the highest average coherence (other than the regime with the highest average coherence, which overlaps itself)", () => {
+    it("should generate two new regimes when the condition is a and only one regime has a confidence interval overlapping the highest average coherence", () => {
         const regimeStats = [
             // if you change this make sure the first entry is always the highest avg coherence
-            {id: 1, mean: 2.7, low90CI: 2.6, high90CI: 3.0}, 
-            {id: 2, mean: 1.7, low90CI: 1.6, high90CI: 1.9},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.2}
+            {id: 1, mean: 2.7, low95CI: 2.6, high95CI: 3.0}, 
+            {id: 2, mean: 1.7, low95CI: 1.6, high95CI: 1.9},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.2}
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const fakeBpm = (someVal) => someVal * 4;
-        const defaultIsBestCnt = 1;
-        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: fakeBpm(id), isBestCnt: defaultIsBestCnt}));
+        const defaultIsBestCnt = 0;
+        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: fakeBpm(id), is_best_cnt: defaultIsBestCnt}));
         const res = generateRegimesForDay(forTesting.condA, 5);
 
         expect(res.length).toBe(6);
-        expect(setRegimeBestCnt).toHaveBeenCalledWith(regimeStats[0].id, defaultIsBestCnt + 1);
+        expect(setRegimeBestCnt).toHaveBeenCalledWith(regimeStats[0].id, 1);
 
         const expectedBpmDiff = 1 / (2 ** (defaultIsBestCnt + 1));
         expect(res.filter(r => r.breathsPerMinute == fakeBpm(regimeStats[0].id) - expectedBpmDiff).length).toBe(2);
@@ -114,23 +125,23 @@ describe("Generating regimes for days 5+", () => {
         expect(getRegimeId).toHaveBeenCalledTimes(2);
         const call1 = getRegimeId.mock.calls[0][0];
         expect(call1.breathsPerMinute).toBe(fakeBpm(regimeStats[0].id) + expectedBpmDiff);
-        expect(call1.isBestCnt).toBe(0);
+        expect(call1.is_best_cnt).toBe(0);
         const call2 = getRegimeId.mock.calls[1][0];
         expect(call2.breathsPerMinute).toBe(fakeBpm(regimeStats[0].id) - expectedBpmDiff);
-        expect(call2.isBestCnt).toBe(0);
+        expect(call2.is_best_cnt).toBe(0);
     });
 
     it("should use is_best_cnt when generating new regimes in condition a with only one overlapping confidence interval", () => {
         const regimeStats = [
             // if you change this make sure the first entry is always the highest avg coherence
-            {id: 1, mean: 2.7, low90CI: 2.6, high90CI: 3.0}, 
-            {id: 2, mean: 1.7, low90CI: 1.6, high90CI: 1.9},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.2}
+            {id: 1, mean: 2.7, low95CI: 2.6, high95CI: 3.0}, 
+            {id: 2, mean: 1.7, low95CI: 1.6, high95CI: 1.9},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.2}
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
         const defaultBpm = 6;
         const defaultIsBestCnt = 2;
-        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: defaultBpm, isBestCnt: defaultIsBestCnt}));
+        lookupRegime.mockImplementationOnce(id => ({id: id, breathsPerMinute: defaultBpm, is_best_cnt: defaultIsBestCnt}));
         const res = generateRegimesForDay(forTesting.condA, 5);
 
         expect(res.length).toBe(6);
@@ -144,12 +155,12 @@ describe("Generating regimes for days 5+", () => {
         const avgRestCoherence = 2.3;
         getAvgRestCoherence.mockReturnValueOnce(avgRestCoherence);
         const regimeStats = [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 1.7, low90CI: 1.6, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.0}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 1.7, low95CI: 1.6, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.0}
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
-        const overlappingRegimes = regimeStats.filter(rs => rs.low90CI <= avgRestCoherence && rs.high90CI >= avgRestCoherence);
+        const overlappingRegimes = regimeStats.filter(rs => rs.low95CI <= avgRestCoherence && rs.high95CI >= avgRestCoherence);
         expect(overlappingRegimes.length).toBe(1);
         const expectedRegimeId = overlappingRegimes[0].id;
         const res = generateRegimesForDay(forTesting.condB, 12);
@@ -159,84 +170,84 @@ describe("Generating regimes for days 5+", () => {
 
     describe.each([
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 2, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.0}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.0}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 2, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9}
         ]},
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 3, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 1.9, low90CI: 1.6, high90CI: 2.3}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 1.9, low95CI: 1.6, high95CI: 2.3}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 3, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 1.7, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9}
+            {id: 1, mean: 2.2, low95CI: 1.7, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9}
         ]},
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 4, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 1.9, low90CI: 1.6, high90CI: 2.3},
-            {id: 4, mean: 1.8, low90CI: 1.6, high90CI: 2.2}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 1.9, low95CI: 1.6, high95CI: 2.3},
+            {id: 4, mean: 1.8, low95CI: 1.6, high95CI: 2.2}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 4, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 1.7, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9},
-            {id: 4, mean: 1.9, low90CI: 1.8, high90CI: 2.0}
+            {id: 1, mean: 2.2, low95CI: 1.7, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9},
+            {id: 4, mean: 1.9, low95CI: 1.8, high95CI: 2.0}
         ]},
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 5, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 1.9, low90CI: 1.6, high90CI: 2.3},
-            {id: 4, mean: 1.8, low90CI: 1.6, high90CI: 2.2},
-            {id: 5, mean: 2.0, low90CI: 2.0, high90CI: 2.21}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 1.9, low95CI: 1.6, high95CI: 2.3},
+            {id: 4, mean: 1.8, low95CI: 1.6, high95CI: 2.2},
+            {id: 5, mean: 2.0, low95CI: 2.0, high95CI: 2.21}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 5, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 1.7, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9},
-            {id: 4, mean: 1.9, low90CI: 1.8, high90CI: 2.0},
-            {id: 5, mean: 1.8, low90CI: 1.7, high90CI: 2.0}
+            {id: 1, mean: 2.2, low95CI: 1.7, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9},
+            {id: 4, mean: 1.9, low95CI: 1.8, high95CI: 2.0},
+            {id: 5, mean: 1.8, low95CI: 1.7, high95CI: 2.0}
         ]},
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 6, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 1.9, low90CI: 1.6, high90CI: 2.3},
-            {id: 4, mean: 1.8, low90CI: 1.6, high90CI: 2.2},
-            {id: 5, mean: 2.0, low90CI: 2.0, high90CI: 2.21},
-            {id: 6, mean: 2.15, low90CI: 1.77, high90CI: 2.3}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 1.9, low95CI: 1.6, high95CI: 2.3},
+            {id: 4, mean: 1.8, low95CI: 1.6, high95CI: 2.2},
+            {id: 5, mean: 2.0, low95CI: 2.0, high95CI: 2.21},
+            {id: 6, mean: 2.15, low95CI: 1.77, high95CI: 2.3}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 6, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 1.7, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9},
-            {id: 4, mean: 1.9, low90CI: 1.8, high90CI: 2.0},
-            {id: 5, mean: 1.8, low90CI: 1.7, high90CI: 2.0},
-            {id: 6, mean: 1.93, low90CI: 1.62, high90CI: 1.94}
+            {id: 1, mean: 2.2, low95CI: 1.7, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9},
+            {id: 4, mean: 1.9, low95CI: 1.8, high95CI: 2.0},
+            {id: 5, mean: 1.8, low95CI: 1.7, high95CI: 2.0},
+            {id: 6, mean: 1.93, low95CI: 1.62, high95CI: 1.94}
         ]},
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 7, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.8, high90CI: 2.4},
-            {id: 3, mean: 1.9, low90CI: 1.6, high90CI: 2.3},
-            {id: 4, mean: 1.8, low90CI: 1.6, high90CI: 2.2},
-            {id: 5, mean: 2.0, low90CI: 2.0, high90CI: 2.21},
-            {id: 6, mean: 2.15, low90CI: 1.77, high90CI: 2.3},
-            {id: 7, mean: 1.76, low90CI: 1.5, high90CI: 2.2}
+            {id: 1, mean: 2.2, low95CI: 2.1, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.8, high95CI: 2.4},
+            {id: 3, mean: 1.9, low95CI: 1.6, high95CI: 2.3},
+            {id: 4, mean: 1.8, low95CI: 1.6, high95CI: 2.2},
+            {id: 5, mean: 2.0, low95CI: 2.0, high95CI: 2.21},
+            {id: 6, mean: 2.15, low95CI: 1.77, high95CI: 2.3},
+            {id: 7, mean: 1.76, low95CI: 1.5, high95CI: 2.2}
         ]},
         {condition: forTesting.condB, avgRestCoherence: 1.8, overlapCnt: 7, regimeStats: [
-            {id: 1, mean: 2.2, low90CI: 1.7, high90CI: 3.0},
-            {id: 2, mean: 2.0, low90CI: 1.7, high90CI: 2.0},
-            {id: 3, mean: 0.9, low90CI: 0.6, high90CI: 1.9},
-            {id: 4, mean: 1.9, low90CI: 1.8, high90CI: 2.0},
-            {id: 5, mean: 1.8, low90CI: 1.7, high90CI: 2.0},
-            {id: 6, mean: 1.93, low90CI: 1.62, high90CI: 1.94},
-            {id: 7, mean: 1.8, low90CI: 1.19, high90CI: 17.4}
+            {id: 1, mean: 2.2, low95CI: 1.7, high95CI: 3.0},
+            {id: 2, mean: 2.0, low95CI: 1.7, high95CI: 2.0},
+            {id: 3, mean: 0.9, low95CI: 0.6, high95CI: 1.9},
+            {id: 4, mean: 1.9, low95CI: 1.8, high95CI: 2.0},
+            {id: 5, mean: 1.8, low95CI: 1.7, high95CI: 2.0},
+            {id: 6, mean: 1.93, low95CI: 1.62, high95CI: 1.94},
+            {id: 7, mean: 1.8, low95CI: 1.19, high95CI: 17.4}
         ]},
     ])("for condition $condition with $overlapCnt overlapping regimes", ({condition, avgRestCoherence, overlapCnt, regimeStats}) => {
         it("should use the overlapping regimes (and only the overlapping regimes)", () => {
@@ -245,66 +256,26 @@ describe("Generating regimes for days 5+", () => {
             getAvgRestCoherence.mockReturnValue(avgRestCoherence);
             getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
             let targetCoh = condition === forTesting.condA ? Math.max(...(regimeStats.map(rs => rs.mean))) : avgRestCoherence;
-            const expectedRegimes = regimeStats.filter(rs => rs.low90CI <= targetCoh && rs.high90CI >= targetCoh);
+            const expectedRegimes = regimeStats.filter(rs => rs.low95CI <= targetCoh && rs.high95CI >= targetCoh);
             const res = generateRegimesForDay(condition, 14);
             expect(res.length).toBe(6);
             const expectedRegimeIds = expectedRegimes.map(er => er.id);
             expect(res.every(receivedRegime => expectedRegimeIds.includes(receivedRegime.id))).toBeTruthy();
             const receivedRegimeIds = res.map(r => r.id);
-            if (condition === forTesting.condA) {
-                let bestRegimeId = regimeStats[0].id;
-                let bestMean = regimeStats[0].mean;
-                expectedRegimeIds.splice(expectedRegimeIds.indexOf(bestRegimeId), 1);
-
-                if (overlapCnt <= 6) {
-                    expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
-                }
-                regimeStats.forEach(rs => {
-                    if (rs.mean > bestMean) {
-                        bestRegimeId = rs.id;
-                        bestMean = rs.mean;
-                    }
-                });
-                if (overlapCnt < 6 && overlapCnt > 1) {
-                    const bestRepeats = 6 - overlapCnt;
-                    expect(receivedRegimeIds[0] === bestRegimeId || receivedRegimeIds[5] === bestRegimeId).toBeTruthy();
-                    if (receivedRegimeIds[0] === bestRegimeId) {
-                        expect(receivedRegimeIds.slice(0, bestRepeats)).toEqual(Array(bestRepeats).fill(bestRegimeId));
-                    } else if (receivedRegimeIds[5] == bestRegimeId) {
-                        expect(receivedRegimeIds.slice(-bestRepeats)).toEqual(Array(bestRepeats).fill(bestRegimeId));
-                    }
-                }
-
-                if (overlapCnt == 6) {
-                    // we already checked that the received regimes contain all of the expected regimes
-                    // other than the best regime, so just check that here
-                    expect(receivedRegimeIds.includes(bestRegimeId)).toBeTruthy();
-                }
-    
-                if (overlapCnt > 6) {
-                    const idCount = {};
-                    res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
-                    // make sure no regime appears more than once
-                    expect(Object.values(idCount).every(cnt => cnt == 1)).toBeTruthy();
-                }
+            if (overlapCnt <= 6) { // if we have more than 6 regimes to pick from we aren't going to use all of them
+                expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
             }
-            if (condition === forTesting.condB) {
-                if (overlapCnt <= 6) { // if we have more than 6 regimes to pick from we aren't going to use all of them
-                    expect(expectedRegimeIds.every(id => receivedRegimeIds.includes(id))).toBeTruthy();
-                }
-                if (6 % overlapCnt === 0) {
-                    // check that every regime is evenly represented
-                    const idCount = {};
-                    res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
-                    expect(Object.values(idCount).every(v => v === 6 / Object.keys(idCount).length)).toBeTruthy();
-                }
+            if (6 % overlapCnt === 0) {
+                // check that every regime is evenly represented
+                const idCount = {};
+                res.forEach(r => idCount[r.id] = idCount[r.id] ? idCount[r.id] + 1 : 1);
+                expect(Object.values(idCount).every(v => v === 6 / Object.keys(idCount).length)).toBeTruthy();
             }
         });
     });
 });
 
 import { getRegimesForDay, getSegmentsAfterDate, getTrainingDayCount } from '../src/breath-data';
-import { rightArithShift } from "mathjs";
 
 /**
  * Given a list of regimes, return those that can be completed within durationMs.

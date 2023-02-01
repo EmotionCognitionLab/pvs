@@ -1,8 +1,5 @@
 module.exports = {
     target: 'node',
-    externals: [
-      'better-sqlite3'
-    ],
     module: {
         rules: [
             {

@@ -37,7 +37,7 @@ import test_introduction_html from "./frag/test/introduction.html";
 export class NBack {
     constructor(setNum) {
         // check for training block
-        if (setNum === 1 || setNum === 7) {
+        if (setNum === 1) {
             this.training = true;
         } else if (Number.isInteger(setNum) && setNum > 0) {
             this.training = false;
@@ -50,7 +50,13 @@ export class NBack {
         const i = this.constructor.simpleInstruction;  // helper for simple instruction trials
         const test_block = [
             i(test_introduction_html),
-            ...this.randTrialGroup(0),
+            ...this.randTrialGroup(0),  // 0
+            ...this.randTrialGroup(1),
+            ...this.randTrialGroup(2),
+            ...this.randTrialGroup(0),  // 1
+            ...this.randTrialGroup(1),
+            ...this.randTrialGroup(2),
+            ...this.randTrialGroup(0),  // 2
             ...this.randTrialGroup(1),
             ...this.randTrialGroup(2, undefined, undefined, undefined, false)
         ];

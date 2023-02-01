@@ -58,6 +58,14 @@ describe("Demographics", () => {
         checkRequiredAndDisabledAttrs([bi1Text, bi2Text], false);
     });
 
+    it("should require a date of vaccination if you say you are vaccinated", () => {
+        const firstDose = document.getElementById("1stdose");
+        expect(firstDose.required).toBe(false);
+        const vaxed = document.getElementById("covidVaxY");
+        vaxed.click();
+        expect(firstDose.required).toBe(true);
+    });
+
     it("should require you to say which psychiatric disorder if you say you've been diagnosed with one", () => {
         const psychDiagWhich = document.getElementById("psychDiagWhich");
         expect(psychDiagWhich.required).toBe(false);
@@ -172,7 +180,7 @@ function checkRequiredAndDisabledAttrs(elemList, required) {
 }
 
 function fillMinimumForm() {
-    const clickIds = ["aa", "ethH", "retiredN", "everSmokedY", "psychDiagN", "heartDisease", "thyroidMed"];
+    const clickIds = ["aa", "ethH", "retiredN", "covidVaxN", "everSmokedY", "psychDiagN", "heartDisease", "thyroidMed"];
     clickIds.forEach(elem => document.getElementById(elem).click());
 
     document.getElementById("educationYears").value = 2;

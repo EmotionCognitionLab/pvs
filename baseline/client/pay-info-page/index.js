@@ -19,21 +19,19 @@ function handleError(err) {
 }
 
 getAuth(
-    async session => {
+    session => {
         try {
             const idToken = getIdToken(session);
             const targetId = parseTargetId(window.location.search) ?? idToken.sub;
             const client = new ApiClient(session);
-            const isAdmin = hasPreferredRole(idToken, awsSettings.AdminRole);
-            const user = isAdmin ? await client.getUser(targetId) : await client.getSelf();
             const payboard = new Payboard(
                 payboardDiv,
                 errorDiv,
-                client,
-                user,
-                isAdmin,
+                new ApiClient(session),
+                targetId,
+                hasPreferredRole(idToken, awsSettings.AdminRole),
             );
-            await payboard.init();
+            payboard.refresh();
         } catch (err) {
             handleError(err);
         }
