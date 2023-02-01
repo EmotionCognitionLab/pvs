@@ -2,7 +2,7 @@
     <div class="instruction" v-if="!done">
         <slot name="preText">
             When you are ready to rest for 5 minutes while measuring your heart rate, please connect your pulse sensor to your ear and to the computer and press the start button.
-            Please remember to sit on a chair with your feet flat on the floor and hands resting on your legs during this portion.
+            Please remember to sit on a chair with your feet flat on the floor and hands resting on your legs. Please rest and do not do anything during this portion.
         </slot>
         <EmWaveListener :showIbi=false @pulseSensorCalibrated="startTimer" @pulseSensorStopped="sensorStopped" @pulseSensorSignalLost="sensorStopped" @pulseSensorSignalRestored="startTimer" @pulseSensorSessionEnded="resetTimer" ref="emwaveListener"/> 
         <br/>
@@ -17,7 +17,6 @@
     </div>
 </template>
 <script setup>
-import { ipcRenderer } from 'electron'
 import { ref } from '@vue/runtime-core'
 import EmWaveListener from './EmWaveListener.vue'
 import TimerComponent from './TimerComponent.vue'
@@ -28,8 +27,9 @@ const done = ref(false)
 const emit = defineEmits(['timer-finished'])
 let timerDone = false
 
-function startTimer() {
+async function startTimer() {
     timer.value.running = true
+    await window.mainAPI.disableMenus()
 }
 
 function sensorStopped() {
@@ -53,7 +53,7 @@ function stopSession() {
 }
 
 function quit() {
-    ipcRenderer.invoke('quit')
+    window.mainAPI.quit()
 }
 
 </script>

@@ -2,9 +2,18 @@
 
 import "@adp-psych/jspsych/jspsych.js";
 import "@adp-psych/jspsych/plugins/jspsych-fullscreen.js";
+import "@adp-psych/jspsych/plugins/jspsych-html-button-response.js";
 import "css/common.css";
+
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 import { DailyStressors } from "../daily-stressors/daily-stressors.js";
 import { Demographics } from "../demographics/demographics.js";
+import { EmotionalMemory } from "../emotional-memory/emotional-memory.js";
 import { Ffmq } from "../ffmq/ffmq.js";
 import { Flanker } from "../flanker/flanker.js";
 import { MoodMemory } from "../mood-memory/mood-memory.js";
@@ -23,21 +32,31 @@ import { PatternSeparation } from "../pattern-separation/pattern-separation.js";
 import { MindEyes } from "../mind-eyes/mind-eyes.js";
 import { Dass } from "../dass/dass.js";
 import { PhysicalActivity } from "../physical-activity/physical-activity.js";
+import { SleepSurvey } from "../sleep-survey/sleep-survey.js";
 import { SpatialOrientation } from "../spatial-orientation/spatial-orientation.js";
+import { Video } from "../video/video.js";
 import version from "../version.json";
+import ApiClient from "../../../common/api/client.js";
 
 /**
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
  * to the user in the correct order.
  */
-
-const set1 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["demographics", "physical-activity", "panas", "daily-stressors", "verbal-fluency", "n-back", "pattern-separation-learning", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
+const set1 = ["video", "mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
+const set2 = ["physical-activity", "pattern-separation-learning", "demographics",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
-const set4 = ["panas", "daily-stressors", "ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "pattern-separation-recall"];
-const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "verbal-learning-recall"];
-const set6 = ["mood-memory", "panas", "daily-stressors", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
-const allSets = [set1, set2, set3, set4, set5, set6];
+const set4 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];
+const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "daily-stressors", "verbal-learning-recall"];
+const set6 = ["mood-memory", "emotional-memory", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall", "video"];
+const set7 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
+const set8 = ["pattern-separation-learning",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
+const set9 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
+const set10 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];
+const set11 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "daily-stressors", "verbal-learning-recall"];
+const set12 = ["mood-memory", "emotional-memory", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall"];
+
+const preInterventionSetCount = 6;
+const allSets = [set1, set2, set3, set4, set5, set6, set7, set8, set9, set10, set11, set12];
 const setFinished = "set-finished";
 const setStarted = "set-started";
 const doneForToday = "done-for-today";
@@ -45,6 +64,7 @@ const allDone = "all-done";
 const startNewSetQuery = "start-new-set-query";
 let logger;
 let db;
+let homeComplete = false;
 
 /**
  * 
@@ -118,8 +138,8 @@ function getSetAndTasks(allResults, saveResultsCallback) {
 }
 
 function allDoneTimeline(highestFinishedSetNum) {
-    if (highestFinishedSetNum === allSets.length) {
-        return { set: allSets.length, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] };
+    if ((highestFinishedSetNum === preInterventionSetCount && !homeComplete) || highestFinishedSetNum === allSets.length) {
+        return { set: highestFinishedSetNum, remainingTasks: [{timeline: [allDoneMessage], taskName: allDone}] };
     } else {
         return { set: highestFinishedSetNum, remainingTasks: [{timeline: [doneForTodayMessage], taskName: doneForToday}] };
     }
@@ -257,6 +277,8 @@ function taskForName(name, options) {
             return new Dass();
         case "demographics":
             return new Demographics();
+        case "emotional-memory":
+            return new EmotionalMemory(options.setNum || 1);
         case "face-name":
             return new FaceName(options.setNum || 1);
         case "ffmq":
@@ -279,6 +301,8 @@ function taskForName(name, options) {
             return new PatternSeparation(options.setNum || 1, true);
         case "physical-activity":
             return new PhysicalActivity();
+        case "sleep-survey":
+            return new SleepSurvey();
         case "spatial-orientation":
             return new SpatialOrientation(options.setNum || 1);
         case "task-switching":
@@ -305,6 +329,8 @@ function taskForName(name, options) {
             return new VerbalLearning(options.setNum || 1, 1);
         case "verbal-learning-recall":
             return new VerbalLearning(options.setNum || 1, 2, verbalLearningEndTime.bind(this));
+        case "video":
+            return new Video(options.setNum);
         default:
            // throw new Error(`Unknown task type: ${name}`);
            return {getTimeline: () => taskNotAvailable(name), taskName: name}; // TODO remove this and throw error instead once we have code for all tasks
@@ -339,6 +365,8 @@ function canDoAdditionalSet(highestStartedSet, highestFinishedSet) {
     if (highestStartedSet === null && highestFinishedSet === null) return false;
 
     if (highestFinishedSet && highestFinishedSet.results.setNum === allSets.length) return false;
+
+    if (highestFinishedSet && highestFinishedSet.results.setNum === preInterventionSetCount && !homeComplete) return false;
 
     if (highestFinishedSet && ( highestStartedSet === null ||
         highestStartedSet.results.setNum < highestFinishedSet.results.setNum || 
@@ -384,9 +412,23 @@ function init() {
 
 async function doAll(session) {
     try {
+        const client = new ApiClient(session);
+        const user = await client.getSelf();
+        if (user.startDate) {
+            const start = dayjs(user.startDate).tz('America/Los_Angeles', true);
+            const now = dayjs().tz('America/Los_Angeles');
+            if (start.isAfter(now)) {
+                // show 'come back later' message
+                jsPsych.init({
+                    timeline: [returnOnStartDateMessage(start.format('MM/DD/YYYY'))]
+                });
+                return;
+            }
+        }
+        homeComplete = user.homeComplete || false;
         db = new Db({session: session});
         // pre-fetch all results before doing browser check to avoid
-        // lag after btowser check sends them to start experiments
+        // lag after browser check sends them to start experiments
         const allResults = await db.getAllResultsForCurrentUser();
         await browserCheck.run(startTasks.bind(null, allResults, saveResultsCallback), session);
     } catch (err) {
@@ -421,7 +463,11 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
     tasks[taskIdx].on_timeline_finish = () => {
         const computerDetails = browserCheck.fetchCurrentProfile();
         saveResultsCallback(tasks[taskIdx].taskName, [{ua: window.navigator.userAgent, screen: computerDetails[browserCheck.screenSizeKey], v: version.v}]);
-        if (taskIdx === tasks.length - 2) { // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+        
+        // -2 b/c the "all done" screen is its own timeline that will never finish b/c there's nothing to do on that screen
+        // check for startNewSetQuery b/c that means that we've been passed a set of tasks that
+        // spans multiple sets
+        if (taskIdx === tasks.length - 2 || tasks[taskIdx + 1].taskName === startNewSetQuery) {
             saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
         } 
         if (taskIdx < tasks.length - 1) {
@@ -524,11 +570,22 @@ const generalProgressMessage = (setNum) => ({
 });
 
 
+const returnOnStartDateMessage = (startDateStr) => ({
+    type: "html-button-response",
+    stimulus: `You are currently scheduled to start the HeartBEAM experiment on ${startDateStr}. Please come back then to begin your assessment.`,
+    choices: []
+});
+
 if (window.location.href.includes("daily-tasks")) {
     init();
 }
 
-export { getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery, startTasks };
+// ugh. need this so that tests can set homeComplete.
+function setHomeComplete(someVal) {
+    homeComplete = someVal;
+}
+
+export { setHomeComplete, preInterventionSetCount, getSetAndTasks, allSets, taskForName, doneForToday, allDone, runTask, setFinished, setStarted, startNewSetQuery, startTasks };
 
 
 

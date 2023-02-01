@@ -7,6 +7,7 @@
  import DynamoDB from 'aws-sdk/clients/dynamodb.js';
  import { Logger } from "../logger/logger.js";
  import { getAuth } from "../auth/auth.js";
+ import { earningsTypes } from "../types/types.js";
  
  'use strict';
 
@@ -15,11 +16,14 @@ export default class Db {
         this.region = options.region || awsSettings.AWSRegion;
         this.identityPoolId = options.identityPoolId || awsSettings.IdentityPoolId;
         this.userPoolId = options.userPoolId || awsSettings.UserPoolId;
+        this.earningsTable = options.earningsTable || awsSettings.EarningsTable;
         this.experimentTable = options.experimentTable || awsSettings.ExperimentTable;
-        this.lumosTable = options.lumosTable || awsSettings.LumosTable;
+        this.lumosAcctTable = options.lumosAcctTable || awsSettings.LumosAcctTable;
+        this.lumosPlaysTable = options.lumosPlaysTable || awsSettings.LumosPlaysTable;
         this.userExperimentIndex = options.userExperimentIndex || awsSettings.UserExperimentIndex;
         this.usersTable = options.usersTable || awsSettings.UsersTable;
         this.dsTable = options.dsTable || awsSettings.DsTable;
+        this.segmentsTable = options.segmentsTable || awsSettings.SegmentsTable;
         this.session = options.session || null;
         if (!options.session) {
             this.docClient = new DynamoDB.DocumentClient({region: this.region});
@@ -206,25 +210,129 @@ export default class Db {
     }
 
     async getBaselineIncompleteUsers(preOrPost) {
-        let filter;
-    
-        if (preOrPost === 'pre') {
-            filter = 'attribute_not_exists(preComplete) or preComplete = :f';
-        } else if (preOrPost === 'post') {
-            filter = 'attribute_not_exists(postComplete) or postComplete = :f';
-        } else {
+        return await this.getUsersByBaselineStatus(preOrPost, 'incomplete');
+    }
+
+    async getBaselineCompleteUsers(preOrPost) {
+        return await this.getUsersByBaselineStatus(preOrPost, 'complete');
+    }
+
+    async getUsersByBaselineStatus(preOrPost, status) {
+        if (preOrPost !== 'pre' && preOrPost !== 'post') {
             throw new Error(`Expected preOrPost to be either 'pre' or 'post' but received "${preOrPost}".`);
         }
-    
+
+        if (status !== 'complete' && status !== 'incomplete') {
+            throw new Error(`Expected status to be either 'complete' or 'incomplete' but received "${status}".`);
+        }
+
+        const preOrPostAttr = preOrPost === 'pre' ? 'preComplete' : 'postComplete'
+        let filter;
+        let attrValues;
+        if (status === 'incomplete') {
+            filter = `attribute_not_exists(${preOrPostAttr}) or ${preOrPostAttr} = :f`;
+            attrValues = { ':f': false };
+        } else {
+            filter = `${preOrPostAttr} = :t`;
+            attrValues = { ':t': true };
+        }
+
         try {
             const params = {
                 TableName: this.usersTable,
                 FilterExpression: filter,
-                ExpressionAttributeValues: { ':f': false }
+                ExpressionAttributeValues: attrValues
             };
             const dynResults = await this.scan(params);
             return dynResults.Items;
             
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async getHomeTrainingInProgressUsers() {
+        try {
+            const params = {
+                TableName: this.usersTable,
+                FilterExpression: 'preComplete = :t and (homeComplete = :f or attribute_not_exists(homeComplete))',
+                ExpressionAttributeValues: {':t': true, ':f': false}
+            };
+            const dynResults = await this.scan(params);
+            return dynResults.Items;
+            
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async segmentsForUser(humanId, startDate = new Date(0), endDate = new Date(1000 * 60 * 60 * 24 * 365 * 1000)) {
+        const startDateEpoch = Math.floor(startDate.getTime() / 1000);
+        const endDateEpoch = Math.floor(endDate.getTime() / 1000);
+        try {
+            const params = {
+                TableName: this.segmentsTable,
+                KeyConditionExpression: 'humanId = :hId and endDateTime between :st and :et',
+                ExpressionAttributeValues: { ':hId': humanId, ':st': startDateEpoch, ':et': endDateEpoch }
+            };
+
+            const results = await this.query(params);
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async lumosPlaysForUser(userId, sinceDate = new Date(0)) {
+        const sinceDateYYYYMMDD = `${sinceDate.getFullYear()}-${(sinceDate.getMonth() + 1).toString().padStart(2,0)}-${sinceDate.getDate().toString().padStart(2, 0)}`
+        try {
+            const params = {
+                TableName: this.lumosPlaysTable,
+                KeyConditionExpression: 'userId = :userId and #dateTime >= :dt',
+                ExpressionAttributeNames: { '#dateTime': 'dateTime' },
+                ExpressionAttributeValues: { ':userId': userId, ':dt': sinceDateYYYYMMDD },
+            };
+
+            const results = await this.query(params);
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async earningsForUser(userId, type = null) {
+        try {
+            const params =  {
+                TableName: this.earningsTable,
+                KeyConditionExpression: 'userId = :uid',
+                ExpressionAttributeValues: {
+                    ':uid': userId,
+                }
+            };
+            if (type) {
+                params.KeyConditionExpression += ' and begins_with(typeDate, :td)';
+                params.ExpressionAttributeValues[':td'] = type;
+            }
+
+            const results = await this.query(params);
+            return results.Items.map(i => {
+                const parts = i.typeDate.split('|');
+                if (parts.length !== 2) {
+                    throw new Error(`Unexpected typeDate value: ${i.typeDate}. Expected two parts, but found ${parts.length}.`);
+                }
+                const type = parts[0];
+                const date = parts[1];
+                return {
+                    userId: i.userId,
+                    type: type,
+                    date: date,
+                    amount: i.amount
+                };
+            });
         } catch (err) {
             this.logger.error(err);
             throw err;
@@ -242,9 +350,10 @@ export default class Db {
                 const propVal = `:${prop}`
                 expressionAttrNames[propName] = prop;
                 expressionAttrVals[propVal] = updates[prop];
-                updateExpression += ` ${propName} = ${propVal}`
+                updateExpression += ` ${propName} = ${propVal},`
             }
         }
+        updateExpression = updateExpression.slice(0, -1); // drop the trailing comma
         if (Object.keys(expressionAttrVals).length < 1) {
             throw new Error("You must provide an update to at least one allowed attribute.");
         }
@@ -277,6 +386,22 @@ export default class Db {
         }
         if (dynResults.Items.length > 1) {
             throw new Error(`Found multiple users with userId ${userId}.`);
+        }
+        return dynResults.Items[0];
+    }
+
+    async getUserByEmail(email) {
+        const params = {
+            TableName: this.usersTable,
+            FilterExpression: "email = :email",
+            ExpressionAttributeValues: { ":email": email }
+        };
+        const dynResults = await this.scan(params);
+        if (dynResults.Items.length === 0) {
+            return {};
+        }
+        if (dynResults.Items.length > 1) {
+            throw new Error(`Found multiple users with email ${email}.`);
         }
         return dynResults.Items[0];
     }
@@ -342,6 +467,43 @@ export default class Db {
         this.logger.error(`Max tries exceeded. Dynamo op: ${fnName}. Parameters: ${JSON.stringify(params)}`);
     }
 
+    async saveEarnings(userId, earningsType, date) {
+        let amount;
+        switch(earningsType) {
+            case earningsTypes.PRE:
+            case earningsTypes.POST:
+                amount = 30;
+                break;
+            case earningsTypes.VISIT1:
+            case earningsTypes.VISIT2:
+            case earningsTypes.VISIT3:
+            case earningsTypes.VISIT4:
+            case earningsTypes.VISIT5:
+                amount = 50;
+                break;
+            case earningsTypes.LUMOS_AND_BREATH_1:
+            case earningsTypes.BREATH_BONUS:
+                amount = 1;
+                break;
+            case earningsTypes.BREATH2:
+            case earningsTypes.LUMOS_BONUS:
+                amount = 2;
+                break;
+            default:
+                throw new Error(`Unrecognized earnings type ${earningsType}.`);
+        }
+        const params = {
+            TableName: this.earningsTable,
+            Key: {
+                userId: userId,
+                typeDate: `${earningsType}|${date}`
+            },
+            UpdateExpression: `set amount = :amount`,
+            ExpressionAttributeValues: { ':amount': amount }
+        };
+        await this.update(params);
+    }
+
     async saveDsOAuthCreds(userId, accessToken, refreshToken, expiresAt) {
         const params = {
             TableName: this.dsTable,
@@ -362,6 +524,63 @@ export default class Db {
         try {
             const dynResults = await this.update(params);
             return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async saveDsSigningInfo(envelopeId, name, email) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { envelopeId: envelopeId },
+            UpdateExpression: "set #name = :name, #email = :email, #dateTime = :dateTime",
+            ExpressionAttributeNames: {
+                "#name": "name",
+                "#email": "email",
+                "#dateTime": "dateTime"
+            },
+            ExpressionAttributeValues: {
+                ":name": name,
+                ":email": email,
+                ":dateTime": (new Date()).toISOString()
+            }
+        };
+        try {
+            await this.update(params);
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async getDsSigningInfo(envelopeId) {
+        const params = {
+            TableName: this.dsTable,
+            KeyConditionExpression: `envelopeId = :envelopeId` ,
+            ExpressionAttributeValues: { ":envelopeId": envelopeId }
+        };
+        try {
+            return await this.query(params);
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
+    async saveDsRegInstructionsSent(envelopeId) {
+        const params = {
+            TableName: this.dsTable,
+            Key: { envelopeId: envelopeId },
+            UpdateExpression: "set #emailed = :dateTime",
+            ExpressionAttributeNames: {
+                "#emailed": "emailed"            },
+            ExpressionAttributeValues: {
+                ":dateTime": (new Date()).toISOString()
+            }
+        }
+        try {
+            return await this.update(params);
         } catch (err) {
             this.logger.error(err);
             throw err;

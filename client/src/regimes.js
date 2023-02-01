@@ -52,32 +52,31 @@ const day3And4BRegimes = [...day1BRegimes, ...day2BRegimes];
 /**
  * Given a list of potential regimes, return a list of six regimes. (Unless there are no potential regimes,
  * in which case it returns an empty list.)
+ * @param {Object} bestRegime the regime that is currently "best", or null if subjCondition is condB
  * @param {Array} potentialRegimes Array of regimes 
  * @param {string} subjCondition The experimental conditon the subject is assigned to
  * @returns A list of six regimes or an empty list.
  */
- function pickRegimes(potentialRegimes, subjCondition) {
-    if (subjCondition !== condA && subjCondition !== condB) {
-        throw new Error(`Unexpected subject condition '${subjCondition}'. Expected either '${condA}' or '${condB}'.`);
-    }
-
-    if (potentialRegimes.length === 0) return [];
-
-    if (potentialRegimes.length === 1) {
-        if (subjCondition === condA) {
-            const r = potentialRegimes[0];
-            const bestTimes = r.is_best_cnt + 1;
+ function pickRegimes(bestRegime, potentialRegimes, subjCondition) {
+    if (subjCondition === condA) {
+        if (potentialRegimes.length === 0) {
+            // then we have only one potential regime - the bestRegime
+            // make some new ones
+            const r = bestRegime;
+            const bestTimes = r.isBestCnt + 1;
             const newPaceDiff = 1 / (2 ** bestTimes);
             const newLowRegime = Object.assign({}, r);
             delete(newLowRegime.id);
+            newLowRegime.isBestCnt = 0;
             newLowRegime.breathsPerMinute -= newPaceDiff;
             const newHighRegime = Object.assign({}, r);
             delete(newHighRegime.id);
+            newHighRegime.isBestCnt = 0;
             newHighRegime.breathsPerMinute += newPaceDiff;
-            r.is_best_cnt = bestTimes;
+            r.isBestCnt = bestTimes;
 
             // save new regimes + changes to old one
-            setRegimeBestCnt(r.id, r.is_best_cnt);
+            setRegimeBestCnt(r.id, r.isBestCnt);
 
             const highRegimeId = getRegimeId(newHighRegime);
             const lowRegimeId = getRegimeId(newLowRegime);
@@ -85,30 +84,72 @@ const day3And4BRegimes = [...day1BRegimes, ...day2BRegimes];
             newLowRegime.id = lowRegimeId;
 
             return arrayShuffle([newLowRegime, r, newHighRegime, newLowRegime, r, newHighRegime]);
-
-        } else {
-            return Array(6).fill(potentialRegimes[0], 6);
         }
-    }
 
-    if (potentialRegimes.length === 2) { // use both 3 times
-        return arrayShuffle([...potentialRegimes, ...potentialRegimes, ...potentialRegimes]);
-    }
-
-    if (potentialRegimes.length === 3) { // use all 3 twice
-        return arrayShuffle([...potentialRegimes, ...potentialRegimes]);
-    }
-
-    if (potentialRegimes.length >= 4) { // use what we have and if it's < 6 re-use random elems to get to 6
-        let neededElems = potentialRegimes.length > 6 ? 6 : 6 - potentialRegimes.length;
-        const res = potentialRegimes.length <= 6 ? [...potentialRegimes] : [];
-        while (neededElems !== 0) {
-            const randIdx = Math.floor(Math.random() * potentialRegimes.length);
-            res.push(potentialRegimes.slice(randIdx, randIdx + 1)[0]);
-            neededElems--;
+        if (potentialRegimes.length < 5) {
+            const bestSpot = Math.random() < 0.5 ? 'front' : 'back';
+            const bestSlotCount = 6 - potentialRegimes.length;
+            const bestArr = Array(bestSlotCount).fill(bestRegime);
+            const remainingArr = arrayShuffle([...potentialRegimes]);
+            if (bestSpot === 'front') {
+                return [...bestArr, ...remainingArr];
+            }
+            return [...remainingArr, ...bestArr];
         }
-        return arrayShuffle(res);
-    } 
+
+        if (potentialRegimes.length === 5) {
+            return arrayShuffle([bestRegime, ...potentialRegimes]);
+        }
+
+        // more than six options
+        const options = [bestRegime, ...potentialRegimes];
+        const chosenIdxs = [];
+        const res = [];
+        for (let i = 0; i < options.length; i++) chosenIdxs.push(i);
+        arrayShuffle(chosenIdxs);
+        for (let i = 0; i < 6; i++) {
+            res.push(options[chosenIdxs.pop()]);
+        }
+        return res;
+
+    } else if (subjCondition === condB) {
+        switch (potentialRegimes.length) {
+            case 0:
+                return [];
+            case 1:
+               return Array(6).fill(potentialRegimes[0]);
+            case 2:
+                return arrayShuffle([...potentialRegimes, ...potentialRegimes, ...potentialRegimes]);
+            case 3:
+                return arrayShuffle([...potentialRegimes, ...potentialRegimes]);
+            case 4:
+            case 5: {
+                const res = [...potentialRegimes];
+                const remainderIdxs = [];
+                for (let i = 0; i < 6 - potentialRegimes.length; i++) {
+                    remainderIdxs[i] = i;
+                }
+                arrayShuffle(remainderIdxs);
+                while (remainderIdxs.length > 0) {
+                    res.push(potentialRegimes[remainderIdxs.pop()]);
+                }
+                return arrayShuffle(res);
+            }
+                
+            default: {
+                const chosenIdxs = [];
+                for (let i = 0; i < potentialRegimes.length; i++) chosenIdxs.push(i);
+                arrayShuffle(chosenIdxs);
+                const res = [];
+                for (let i = 0; i < 6; i++) {
+                    res.push(potentialRegimes[chosenIdxs.pop()]);
+                }
+                return res;
+            }   
+        }
+    } else {
+        throw new Error(`Unexpected subject condition '${subjCondition}'. Expected either '${condA}' or '${condB}'.`);
+    }
 }
 
 function arrayShuffle(arr) {
@@ -164,14 +205,21 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
         const allRegimes = getPracticedRegimeIds(stage);
         const regimeStats = allRegimes.map(id => getRegimeStats(id, stage));
 
-        let targetAvgCoherence;
+        let targetAvgCoherence = -10000;
+        let bestRegimeId;
         if (subjCondition === condA) {
-            targetAvgCoherence = Math.max(...(regimeStats.map(rs => rs.mean)));
+            regimeStats.forEach(rs => {
+                if (rs.mean > targetAvgCoherence) {
+                    targetAvgCoherence = rs.mean;
+                    bestRegimeId = rs.id;
+                }
+            });
         } else {
-            targetAvgCoherence = getAvgRestCoherence(stage);
+            targetAvgCoherence = getAvgRestCoherence(2);
+            // we intentionally leave bestRegimeId null here
         }
-        const overlappingRegimes = regimeStats.filter(s => s.low95CI <= targetAvgCoherence && s.high95CI >= targetAvgCoherence);
-        regimes = pickRegimes(overlappingRegimes.map(olr => lookupRegime(olr.id)), subjCondition);
+        const overlappingRegimes = regimeStats.filter(s => s.low90CI <= targetAvgCoherence && s.high90CI >= targetAvgCoherence && s.id !== bestRegimeId);
+        regimes = pickRegimes(lookupRegime(bestRegimeId), overlappingRegimes.map(olr => lookupRegime(olr.id)), subjCondition);
         if (regimes.length === 0) {
             if (subjCondition === condA) {
                 throw new Error('Found 0 possible regimes for training.');
@@ -179,9 +227,9 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
                 // this is possible, though unlikely, in condition b
                 console.warn('Found 0 possible regimes for training in condition b; picking regime with coherence closest to rest.');
                 const closestToRest = regimeStats.reduce((prev, cur) => {
-                    return Math.abs(cur.avg_coherence - targetAvgCoherence) < Math.abs(prev.avg_coherence - targetAvgCoherence) ? cur : prev;
+                    return Math.abs(cur.mean - targetAvgCoherence) < Math.abs(prev.mean - targetAvgCoherence) ? cur : prev;
                 },
-                {avg_coherence: Number.MAX_SAFE_INTEGER}
+                {mean: Number.MAX_SAFE_INTEGER}
                 );
                 const closestRegime = lookupRegime(closestToRest.id);
                 if (!closestRegime) {

@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="overflow: hidden;">
         <canvas ref="pacer" width="1200" height="400"></canvas>
     </div>
 </template>
