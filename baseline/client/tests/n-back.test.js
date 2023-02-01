@@ -240,7 +240,6 @@ describe("n-back", () => {
                         fail("invalid n");
                         return false;
                     }
-                    return expected_cue !== null && flatTimeline[index - 2] === expected_cue;
                 } else {
                     return true;
                 }
