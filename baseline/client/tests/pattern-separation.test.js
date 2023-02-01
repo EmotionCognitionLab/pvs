@@ -46,7 +46,7 @@ describe("PatternSeparation learning phase", () => {
 
     it("should randomize the order of the stimuli", () => {
         const tl2 = (new PatternSeparation(2, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
-        for (let i of [2,3,5,7,8]) { // timeline entries that aren't instructions
+        for (let i of [3,5,7,10,12]) { // timeline entries that aren't instructions
             expect(tl[i].timeline_variables.length).toEqual(tl2[i].timeline_variables.length);
             expect(tl2[i].timeline_variables).toEqual(expect.arrayContaining(tl[i].timeline_variables));
             expect(tl[i].timeline_variables).not.toStrictEqual(tl2[i].timeline_variables);
@@ -54,14 +54,13 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should show the stimuli twice during the learning phase, using the same order the second time", () => {
-        expect(tl[2].timeline_variables).toStrictEqual(tl[3].timeline_variables);
-        expect(tl[7].timeline_variables).toStrictEqual(tl[8].timeline_variables);
+        expect(tl[3].timeline_variables).toStrictEqual(tl[5].timeline_variables);
+        expect(tl[10].timeline_variables).toStrictEqual(tl[12].timeline_variables);
     });
 
     it("should use the shoebox prompt on the first showing of a learning stimulus", () => {
-        pressKey(" ");
-        pressKey(" ");
-        for (let i=0; i<tl[2].timeline_variables.length; i++) {
+        skipInstructions();
+        for (let i=0; i<tl[3].timeline_variables.length; i++) {
             const prompt = document.getElementById("prompt").innerHTML;
             expect(prompt).toMatch(/shoe box/);
             pressKey("y");
@@ -70,13 +69,13 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should use the right hand prompt on the second showing of a learning stimulus", () => {
-        pressKey(" ");
-        pressKey(" ");
-        for (let i=0; i<tl[2].timeline_variables.length; i++) {
+        skipInstructions();
+        for (let i=0; i<tl[3].timeline_variables.length; i++) {
             pressKey("y");
             jest.advanceTimersByTime(3000);
         }
-        for (let i=0; i<tl[3].timeline_variables.length; i++) {
+        pressKey(" "); // skip the round 2 screen
+        for (let i=0; i<tl[5].timeline_variables.length; i++) {
             const prompt = document.getElementById("prompt").innerHTML;
             expect(prompt).toMatch(/right hand/);
             pressKey("y");
@@ -99,8 +98,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should keep learning stimuli on the screen for 3000ms if the user responds to the prompt", () => {
-        pressKey(" ");
-        pressKey(" ");
+        skipInstructions();
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
         pressKey("y");
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
@@ -111,8 +109,7 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should keep learning stimuli on the screen for 3000ms if the user doesn't respond to the prompt", () => {
-        pressKey(" ");
-        pressKey(" ");
+        skipInstructions();
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
         jest.advanceTimersByTime(2999);
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
@@ -120,9 +117,8 @@ describe("PatternSeparation learning phase", () => {
         expect(document.getElementsByTagName("img").length).toBe(0);
     });
 
-    it("should keep learning stimuli on the screen for 2500ms during the actual (non-practice) test", () => {
-        pressKey(" ");
-        pressKey(" ");
+    it("should keep learning stimuli on the screen for 3000ms during the actual (non-practice) test", () => {
+        skipInstructions();
         for (let i=0; i<stimuli["Practice"].length * 2; i++) {
             jest.advanceTimersByTime(3000);
         }
@@ -132,21 +128,20 @@ describe("PatternSeparation learning phase", () => {
         }
         pressKey(" ");
         const img = document.getElementsByTagName("img")[0].getAttribute("src");
-        jest.advanceTimersByTime(2499);
+        jest.advanceTimersByTime(2999);
         expect(document.getElementsByTagName("img")[0].getAttribute("src")).toBe(img);
         jest.advanceTimersByTime(2);
         expect(document.getElementsByTagName("img").length).toBe(0);
     });
 
     it("should tell the user to answer faster if they don't answer within 3000ms", () => {
-        pressKey(" ");
-        pressKey(" ");
+        skipInstructions();
         jest.advanceTimersByTime(3000);
         expect(jsPsych.getDisplayElement().innerHTML).toMatch(/Answer faster/);
     });
 
     it("should only show learning stimuli when isRecall is false (excluding practice)", () => {
-        for (let node of tl.slice(7)) { // entries 0-6 are instructions and practice
+        for (let node of tl.slice(8)) { // entries 0-7 are instructions and practice
             if (node.timeline) {
                 const subTl = node.timeline[0];
                 expect(subTl.prompt).not.toMatch(/1 = definitely old/);
@@ -156,11 +151,11 @@ describe("PatternSeparation learning phase", () => {
     });
 
     it("should show different stimuli for different sets", () => {
-        const tl2 = (new PatternSeparation(4)).getTimeline().slice(1); // drop preload; doesn't play well with jest
-        for (let i=7; i<tl.length; i++) { // entries 0-6 are instructions and practice in set 1
+        const tl2 = (new PatternSeparation(4, false)).getTimeline().slice(1); // drop preload; doesn't play well with jest
+        for (let i=10; i<tl.length; i++) { // entries 0-9 are instructions and practice in set 2
             const node = tl[i];
-            expect(node.timeline_variables);
-            expect(node.timeline_variables).not.toStrictEqual(tl2[i - 7].timeline_variables); // -7 because set 3 should not have proactice
+            if (!node.timeline_variables) continue;
+            expect(node.timeline_variables).not.toStrictEqual(tl2[i - 10].timeline_variables); // -10 because set 4 should not have practice
         }
     });
 });
@@ -194,15 +189,20 @@ describe("PatternSeparation recall phase", () => {
     it("should show all of the practice recall stimuli during practice", () => {
         const practiceTl = (new PatternSeparation(2, false)).getTimeline().slice(1); // drop preload
         const practiceStim = stimuli["Practice"];
-        const practiceRecallIdx = 2 + 1 + 1 + 1; // 2 instructions, shoebox, right hand, 1 instruction
+        const practiceRecallIdx = 7;
         expect(practiceTl[practiceRecallIdx].timeline_variables.length).toBe(practiceStim.length);
     });
 
 });
 
-function doFirstTrial() {
+function skipInstructions() {
     pressKey(" "); // first instruction screen
     pressKey(" "); // second instruction screen
+    pressKey(" "); // third instruction screen
+}
+
+function doFirstTrial() {
+    skipInstructions();
     doLearningTrial();
 }
 

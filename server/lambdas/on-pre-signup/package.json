@@ -1,0 +1,22 @@
+{
+  "name": "on-pre-signup",
+  "version": "1.0.0",
+  "description": "When called by cognito's pre-signup trigger, confirms a signed consent form exists before allowing signup to continue.",
+  "main": "pre-signup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "db": "file:../../../common/db"
+  }
+}

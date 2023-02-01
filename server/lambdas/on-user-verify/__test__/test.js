@@ -15,7 +15,7 @@ const verified = require('../verified.js');
 
 describe("Testing with a valid post confirmation trigger event", () => {
     let hIdExistsMock;
-    beforeAll(async () => {
+    beforeEach(async () => {
         await th.dynamo.createTable(process.env.USERS_TABLE, 
             [{AttributeName: 'userId', KeyType: 'HASH'}], 
             [{AttributeName: 'userId', AttributeType: 'S'}]
@@ -43,7 +43,21 @@ describe("Testing with a valid post confirmation trigger event", () => {
         expect(userRec.Item.humanId).toBe(hIdExistsMock.mock.calls[0][0]);
     });
 
-    afterAll(async () => {
+    test("should do nothing if the trigger is not for a signup", async() => {
+        const changePwTriggerEvent = JSON.parse(postConfirmationEventJson);
+        changePwTriggerEvent.triggerSource = 'PostConfirmation_ConfirmForgotPassword';
+        await verified.handler(changePwTriggerEvent);
+        const params = {
+            TableName: process.env.USERS_TABLE,
+            Key: {
+                userId: changePwTriggerEvent.request.userAttributes.sub
+            }
+        };
+        const userRec = await docClient.get(params).promise();
+        expect(userRec).toEqual({});
+    });
+
+    afterEach(async () => {
         await th.dynamo.deleteTable(process.env.USERS_TABLE);
     });
 });

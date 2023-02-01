@@ -4,7 +4,9 @@ const path = require('path');
 const { ipcMain, app } = require('electron');
 const CBuffer = require('CBuffer');
 const { epToCoherence } = require('./coherence.js')
+const { Logger } = require('../../common/logger/logger.js')
 
+let logger = new Logger(false)
 let emWavePid = null;
 const client = net.Socket();
 const artifactLimit = 60; // we alert if there are more than this many artifacts in 60s
@@ -56,13 +58,17 @@ ipcMain.handle('pacer-regime-changed', (_event, sessionStartTime, regime) => {
     curSessionStartTime = sessionStartTime;
 });
 
+ipcMain.on('current-user', (_event, user) => {
+    logger = new Logger(false, user)
+})
+
 function notifyAvgCoherence() {
     try {
         // we only want to use the final four minutes of data
         // we get ~ 2 ep values/sec, so four minutes is 2 * 60 * 4
         const min_values = 2 * 60 * 4;
         if (coherenceValues.length < min_values) {
-            console.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
+            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
             return;
         }
 
@@ -84,11 +90,11 @@ export default {
         let retries = 0;
     
         client.on('error', async function() {
-            if (retries > 0) console.log('network error') // we always get error on 1st try; don't log unless we are past that
+            if (retries > 0) logger.log('network error') // we always get error on 1st try; don't log unless we are past that
             retries++;
             if (retries < 4) {
                 await new Promise(r => setTimeout(r, retries * 10000));
-                if (retries > 1) console.log(`doing retry #${retries}`);
+                if (retries > 1) logger.log(`doing retry #${retries}`);
                 client.connect(20480, '127.0.0.1', function() {
                     win.webContents.send('emwave-status', 'Connected');
                 });	
@@ -123,15 +129,15 @@ export default {
     
         return client;
     },
-
-    startEmWave() {
+ 
+    async startEmWave() {
         // must set stdio: 'ignore' on spawn options
         // otherwise the stdout buffer will overflow after ~30s of pulse sensor data
         // and emWave will hang
         if (process.platform === 'darwin') {
-            emWavePid = (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
+            emWavePid = await (spawn('/Applications/emWave Pro.app/Contents/MacOS/emWaveMac', [], {stdio: 'ignore'})).pid
         } else if (process.platform === 'win32') {
-            emWaveProc = spawn('C:\\Program Files (x86)\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})
+            emWavePid = await (spawn('C:\\Program Files\\HeartMath\\emWave\\emWavePC.exe', [], {stdio: 'ignore'})).pid
             // const startScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'start-emwave-hidden.ps1') : path.join(app.getAppPath(), '../src/powershell/start-emwave-hidden.ps1')
             // const emWaveProc = spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', ["-executionPolicy", "bypass", "-file", startScript])
             // emWaveProc.stdout.on("data", (data) => {
@@ -148,9 +154,10 @@ export default {
         }
     },
 
-    hideEmWave() {
+    async hideEmWave() {
+	const hideScript = process.env.NODE_ENV === 'production' ? path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1') : path.join(app.getAppPath(), '../src/powershell/hide-emwave.ps1')
         if (process.platform === 'win32' && emWavePid) {
-            spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [path.join(path.dirname(app.getPath('exe')), 'hide-emwave.ps1'), emWavePid], {stdio: 'ignore'});
+            await spawn('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', [hideScript, emWavePid], {stdio:'ignore'});
         }
     },
 
@@ -176,7 +183,7 @@ export default {
                 emWavePid = null;
             } else {
                 // TODO put in some wait/retry logic?
-                console.log('killing emwave returned false');
+                logger.log('killing emwave returned false');
             }
         }
     },

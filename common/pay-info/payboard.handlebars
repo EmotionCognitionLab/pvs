@@ -1,0 +1,77 @@
+<table>
+    <thead>
+        <tr>
+            <th>Study Activity</th>
+            <th>Total Earned</th>
+            <th>Payment Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Week 1 Assessments ($30)</td>
+            <td class="pay-info-total-earned">{{#if week1Earned}} ${{week1Earned}} {{/if}}</td>
+            <td class="pay-info-payment-status" rowspan="4">
+                {{#if admin}}
+                    <select>
+                        <option value="unprocessed">Not yet processed</option>
+                        <option {{#if pay1-processed}} selected {{/if}} value="processed">Processed</option>
+                    </select>
+                {{else}}
+                    {{#if pay1-processed}} Processed {{/if}}
+                {{/if}}
+            </td>
+        </tr>
+
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Lab visit #1 ($50)</td>
+            <td class="pay-info-total-earned">{{#if visit1Earned}} ${{visit1Earned}} {{/if}}</td>
+        </tr>
+         <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Lab visit #2 ($50)</td>
+            <td class="pay-info-total-earned">{{#if visit2Earned}} ${{visit2Earned}} {{/if}}</td>
+        </tr>
+         <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Lab visit #3 ($50)</td>
+            <td class="pay-info-total-earned">{{#if visit3Earned}} ${{visit3Earned}} {{/if}}</td>
+        </tr>
+         <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Lab visit #4 ($50)</td>
+            <td class="pay-info-total-earned">{{#if visit4Earned}} ${{visit4Earned}} {{/if}}</td>
+            <td class="pay-info-payment-status" rowspan="6">
+                {{#if admin}}
+                    <select>
+                        <option value="unprocessed">Not yet processed</option>
+                        <option {{#if pay2-processed}} selected {{/if}} value="processed">Processed</option>
+                    </select>
+                {{else}}
+                    {{#if pay2-processed}} Processed {{/if}}
+                {{/if}}
+            </td>
+        </tr>
+         <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Lab visit #5 ($50)</td>
+            <td class="pay-info-total-earned">{{#if visit5Earned}} ${{visit5Earned}} {{/if}}</td>
+        </tr>
+        
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Week 12 Assessments ($30)</td>
+            <td class="pay-info-total-earned">{{#if week12Earned}} ${{week12Earned}} {{/if}}</td>
+        </tr>
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Brain Games</td>
+            <td class="pay-info-total-earned">{{#if lumosityEarned}} ${{lumosityEarned}} {{/if}}</td>
+        </tr>
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Breathing practice</td>
+            <td class="pay-info-total-earned">{{#if breathingEarned}} ${{breathingEarned}} {{/if}}</td>
+        </tr>
+        <tr class="pay-info-row">
+            <td class="pay-info-study-activity">Brain Games and Breathing Practice Bonuses</td>
+            <td class="pay-info-total-earned">{{#if bonusEarned}} ${{bonusEarned}} {{/if}}</td>
+        </tr>
+    </tbody>
+</table>
+<br/>
+<div>
+    Earnings may not include activity from the past two days. Bonuses may not include this week's activity.
+</div>

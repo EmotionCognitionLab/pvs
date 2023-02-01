@@ -5,6 +5,9 @@ An application (based on [Vue](vuejs.org) and [Electron](electronjs.org)) that p
 If you don't already have them, you will need [node](nodejs.org) and [yarn](https://yarnpkg.com) installed. (And, of course, [emWave](https://store.heartmath.com/emwavepro).) Once you have those, you can use the commands below to set up and run the project.
 
 ## Project setup
+If you haven't already done so, go into every directory in ../common and do `npm install`. In the ../common/pay-info directory also do `npm run build`
+
+Next, return to this directory and do:
 ```
 yarn install
 ```

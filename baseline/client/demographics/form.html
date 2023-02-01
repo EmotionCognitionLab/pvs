@@ -69,28 +69,17 @@
     <input type="text" name="profession" id="profession" required>
 </div>
 
-<div class="demo-question" id="vax-question">
-    <p>Have you been vaccinated against COVID-19?</p>
-    <input type="radio" id="covidVaxY" name="covid_vax" value="yes" required>
-    <label for="covidVaxY">Yes</label>
-
-    <input type="radio" id="covidVaxN" name="covid_vax" value="no">
-    <label for="covidVaxN">No</label>
-
-    <div id="vax-followup">
-        <label for="1stdose">1st dose</label>
-        <input type="date" name="covid_vax_1st_dose" id="1stdose" min="2020-12-01">
-
-        <label for="2nddose">2nd dose</label>
-        <input type="date" name="covid_vax_2nd_dose" id="2nddose" min="2020-12-15">
-    </div>
-</div>
-
 <div class="demo-question">
-    <p>Please indicate all of the dates (if any) on which you have tested positive for COVID-19:</p>
-    <input type="date" min="2019-01-01" name="covid_positive_test1">
-    <input type="date" min="2019-01-01" name="covid_positive_test2">
-    <input type="date" min="2019-01-01" name="covid_positive_test3">
+    <p>How many separate times have you contracted COVID-19 (with confirmed tests, with or without symptoms):</p>
+    <select name="covid_count" id="covidCount" required>
+        <option value="">Please select</option>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5+">5+</option>
+    </select>
 </div>
 
 <div class="demo-question" id="smoker-question">
@@ -268,6 +257,8 @@
     </p>
     <select name="last_menstrual_period" id="lastMenstrualPeriod">
         <option value="NA">Please select</option>
+        <option value="2mos">Within the past 2 months</option>
+        <option value="1y">Within the past year</option>
         <option value="1-2y"/>1-2 years</option>
         <option value="3-6y"/>3-6 years</option>
         <option value="7-10y"/>7-10 years</option>
