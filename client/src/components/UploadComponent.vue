@@ -10,7 +10,6 @@
     </div>
 </template>
 <script setup>
-    import { ipcRenderer } from 'electron'
     import { ref, onMounted } from '@vue/runtime-core'
     import { SessionStore } from '../session-store.js'
 
@@ -18,8 +17,8 @@
 
     onMounted(async () => {
         const sess = await SessionStore.getRendererSession()
-        await ipcRenderer.invoke('upload-emwave-data', sess)
-        await ipcRenderer.invoke('upload-breath-data', sess)
+        await window.mainAPI.uploadEmWaveData(sess)
+        await window.mainAPI.uploadBreathData(sess)
         uploadComplete.value = true
     })
 </script>

@@ -171,6 +171,7 @@ describe("n-back", () => {
     describe.each([
         [1],
         [2],
+        [7],
     ])("n-back set %i", setNum => {
         it("evaluated n-back trials should match spec", () => {
             // evaluate all n-back trials
@@ -197,9 +198,9 @@ describe("n-back", () => {
             // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
             expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
             // there should 2*3 n-back trials in a training block
-            expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
-            // there should 3*3 n-back trials in a full test block
-            expect(nbTests.length).toBe(3*3);
+            expect(nbTrains.length).toBe(setNum === 1 || setNum === 7 ? 2*3 : 0);
+            // there should 3 n-back trials in a full test block
+            expect(nbTests.length).toBe(3);
             // there should be 15 digits and 5 targets per n-back test trials
             expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
             expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 5)).toBe(true);
@@ -217,7 +218,7 @@ describe("n-back", () => {
         while (!complete) {
             completeCurrentTrial(true, true);
         }
-        expect(spy).toHaveBeenCalledTimes(2*3 + 3*3);
+        expect(spy).toHaveBeenCalledTimes(2*3 + 3);
     });
 
     it("n-back plugin trials are preceded by cues", () => {
@@ -237,8 +238,7 @@ describe("n-back", () => {
                         return (cueStimulus === cue_2_html || cueStimulus === train_instruction_cue_2_html)
                             && cueWrongStimulus === cue_2_wrong_html;
                     } else {
-                        fail("invalid n");
-                        return false;
+                        throw new Error("invalid n");
                     }
                 } else {
                     return true;

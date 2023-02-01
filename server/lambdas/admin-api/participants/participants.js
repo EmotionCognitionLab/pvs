@@ -2,10 +2,13 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand} from "@aws-sdk/lib-dynamodb";
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
 import Db from 'db/db.js';
+import awsSettings from "../../../../common/aws-settings.json";
+import { baselineStatus, stage2Status, stage3Status } from "./status.js";
 
 const AWS = require("aws-sdk");
 const region = process.env.REGION;
 const usersTable = process.env.USERS_TABLE;
+const potentialParticipantsTable = process.env.POTENTIAL_PARTICIPANTS_TABLE;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 
 const noAccess = {
@@ -22,6 +25,18 @@ exports.getAll = async(event) => {
     const docClient = DynamoDBDocumentClient.from(dbClient);
 
     return await getAllParticipants(docClient);
+}
+
+exports.getEarnings = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) return noAccess;
+    
+    const credentials = await credentialsForRole(userRole);
+    const db = dbWithCredentials(credentials);
+
+    const participantId = event.pathParameters.id;
+    const earningsType = event.pathParameters.earningsType;
+    return await db.earningsForUser(participantId, earningsType);
 }
 
 exports.getSets = async(event) => {
@@ -65,6 +80,73 @@ exports.get = async(event) => {
     }
     
     return user;
+}
+
+exports.getPotential = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole.endsWith(awsSettings.AdminRole)) return noAccess;
+
+    try {
+        const params = {
+            TableName: potentialParticipantsTable
+        };
+        const scan = new ScanCommand(params);
+        const credentials = await credentialsForRole(userRole)
+        const dbClient = new DynamoDBClient({endpoint: dynamoEndpoint, apiVersion: "2012-08-10", region: region, credentials: credentials });
+        const docClient = DynamoDBDocumentClient.from(dbClient);
+        const dynResults = await docClient.send(scan);
+        return dynResults.Items.sort((i, j) => i.date < j.date ? -1 : i.date > j.date ? 1 : 0);
+        
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
+
+}
+
+/**
+ * Status is red, yellow, green or gray as follows:
+ * green: Participant has done everything they're supposed to for 4-5 days out of the last 5,
+ * or is in the first 1-2 days of what they're supposed to be doing.
+ * yellow: Participant has done everything they're supposed to for 2-3 days out of the last 5,
+ * or is in the first 3-4 days of what they're supposed to be doing and has done everything they should for <2 days.
+ * red: Participant has done everything they're supposed to for 0-1 days out of the last 5
+ * gray: Participant cannot proceed without action by the study administrators.
+ * @param {*} event 
+ * @returns 
+ */
+exports.getStatus = async(event) => {
+    const userRole = event.requestContext.authorizer.jwt.claims['cognito:preferred_role'];
+    if (!userRole) return noAccess;
+
+    const credentials = await credentialsForRole(userRole);
+    const db = dbWithCredentials(credentials);
+
+    const participantId = event.pathParameters.id;
+    const humanId = event.queryStringParameters.hId;
+    const preComplete = event.queryStringParameters.preComplete === '1';
+    const stage2Completed = event.queryStringParameters.stage2Completed === '1';
+    const homeComplete = event.queryStringParameters.homeComplete === '1';
+    const postComplete = event.queryStringParameters.postComplete === '1';
+    const stage2CompletedOn = event.queryStringParameters.stage2CompletedOn;
+
+    if (!preComplete) {
+        return await baselineStatus(db, participantId);
+    }
+
+    if (!stage2Completed) {
+        return await stage2Status(db, participantId, humanId);
+    }
+
+    if (!homeComplete) {
+        return await stage3Status(db, participantId, humanId, stage2CompletedOn);
+    }
+
+    if (!postComplete) {
+        // they should be doing post-training cognitive baseline - check to see how many sets they've done
+        // and when they started
+        return {status: 'black', note: 'not yet implemented'}
+    }
 }
 
 async function credentialsForRole(roleArn) {

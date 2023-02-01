@@ -23,6 +23,10 @@ const nouns3 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns3.txt"), "utf8")
 const nouns4 = fs.readFileSync(path.join(__dirname ,"wn3.1-nouns4.txt"), "utf8").trim().split("\n");
 
 exports.handler = async (event) => {
+    // make sure that we don't run this code when the user is 
+    // going through the forgot password flow
+    if (event.triggerSource !== 'PostConfirmation_ConfirmSignUp') return event;
+
     const userRec = buildUserRecord(event);
     let maxTries = 3;
     let hIdOk = false;

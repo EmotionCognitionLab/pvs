@@ -50,10 +50,13 @@ function invalidateCloudFrontDistribution(distId) {
         InvalidationBatch: {
             CallerReference: Date.now().toString(),
             Paths: {
-                Quantity: 2,
+                Quantity: 5,
                 Items: [
                     '/daily-tasks/*',
-                    '/login/*'
+                    '/login/*',
+                    '/admin/*',
+                    '/screening/*',
+                    '/register/*'
                 ]
             }
         }

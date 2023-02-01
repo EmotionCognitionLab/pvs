@@ -1,0 +1,22 @@
+{
+  "name": "process-sqlite-dbs",
+  "version": "1.0.0",
+  "description": "Function to extract data from participant sqlite files and add (some of) it to DynamoDb.",
+  "main": "process-sqlite-dbs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmotionCognitionLab/pvs.git"
+  },
+  "author": "Noah Mercer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmotionCognitionLab/pvs/issues"
+  },
+  "homepage": "https://github.com/EmotionCognitionLab/pvs#readme",
+  "dependencies": {
+    "better-sqlite3": "^7.6.2"
+  }
+}

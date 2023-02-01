@@ -1,13 +1,15 @@
 import { app, ipcMain } from 'electron';
 import { statSync } from 'fs';
 import { mkdir } from 'fs/promises';
-import { mean, std } from 'mathjs';
+import { mean, std, sqrt } from 'mathjs';
 import { camelCase, zipObject } from 'lodash'
 import emwave from './emwave.js';
 import Database from 'better-sqlite3';
 import s3utils from './s3utils.js'
 import { SessionStore } from './session-store.js'
+import version from '../version.json'
 import { yyyymmddNumber } from './utils.js';
+import { earningsTypes } from '../../common/types/types.js';
 import * as path from 'path'
 
 let db;
@@ -86,7 +88,8 @@ function createSegment(regimeData, stage) {
 }
 
 function getSegmentsAfterDate(date, stage) {
-    const stmt = db.prepare('SELECT * FROM segments where end_date_time >= ? and stage = ? ORDER BY end_date_time asc');
+    const tableName = stage == 3 ? 'segments' : 'rest_segments';
+    const stmt = db.prepare(`SELECT * FROM ${tableName} where end_date_time >= ? and stage = ? ORDER BY end_date_time asc`);
     const res = stmt.all(date.getTime() / 1000, stage);
     return res.map(rowToObject);
 }
@@ -131,9 +134,9 @@ function getAvgCoherenceValues(regimeId, stage) {
 function getRegimeStats(regimeId, stage) {
     const avgCohVals = getAvgCoherenceValues(regimeId, stage);
     const stdDev = std(avgCohVals);
-    const interval = 1.96 * stdDev;
+    const interval = (1.645 * stdDev) / sqrt(avgCohVals.length - 1);
     const meanAvgCoh = mean(avgCohVals);
-    return { id: regimeId, mean: meanAvgCoh, low95CI: meanAvgCoh - interval, high95CI: meanAvgCoh + interval};
+    return { id: regimeId, mean: meanAvgCoh, low90CI: meanAvgCoh - interval, high90CI: meanAvgCoh + interval};
 }
 
 function getPracticedRegimeIds(stage) {
@@ -161,6 +164,25 @@ function getRestBreathingDays(stage) {
  */
 function getPacedBreathingDays(stage) {
     return getTrainingDays(false, true, stage);
+}
+
+function getLastShownDateTimeForBonusType(bonusType) {
+    if (bonusType !== earningsTypes.BREATH_BONUS && bonusType !== earningsTypes.LUMOS_BONUS) {
+        throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
+    }
+
+    const stmt = db.prepare('SELECT msg_last_shown_date_time FROM bonus_msg_display_dates WHERE bonus_type = ?');
+    const res = stmt.get(bonusType);
+    return res.msg_last_shown_date_time;
+}
+
+function setLastShownDateTimeForBonusType(bonusType, lastShownDateTime) {
+    if (bonusType !== earningsTypes.BREATH_BONUS && bonusType !== earningsTypes.LUMOS_BONUS) {
+        throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
+    }
+
+    const stmt = db.prepare('UPDATE bonus_msg_display_dates SET msg_last_shown_date_time = ? WHERE bonus_type = ?');
+    stmt.run(lastShownDateTime, bonusType);
 }
 
 function setRegimeBestCnt(regimeId, count) {
@@ -210,6 +232,29 @@ function saveRegimesForDay(regimes, date) {
     });
 }
 
+function checkVersion() {
+    const curVerStmt = db.prepare('SELECT version from version ORDER BY date_time DESC LIMIT 1');
+    const res = curVerStmt.get();
+    if (!res || res.version !== version.v) {
+        const updateVerStmt = db.prepare('INSERT INTO version(version, date_time) VALUES(?, ?)');
+        const dateTime = (new Date()).toISOString();
+        updateVerStmt.run(version.v, dateTime);
+    }
+}
+
+function initBonusMsgTable() {
+    const checkTypesStmt = db.prepare('SELECT bonus_type from bonus_msg_display_dates');
+    const res = checkTypesStmt.all();
+    const allTypes = res.map(r => r.bonus_type);
+    const initStmt = db.prepare('INSERT INTO bonus_msg_display_dates(bonus_type, msg_last_shown_date_time) VALUES(? , 0)');
+    if (!allTypes.includes(earningsTypes.LUMOS_BONUS)) {
+        initStmt.run(earningsTypes.LUMOS_BONUS);
+    }
+    if (!allTypes.includes(earningsTypes.BREATH_BONUS)) {
+        initStmt.run(earningsTypes.BREATH_BONUS);
+    }
+}
+
 // import this module into itself so that we can mock
 // certain calls in test
 // https://stackoverflow.com/questions/51269431/jest-mock-inner-function
@@ -255,6 +300,14 @@ async function initBreathDb(serializedSession) {
         createRestSegmentsTableStmt.run();
         insertRestSegmentStmt = db.prepare('INSERT INTO rest_segments(end_date_time, avg_coherence, stage) VALUES(?, ?, ?)');
 
+        const createVersionTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS version(version TEXT PRIMARY KEY, date_time TEXT NOT NULL)');
+        createVersionTableStmt.run();
+        checkVersion();
+
+        const createBonusMsgTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS bonus_msg_display_dates(id INTEGER PRIMARY KEY, bonus_type TEXT NOT NULL UNIQUE, msg_last_shown_date_time INTEGER NOT NULL)');
+        createBonusMsgTableStmt.run();
+        initBonusMsgTable();
+
         findRegimeStmt = db.prepare('SELECT id from regimes where duration_ms = ? AND breaths_per_minute = ? AND hold_pos is ? AND randomize = ?');
         insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
         regimeByIdStmt = db.prepare('SELECT * from regimes where id = ?');
@@ -292,6 +345,8 @@ export {
     setRegimeBestCnt,
     getSegmentsAfterDate,
     getTrainingDayCount,
-    saveRegimesForDay
+    saveRegimesForDay,
+    getLastShownDateTimeForBonusType,
+    setLastShownDateTimeForBonusType
 }
 export const forTesting = { initBreathDb, downloadDatabase, createSegment }

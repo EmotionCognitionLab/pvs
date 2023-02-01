@@ -39,11 +39,18 @@ describe("jspsych-spatial-orientation.js plugin", () => {
             // expect responseRadians to be a number
             const data = jsPsych.data.getLastTrialData().values()[0];
             expect(typeof data.responseRadians).toBe("number");
+            // signedRadianDistance to be a number
+            expect(typeof data.signedRadianDistance).toBe("number");
             return data;
         };
         expect(dataFromClick(0, 1).responseRadians).toBeCloseTo(0);
+        expect(dataFromClick(0, 1).signedRadianDistance).toBeCloseTo(0);
         expect(dataFromClick(-123, 0).responseRadians).toBeCloseTo(Math.PI/2);
+        expect(dataFromClick(-123, 0).signedRadianDistance).toBeCloseTo(-Math.PI/2);
         expect(dataFromClick(2, -2).responseRadians).toBeCloseTo(-Math.PI*3/4);
+        expect(dataFromClick(2, -2).signedRadianDistance).toBeCloseTo(Math.PI*3/4);
+        expect(Math.abs(dataFromClick(0, -1).responseRadians)).toBeCloseTo(Math.PI);
+        expect(Math.abs(dataFromClick(0, -1).signedRadianDistance)).toBeCloseTo(Math.PI);
         // please don't explode
         expect(dataFromClick(0, 0)).not.toBe(NaN);
     });

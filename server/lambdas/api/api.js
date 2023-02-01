@@ -29,6 +29,10 @@ exports.handler = async (event) => {
     if (path === "/self/lumos" && method === "GET") {
         return getLumosCreds(event.requestContext.authorizer.jwt.claims.sub);
     }
+    if (path.startsWith("/self/earnings") && method === "GET") {
+        const earningsType = event.pathParameters.earningsType;
+        return getEarnings(event.requestContext.authorizer.jwt.claims.sub, earningsType);
+    }
     if (path === "/condition" && method === "POST") {
         return assignToCondition(event.requestContext.authorizer.jwt.claims.sub, JSON.parse(event.body));
     }
@@ -180,6 +184,20 @@ const assignToCondition = async(userId, data) => {
         };
         await docClient.update(conditionParams).promise();
         return successResponse({condition: condition});
+    } catch (err) {
+        console.error(err);
+        if (!(err instanceof HttpError)) {
+            err = new HttpError(err.message);
+        }
+        return errorResponse(err);
+    }
+}
+
+const getEarnings = async (userId, earningsType = null) => {
+    try {
+        const db = new Db();
+        db.docClient = docClient;
+        return await db.earningsForUser(userId, earningsType);
     } catch (err) {
         console.error(err);
         if (!(err instanceof HttpError)) {
