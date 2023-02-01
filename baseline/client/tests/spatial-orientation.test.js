@@ -96,7 +96,7 @@ describe("spatial-orientation", () => {
         }
     });
 
-    it("includes example and practice blocks only in the first and seventh sets", () => {
+    it("includes example and practice blocks only in the first set", () => {
         {
             const timeline1 = (new SpatialOrientation(1)).getTimeline();
             const sots1 = timeline1.filter(trial => trial.type === "spatial-orientation");
@@ -110,14 +110,8 @@ describe("spatial-orientation", () => {
             }
             const timelineI = (new SpatialOrientation(i)).getTimeline();
             const sotsI = timelineI.filter(trial => trial.type === "spatial-orientation");
-            if (i === 7) {
-                expect(sotsI.slice(0, 1).every(trial => trial.mode === "example")).toBe(true);
-                expect(sotsI.slice(1, 4).every(trial => trial.mode === "practice")).toBe(true);
-                expect(sotsI.slice(4).every(trial => trial.mode === "test")).toBe(true);
-            } else {
-                // all trials should be test trials
-                expect(sotsI.every(trial => trial.mode === "test")).toBe(true);
-            }
+            // all trials should be test trials
+            expect(sotsI.every(trial => trial.mode === "test")).toBe(true);
         }
     });
 

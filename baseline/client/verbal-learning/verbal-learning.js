@@ -11,10 +11,8 @@ import "css/jspsych-memory-field.css";
 import "css/common.css";
 import "./style.css";
 // audio stimuli
-import pre_a_audio from "./pre-a.mp3";
-import pre_b_audio from "./pre-b.mp3";
-import post_a_audio from "./post-a.mp3";
-import post_b_audio from "./post-b.mp3";
+import a_audio from "./a.mp3";
+import b_audio from "./b.mp3";
 import check_audio from "./check.mp3";
 // instruction fragments
 import instruction_check_start_html from "./frag/instruction_check_start.html";
@@ -27,30 +25,24 @@ import instruction_a_long_html from "./frag/instruction_a_long.html";
 // presentation fragments
 import presentation_cue_html from "./frag/presentation_cue.html";
 import presentation_prompt_html from "./frag/presentation_prompt.html";
-// recall fragments
+// remember fragments
 import remember_a_immediate_html from "./frag/remember_a_immediate.html";
 import remember_a_immediate_rep_html from "./frag/remember_a_immediate_rep.html";
 import remember_b_immediate_html from "./frag/remember_b_immediate.html";
 import remember_a_short_html from "./frag/remember_a_short.html";
-import remember_a_long_html from "./frag/remember_a_long.html";
-// pre-intervention cued recall fragments
 import remember_a_cue_furniture_html from "./frag/remember_a_cue_furniture.html";
 import remember_a_cue_vegetable_html from "./frag/remember_a_cue_vegetable.html";
 import remember_a_cue_traveling_html from "./frag/remember_a_cue_traveling.html";
 import remember_a_cue_animal_html from "./frag/remember_a_cue_animal.html";
-// post-intervention cued recall fragments
-import remember_a_cue_tool_html from "./frag/remember_a_cue_tool.html";
-import remember_a_cue_fruit_html from "./frag/remember_a_cue_fruit.html";
-import remember_a_cue_insect_html from "./frag/remember_a_cue_insect.html";
-import remember_a_cue_clothing_html from "./frag/remember_a_cue_clothing.html";
+import remember_a_long_html from "./frag/remember_a_long.html";
 
 export class VerbalLearning {
     constructor(setNum, segmentNum, getLastSegmentEndTime = null) {
         // validate setNum
-        if (Number.isInteger(setNum) && 1 <= setNum && setNum < 13) {
+        if (Number.isInteger(setNum) && setNum > 0) {
             this.setNum = setNum;
         } else {
-            throw new Error("setNum must be an integer in [1, 13)");
+            throw new Error("setNum must be a strictly positive integer");
         }
         // validate segmentNum and compute startTime
         if (!Number.isInteger(segmentNum) || segmentNum < 1 || segmentNum > 2) {
@@ -90,13 +82,6 @@ export class VerbalLearning {
                 }
             }]
         };
-        const pre = this.setNum < 7;
-        const a_audio = pre ? pre_a_audio : post_a_audio;
-        const b_audio = pre ? pre_b_audio : post_b_audio;
-        const remember_a_cue_w_html = pre ? remember_a_cue_furniture_html : remember_a_cue_tool_html;
-        const remember_a_cue_x_html = pre ? remember_a_cue_vegetable_html : remember_a_cue_fruit_html;
-        const remember_a_cue_y_html = pre ? remember_a_cue_traveling_html : remember_a_cue_insect_html;
-        const remember_a_cue_z_html = pre ? remember_a_cue_animal_html : remember_a_cue_clothing_html;
         if (this.segmentNum === 1) {
             return [
                 this.constructor.preload,
@@ -122,20 +107,20 @@ export class VerbalLearning {
                 this.constructor.remember(remember_b_immediate_html),
                 this.constructor.instruction(instruction_a_short_html),
                 this.constructor.remember(remember_a_short_html),
-                this.constructor.remember(remember_a_cue_w_html),
-                this.constructor.remember(remember_a_cue_x_html),
-                this.constructor.remember(remember_a_cue_y_html),
-                this.constructor.remember(remember_a_cue_z_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_animal_html),
             ];
         } else if (this.segmentNum === 2) {
             return [
                 segmentCountdownNode,
                 this.constructor.instruction(instruction_a_long_html),
                 this.constructor.remember(remember_a_long_html),
-                this.constructor.remember(remember_a_cue_w_html),
-                this.constructor.remember(remember_a_cue_x_html),
-                this.constructor.remember(remember_a_cue_y_html),
-                this.constructor.remember(remember_a_cue_z_html),
+                this.constructor.remember(remember_a_cue_furniture_html),
+                this.constructor.remember(remember_a_cue_vegetable_html),
+                this.constructor.remember(remember_a_cue_traveling_html),
+                this.constructor.remember(remember_a_cue_animal_html),
             ];
         } else {
             throw new Error("segmentNum must be in 1..2");
@@ -155,10 +140,8 @@ VerbalLearning.taskName = "verbal-learning";
 VerbalLearning.preload = {
     type: "preload",
     audio: [
-        pre_a_audio,
-        pre_b_audio,
-        post_a_audio,
-        post_b_audio,
+        a_audio,
+        b_audio,
         check_audio,
     ],
 };
@@ -206,7 +189,6 @@ VerbalLearning.remember = stimulus => ({
     type: "memory-field",
     stimulus: stimulus,
     button_label: "Stop",
-    confirm_text: "Click OK if you've thought of all the words you can. Click cancel if you can remember more.",
     data: { isRelevant: true },
 });
 

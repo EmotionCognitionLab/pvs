@@ -1,27 +1,15 @@
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import Db from 'db/db.js';
-import awsSettings from "../../../../common/aws-settings.json";
+import { ApiClient } from "docusign-esign";
 
 const AWS = require("aws-sdk");
-const docusign = require("docusign-esign");
-
 const region = process.env.REGION;
 const dynamoEndpoint = process.env.DYNAMO_ENDPOINT;
 
-const DS_RSA_PRIV = process.env.DS_RSA_PRIV;
-const DS_INT_KEY = process.env.DS_INT_KEY;
-const DS_USER_ID = process.env.DS_USER_ID;
-
-const dsClient = new docusign.ApiClient();
-dsClient.setOAuthBasePath(awsSettings.DsOAuthUri.replace('https://', ''));
-
-
 const noAccess = {
     statusCode: 401,
-    body: "You do not have permission to access this information",
-    headers: {
-        "Access-Control-Allow-Origin": "*"
-    }
+    body: "You do not have permission to access this information"
 };
 
 exports.callback = async(event) => {
@@ -47,7 +35,7 @@ exports.callback = async(event) => {
         await db.updateUser(userId, {hasDs: true});
         return {
             statusCode: 200,
-            Body: "Success"
+            Body: "Successn"
         }
     } catch (err) {
         console.error(err);
@@ -55,25 +43,15 @@ exports.callback = async(event) => {
     }
 }
 
-async function getAccessInfo() {
-    try {
-        const res = await dsClient.requestJWTUserToken(DS_INT_KEY, DS_USER_ID, "signature+impersonation", DS_RSA_PRIV, 600);
-        const accessToken = res.body.access_token;
-
-        const userInfoRes = await dsClient.getUserInfo(accessToken);
-
-        const defaultUser = userInfoRes.accounts.find(acc => acc.isDefault === "true");
-        return {
-            accessToken: accessToken,
-            apiAccountId: defaultUser.accountId,
-            basePath: `${defaultUser.baseUri}/restapi`
-        };
-    } catch (err) {
-        console.error("Error getting DS access info", err);
-        if (err.response && err.response.body) {
-            console.error(`DS API status code: ${err.response.status}; message body: ${JSON.stringify(err.response.body)}`)
-        }
+// for future use with JWT auth
+async function getDsKey(credentials) {
+    const params = {
+        Bucket: process.env.DS_BUCKET,
+        Key: process.env.DS_KEY
     }
+    const command = new GetObjectCommand(params);
+    const s3Client = new S3Client({ region: region, credentials: credentials });
+    return await (await s3Client.send(command)).Body.text();
 }
 
 async function credentialsForRole(roleArn) {

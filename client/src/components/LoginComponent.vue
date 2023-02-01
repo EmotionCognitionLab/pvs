@@ -7,6 +7,7 @@
     </div>
 </template>
 <script setup>
+    import { ipcRenderer } from 'electron'
     import { useRoute } from "vue-router";
 
     const route = useRoute();
@@ -15,7 +16,7 @@
         if (route.query.postLoginPath !== undefined) {
             window.sessionStorage.setItem('HeartBeam.postLoginPath', route.query.postLoginPath)
         }
-        window.mainAPI.showLoginWindow()
+        ipcRenderer.send('show-login-window')
     }
 
 </script>

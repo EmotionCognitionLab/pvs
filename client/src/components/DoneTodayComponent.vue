@@ -8,9 +8,10 @@
     </div>
 </template>
 <script setup>
+import { ipcRenderer } from 'electron'
 
 function quit() {
-    window.mainAPI.quit()
+    ipcRenderer.invoke('quit')
 }
 
 </script>

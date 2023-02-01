@@ -1,12 +1,5 @@
 import Database from 'better-sqlite3'
-import { ipcMain, app } from 'electron'
-const { Logger } = require('../../common/logger/logger.js')
-
-let logger = new Logger(false);
-
-ipcMain.on('current-user', (_event, user) => {
-    logger = new Logger(false, user);
-});
+import { app } from 'electron'
 
 function emWaveDbPath() {
     let emWaveDbPath;
@@ -30,7 +23,7 @@ function deleteShortSessions() {
         const debugStmt = db.prepare(`select FirstName, datetime(IBIStartTime, 'unixepoch', 'localtime') as start, datetime(IBIEndTime, 'unixepoch', 'localtime') as end from Session join User on Session.UserUuid = User.UserUuid where IBIEndTime - IBIStartTime <= ${shortSessionLength}`);
         const toDelete = debugStmt.all();
         for (let shortSession of toDelete) {
-            logger.log(`Deleting short session for user ${shortSession.FirstName} that runs from ${shortSession.start} to ${shortSession.end}.`);
+            console.log(`Deleting short session for user ${shortSession.FirstName} that runs from ${shortSession.start} to ${shortSession.end}.`)
         }
         // end debug
         const stmt = db.prepare(`delete from Session where IBIEndTime - IBIStartTime <= ${shortSessionLength}`);

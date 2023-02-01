@@ -54,11 +54,6 @@ jsPsych.plugins["spatial-orientation"] = (() => {
         return Math.atan2(dy, dx);
     };
 
-    plugin.signedRadianDistance = (a, b) => {
-        const diff = a - b;
-        return Math.atan2(Math.sin(diff), Math.cos(diff));
-    };
-
     plugin.buildIcirc = (canvas, options) => {
         const ctx = canvas.getContext("2d");
         const centerX = canvas.width / 2;
@@ -136,14 +131,9 @@ jsPsych.plugins["spatial-orientation"] = (() => {
                 running = false;
                 // build completionData
                 const responseRadians = pointerAngleFromMouseEvent(e);
-                const signedRadianDistance = plugin.signedRadianDistance(
-                    options.targetRadians,
-                    responseRadians,
-                );
                 const completionData = {
                     completionReason: "responded",
-                    responseRadians,
-                    signedRadianDistance,
+                    responseRadians: responseRadians,
                 };
                 // draw target pointer if practice
                 if (options.mode === "practice") {

@@ -13,12 +13,13 @@
         </div>
         <button class="pulse-sensor-button" id="startSensor" :disabled="running" @click="startPulseSensor">Start</button>
         <div v-if="showIbi" id="ibi">{{ ibi }}</div>
-        <div v-if="showScore" id="scoreText">Score (higher is better): <span  id="score">{{ score }}</span></div>
+        <div v-if="showScore" id="score">Score (higher is better): {{ score }}</div>
     </div>
    
 </template>
 <script setup>
-    import { ref, watch, computed } from '@vue/runtime-core'
+    import { ipcRenderer } from 'electron'
+    import { ref, watch, computed, onUnmounted } from '@vue/runtime-core'
     import { epToCoherence } from '../coherence.js'
 
     const props = defineProps(['showIbi', 'showScore', 'condition'])
@@ -65,7 +66,12 @@
         }
     })
 
-    function handleEmWaveIbiEvent(_event, hrData) {
+    onUnmounted(() => {
+        ipcRenderer.removeListener('emwave-ibi', handleEmwaveIbiEvent)
+        ipcRenderer.removeListener('emwave-status', handleEmwaveStatusEvent)
+    })
+
+    function handleEmwaveIbiEvent(_event, hrData) {
         ibi.value = Number(hrData.ibi)
         if (ibi.value <= 0) return
 
@@ -84,9 +90,9 @@
         resetForcedRestartTimer()
     }
 
-    window.mainAPI.handleEmWaveIBIEvent(handleEmWaveIbiEvent)
+    ipcRenderer.on('emwave-ibi', handleEmwaveIbiEvent)
 
-    function handleEmWaveStatusEvent(_event, message) {
+    function handleEmwaveStatusEvent(_event, message) {
         if (message === 'SensorError') {
             stopPulseSensor()
             sensorError.value = true
@@ -95,11 +101,11 @@
         }
     }
 
-    window.mainAPI.handleEmWaveStatusEvent(handleEmWaveStatusEvent)
+    ipcRenderer.on('emwave-status', handleEmwaveStatusEvent)
 
     // eslint-disable-next-line no-unused-vars
     function startPulseSensor() {
-        window.mainAPI.startPulseSensor()
+        ipcRenderer.send('pulse-start')
         running.value = true
         stopSensor.value = false
         sessionEnded.value = false
@@ -115,7 +121,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function stopPulseSensor() {
-        window.mainAPI.stopPulseSensor()
+        ipcRenderer.send('pulse-stop')
         emit('pulse-sensor-stopped')
         reset()
         stopSignalLossTimer()
@@ -175,19 +181,11 @@
         font-size: 80px;
         margin: 20px;
     }
-    #score {
-        font-size: 40px;
-        display: inline-block;
-        margin-left: 10px;
-    }
-    #scoreText {
-        display: flex;
-        padding-left: 420px;
-    }
     .pulse-sensor-button {
         padding: 8px;
         font-size: 18px;
         font-weight: bold;
         margin-right: 4px;
+        margin-top: 5px;
     }
 </style>

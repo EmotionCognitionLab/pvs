@@ -120,7 +120,7 @@ function updateUserAttributes(accessToken, userAttributes, onSuccess, onFailure)
  *
  * @param {string} accessToken The access token the user receives when logging in.
  * @param {string} verificationCode The verification code the user received on her phone.
- * @param {function} onSuccess Called when phone verification succeeds. Receives data param.
+ * @param {function} Called when phone verification succeeds. Receives data param.
  * @param {function} onFailure Called when phone verification fails. Receives error param
  * See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html#verifyUserAttribute-property
  * for details on the parameters passed to onSuccess and onFailure.

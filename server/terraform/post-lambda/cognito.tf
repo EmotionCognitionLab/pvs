@@ -11,13 +11,9 @@ provider "aws" {
     region = var.region
 }
 
-# These are set in ../../lambdas/serverless.yml
+# This is set in ../../lambdas/serverless.yml
 data "aws_ssm_parameter" "post-confirmation-lambda-arn" {
   name = "/pvs/${var.env}/info/lambdas/write-user-on-verify/arn"
-}
-
-data "aws_ssm_parameter" "pre-signup-lambda-arn" {
-  name = "/pvs/${var.env}/info/lambdas/confirm-signed-consent-on-signup/arn"
 }
 
 # do not change this without also changing it
@@ -59,7 +55,6 @@ resource "aws_cognito_user_pool" "pool" {
       case_sensitive = false
     }
     lambda_config {
-      pre_sign_up = data.aws_ssm_parameter.pre-signup-lambda-arn.value
       post_confirmation = data.aws_ssm_parameter.post-confirmation-lambda-arn.value
     }
 }

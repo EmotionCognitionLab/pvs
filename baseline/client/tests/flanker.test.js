@@ -77,16 +77,17 @@ describe("flanker", () => {
         expect(data[1].stimulus).toMatch(/.*\+.*/); // the fixation cross is a plus sign
     });
 
-    it("shows the participant a red screen if they don't respond in time", () => {
+    it("tells the participant to answer faster if they don't respond in time", () => {
         doMainInstructions();
         // fixation 1 -> trial 1
         jest.advanceTimersByTime(800);
         // trial 1 -> feedback 1 without responding to trial
         jest.advanceTimersByTime(1100);
-        expect(document.body.classList.contains("flanker-miss")).toBe(true);
         // feedback 1 -> fixation 2
         jest.advanceTimersByTime(800);
-        expect(document.body.classList.contains("flanker-miss")).toBe(false);
+        const dataValues = jsPsych.data.get().values();
+        const finalValue = dataValues[dataValues.length - 1];
+        expect(finalValue.stimulus).toBe("Answer faster next time");
     });
 
     it("increases the response time limit by 270 ms in the first six blocks if they get < 13 out of 16 trials correct", () => {
@@ -214,7 +215,7 @@ it("displays 9 blocks of 16 trials each", () => {
 
 describe("flanker training", () => {
     beforeEach(() => {
-        let timeline = (new Flanker(randomTrainingSetNum())).getTimeline();
+        let timeline = (new Flanker(1)).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
         expect(timeline.length).toBeGreaterThanOrEqual(7);
@@ -259,16 +260,17 @@ describe("flanker training", () => {
         expect(availableResponseTime).toBe(1050);
     });
 
-    it("shows the participant a red screen if they don't respond in 1050 ms", () => {
+    it("tells the participant to answer faster if they don't respond in 1050 ms", () => {
         doTrainingInstructions();
         // fixation 1 -> trial 1
         jest.advanceTimersByTime(800);
         // trial 1 -> feedback 1 without responding to trial
         jest.advanceTimersByTime(1100);
-        expect(document.body.classList.contains("flanker-miss")).toBe(true);
         // feedback 1 -> fixation 2
         jest.advanceTimersByTime(800);
-        expect(document.body.classList.contains("flanker-miss")).toBe(false);
+        const dataValues = jsPsych.data.get().values();
+        const finalValue = dataValues[dataValues.length - 1];
+        expect(finalValue.stimulus).toBe("Answer faster next time");
     });
 
     it("presents four training trials", () => {
@@ -312,7 +314,7 @@ describe("flanker training with controlled randomization", () => {
     let randomizationSpy;
 
     beforeEach(() => {
-        timeline = (new Flanker(randomTrainingSetNum())).getTimeline();
+        timeline = (new Flanker(1)).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
         expect(timeline.length).toBeGreaterThanOrEqual(7);
@@ -381,10 +383,6 @@ describe("flanker training with controlled randomization", () => {
     });
 
 });
-
-function randomTrainingSetNum() {
-    return Math.random() < 0.5 ? 1 : 7;
-}
 
 function doTrainingInstructions() {
     // welcome screen -> instruction 1

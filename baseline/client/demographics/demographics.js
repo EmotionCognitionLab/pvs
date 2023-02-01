@@ -60,6 +60,14 @@ Demographics.setDynamicallyRequiredFields = () => {
         }
     });
 
+    document.getElementById("vax-question").addEventListener("input", (event) => {
+        if (event.target.type !== "radio") return;
+
+        const dispStyle = event.target.id === "covidVaxY" ? "display: block;" : "display: none;";
+        document.getElementById("vax-followup").style = dispStyle;
+        document.getElementById("1stdose").required = event.target.id === "covidVaxY";
+    });
+
     document.getElementById("psych-question").addEventListener("input", (event) => {
         if (event.target.type !== "radio") return;
 

@@ -1,14 +1,9 @@
-import { std, sqrt } from 'mathjs';
-import { earningsTypes } from '../../common/types/types.js';
+import { std } from 'mathjs';
 import * as bd from "../src/breath-data";
 
 jest.mock('fs/promises', () => ({
     mkdir: jest.fn(() => {})
 }));
-
-jest.mock('electron', () => {
-    return { ipcMain: { on: jest.fn(), handle: jest.fn() }}
-});
 
 import { mkdir } from 'fs/promises';
 
@@ -62,13 +57,6 @@ describe("Breathing data functions", () => {
     it("should use an in-memory database in test", () => {
         const path = bd.breathDbPath();
         expect(path).toBe(":memory:");
-    });
-
-    it("should set the msg_last_shown_date_time to 0 for the lumosity and breath bonuses", () => {
-        const stmt = db.prepare('select bonus_type, msg_last_shown_date_time from bonus_msg_display_dates');
-        const res = stmt.all();
-        expect(res).toContainEqual({ bonus_type: earningsTypes.LUMOS_BONUS, msg_last_shown_date_time: 0 });
-        expect(res).toContainEqual({ bonus_type: earningsTypes.BREATH_BONUS, msg_last_shown_date_time: 0 });
     });
 
     it("should insert a row for a regime that doesn't exist when getRegimeId is called", () => {
@@ -170,9 +158,9 @@ describe("Breathing data functions", () => {
         const expectedAvg = cohValues.reduce((prev, cur) => prev+cur, 0) / cohValues.length;
         expect(stats.mean).toBeCloseTo(expectedAvg);
         const stdDev = std(cohValues);
-        const interval = (1.645*stdDev) / sqrt(cohValues.length - 1);
-        expect(stats.low90CI).toBeCloseTo(expectedAvg - interval);
-        expect(stats.high90CI).toBeCloseTo(expectedAvg + interval);
+        const interval = 1.96*stdDev;
+        expect(stats.low95CI).toBeCloseTo(expectedAvg - interval);
+        expect(stats.high95CI).toBeCloseTo(expectedAvg + interval);
     });
 
     it("getTrainingDayCount should return 0 when the user has done no training", () => {
@@ -215,30 +203,5 @@ describe("Breathing data functions", () => {
         const expectedDays = new Set(datesAsDays).size;
 
         expect(bd.getTrainingDayCount(stage)).toBe(expectedDays);
-    });
-
-    it("getSegmentsAfterDate should return segments for the given stage", () => {
-        const regime = { durationMs: 300000, breathsPerMinute: 12, randomize: false };
-        const segs = [
-            { seg: {avgCoherence: 1, sessionStartTime: 1000}, stage: 1 },
-            { seg: {avgCoherence: 2, sessionStartTime: 2000}, stage: 2 },
-            { seg: {regime: regime, avgCoherence: 3, sessionStartTime: 3000}, stage: 3 },
-        ];
-        
-        segs.forEach(s => bd.forTesting.createSegment(s.seg, s.stage));
-        const startDate = new Date(0);
-        const stages = [1,2,3];
-        stages.forEach(stage => {
-            const segResults = bd.getSegmentsAfterDate(startDate, stage);
-            expect(segResults.length).toBe(1);
-            const curSeg = segResults[0];
-            expect(curSeg.avgCoherence).toBe(segs[stage - 1].seg.avgCoherence);
-            expect(curSeg.stage).toBe(segs[stage - 1].stage);
-            if (stage == 3) {
-                expect(curSeg.regimeId).toBeDefined();
-                expect(curSeg.regimeId).not.toBeNull();
-                expect(curSeg.sessionStartTime).toBe(segs[stage - 1].seg.sessionStartTime);
-            }
-        });
     });
 });

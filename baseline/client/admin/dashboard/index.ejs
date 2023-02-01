@@ -3,65 +3,28 @@
 <head>
     <meta charset="utf-8">
     <title><%= htmlWebpackPlugin.options.title %></title>
-    <style>
-        .dot {
-            height: 25px;
-            width: 25px;
-            border-radius: 50%;
-            display: inline-block
-        }
-        .red {
-            background-color: red;
-        }
-        .yellow {
-            background-color: yellow;
-        }
-        .green {
-            background-color: green;
-        }
-        .gray {
-            background-color: gray;
-        }
-        .black {
-            background-color: black;
-        }
-    </style>
 </head>
 <body>
     <div>
         <div id="error"></div>
-        <span><a href="#" id="dash-link">Dashboard</a></span> | <span><a href="#" id="screened-link">Potential Participants</a></span>
-        <table id="screened" class="hidden">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Gender</th>
-                </tr>
-            </thead>
-        </table>
         <table id="dashboard">
             <thead>
                 <tr>
                     <th>Subject</th>
-                    <th>Week 1 Assessments</th>
-                    <th>Visit 1</th>
-                    <th>Visit 2</th>
-                    <th>Brain Games + Breathing Practice</th>
-                    <th>Visit 3</th>
-                    <th>Visit 4</th>
-                    <th>Visit 5</th>
-                    <th>Week 12 Assessments</th>
+                    <th>Daily Tasks T1</th>
+                    <th>EEG T1</th>
+                    <th>MRI T1</th>
+                    <th>Biofeedback Practice</th>
+                    <th>EEG T2</th>
+                    <th>MRI T2</th>
+                    <th>Daily Tasks T2</th>
                     <th>Dropped</th>
                 </tr>
             </thead>
             <tbody>
             </body>
         </table>
-        <div id="user-details" class="hidden"><button id="close-button">X</button></div>
+        <div id="user-details" class="hidden"></div>
     </div>
 </body>
 </html>

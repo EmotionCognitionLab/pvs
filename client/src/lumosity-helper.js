@@ -12,8 +12,6 @@ export async function useLumosityHelper() {
     if (data.lumosDays && data.lumosDays.length > 0) {
         const today = yyyymmddString(new Date())
         if (data.lumosDays.indexOf(today) !== -1) lumosityDone = true
-    } else if (!data.lumosDays) {
-        data.lumosDays = []
     }
 
     return { days: data.lumosDays, done: lumosityDone, ready: true }

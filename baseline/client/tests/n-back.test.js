@@ -3,6 +3,9 @@ import { pressKey, cartesianProduct, flattenTimeline } from "./utils.js";
 import cue_0_html from "../n-back/frag/cue_0.html";
 import cue_1_html from "../n-back/frag/cue_1.html";
 import cue_2_html from "../n-back/frag/cue_2.html";
+import train_instruction_cue_0_html from "../n-back/frag/train/instruction_cue_0.html";
+import train_instruction_cue_1_html from "../n-back/frag/train/instruction_cue_1.html";
+import train_instruction_cue_2_html from "../n-back/frag/train/instruction_cue_2.html";
 import cue_0_wrong_html from "../n-back/frag/cue_0_wrong.html";
 import cue_1_wrong_html from "../n-back/frag/cue_1_wrong.html";
 import cue_2_wrong_html from "../n-back/frag/cue_2_wrong.html";
@@ -11,6 +14,9 @@ const correctCueResponse = new Map([
     [cue_0_html, "0"],
     [cue_1_html, "1"],
     [cue_2_html, "2"],
+    [train_instruction_cue_0_html, "0"],
+    [train_instruction_cue_1_html, "1"],
+    [train_instruction_cue_2_html, "2"],
 ]);
 
 const completeCurrentTrial = (
@@ -165,7 +171,6 @@ describe("n-back", () => {
     describe.each([
         [1],
         [2],
-        [7],
     ])("n-back set %i", setNum => {
         it("evaluated n-back trials should match spec", () => {
             // evaluate all n-back trials
@@ -192,9 +197,9 @@ describe("n-back", () => {
             // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
             expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
             // there should 2*3 n-back trials in a training block
-            expect(nbTrains.length).toBe(setNum === 1 || setNum === 7 ? 2*3 : 0);
-            // there should 3 n-back trials in a full test block
-            expect(nbTests.length).toBe(3);
+            expect(nbTrains.length).toBe(setNum === 1 ? 2*3 : 0);
+            // there should 3*3 n-back trials in a full test block
+            expect(nbTests.length).toBe(3*3);
             // there should be 15 digits and 5 targets per n-back test trials
             expect(nbTests.every(t => t.sequence.length === 15)).toBe(true);
             expect(nbTests.every(t => nbSequenceTargets(t.n, t.sequence) === 5)).toBe(true);
@@ -212,7 +217,7 @@ describe("n-back", () => {
         while (!complete) {
             completeCurrentTrial(true, true);
         }
-        expect(spy).toHaveBeenCalledTimes(2*3 + 3);
+        expect(spy).toHaveBeenCalledTimes(2*3 + 3*3);
     });
 
     it("n-back plugin trials are preceded by cues", () => {
@@ -223,13 +228,17 @@ describe("n-back", () => {
                     const cueStimulus = flatTimeline[index - 2].stimulus;
                     const cueWrongStimulus = flatTimeline[index - 1].stimulus;
                     if (trial.n === 0) {
-                        return cueStimulus === cue_0_html && cueWrongStimulus === cue_0_wrong_html;
+                        return (cueStimulus === cue_0_html || cueStimulus === train_instruction_cue_0_html) 
+                            && cueWrongStimulus === cue_0_wrong_html;
                     } else if (trial.n === 1) {
-                        return cueStimulus === cue_1_html && cueWrongStimulus === cue_1_wrong_html;
+                        return (cueStimulus === cue_1_html || cueStimulus === train_instruction_cue_1_html)
+                            && cueWrongStimulus === cue_1_wrong_html;
                     } else if (trial.n === 2) {
-                        return cueStimulus === cue_2_html && cueWrongStimulus === cue_2_wrong_html;
+                        return (cueStimulus === cue_2_html || cueStimulus === train_instruction_cue_2_html)
+                            && cueWrongStimulus === cue_2_wrong_html;
                     } else {
-                        throw new Error("invalid n");
+                        fail("invalid n");
+                        return false;
                     }
                 } else {
                     return true;
@@ -238,7 +247,7 @@ describe("n-back", () => {
         ).toBe(true);
     });
 
-    it("n-back plugin trials are succeeded by rests", () => {
+    it("relevant n-back plugin trials are succeeded by rests", () => {
         const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
         const lastNBackTrialIndex = (() => {
             for (let i = flatTimeline.length - 1; i >= 0; --i) {
@@ -251,7 +260,7 @@ describe("n-back", () => {
         expect(lastNBackTrialIndex).not.toBe(null);
         expect(
             flatTimeline.every((trial, index) => {
-                if (trial.type === "n-back" && index !== lastNBackTrialIndex) {
+                if (trial.type === "n-back" && index !== lastNBackTrialIndex && trial.data.isRelevant) {
                     return flatTimeline[index + 1] === NBack.rest.timeline[0];
                 } else {
                     return true;
