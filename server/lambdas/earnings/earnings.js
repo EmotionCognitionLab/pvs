@@ -150,7 +150,7 @@ async function saveLumosAndBreathEarnings(userId, humanId, lastLumosEarningsDate
     const breathSegs = await db.segmentsForUser(humanId);
     const breathSegsByDate = {};
     breathSegs.forEach(bs => {
-        const date = dayjs(bs.endDateTime * 1000).format('YYYY-MM-DD');
+        const date = dayjs(bs.endDateTime * 1000).tz('America/Los_Angeles').format('YYYY-MM-DD');
         const segs = breathSegsByDate[date] || [];
         segs.push(bs);
         breathSegsByDate[date] = segs;

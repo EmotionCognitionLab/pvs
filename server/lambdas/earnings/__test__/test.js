@@ -545,6 +545,53 @@ describe("Lumos + breathing 1 earnings", () => {
         expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
 
     });
+
+    it("in stage 3, should pay for Lumosity plays on days with >= 6 game plays followed by three breathing segments if those segments are in a different UTC day but same PT day", async () => {
+        const testDate1 = new Date("2022-10-15 11:45:17"); // UTC, b/c tests run in UTC
+        const stage2CompletedDate = "20220930";
+        const stage3Users = [Object.assign({}, users[0])];
+        stage3Users[0].stage2Completed = true;
+        stage3Users[0].stage2CompletedOn = stage2CompletedDate;
+        mockGetBaselineCompleteUsers.mockReturnValue(stage3Users);
+
+        
+        const lumosPlays1 = buildLumosPlaysForEarnings(users[0].userId, testDate1);
+        
+        mockLumosPlaysForUser.mockReturnValue(lumosPlays1);
+        mockEarningsForUser.mockImplementation((userId, earnType) => {
+            if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
+            return [{}];
+        });
+
+        const breathSegs = [
+            {
+                humanId: users[0].humanId,
+                endDateTime: dayjs(testDate1).add(13, 'hours').unix(), // new day UTC, same day PT
+                avgCoherence: 0.84,
+                isRest: false,
+                stage: 3
+            },
+            {
+                humanId: users[0].humanId,
+                endDateTime: dayjs(testDate1).add(13, 'hours').add(5, 'minutes').unix(),
+                avgCoherence: 1.12,
+                isRest: false,
+                stage: 3
+            },
+            {
+                humanId: users[0].humanId,
+                endDateTime: dayjs(testDate1).add(13, 'hours').add(10, 'minutes').unix(),
+                avgCoherence: 0.77,
+                isRest: false,
+                stage: 3
+            }
+        ];
+        mockSegmentsForUser.mockReturnValue(breathSegs);
+
+        await handler();
+        expect(mockSaveEarnings).toHaveBeenCalledTimes(1);
+        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate1).format('YYYY-MM-DD'));
+    });
 });
 
 describe("Breathing 2 earnings", () => {
@@ -559,6 +606,44 @@ describe("Breathing 2 earnings", () => {
     it("should pay users a stage 3 breathing bonus if they meet the requirements and it is the same day that they transitioned to stage 3", async () => {
         const d = new Date('2022-10-15 11:45:17');
         await confirmBreath2Earnings(d, dayjs(d).format('YYYYMMDD'))
+    });
+
+    it("should pay an additional $2 in stage 3 if the user does six breathing segments spread across two UTC days but on same PT day after a Lumosity session", async () => {
+        const testDate = new Date('2022-09-29 22:47:38'); // UTC b/c tests run in UTC
+
+        const users = [{userId: 'def456', humanId: 'BigTest', preComplete: true, stage2Completed: true, stage2CompletedOn: "20220914"}];
+        mockGetBaselineCompleteUsers.mockReturnValue(users);
+
+        
+        const lumosPlays = buildLumosPlaysForEarnings(users[0].userId, testDate);
+        
+        mockLumosPlaysForUser.mockReturnValue(lumosPlays);
+        mockEarningsForUser.mockImplementation((userId, earnType) => {
+            if (earnType === earningsTypes.LUMOS_AND_BREATH_1) return [];
+            return [{}];
+        });
+
+        const breathSegs = [];
+        // spreads breathing segments across three hours, 
+        // splitting them across two UTC days but keeping
+        // them in the same PT day
+        for (let min = 30; min <= 180; min += 30) { 
+            breathSegs.push({
+                humanId: users[0].humanId,
+                endDateTime: dayjs(testDate).add(min, 'minutes').unix(),
+                avgCoherence: 0.84,
+                isRest: false,
+                stage: 3
+            });
+        }
+
+        mockSegmentsForUser.mockReturnValue(breathSegs);
+
+        await handler();
+        expect(mockSaveEarnings).toHaveBeenCalledTimes(2);
+        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.LUMOS_AND_BREATH_1, dayjs(testDate).format('YYYY-MM-DD'));
+        expect(mockSaveEarnings).toHaveBeenCalledWith(users[0].userId, earningsTypes.BREATH2, dayjs(testDate).format('YYYY-MM-DD'));
+
     });
        
 });
