@@ -3,6 +3,9 @@ import { pressKey, cartesianProduct, flattenTimeline } from "./utils.js";
 import cue_0_html from "../n-back/frag/cue_0.html";
 import cue_1_html from "../n-back/frag/cue_1.html";
 import cue_2_html from "../n-back/frag/cue_2.html";
+import train_instruction_cue_0_html from "../n-back/frag/train/instruction_cue_0.html";
+import train_instruction_cue_1_html from "../n-back/frag/train/instruction_cue_1.html";
+import train_instruction_cue_2_html from "../n-back/frag/train/instruction_cue_2.html";
 import cue_0_wrong_html from "../n-back/frag/cue_0_wrong.html";
 import cue_1_wrong_html from "../n-back/frag/cue_1_wrong.html";
 import cue_2_wrong_html from "../n-back/frag/cue_2_wrong.html";
@@ -11,6 +14,9 @@ const correctCueResponse = new Map([
     [cue_0_html, "0"],
     [cue_1_html, "1"],
     [cue_2_html, "2"],
+    [train_instruction_cue_0_html, "0"],
+    [train_instruction_cue_1_html, "1"],
+    [train_instruction_cue_2_html, "2"],
 ]);
 
 const completeCurrentTrial = (
@@ -223,11 +229,14 @@ describe("n-back", () => {
                     const cueStimulus = flatTimeline[index - 2].stimulus;
                     const cueWrongStimulus = flatTimeline[index - 1].stimulus;
                     if (trial.n === 0) {
-                        return cueStimulus === cue_0_html && cueWrongStimulus === cue_0_wrong_html;
+                        return (cueStimulus === cue_0_html || cueStimulus === train_instruction_cue_0_html) 
+                            && cueWrongStimulus === cue_0_wrong_html;
                     } else if (trial.n === 1) {
-                        return cueStimulus === cue_1_html && cueWrongStimulus === cue_1_wrong_html;
+                        return (cueStimulus === cue_1_html || cueStimulus === train_instruction_cue_1_html)
+                            && cueWrongStimulus === cue_1_wrong_html;
                     } else if (trial.n === 2) {
-                        return cueStimulus === cue_2_html && cueWrongStimulus === cue_2_wrong_html;
+                        return (cueStimulus === cue_2_html || cueStimulus === train_instruction_cue_2_html)
+                            && cueWrongStimulus === cue_2_wrong_html;
                     } else {
                         throw new Error("invalid n");
                     }
@@ -238,7 +247,7 @@ describe("n-back", () => {
         ).toBe(true);
     });
 
-    it("n-back plugin trials are succeeded by rests", () => {
+    it("relevant n-back plugin trials are succeeded by rests", () => {
         const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
         const lastNBackTrialIndex = (() => {
             for (let i = flatTimeline.length - 1; i >= 0; --i) {
@@ -251,7 +260,7 @@ describe("n-back", () => {
         expect(lastNBackTrialIndex).not.toBe(null);
         expect(
             flatTimeline.every((trial, index) => {
-                if (trial.type === "n-back" && index !== lastNBackTrialIndex) {
+                if (trial.type === "n-back" && index !== lastNBackTrialIndex && trial.data.isRelevant) {
                     return flatTimeline[index + 1] === NBack.rest.timeline[0];
                 } else {
                     return true;

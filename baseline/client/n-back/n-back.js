@@ -26,6 +26,7 @@ import train_instruction_cue_1_html from "./frag/train/instruction_cue_1.html";
 import train_instruction_cue_2_html from "./frag/train/instruction_cue_2.html";
 import train_instruction_retry_html from "./frag/train/instruction_retry.html";
 // refresher fragments
+import refresh_introduction_html from "./frag/refresh/introduction.html";
 import refresh_instruction_start_html from "./frag/refresh/instruction_start.html";
 import refresh_instruction_0_html from "./frag/refresh/instruction_0.html";
 import refresh_instruction_1_html from "./frag/refresh/instruction_1.html";
@@ -66,12 +67,12 @@ export class NBack {
                 i(train_instruction_2a_html),
                 this.randShortPracticeLoop(2),
                 i(train_instruction_2b_html),
-                i(train_instruction_cue_0_html),
-                ...this.randTrialGroup(0, undefined, undefined, false),
-                i(train_instruction_cue_1_html),
-                ...this.randTrialGroup(1, undefined, undefined, false),
-                i(train_instruction_cue_2_html),
-                ...this.randTrialGroup(2, undefined, undefined, false),
+                this.constructor.cue("0", train_instruction_cue_0_html, cue_0_wrong_html),
+                this.randTrial(0, 15, 5, false),
+                this.constructor.cue("1", train_instruction_cue_1_html, cue_1_wrong_html),
+                this.randTrial(1, 15, 5, false),
+                this.constructor.cue("2", train_instruction_cue_2_html, cue_2_wrong_html),
+                this.randTrial(2, 15, 5, false),
             ];
             return [
                 ...training_block,
@@ -79,6 +80,7 @@ export class NBack {
             ];
         } else {
             const refresher_block = [
+                i(refresh_introduction_html),
                 i(refresh_instruction_start_html),
                 i(refresh_instruction_0_html),
                 i(refresh_instruction_1_html),
@@ -192,7 +194,6 @@ NBack.cue = (targetKey, stimulus, wrongFeedback) => ({
         {
             type: "html-keyboard-response",
             stimulus: stimulus,
-            choices: ["0", "1", "2"],
         },
         {
             timeline: [NBack.simpleInstruction(wrongFeedback)],
