@@ -32,6 +32,17 @@ const homeTrainingMsg = {
     sms: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today."
 }
 
+const bloodDrawMessage = (huid) => {
+    if (!huid || huid.trim() === "") throw new Error('Nonexistent or empty huid. Not sending blood draw survey for this recipient.');
+    
+    return {
+        subject: "How was your blood draw yesterday?",
+        html: `Please take this survey to let us know how your blood draw for the USC HeartBEAM study was: https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}`,
+        text: `Please take this survey to let us know how your blood draw for the USC HeartBEAM study was: https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}`
+    };
+    
+}
+
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
 const sns = new SNS({endpoint: snsEndpoint, apiVersion: '2010-03-31', region: region});
 const db = new Db();
@@ -49,6 +60,8 @@ export async function handler (event) {
         await sendPreBaselineReminders(commType);
     } else if (reminderType === 'homeTraining') {
         await sendHomeTraininingReminders(commType);
+    } else if (reminderType === 'bloodDrawSurvey') {
+        await sendBloodDrawSurvey(commType);
     } else {
         const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
         console.error(errMsg);
@@ -126,6 +139,12 @@ async function sendHomeTraininingReminders(commType) {
         console.error(`Error sending ${commType} reminders for home training tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} home training reminders via ${commType}.`);
+}
+
+async function sendBloodDrawSurvey(commType) {
+    if (commType !== "email") throw new Error(`The commType ${commType} is not supported for sending blood draw surveys.`);
+
+
 }
 
 async function deliverReminders(recipients, commType, msg) {
