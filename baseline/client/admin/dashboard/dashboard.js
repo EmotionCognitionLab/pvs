@@ -213,8 +213,8 @@ export class Dashboard {
             const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
                 let status;
-                if (user.startDate && dayjs(user.startDate).isAfter(dayjs())) {
-                   status = { status: 'gray', note: `start date ${user.startDate}`};
+                if ( (user.progress && user.progress.dropped) || (user.startDate && dayjs(user.startDate).isAfter(dayjs())) ) {
+                   status = { status: 'gray' };
                 } else {
                     status = await this.client.getUserStatus(user.userId, user.humanId, user.preComplete, user.stage2Completed, user.stage2CompletedOn, user.homeComplete, user.postComplete);
                 }
@@ -338,7 +338,7 @@ export class Dashboard {
         idDiv.classList.add("small");
         subjectCell.append(idDiv);
         const dateDiv = document.createElement("div");
-        dateDiv.textContent = user.createdAt.substring(0, 10);
+        dateDiv.textContent = user.startDate ? user.startDate : "No start date";
         dateDiv.classList.add("small");
         subjectCell.appendChild(dateDiv);
         const [preStatus, lumosBreathingStatus, postStatus] = Dashboard.buildStatusDivs(user.preComplete, user.homeComplete, user.postComplete, status);
