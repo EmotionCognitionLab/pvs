@@ -213,7 +213,7 @@ export class Dashboard {
             const users = await this.client.getAllParticipants();
             await Promise.all(users.map(async (user) => {
                 let status;
-                if (user.startDate && dayjs(user.startDate).isAfter(dayjs())) {
+                if ( (user.progress && user.progress.dropped) || (user.startDate && dayjs(user.startDate).isAfter(dayjs())) ) {
                    status = { status: 'gray' };
                 } else {
                     status = await this.client.getUserStatus(user.userId, user.humanId, user.preComplete, user.stage2Completed, user.stage2CompletedOn, user.homeComplete, user.postComplete);
