@@ -338,7 +338,7 @@ export class Dashboard {
         idDiv.classList.add("small");
         subjectCell.append(idDiv);
         const dateDiv = document.createElement("div");
-        dateDiv.textContent = user.createdAt.substring(0, 10);
+        dateDiv.textContent = user.startDate ? user.startDate : "No start date";
         dateDiv.classList.add("small");
         subjectCell.appendChild(dateDiv);
         const [preStatus, lumosBreathingStatus, postStatus] = Dashboard.buildStatusDivs(user.preComplete, user.homeComplete, user.postComplete, status);
