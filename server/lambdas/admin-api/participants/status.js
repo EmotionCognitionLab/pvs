@@ -4,7 +4,7 @@ const baselineStatus = async (db, userId) => {
     // they're doing baseline training; check to see how many sets they've finished
     // and when they did their first set
     const sets = await db.getSetsForUser(userId);
-    if (sets.length === 0) return {status: 'red'};
+    if (sets.length === 0) return {status: 'red', sets: '0/6'};
 
     const started = dayjs(sets[0].dateTime);
     const now = dayjs();
@@ -13,13 +13,13 @@ const baselineStatus = async (db, userId) => {
 
     const finishedSetsCount = sets.filter(s => s.experiment === 'set-finished').length;
     if (daysSinceStart <= 3) {
-        if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green'};
-        return {status: 'yellow'};
+        if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+        return {status: 'yellow', sets: `${finishedSetsCount}/6`};
     }
 
-    if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green'};
-    if (finishedSetsCount >= daysSinceStart - 2) return {status: 'yellow'};
-    return {status: 'red'};
+    if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+    if (finishedSetsCount >= daysSinceStart - 2) return {status: 'yellow', sets: `${finishedSetsCount}/6`};
+    return {status: 'red', sets: `${finishedSetsCount}/6`};
 }
 
 // slightly misnamed, as they might not have started stage 2
