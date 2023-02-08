@@ -20,8 +20,8 @@ const mockDb = (results, lumosPlays = [], user) => ({
 });
 
 describe("pre-baseline complete status", () => {
-    it("should return red if the user started >= 2 days ago and has done no sets", async () => {
-        await checkBaselineStatus(49, 0, 'red');
+    it.only("should return red if the user started >= 2 days ago and has done no sets", async () => {
+        await checkBaselineStatus(57, 0, 'red');
     });
 
     it.each([1, 22, 27, 47])

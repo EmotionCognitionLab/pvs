@@ -16,7 +16,6 @@ const baselineStatus = async (db, userId) => {
 
     if (daysSinceStart <= 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
 
-    
     if (sets.length === 0) return {status: 'red', sets: '0/6'};
 
     if (daysSinceStart <= 3) {
