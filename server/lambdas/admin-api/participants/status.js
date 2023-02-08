@@ -11,20 +11,21 @@ const baselineStatus = async (db, userId) => {
     const started = user.startDate ? dayjs(user.startDate).tz('America/Los_Angeles', true).utc() : dayjs(user.createdAt);
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day'); // will be 0 for all values <24h, 1 for <48h, etc.
-    if (daysSinceStart <= 1) return {status: 'green'};
-
     const sets = await db.getSetsForUser(userId);
-    if (sets.length === 0) return {status: 'red'};
-
     const finishedSetsCount = sets.filter(s => s.experiment === 'set-finished').length;
+
+    if (daysSinceStart <= 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+
+    if (sets.length === 0) return {status: 'red', sets: '0/6'};
+
     if (daysSinceStart <= 3) {
-        if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green'};
-        return {status: 'yellow'};
+        if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+        return {status: 'yellow', sets: `${finishedSetsCount}/6`};
     }
 
-    if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green'};
-    if (finishedSetsCount >= daysSinceStart - 2) return {status: 'yellow'};
-    return {status: 'red'};
+    if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+    if (finishedSetsCount >= daysSinceStart - 2) return {status: 'yellow', sets: `${finishedSetsCount}/6`};
+    return {status: 'red', sets: `${finishedSetsCount}/6`};
 }
 
 // slightly misnamed, as they might not have started stage 2
