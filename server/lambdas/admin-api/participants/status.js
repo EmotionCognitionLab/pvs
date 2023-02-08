@@ -1,17 +1,24 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const baselineStatus = async (db, userId) => {
     // they're doing baseline training; check to see how many sets they've finished
-    // and when they did their first set
-    const sets = await db.getSetsForUser(userId);
-    if (sets.length === 0) return {status: 'red', sets: '0/6'};
-
-    const started = dayjs(sets[0].dateTime);
+    // and when they should have started doing sets
+    const user = await db.getUser(userId);
+    const started = user.startDate ? dayjs(user.startDate).tz('America/Los_Angeles', true).utc() : dayjs(user.createdAt);
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day'); // will be 0 for all values <24h, 1 for <48h, etc.
-    if (daysSinceStart <= 1) return {status: 'green'};
-
+    const sets = await db.getSetsForUser(userId);
     const finishedSetsCount = sets.filter(s => s.experiment === 'set-finished').length;
+
+    if (daysSinceStart <= 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
+
+    
+    if (sets.length === 0) return {status: 'red', sets: '0/6'};
+
     if (daysSinceStart <= 3) {
         if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
         return {status: 'yellow', sets: `${finishedSetsCount}/6`};
