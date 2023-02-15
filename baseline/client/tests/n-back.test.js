@@ -63,7 +63,7 @@ const nbSequenceTargets = (n, sequence) => (
 describe("n-back", () => {
     it("results should have at least one result marked isRelevant", () => {
         // check timeline nodes
-        const timeline = (new NBack(1)).getTimeline();
+        const timeline = (new NBack(2)).getTimeline();
         expect(timeline.some(trial => trial.data && trial.data.isRelevant)).toBe(true);
         // check generated data
         jest.useFakeTimers("legacy");
@@ -142,7 +142,7 @@ describe("n-back", () => {
         jest.useFakeTimers("legacy");
         let complete = false;
         jsPsych.init({
-            timeline: (new NBack(1)).getTimeline(),
+            timeline: (new NBack(2)).getTimeline(),
             on_finish: () => { complete = true; },
         });
         const completeNTrials = (n, nbCorrectly) => {
@@ -169,9 +169,9 @@ describe("n-back", () => {
     });
 
     describe.each([
-        [1],
         [2],
-        [7],
+        [3],
+        [8],
     ])("n-back set %i", setNum => {
         it("evaluated n-back trials should match spec", () => {
             // evaluate all n-back trials
@@ -198,7 +198,7 @@ describe("n-back", () => {
             // n-back trial digits should be presented for 800 ms and hidden for 1000 ms
             expect(nbTrials.every(t => t.show_duration === 800 && t.hide_duration === 1000)).toBe(true);
             // there should 2*3 n-back trials in a training block
-            expect(nbTrains.length).toBe(setNum === 1 || setNum === 7 ? 2*3 : 0);
+            expect(nbTrains.length).toBe(setNum === 2 || setNum === 8 ? 2*3 : 0);
             // there should 3 n-back trials in a full test block
             expect(nbTests.length).toBe(3);
             // there should be 15 digits and 5 targets per n-back test trials
@@ -208,7 +208,7 @@ describe("n-back", () => {
     });
 
     it("uses NBack.randSequence to evaluate n-back trials in its timeline", () => {
-        const nback = new NBack(1);
+        const nback = new NBack(2);
         const spy = jest.spyOn(nback, "randSequence");
         let complete = false;
         jsPsych.init({
@@ -222,7 +222,7 @@ describe("n-back", () => {
     });
 
     it("n-back plugin trials are preceded by cues", () => {
-        const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
+        const flatTimeline = flattenTimeline((new NBack(2)).getTimeline());
         expect(
             flatTimeline.every((trial, index) => {
                 if (trial.type === "n-back") {
@@ -248,7 +248,7 @@ describe("n-back", () => {
     });
 
     it("relevant n-back plugin trials are succeeded by rests", () => {
-        const flatTimeline = flattenTimeline((new NBack(1)).getTimeline());
+        const flatTimeline = flattenTimeline((new NBack(2)).getTimeline());
         const lastNBackTrialIndex = (() => {
             for (let i = flatTimeline.length - 1; i >= 0; --i) {
                 if (flatTimeline[i].type === "n-back") {
@@ -270,7 +270,7 @@ describe("n-back", () => {
     });
 
     it("generates random n-back sequences correctly", () => {
-        const nback = new NBack(1);
+        const nback = new NBack(2);
         const choicess = [["1", "2", "3", "4", "5", "6", "7", "8", "9"]];
         const lengths = [15, 16, 17, 18, 19, 20];
         const ns = [0, 1, 2];
