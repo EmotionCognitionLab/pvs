@@ -80,10 +80,9 @@ function goToTasks() {
 async function lumosBonusAchieved(lastLumosBonusEarnings) {
     if (!lastLumosBonusEarnings) return ""
 
-    const lastBonusDate = Math.round(new Date(lastLumosBonusEarnings.date).getTime() / 1000)
     const lastBonusDisplayedDate = await window.mainAPI.getLastShownDateTimeForBonusType(earningsTypes.LUMOS_BONUS)
-    if (lastBonusDate > lastBonusDisplayedDate) {
-        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.LUMOS_BONUS, Math.round(Date.now() / 1000))
+    if (lastLumosBonusEarnings.date > lastBonusDisplayedDate) {
+        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.LUMOS_BONUS, lastLumosBonusEarnings.date)
         return "Congratulations! You've earned a $2 bonus for improving your brain game scores this past week. Keep it up!"
     }
 
@@ -93,10 +92,9 @@ async function lumosBonusAchieved(lastLumosBonusEarnings) {
 async function breathBonusAchieved(lastBreathBonusEarnings, condition) {
     if (!lastBreathBonusEarnings) return ""
 
-    const lastBonusDate = new Date(lastBreathBonusEarnings.date).getTime() / 1000
     const lastBonusDisplayedDate = await window.mainAPI.getLastShownDateTimeForBonusType(earningsTypes.BREATH_BONUS)
-    if (lastBonusDate > lastBonusDisplayedDate) {
-        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.BREATH_BONUS, Math.round(Date.now() / 1000))
+    if (lastBreathBonusEarnings.date > lastBonusDisplayedDate) {
+        await window.mainAPI.setLastShownDateTimeForBonusType(earningsTypes.BREATH_BONUS, lastBreathBonusEarnings.date)
         let adjective = ""
         if (condition === 'A') {
             adjective = "relaxed"
