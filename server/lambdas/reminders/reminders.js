@@ -37,7 +37,7 @@ const bloodDrawMessage = (huid, firstName) => {
     
     return {
         subject: "Tell us about your blood draw at your recent lab visit",
-        html: `Hello ${firstName},\n\nWe'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please <a href="https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}">click here</a> to complete a short survey.`,
+        html: `Hello ${firstName},<p>We'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please <a href="https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}">click here</a> to complete a short survey.</p>`,
         text: `Hello ${firstName},\n\nWe'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please click here https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid} to complete a short survey.`
     };
     
