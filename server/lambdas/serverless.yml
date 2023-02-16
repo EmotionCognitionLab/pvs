@@ -298,6 +298,12 @@ functions:
           input:
             commType: email
             reminderType: preBaseline
+      - schedule:
+          name: "${self:provider.stage}-blood-draw-survey-noon-email"
+          rate: cron(00 20 * * ? *)
+          input:
+            commType: email
+            reminderType: bloodDrawSurvey
         
     environment:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"

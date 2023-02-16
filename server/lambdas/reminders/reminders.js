@@ -32,13 +32,13 @@ const homeTrainingMsg = {
     sms: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today."
 }
 
-const bloodDrawMessage = (huid) => {
+const bloodDrawMessage = (huid, firstName) => {
     if (!huid || huid.trim() === "") throw new Error('Nonexistent or empty huid. Not sending blood draw survey for this recipient.');
     
     return {
-        subject: "How was your blood draw yesterday?",
-        html: `Please take this survey to let us know how your blood draw for the USC HeartBEAM study was: https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}`,
-        text: `Please take this survey to let us know how your blood draw for the USC HeartBEAM study was: https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}`
+        subject: "Tell us about your blood draw at your recent lab visit",
+        html: `Hello ${firstName},\n\nWe'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please <a href="https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}">click here</a> to complete a short survey.`,
+        text: `Hello ${firstName},\n\nWe'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please click here https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid} to complete a short survey.`
     };
     
 }
@@ -144,7 +144,24 @@ async function sendHomeTraininingReminders(commType) {
 async function sendBloodDrawSurvey(commType) {
     if (commType !== "email") throw new Error(`The commType ${commType} is not supported for sending blood draw surveys.`);
 
+    let sentCount = 0;
 
+    try {
+        const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+        const usersToMsg = await db.getBloodDrawUsers(yesterday);
+
+        // we intentionally don't filter drops
+        // even if they drop right after a blood draw
+        // we still want to send the survey
+        const sends = usersToMsg.map(async u => {
+            await sendEmail(u.email, bloodDrawMessage(u.humanId, u.name.split(" ")[0]));
+            sentCount++
+        });
+        await Promise.all(sends);
+    } catch (err) {
+        console.error(`Error sending blood draw surveys: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} blood draw surveys.`);
 }
 
 async function deliverReminders(recipients, commType, msg) {
