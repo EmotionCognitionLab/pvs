@@ -171,9 +171,9 @@ function getLastShownDateTimeForBonusType(bonusType) {
         throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
     }
 
-    const stmt = db.prepare('SELECT msg_last_shown_date_time FROM bonus_msg_display_dates WHERE bonus_type = ?');
+    const stmt = db.prepare('SELECT bonus_date FROM bonus_msg_display_dates WHERE bonus_type = ?');
     const res = stmt.get(bonusType);
-    return res.msg_last_shown_date_time;
+    return res.bonus_date;
 }
 
 function setLastShownDateTimeForBonusType(bonusType, lastShownDateTime) {
@@ -181,7 +181,7 @@ function setLastShownDateTimeForBonusType(bonusType, lastShownDateTime) {
         throw new Exception(`The bonus type must be either ${earningsTypes.LUMOS_BONUS} or ${earningsTypes.BREATH_BONUS}`);
     }
 
-    const stmt = db.prepare('UPDATE bonus_msg_display_dates SET msg_last_shown_date_time = ? WHERE bonus_type = ?');
+    const stmt = db.prepare('UPDATE bonus_msg_display_dates SET bonus_date = ? WHERE bonus_type = ?');
     stmt.run(lastShownDateTime, bonusType);
 }
 
@@ -246,7 +246,7 @@ function initBonusMsgTable() {
     const checkTypesStmt = db.prepare('SELECT bonus_type from bonus_msg_display_dates');
     const res = checkTypesStmt.all();
     const allTypes = res.map(r => r.bonus_type);
-    const initStmt = db.prepare('INSERT INTO bonus_msg_display_dates(bonus_type, msg_last_shown_date_time) VALUES(? , 0)');
+    const initStmt = db.prepare("INSERT INTO bonus_msg_display_dates(bonus_type, bonus_date) VALUES(? , '1970-01-01')");
     if (!allTypes.includes(earningsTypes.LUMOS_BONUS)) {
         initStmt.run(earningsTypes.LUMOS_BONUS);
     }
@@ -304,7 +304,7 @@ async function initBreathDb(serializedSession) {
         createVersionTableStmt.run();
         checkVersion();
 
-        const createBonusMsgTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS bonus_msg_display_dates(id INTEGER PRIMARY KEY, bonus_type TEXT NOT NULL UNIQUE, msg_last_shown_date_time INTEGER NOT NULL)');
+        const createBonusMsgTableStmt = db.prepare('CREATE TABLE IF NOT EXISTS bonus_msg_display_dates(id INTEGER PRIMARY KEY, bonus_type TEXT NOT NULL UNIQUE, bonus_date TEXT NOT NULL)');
         createBonusMsgTableStmt.run();
         initBonusMsgTable();
 
