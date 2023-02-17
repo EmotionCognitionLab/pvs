@@ -40,7 +40,13 @@ const bloodDrawMessage = (huid, firstName) => {
         html: `Hello ${firstName},<p>We'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please <a href="https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid}">click here</a> to complete a short survey.</p>`,
         text: `Hello ${firstName},\n\nWe'd like to hear about your experience with the blood draw at your recent lab visit for the HeartBEAM study. Please click here https://usc.qualtrics.com/jfe/form/SV_ebqB8UDgv1Ges3Y?huid=${huid} to complete a short survey.`
     };
-    
+};
+
+const startTomorrowMsg = {
+    subject: "Start the HeartBEAM Study Tomorrow!",
+    html: "Hello, <p>This is a reminder that it's almost time to start the HeartBEAM study! Tomorrow, please be sure to log into the HeartBEAM study website (www.heartbeamstudy.org) to start the first of 6 days of assessments. Please complete these over 6 consecutive days. As stated in the consent form, if you miss more than one out of 6 days of assessments, you will not be able to continue in the study.</p><p>Please let us know if you have any questions.</p><p>Best,</p><p>USC HeartBEAM Study Team</p>",
+    text: "Hello,\n\nThis is a reminder that it's almost time to start the HeartBEAM study! Tomorrow, please be sure to log into the HeartBEAM study website (www.heartbeamstudy.org) to start the first of 6 days of assessments. Please complete these over 6 consecutive days. As stated in the consent form, if you miss more than one out of 6 days of assessments, you will not be able to continue in the study.\n\nPlease let us know if you have any questions.\n\nBest,\n\nUSC HeartBEAM Study Team",
+    sms: "It's almost time to start the HeartBEAM study! Log in tomorrow at www.heartbeamstudy.org to complete Day 1 of 6 days of assessments."
 }
 
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
@@ -62,6 +68,8 @@ export async function handler (event) {
         await sendHomeTraininingReminders(commType);
     } else if (reminderType === 'bloodDrawSurvey') {
         await sendBloodDrawSurvey(commType);
+    } else if (reminderType === 'startTomorrow') {
+        await sendStartTomorrowReminders(commType);
     } else {
         const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
         console.error(errMsg);
@@ -162,6 +170,19 @@ async function sendBloodDrawSurvey(commType) {
         console.error(`Error sending blood draw surveys: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} blood draw surveys.`);
+}
+
+async function sendStartTomorrowReminders(commType) {
+    let sentCount = 0;
+
+    try {
+        const tomorrow = dayjs().tz('America/Los_Angeles').add(1, 'day').format('YYYY-MM-DD');
+        const usersStartingTomorrow = await db.getUsersStartingOn(tomorrow);
+        sentCount = await deliverReminders(usersStartingTomorrow, commType, startTomorrowMsg);
+    } catch (err) {
+        console.error(`Error sending ${commType} reminders to start tomorrow: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} reminders to start tomorrow via ${commType}.`);
 }
 
 async function deliverReminders(recipients, commType, msg) {
