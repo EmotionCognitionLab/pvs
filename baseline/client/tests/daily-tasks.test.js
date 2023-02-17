@@ -556,7 +556,8 @@ describe("doing the tasks", () => {
         jest.spyOn(window.screen, "width", "get").mockReturnValue(screenWidth);
         jest.spyOn(window.screen, "height", "get").mockReturnValue(screenHeight);
         jest.useFakeTimers("legacy");
-        dailyTasks.runTask(allTimelines.remainingTasks, 0, saveResultsMock);
+        const remainingTasks = allTimelines.remainingTasks.slice(1); // slice to skip demographics
+        dailyTasks.runTask(remainingTasks, 0, saveResultsMock); 
         // full-screen mode screen
         clickContinue();
         jest.runAllTimers();
@@ -564,19 +565,19 @@ describe("doing the tasks", () => {
         // video
         clickContinue();
 
-        expect(saveResultsMock.mock.calls.length).toBe(6); // set-started, video task-started, video full-screen, video results, video user-agent, next task started
+        expect(saveResultsMock.mock.calls.length).toBe(5); // video task-started, video full-screen, video results, video user-agent, next task started
         // the experiment name saved to the results should be the name of the first task in allTimelines
-        expect(saveResultsMock.mock.calls[3][0]).toBe(allTimelines.remainingTasks[0].taskName);
+        expect(saveResultsMock.mock.calls[3][0]).toBe(remainingTasks[0].taskName);
         // it should save the browser user agent as part of the results
-        const ua = saveResultsMock.mock.calls[4][1].filter(r => r.ua);
+        const ua = saveResultsMock.mock.calls[3][1].filter(r => r.ua);
         expect(ua.length).toBe(1);
         expect(ua[0].ua).toBe(window.navigator.userAgent);
         // it should save the screen size as part of the results
-        const screen = saveResultsMock.mock.calls[4][1].filter(r => r.screen);
+        const screen = saveResultsMock.mock.calls[3][1].filter(r => r.screen);
         expect(screen.length).toBe(1);
         expect(screen[0].screen).toBe(`${screenWidth}x${screenHeight}`);
         // it should save the application version as part of the results
-        const vers = saveResultsMock.mock.calls[4][1].filter(r => r.v);
+        const vers = saveResultsMock.mock.calls[3][1].filter(r => r.v);
         expect(vers.length).toBe(1);
         expect(vers[0].v).toBe(version.v);
     });
