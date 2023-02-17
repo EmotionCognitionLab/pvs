@@ -14,6 +14,7 @@ const mockGetBaselineIncompleteUsers = jest.fn(() => [ user ]);
 const mockGetHomeTrainingInProgressUsers = jest.fn(() => [ user ]);
 const mockGetResultsForCurrentUser = jest.fn(() => []);
 const mockSegmentsForUser = jest.fn(() => []);
+const mockGetBloodDrawUsers = jest.fn((yyyymmddStr) => []);
 const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
@@ -21,7 +22,7 @@ const mockUpdateUser = jest.fn(() => {});
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockSendEmail, mockSnsPublish];
+const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockGetBloodDrawUsers, mockSendEmail, mockSnsPublish];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -47,7 +48,8 @@ jest.mock('db/db', () => {
             getSetsForUser: (userId) => mockGetSetsForUser(userId),
             updateUser: (userId, updates) => mockUpdateUser(userId, updates),
             getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
-            segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate)
+            segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate),
+            getBloodDrawUsers: (yyyymmddStr) => mockGetBloodDrawUsers(yyyymmddStr)
         };
     });
 });
@@ -340,4 +342,31 @@ describe("home training reminders", () => {
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).not.toHaveBeenCalled();
     });
+});
+
+describe("blood draw surveys", () => {
+    it("should request people whose blood was drawn yesterday", async() => {
+        await handler({commType: 'email', reminderType: 'bloodDrawSurvey'});
+        const expectedDate = dayjs().subtract(1, 'days').format('YYYY-MM-DD');
+        expect(mockGetBloodDrawUsers).toHaveBeenCalledTimes(1);
+        expect(mockGetBloodDrawUsers.mock.calls[0][0]).toBe(expectedDate);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    it("should include the user's first name and humanId in the message", async() => {
+        const user = {name: 'ivan ivanovich', humanId: 'BigBoot', email: 'ivani@example.com'};
+        mockGetBloodDrawUsers.mockImplementationOnce(() => [user]);
+        await handler({commType: 'email', reminderType: 'bloodDrawSurvey'});
+        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        const emailParams = mockSendEmail.mock.calls[0][0];
+        expect(emailParams.Destination.ToAddresses[0]).toBe(user.email);
+        const namePat = new RegExp(user.name.split(" ")[0]);
+        const idPat = new RegExp(user.humanId);
+        expect(emailParams.Message.Body.Html.Data).toMatch(namePat);
+        expect(emailParams.Message.Body.Html.Data).toMatch(idPat);
+        expect(emailParams.Message.Body.Text.Data).toMatch(namePat);
+        expect(emailParams.Message.Body.Text.Data).toMatch(idPat);
+    });
+
 });

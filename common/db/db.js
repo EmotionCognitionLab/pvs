@@ -268,6 +268,21 @@ export default class Db {
         }
     }
 
+    async getBloodDrawUsers(yyyymmddStr) {
+        try {
+            const params = {
+                TableName: this.usersTable,
+                FilterExpression: 'begins_with(progress.visit2, :ymdDate) or begins_with(progress.visit3, :ymdDate) or begins_with(progress.visit5, :ymdDate)',
+                ExpressionAttributeValues: {':ymdDate': yyyymmddStr}
+            };
+            const dynResults = await this.scan(params);
+            return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw(err);
+        }
+    }
+
     async segmentsForUser(humanId, startDate = new Date(0), endDate = new Date(1000 * 60 * 60 * 24 * 365 * 1000)) {
         const startDateEpoch = Math.floor(startDate.getTime() / 1000);
         const endDateEpoch = Math.floor(endDate.getTime() / 1000);

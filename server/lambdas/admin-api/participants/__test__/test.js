@@ -1,7 +1,7 @@
 import { baselineStatus, stage2Status, stage3Status, lumosityStatus } from "../status.js"
 import dayjs from 'dayjs';
 
-const mockDb = (results, lumosPlays = []) => ({
+const mockDb = (results, lumosPlays = [], user) => ({
     getSetsForUser: (userId) => {
         return results;
     },
@@ -12,20 +12,23 @@ const mockDb = (results, lumosPlays = []) => ({
 
     lumosPlaysForUser: (userId) => {
         return lumosPlays;
+    },
+
+    getUser: (userId)  => {
+        return user;
     }
 });
 
 describe("pre-baseline complete status", () => {
-    it("should return red if the user has done no sets", async () => {
-        const status = await baselineStatus(mockDb([]), '123abc');
-        expect(status.status).toBe('red');
+    it.only("should return red if the user started >= 2 days ago and has done no sets", async () => {
+        await checkBaselineStatus(57, 0, 'red');
     });
 
     it.each([1, 22, 27, 47])
         ("should return green if the user started < 2 days ago (%p hours)", async hours => {
             const now = dayjs();
             const firstSetDate = now.subtract(hours, 'hours');
-            const status = await baselineStatus(mockDb([{dateTime: firstSetDate.toISOString()}]), 'abc321');
+            const status = await baselineStatus(mockDb([{dateTime: firstSetDate.toISOString()}], [], { startDate: firstSetDate.format('YYYY-MM-DD')}), 'abc321');
             expect(status.status).toBe('green');
     });
 
@@ -33,8 +36,8 @@ describe("pre-baseline complete status", () => {
         await checkBaselineStatus(90, 3, 'green');
     });
 
-    it("should return yellow if the user started < 4 days ago and has done < 3 sets", async () => {
-        await checkBaselineStatus(90, 0, 'yellow');
+    it("should return yellow if the user started < 4 days ago and has done >=1 and < 3 sets", async () => {
+        await checkBaselineStatus(90, 1, 'yellow');
     });
 
     it("should return green if the user started >= 4 days ago and has done >=4 sets", async () => {
@@ -55,7 +58,14 @@ describe("pre-baseline complete status", () => {
 
     it("should return red if the user started >= 9 days ago and has done < 7 sets", async () => {
         await checkBaselineStatus(220, 6, 'red');
-    })
+    });
+
+    it("should use the createdAt date if the user has no start date", async () => {
+        const now = dayjs();
+        const daysAgo = now.subtract(77, 'hours');
+        const status = await baselineStatus(mockDb([{experimentDateTime: "set-started|2023-01-01T00:00:00.000Z"}], [], { createdAt: daysAgo.toISOString()}));
+        expect(status.status).toBe('yellow');
+    });
 
 });
 
@@ -300,14 +310,12 @@ describe("stage 3 status", () => {
 
 async function checkBaselineStatus(startHoursAgo, numSetsDone, expectedStatus) {
     const now = dayjs();
-    const firstSetDate = now.subtract(startHoursAgo, 'hours');
-    const results = [
-        { dateTime: firstSetDate.toISOString(), experiment: 'set-started' },
-    ];
+    const startDate = now.subtract(startHoursAgo, 'hours');
+    const results = [];
     for (let i = 0; i < numSetsDone; i++) {
         results.push({experiment: 'set-finished'});
     }
-    const status = await baselineStatus(mockDb(results), 'abc321');
+    const status = await baselineStatus(mockDb(results, [], { startDate: startDate.format('YYYY-MM-DD') }), 'abc321');
     expect(status.status).toBe(expectedStatus);
 }
 

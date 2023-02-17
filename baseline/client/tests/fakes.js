@@ -118,7 +118,7 @@ export const fakeUsers = [
         },
         userId: "d24dc34b-2c74-4d52-a7a1-1ec9577a9d00",
         status: {
-            status: 'yellow'
+            status: 'gray'
         }
     },
     {
