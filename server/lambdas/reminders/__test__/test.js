@@ -17,11 +17,12 @@ const mockSegmentsForUser = jest.fn(() => []);
 const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
+const mockGetUsersStartingOn = jest.fn((yyyyMMdd) => []);
 
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockSendEmail, mockSnsPublish];
+const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockGetUsersStartingOn, mockSendEmail, mockSnsPublish];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -47,7 +48,8 @@ jest.mock('db/db', () => {
             getSetsForUser: (userId) => mockGetSetsForUser(userId),
             updateUser: (userId, updates) => mockUpdateUser(userId, updates),
             getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
-            segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate)
+            segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate),
+            getUsersStartingOn: (yyyyMMdd) => mockGetUsersStartingOn(yyyyMMdd)
         };
     });
 });
@@ -340,4 +342,44 @@ describe("home training reminders", () => {
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).not.toHaveBeenCalled();
     });
+});
+
+describe("start tomorrow reminders", () => {
+    afterEach(() => {
+        mockGetUsersStartingOn.mockClear();
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+    });
+
+    it("should query for users whose start date is tomorrow", async () => {
+        await handler({commType: 'email', reminderType: 'startTomorrow'});
+        expect(mockGetUsersStartingOn).toHaveBeenCalledTimes(1);
+        const expectedDate = dayjs().tz('America/Los_Angeles').add(1, 'day').format('YYYY-MM-DD');
+        expect(mockGetUsersStartingOn.mock.calls[0][0]).toBe(expectedDate);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    const users = [
+        { email: 'good@example.com', phone_number: '+10123456789', phone_number_verified: true},
+        { email: 'dropped@example.com', phone_number: '+00123456789', phone_number_verified: true, progress: { dropped: '2023-01-01:10:19:37.039Z'} },
+        { email: 'unverified@example.com', phone_number: '+10023456789', phone_number_verified: false}
+    ];
+
+    it("email should not be sent if the participant has dropped out", async() => {
+        mockGetUsersStartingOn.mockImplementationOnce(() => users);
+        await handler({commType: 'email', reminderType: 'startTomorrow'});
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+        expect(mockSendEmail).toHaveBeenCalledTimes(2);
+        expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).not.toContain([users[1].email]);
+    });
+
+    it("sms should not be sent if the participant has dropped out or has an unverified phone number", async() => {
+        mockGetUsersStartingOn.mockImplementationOnce(() => users);
+        await handler({commType: 'sms', reminderType: 'startTomorrow'});
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).toHaveBeenCalledTimes(1);
+        expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(users[0].phone_number);
+    });
+
 });

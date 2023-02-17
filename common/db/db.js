@@ -268,6 +268,21 @@ export default class Db {
         }
     }
 
+    async getUsersStartingOn(yyyyMMddStartDate) {
+        try {
+            const params = {
+                TableName: this.usersTable,
+                FilterExpression: 'startDate = :sd',
+                ExpressionAttributeValues: {':sd': yyyyMMddStartDate}
+            };
+            const dynResults = await this.scan(params);
+            return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
     async segmentsForUser(humanId, startDate = new Date(0), endDate = new Date(1000 * 60 * 60 * 24 * 365 * 1000)) {
         const startDateEpoch = Math.floor(startDate.getTime() / 1000);
         const endDateEpoch = Math.floor(endDate.getTime() / 1000);

@@ -32,6 +32,13 @@ const homeTrainingMsg = {
     sms: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today."
 }
 
+const startTomorrowMsg = {
+    subject: "Start the HeartBEAM Study Tomorrow!",
+    html: "Hello, <p>This is a reminder that it's almost time to start the HeartBEAM study! Tomorrow, please be sure to log into the HeartBEAM study website (www.heartbeamstudy.org) to start the first of 6 days of assessments. Please complete these over 6 consecutive days. As stated in the consent form, if you miss more than one out of 6 days of assessments, you will not be able to continue in the study.</p><p>Please let us know if you have any questions.</p><p>Best,</p><p>USC HeartBEAM Study Team</p>",
+    text: "Hello,\n\nThis is a reminder that it's almost time to start the HeartBEAM study! Tomorrow, please be sure to log into the HeartBEAM study website (www.heartbeamstudy.org) to start the first of 6 days of assessments. Please complete these over 6 consecutive days. As stated in the consent form, if you miss more than one out of 6 days of assessments, you will not be able to continue in the study.\n\nPlease let us know if you have any questions.\n\nBest,\n\nUSC HeartBEAM Study Team",
+    sms: "It's almost time to start the HeartBEAM study! Log in tomorrow at www.heartbeamstudy.org to complete Day 1 of 6 days of assessments."
+}
+
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
 const sns = new SNS({endpoint: snsEndpoint, apiVersion: '2010-03-31', region: region});
 const db = new Db();
@@ -49,6 +56,8 @@ export async function handler (event) {
         await sendPreBaselineReminders(commType);
     } else if (reminderType === 'homeTraining') {
         await sendHomeTraininingReminders(commType);
+    } else if (reminderType === 'startTomorrow') {
+        await sendStartTomorrowReminders(commType);
     } else {
         const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
         console.error(errMsg);
@@ -126,6 +135,19 @@ async function sendHomeTraininingReminders(commType) {
         console.error(`Error sending ${commType} reminders for home training tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} home training reminders via ${commType}.`);
+}
+
+async function sendStartTomorrowReminders(commType) {
+    let sentCount = 0;
+
+    try {
+        const tomorrow = dayjs().tz('America/Los_Angeles').add(1, 'day').format('YYYY-MM-DD');
+        const usersStartingTomorrow = await db.getUsersStartingOn(tomorrow);
+        sentCount = await deliverReminders(usersStartingTomorrow, commType, startTomorrowMsg);
+    } catch (err) {
+        console.error(`Error sending ${commType} reminders to start tomorrow: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} reminders to start tomorrow via ${commType}.`);
 }
 
 async function deliverReminders(recipients, commType, msg) {
