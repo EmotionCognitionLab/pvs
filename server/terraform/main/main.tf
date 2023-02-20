@@ -813,7 +813,7 @@ resource "aws_iam_policy" "dynamodb-userid-read" {
       "Condition": {
         "ForAllValues:StringEquals": {
           "dynamodb:Attributes": [
-            "userId"
+            "userId", "humanId"
           ]
         },
         "StringEqualsIfExists": {
