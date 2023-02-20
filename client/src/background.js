@@ -144,7 +144,12 @@ function buildMenuTemplate(window) {
           { role: 'close' }
         ])
       ]
-    }
+    },
+    // { role: 'helpMenu' }
+    ...(isMac ? [] : [{
+      label: 'Help',
+      submenu: [{role: 'about'}]
+    }])
   ]
 }
 
