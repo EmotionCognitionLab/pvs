@@ -25,7 +25,7 @@ export class Flanker {
     }
 
     getTimeline() {
-        if (this.setNum === 1 || this.setNum === 7) {
+        if (this.setNum === 3 || this.setNum === 9) {
             return [
                 this.constructor.preload,
                 this.constructor.instruction1,

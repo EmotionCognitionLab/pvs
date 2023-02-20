@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe("flanker", () => {
-    const setNum = 3;
+    const setNum = 5;
 
     beforeEach(() => {
         let timeline = (new Flanker(setNum)).getTimeline();
@@ -144,7 +144,7 @@ describe("flanker with controlled randomization", () => {
     let randomizationSpy;
 
     beforeEach(() => {
-        let timeline = (new Flanker(3)).getTimeline();
+        let timeline = (new Flanker(5)).getTimeline();
         // drop the preload; the test env doesn't get past it
         timeline = timeline.slice(1);
         // make sure that jsPsych's randomize_order feature doesn't randomze the order
@@ -195,7 +195,7 @@ describe("flanker with controlled randomization", () => {
 
 it("displays 9 blocks of 16 trials each", () => {
     const expFinishedMock = jest.fn(() => null);
-    let timeline = (new Flanker(3)).getTimeline();
+    let timeline = (new Flanker(5)).getTimeline();
     // drop the preload; the test env doesn't get past it
     timeline = timeline.slice(1);
 
@@ -383,7 +383,7 @@ describe("flanker training with controlled randomization", () => {
 });
 
 function randomTrainingSetNum() {
-    return Math.random() < 0.5 ? 1 : 7;
+    return Math.random() < 0.5 ? 3 : 9;
 }
 
 function doTrainingInstructions() {
