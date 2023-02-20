@@ -53,7 +53,7 @@ async function getAllUsers() {
     const results = [];
     const baseParams = {
         TableName: usersTable,
-        ProjectionExpression: 'userId'
+        ProjectionExpression: 'userId,humanId'
     };
     const scan = new ScanCommand(baseParams);
     let lastKey = null;
