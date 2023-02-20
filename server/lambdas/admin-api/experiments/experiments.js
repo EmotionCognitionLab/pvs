@@ -33,11 +33,11 @@ exports.getData = async(event) => {
     s3Client = new S3Client({region: region, credentials: credentials });
 
     const experimentName = event.pathParameters.experiment;
-    const identityIds = await getAllUsers();
+    const ids = await getAllUsers();
     const allResults = [];
-    for (let id of identityIds) {
-        if (id === null || Object.keys(id).length === 0) continue;
-        const results = await getExperimentData(experimentName, id);
+    for (let {iid, hid} of ids) {
+        if (iid === null || Object.keys(iid).length === 0) continue;
+        const results = await getExperimentData(experimentName, iid, hid);
         if (results.length > 0) allResults.push(...results);
     }
     
@@ -68,12 +68,12 @@ async function getAllUsers() {
         console.error(err);
         throw err;
     }
-    const identityIds = [];
+    const ids = [];
     for (let r of results) {
         const identityId = await getIdentityIdForUserId(r.userId);
-        if (identityId !== null) identityIds.push(identityId);
+        if (identityId !== null) ids.push({iid: identityId, hid: r.humanId});
     }
-    return identityIds;
+    return ids;
 }
 
 // TODO this is now in common/db; use it from there
@@ -92,7 +92,7 @@ async function getIdentityIdForUserId(userId) {
     return result.Items[0].identityId;
 }
 
-async function getExperimentData(experimentName, identityId) {
+async function getExperimentData(experimentName, identityId, humanId) {
     const results = [];
     const baseParams = {
         TableName: experimentTable,
@@ -116,7 +116,7 @@ async function getExperimentData(experimentName, identityId) {
                     dateTime,
                     experiment,
                     isRelevant: item.isRelevant,
-                    userId: item.userId,
+                    userId: humanId,
                 });
             });
             lastKey = response.LastEvaluatedKey;
