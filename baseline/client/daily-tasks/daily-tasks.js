@@ -42,13 +42,13 @@ import ApiClient from "../../../common/api/client.js";
  * Module for determining which baselne tasks a user should be doing at the moment and presenting them
  * to the user in the correct order.
  */
-const set1 = ["demographics", "video", "mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
-const set2 = ["physical-activity", "pattern-separation-learning", "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
+const set1 = ["demographics", "video", "mood-prediction", "panas", "daily-stressors", "dass", "mind-in-eyes", "verbal-fluency", "face-name", "spatial-orientation"];
+const set2 = ["physical-activity", "pattern-separation-learning",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set3 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
 const set4 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];
 const set5 = ["verbal-learning-learning", "face-name", "n-back", "mind-in-eyes", "flanker", "panas", "daily-stressors", "verbal-learning-recall"];
 const set6 = ["mood-memory", "emotional-memory", "pattern-separation-learning", "n-back", "verbal-fluency", "spatial-orientation", "mind-in-eyes", "face-name", "pattern-separation-recall", "video"];
-const set7 = ["mood-prediction", "panas", "daily-stressors", "dass", "n-back", "mind-in-eyes", "verbal-fluency", "flanker", "face-name", "spatial-orientation"];
+const set7 = ["mood-prediction", "panas", "daily-stressors", "dass", "mind-in-eyes", "verbal-fluency", "face-name", "spatial-orientation"];
 const set8 = ["pattern-separation-learning",  "verbal-fluency", "n-back", "face-name", "spatial-orientation", "mind-in-eyes", "pattern-separation-recall"];
 const set9 = ["panas", "daily-stressors", "task-switching", "mind-in-eyes", "verbal-fluency", "face-name", "n-back", "spatial-orientation", "flanker"];
 const set10 = ["ffmq", "pattern-separation-learning", "spatial-orientation", "verbal-fluency", "n-back", "mind-in-eyes", "face-name", "sleep-survey", "pattern-separation-recall", "emotional-memory"];

@@ -37,7 +37,7 @@ import test_introduction_html from "./frag/test/introduction.html";
 export class NBack {
     constructor(setNum) {
         // check for training block
-        if (setNum === 1 || setNum === 7) {
+        if (setNum === 2 || setNum === 8) {
             this.training = true;
         } else if (Number.isInteger(setNum) && setNum > 0) {
             this.training = false;
