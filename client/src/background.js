@@ -213,7 +213,9 @@ app.on('ready', async () => {
     const menuTmpl = buildMenuTemplate(mainWin)
     const menu = Menu.buildFromTemplate(menuTmpl)
     Menu.setApplicationMenu(menu)
-    mainWin.webContents.send('get-current-user')
+    mainWin.webContents.on('did-finish-load', () => {
+      mainWin.webContents.send('get-current-user')
+    })
     emwave.createClient(mainWin)
     mainWin.setFullScreen(true)
     mainWin.show()
