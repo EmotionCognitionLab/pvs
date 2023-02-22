@@ -17,6 +17,7 @@ const subscribers = [];
 let coherenceValues = [];
 let curRegime;
 let curSegmentStartMsOffset;
+let curSegmentStartTime;
 let stage = 0;
 let sensorStopped = true;
 
@@ -56,6 +57,7 @@ ipcMain.handle('pacer-regime-changed', (_event, sessionStartTime, regime) => {
     
     curRegime = regime;
     curSegmentStartMsOffset = sessionStartTime;
+    curSegmentStartTime = Date.now();
 });
 
 ipcMain.on('current-user', (_event, user) => {
@@ -81,6 +83,7 @@ function notifyAvgCoherence() {
         coherenceValues = [];
         curRegime = null;
         curSegmentStartMsOffset = null;
+        curSegmentStartTime = null;
     }
     
 }
@@ -107,6 +110,10 @@ export default {
                 win.webContents.send('emwave-status', 'SessionEnded');
             } else if (hrData !== null && !sensorStopped) {  // without sensorStopped check a race can cause us to send data to client after client has told us to stop
                 win.webContents.send('emwave-ibi', hrData);
+
+                // we ignore the first 30 seconds of data from each segment
+                if (!curSegmentStartTime || curSegmentStartTime + (30 * 1000) > Date.now() ) return;
+                    
                 if (Object.prototype.hasOwnProperty.call(hrData, 'artifact')) {
                     artifacts.push(hrData.artifact);
                     let artCount = 0;
@@ -165,6 +172,7 @@ export default {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
         artifacts = new CBuffer(artifactsToTrack);
         sensorStopped = false;
+        curSegmentStartTime = Date.now();
     },
 
     stopPulseSensor() {
