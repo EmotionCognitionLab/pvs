@@ -157,6 +157,23 @@ describe("Generating regimes for days 5+", () => {
         expect(res.every(r => r.id === expectedRegimeId)).toBeTruthy();
     });
 
+    it("should include regimes whose confidence interval can't be calculated along with any overlapping regimes", () => {
+        const avgRestCoherence = 2.8;
+        getAvgRestCoherence.mockReturnValueOnce(avgRestCoherence);
+        const regimeStats = [
+            {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
+            {id: 2, mean: 1.7, low90CI: NaN, high90CI: NaN},
+            {id: 3, mean: 0.9, low90CI: 0.4, high90CI: 1.2}
+        ];
+        getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
+        const expectedRegimeIds = [1,2];
+        const res = generateRegimesForDay(forTesting.condB, 9);
+        const resIds = res.map(r => r.id);
+        expect(res.length).toBe(6);
+        expect(expectedRegimeIds.every(erId => resIds.includes(erId))).toBeTruthy();
+        expect(resIds.every(rid => expectedRegimeIds.includes(rid))).toBeTruthy();
+    });
+
     describe.each([
         {condition: forTesting.condA, avgRestCoherence: null, overlapCnt: 2, regimeStats: [
             {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},

@@ -218,7 +218,7 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
             targetAvgCoherence = getAvgRestCoherence(2);
             // we intentionally leave bestRegimeId null here
         }
-        const overlappingRegimes = regimeStats.filter(s => s.low90CI <= targetAvgCoherence && s.high90CI >= targetAvgCoherence && s.id !== bestRegimeId);
+        const overlappingRegimes = regimeStats.filter(s => isNaN(s.low90CI) || isNaN(s.high90CI) || (s.low90CI <= targetAvgCoherence && s.high90CI >= targetAvgCoherence && s.id !== bestRegimeId));
         regimes = pickRegimes(lookupRegime(bestRegimeId), overlappingRegimes.map(olr => lookupRegime(olr.id)), subjCondition);
         if (regimes.length === 0) {
             if (subjCondition === condA) {
