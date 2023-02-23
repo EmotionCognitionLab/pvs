@@ -347,12 +347,16 @@ describe("home training reminders", () => {
 });
 
 describe("blood draw surveys", () => {
+    afterEach(() => {
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+    });
+
     it("should request people whose blood was drawn yesterday", async() => {
         await handler({commType: 'email', reminderType: 'bloodDrawSurvey'});
         const expectedDate = dayjs().subtract(1, 'days').format('YYYY-MM-DD');
         expect(mockGetBloodDrawUsers).toHaveBeenCalledTimes(1);
         expect(mockGetBloodDrawUsers.mock.calls[0][0]).toBe(expectedDate);
-
     });
 
     it("should include the user's first name and humanId in the message", async() => {
@@ -372,11 +376,6 @@ describe("blood draw surveys", () => {
 });
 
 describe("start tomorrow reminders", () => {
-    beforeAll(() => {
-        mockSendEmail.mockClear();
-        mockSnsPublish.mockClear();
-    });
-
     afterEach(() => {
         mockGetUsersStartingOn.mockClear();
         mockSendEmail.mockClear();
@@ -413,5 +412,4 @@ describe("start tomorrow reminders", () => {
         expect(mockSnsPublish).toHaveBeenCalledTimes(1);
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(users[0].phone_number);
     });
-
 });

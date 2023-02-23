@@ -274,7 +274,7 @@ export default class Db {
                 TableName: this.usersTable,
                 FilterExpression: 'begins_with(progress.visit2, :ymdDate) or begins_with(progress.visit3, :ymdDate) or begins_with(progress.visit5, :ymdDate)',
                 ExpressionAttributeValues: {':ymdDate': yyyymmddStr}
-            }
+            };
             const dynResults = await this.scan(params);
             return dynResults.Items;
         } catch (err) {
@@ -294,7 +294,7 @@ export default class Db {
             return dynResults.Items;
         } catch (err) {
             this.logger.error(err);
-            throw(err);
+            throw err;
         }
     }
 
