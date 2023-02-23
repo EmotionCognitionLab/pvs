@@ -16,7 +16,8 @@ let reportSessionEnd = true;
 const subscribers = [];
 let coherenceValues = [];
 let curRegime;
-let curSessionStartTime;
+let curSegmentStartMsOffset;
+let curSegmentStartTime;
 let stage = 0;
 let sensorStopped = true;
 
@@ -55,7 +56,8 @@ ipcMain.handle('pacer-regime-changed', (_event, sessionStartTime, regime) => {
     if (sessionStartTime !== 0) notifyAvgCoherence();
     
     curRegime = regime;
-    curSessionStartTime = sessionStartTime;
+    curSegmentStartMsOffset = sessionStartTime;
+    curSegmentStartTime = Date.now();
 });
 
 ipcMain.on('current-user', (_event, user) => {
@@ -68,19 +70,20 @@ function notifyAvgCoherence() {
         // we get ~ 2 ep values/sec, so four minutes is 2 * 60 * 4
         const min_values = 2 * 60 * 4;
         if (coherenceValues.length < min_values) {
-            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSessionStartTime} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
+            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSegmentStartMsOffset} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
             return;
         }
 
         const relevantVals = coherenceValues.slice(-1 * min_values);
         const coherenceSum = relevantVals.reduce((cur, prev) => cur + prev, 0);
         const coherenceAvg = coherenceSum / relevantVals.length;
-        subscribers.forEach(callback => callback({sessionStartTime: curSessionStartTime, regime: curRegime, avgCoherence: coherenceAvg}, stage));
+        subscribers.forEach(callback => callback({sessionStartTime: curSegmentStartMsOffset, regime: curRegime, avgCoherence: coherenceAvg}, stage));
     } finally {
         // TODO if there's an error in one of the subscribers (or too little data) are we 100% sure we want to wipe these out?
         coherenceValues = [];
         curRegime = null;
-        curSessionStartTime = null;
+        curSegmentStartMsOffset = null;
+        curSegmentStartTime = null;
     }
     
 }
@@ -107,6 +110,10 @@ export default {
                 win.webContents.send('emwave-status', 'SessionEnded');
             } else if (hrData !== null && !sensorStopped) {  // without sensorStopped check a race can cause us to send data to client after client has told us to stop
                 win.webContents.send('emwave-ibi', hrData);
+
+                // we ignore the first 30 seconds of data from each segment
+                if (!curSegmentStartTime || curSegmentStartTime + (30 * 1000) > Date.now() ) return;
+                    
                 if (Object.prototype.hasOwnProperty.call(hrData, 'artifact')) {
                     artifacts.push(hrData.artifact);
                     let artCount = 0;
@@ -165,6 +172,7 @@ export default {
         client.write('<CMD ID=2 />'); // tells emWave to start getting data from heartbeat sensor
         artifacts = new CBuffer(artifactsToTrack);
         sensorStopped = false;
+        curSegmentStartTime = Date.now();
     },
 
     stopPulseSensor() {
