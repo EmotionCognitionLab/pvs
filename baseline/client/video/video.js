@@ -15,13 +15,15 @@ export class Video {
             return [{
                 type: 'html-button-response',
                 choices: ['Continue'],
-                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/eR9zNMfrQ0c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/eR9zNMfrQ0c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+                data: {isRelevant: true}
             }];
         } else if (this.setNum == 6) {
             return [{
                 type: 'html-button-response',
                 choices: ['Continue'],
-                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/9OEjHl677fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'
+                stimulus: '<iframe width="560" height="315" src="https://www.youtube.com/embed/9OEjHl677fo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+                data: {isRelevant: true}
             }];
         } else {
             throw new Error(`In Video, expected set to be 1 or 6, but got ${this.setNum}`);
