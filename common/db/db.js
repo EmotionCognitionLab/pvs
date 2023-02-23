@@ -279,7 +279,21 @@ export default class Db {
             return dynResults.Items;
         } catch (err) {
             this.logger.error(err);
-            throw(err);
+        }
+    }
+
+    async getUsersStartingOn(yyyyMMddStartDate) {
+        try {
+            const params = {
+                TableName: this.usersTable,
+                FilterExpression: 'startDate = :sd',
+                ExpressionAttributeValues: {':sd': yyyyMMddStartDate}
+            };
+            const dynResults = await this.scan(params);
+            return dynResults.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
         }
     }
 

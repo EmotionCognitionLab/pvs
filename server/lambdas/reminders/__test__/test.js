@@ -18,11 +18,12 @@ const mockGetBloodDrawUsers = jest.fn((yyyymmddStr) => []);
 const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
+const mockGetUsersStartingOn = jest.fn((yyyyMMdd) => []);
 
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockGetBloodDrawUsers, mockSendEmail, mockSnsPublish];
+const allMocks = [mockGetBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockGetBloodDrawUsers, mockGetUsersStartingOn, mockSendEmail, mockSnsPublish];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -49,7 +50,8 @@ jest.mock('db/db', () => {
             updateUser: (userId, updates) => mockUpdateUser(userId, updates),
             getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
             segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate),
-            getBloodDrawUsers: (yyyymmddStr) => mockGetBloodDrawUsers(yyyymmddStr)
+            getBloodDrawUsers: (yyyymmddStr) => mockGetBloodDrawUsers(yyyymmddStr),
+            getUsersStartingOn: (yyyyMMdd) => mockGetUsersStartingOn(yyyyMMdd)
         };
     });
 });
@@ -345,13 +347,16 @@ describe("home training reminders", () => {
 });
 
 describe("blood draw surveys", () => {
+    afterEach(() => {
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+    });
+
     it("should request people whose blood was drawn yesterday", async() => {
         await handler({commType: 'email', reminderType: 'bloodDrawSurvey'});
         const expectedDate = dayjs().subtract(1, 'days').format('YYYY-MM-DD');
         expect(mockGetBloodDrawUsers).toHaveBeenCalledTimes(1);
         expect(mockGetBloodDrawUsers.mock.calls[0][0]).toBe(expectedDate);
-        expect(mockSendEmail).not.toHaveBeenCalled();
-        expect(mockSnsPublish).not.toHaveBeenCalled();
     });
 
     it("should include the user's first name and humanId in the message", async() => {
@@ -368,5 +373,43 @@ describe("blood draw surveys", () => {
         expect(emailParams.Message.Body.Text.Data).toMatch(namePat);
         expect(emailParams.Message.Body.Text.Data).toMatch(idPat);
     });
+});
 
+describe("start tomorrow reminders", () => {
+    afterEach(() => {
+        mockGetUsersStartingOn.mockClear();
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+    });
+
+    it("should query for users whose start date is tomorrow", async () => {
+        await handler({commType: 'email', reminderType: 'startTomorrow'});
+        expect(mockGetUsersStartingOn).toHaveBeenCalledTimes(1);
+        const expectedDate = dayjs().tz('America/Los_Angeles').add(1, 'day').format('YYYY-MM-DD');
+        expect(mockGetUsersStartingOn.mock.calls[0][0]).toBe(expectedDate);
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+    });
+
+    const users = [
+        { email: 'good@example.com', phone_number: '+10123456789', phone_number_verified: true},
+        { email: 'dropped@example.com', phone_number: '+00123456789', phone_number_verified: true, progress: { dropped: '2023-01-01:10:19:37.039Z'} },
+        { email: 'unverified@example.com', phone_number: '+10023456789', phone_number_verified: false}
+    ];
+
+    it("email should not be sent if the participant has dropped out", async() => {
+        mockGetUsersStartingOn.mockImplementationOnce(() => users);
+        await handler({commType: 'email', reminderType: 'startTomorrow'});
+        expect(mockSnsPublish).not.toHaveBeenCalled();
+        expect(mockSendEmail).toHaveBeenCalledTimes(2);
+        expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).not.toContain([users[1].email]);
+    });
+
+    it("sms should not be sent if the participant has dropped out or has an unverified phone number", async() => {
+        mockGetUsersStartingOn.mockImplementationOnce(() => users);
+        await handler({commType: 'sms', reminderType: 'startTomorrow'});
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        expect(mockSnsPublish).toHaveBeenCalledTimes(1);
+        expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(users[0].phone_number);
+    });
 });

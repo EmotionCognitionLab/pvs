@@ -304,6 +304,18 @@ functions:
           input:
             commType: email
             reminderType: bloodDrawSurvey
+      - schedule:
+          name: "${self:provider.stage}-start-day-10AM-email-reminder"
+          rate: cron(0 18 * * ? *)
+          input:
+            commType: email
+            reminderType: startTomorrow
+      - schedule:
+          name: "${self:provider.stage}-start-day-10AM-sms-reminder"
+          rate: cron(1 18 * * ? *)
+          input:
+            commType: sms
+            reminderType: startTomorrow
         
     environment:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"
