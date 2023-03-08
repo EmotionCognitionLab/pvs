@@ -335,11 +335,13 @@ describe("getSetAndTasks", () => {
 
 describe("taskForName for verbal-fluency", () => {
     it("returns a VerbalFluency object", () => {
-        const result = dailyTasks.taskForName("verbal-fluency", { allResults: 
-            [
-                {experiment: "verbal-fluency", isRelevant: true, results: {letter: "a"}}
-            ]}
-        );
+        const result = dailyTasks.taskForName("verbal-fluency", { 
+            allResults: 
+                [
+                    {experiment: "verbal-fluency", isRelevant: true, results: {letter: "a"}}
+                ],
+            setNum: 2
+        });
         expect(result instanceof VerbalFluency).toBe(true);
     });
 
@@ -352,7 +354,7 @@ describe("taskForName for verbal-fluency", () => {
             }
         ));
         function callWithAllLetters() {
-            dailyTasks.taskForName("verbal-fluency", { allResults: input });
+            dailyTasks.taskForName("verbal-fluency", { allResults: input, setNum: 3 });
         }
         expect(callWithAllLetters).toThrowError("All of the verbal fluency tasks have been completed.");
     });
@@ -365,8 +367,48 @@ describe("taskForName for verbal-fluency", () => {
                 results: { letter: l }
             }
         ));
-        const result = dailyTasks.taskForName("verbal-fluency", { allResults: input });
+        const result = dailyTasks.taskForName("verbal-fluency", { allResults: input, setNum: 1 });
         expect(result.letter).toBe(VerbalFluency.possibleLetters[0]);
+    });
+
+    it("ignores letters used pre-intervention when doing post-intervention sets", () => {
+        const input = VerbalFluency.possibleLetters.map(l => (
+            { 
+                experiment: "verbal-fluency",
+                isRelevant: true,
+                results: { letter: l }
+            }
+        ));
+        const result = dailyTasks.taskForName("verbal-fluency", { allResults: input, setNum: 7 });
+        expect(VerbalFluency.possibleLetters).toContain(result.letter);
+    });
+
+    it("throws an error if all possible letters have been used post-intervention", () => {
+        const allResults = [];
+        for (let i = 0; i < VerbalFluency.possibleLetters.length; i++) {
+            allResults.push({experiment: "verbal-fluency", results: {setNum: i + 1, taskStarted: true}});
+            allResults.push(
+                { 
+                    experiment: "verbal-fluency",
+                    isRelevant: true,
+                    results: { letter: VerbalFluency.possibleLetters[i] }
+                }
+            );
+        }
+        for (let i = 0; i < VerbalFluency.possibleLetters.length; i++) {
+            allResults.push({experiment: "verbal-fluency", results: {setNum: i + 7, taskStarted: true}});
+            allResults.push(
+                { 
+                    experiment: "verbal-fluency",
+                    isRelevant: true,
+                    results: { letter: VerbalFluency.possibleLetters[i] }
+                }
+            );
+        }
+        function callWithAllLetters() {
+            dailyTasks.taskForName("verbal-fluency", { allResults: allResults, setNum: 11 });
+        }
+        expect(callWithAllLetters).toThrowError("All of the verbal fluency tasks have been completed.");
     });
 
 });

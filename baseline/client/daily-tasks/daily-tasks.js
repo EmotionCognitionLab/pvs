@@ -310,10 +310,16 @@ function taskForName(name, options) {
         case "verbal-fluency": {
             const allResults = options.allResults.map(r => r.results);
             const availableLetters = new Set(VerbalFluency.possibleLetters);
+            let curSetNum = 1;
+            const postInterventionStartSet = preInterventionSetCount + 1;
             // iterate over allResults, find out which letters have been used,
             // pick letter 
             allResults.forEach(r => {
-                if (r.letter) {
+                if (r.setNum) curSetNum = r.setNum;
+                // we use the same letters in both pre- and post-intervention sets
+                // so ignore letters used pre-intervention
+                // if we're in the post-intervention phase
+                if (r.letter && (options.setNum < postInterventionStartSet || curSetNum >= postInterventionStartSet)) {
                     availableLetters.delete(r.letter);
                 }
             });
