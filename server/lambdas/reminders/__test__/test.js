@@ -327,10 +327,11 @@ describe("home training reminders", () => {
         expect(mockSnsPublish).not.toHaveBeenCalled();
     });
 
-    it("should be sent if <6 stage 3 segments have been done today", async () => {
+    it("should send a stage 3-specific reminder if <6 stage 3 segments have been done today", async () => {
         const segments = [0,1,2,3,4].map(() => ({ stage: 3 }));
         await testWithSegments(segments);
         expect(mockSendEmail).toHaveBeenCalled();
+        expect(mockSendEmail.mock.calls[0][0].Message.Body.Html.Data).toMatch(/complete two 15-minute paced breathing exercises/);
         expect(mockSnsPublish).not.toHaveBeenCalled();
     });
 
