@@ -32,6 +32,13 @@ const homeTrainingMsg = {
     sms: "Have you done your training today? If you don't have time right now, put a reminder in your calendar to train later today."
 }
 
+const stage3Msg = {
+    subject: "A quick reminder to train today!",
+    html: "Have you done your training today? Remember to play brain games and complete two 15-minute paced breathing exercises today!",
+    text: "Have you done your training today? Remember to play brain games and complete two 15-minute paced breathing exercises today!",
+    sms: "Have you done your training today? Remember to play brain games and complete two 15-minute paced breathing exercises today!"
+}
+
 const bloodDrawMessage = (huid, firstName) => {
     if (!huid || huid.trim() === "") throw new Error('Nonexistent or empty huid. Not sending blood draw survey for this recipient.');
     
@@ -110,7 +117,9 @@ async function sendPreBaselineReminders(commType) {
 
 async function sendHomeTraininingReminders(commType) {
     let sentCount = 0;
+    let stage3SentCount = 0;
     const usersToRemind = [];
+    const stage3UsersToRemind = [];
 
     try {
         const baselineDoneUsers = await db.getHomeTrainingInProgressUsers();
@@ -138,15 +147,17 @@ async function sendHomeTraininingReminders(commType) {
             // 2 they don't get any reminders b/c they've obviously
             // already done everything for today
             if (curStage === 3 && segments.length < 6) {
-                usersToRemind.push(u);
+                stage3UsersToRemind.push(u);
             }
         }
 
         sentCount = await deliverReminders(usersToRemind, commType, homeTrainingMsg);
+        stage3SentCount = await deliverReminders(stage3UsersToRemind, commType, stage3Msg);
     } catch (err) {
         console.error(`Error sending ${commType} reminders for home training tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} home training reminders via ${commType}.`);
+    console.log(`Done sending ${stage3SentCount} stage 3 home training reminders via ${commType}.`);
 }
 
 async function sendBloodDrawSurvey(commType) {
