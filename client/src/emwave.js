@@ -66,17 +66,16 @@ ipcMain.on('current-user', (_event, user) => {
 
 function notifyAvgCoherence() {
     try {
-        // we only want to use the final four minutes of data
-        // we get ~ 2 ep values/sec, so four minutes is 2 * 60 * 4
-        const min_values = 2 * 60 * 4;
+        // we need a minimum of three minutes of data and we get
+        // (ideally) two values per second
+        const min_values = 2 * 60 * 3;
         if (coherenceValues.length < min_values) {
-            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSegmentStartMsOffset} has ended but there are less than four minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
+            logger.error(`Regime ${JSON.stringify(curRegime)} starting at ${curSegmentStartMsOffset} has ended but there are less than three minutes of data (${coherenceValues.length} coherence values). Unable to report average coherence.`);
             return;
         }
 
-        const relevantVals = coherenceValues.slice(-1 * min_values);
-        const coherenceSum = relevantVals.reduce((cur, prev) => cur + prev, 0);
-        const coherenceAvg = coherenceSum / relevantVals.length;
+        const coherenceSum = coherenceValues.reduce((cur, prev) => cur + prev, 0);
+        const coherenceAvg = coherenceSum / coherenceValues.length;
         subscribers.forEach(callback => callback({sessionStartTime: curSegmentStartMsOffset, regime: curRegime, avgCoherence: coherenceAvg}, stage));
     } finally {
         // TODO if there's an error in one of the subscribers (or too little data) are we 100% sure we want to wipe these out?
