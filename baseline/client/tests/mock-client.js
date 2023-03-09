@@ -7,7 +7,7 @@ export class MockClient {
     }
 
     async getSetsForUser(userId) {
-        throw new Error("mock client does not support getSetsForUser");
+        return [];
     }
 
     async getSelf() {

@@ -5,9 +5,10 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 
 export class Dashboard {
-    constructor(tbody, client) {
+    constructor(tbody, client, db) {
         this.tbody = tbody;
         this.client = client;
+        this.db = db;
         this.records = new Map();
         this.listen();
         this.allUsersLoadedSuccessfully = false;
@@ -36,6 +37,9 @@ export class Dashboard {
                     // timestamp for key can be set
                     progress[key] = (new Date()).toISOString();
                     const updates = {progress};
+                    if (key === "visit2") {
+                        updates['preComplete'] = true;
+                    }
                     if (key === "visit5") {
                         updates['homeComplete'] = true;
                     }
@@ -57,6 +61,9 @@ export class Dashboard {
                 if (progress[key]) {
                     delete progress[key];
                     const updates = {progress};
+                    if (key === "visit2") {
+                        updates['preComplete'] = await this.hasCompletedBaseline(userId, 'pre');
+                    }
                     if (key === "visit5") {
                         updates['homeComplete'] = false;
                     }
@@ -315,6 +322,37 @@ export class Dashboard {
 
     static getPotentialParticipants() {
         return document.getElementById("screened");
+    }
+
+    // TODO move this into common and replace this code
+    // and the function of the same name in reminders.js
+    // with a call to the function in common
+    async hasCompletedBaseline(userId, preOrPost) {
+        if (preOrPost !== "pre" && preOrPost !== "post") throw new Error(`${preOrPost} is not valid. Expected either 'pre' or 'post'.`);
+
+        const sets = await this.client.getSetsForUser(userId);
+        if (sets.length < 12) return false;
+
+        // we have to call this b/c getSetsForUser
+        // doesn't return the results with the set numbers
+        const setsDone = 
+        (await this.db.getResultsForCurrentUser('set-finished', sets[0].identityId))
+        .filter(s => s.experiment === 'set-finished');
+
+        if (setsDone.length < 6) return false;
+        const completedSetNums = setsDone.map(set => set.results.setNum).sort((elem1, elem2) => {
+            if (elem1 == elem2) return 0;
+            return elem1 < elem2 ? -1 : 1;
+        });
+
+        if (preOrPost === 'pre') {
+            const expectedSetsDone = [1,2,3,4,5,6];
+            return completedSetNums.slice(0, 6).every((val, idx) => val === expectedSetsDone[idx]);
+        }
+
+        const expectedSetsDone = [7,8,9,10,11,12];
+        return completedSetNums.filter(setNum => setNum >= 7).every((val, idx) => val === expectedSetsDone[idx]);
+
     }
 
     appendRow(userId) {

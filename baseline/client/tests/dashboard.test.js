@@ -1,6 +1,7 @@
 import { Dashboard } from "admin/dashboard/dashboard.js";
 import { MockClient } from "./mock-client.js";
 import { fakeUsers as users } from "./fakes.js";
+const origUsers = JSON.parse(JSON.stringify(users));
 import dayjs from 'dayjs';
 
 function expectRowMatches(row, user) {
@@ -58,8 +59,10 @@ const getDashboardElements = () => ({
     details: document.querySelector("#details"),
 });
 
+let table, mc, dash, mdb;
 describe("dashboard", () => {
-    beforeEach(() => {
+
+    beforeEach(async () => {
         jest.useFakeTimers("legacy");
         const dashboardWrapper = document.createElement("div");
         const dashboardError = document.createElement("div");
@@ -79,19 +82,27 @@ describe("dashboard", () => {
         dashboardWrapper.appendChild(potPartsLink);
         dashboardWrapper.appendChild(dashLink);
         document.body.appendChild(dashboardWrapper);
+
+        const elements = getDashboardElements();
+        table = elements.table;
+        mc = new MockClient(users);
+        mdb = {
+            getResultsForCurrentUser: async () => []
+        };
+        dash = new Dashboard(table, mc, mdb);
+        await dash.refreshRecords();
+        dash.showActive();
     });
     
     afterEach(() => {
         document.querySelector("body > div").remove();
         alertSpy.mockClear();
+        for (let i = 0; i < users.length; i++) {
+            users[i] = JSON.parse(JSON.stringify(origUsers[i]));
+        }
     });
 
     it("cells display correct data", async () => {
-        const {wrapper, error, table, details} = getDashboardElements();
-        const mc = new MockClient(users);
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
         const rows = Array.from(document.querySelectorAll("tr"));
         expect(rows.length).toBe(users.length);
         //for (const user of users) {  // `unknown Statement of type "ForOfStatement"` Babel error?
@@ -122,12 +133,6 @@ describe("dashboard", () => {
                 status: 'red'
             }
         };
-        // create dashboard without Spike
-        const mc = new MockClient(users);
-        const {wrapper, error, table, details} = getDashboardElements();
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
         expect(document.querySelector(`[data-user-id="${spike.userId}"]`)).toBeNull();
         // add Spike
         mc.users.set(spike.userId, spike);
@@ -142,12 +147,7 @@ describe("dashboard", () => {
         // current date
         const date = new Date(2010, 9, 10);
         const dateSpy = jest.spyOn(global, "Date").mockImplementation(() => date);
-        // create dashboard
-        const mc = new MockClient(users);
-        const {wrapper, error, table, details} = getDashboardElements();
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
+        
         // Fluttershy should not have a timestamp for visit1
         const visit1Cell = await clickVisitCheckbox(mc, "597e8b3e-7907-4eae-a7da-b1abb25f5579", 1, false, true);
         expect(visit1Cell.querySelector("span").textContent).toBe("2010-10-10");
@@ -159,12 +159,7 @@ describe("dashboard", () => {
     it("updates backend through client on uncheck", async () => {
         // mock window.confirm
         const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
-        // create dashboard
-        const mc = new MockClient(users);
-        const {wrapper, error, table, details} = getDashboardElements();
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
+        
         // Twilight Sparkle should have a timestamp for visit2
         await clickVisitCheckbox(mc, "95240257-42f9-4ae6-b989-0126f595e547", 2, true, false);
         expect(confirmSpy).toHaveBeenCalledTimes(1);
@@ -173,12 +168,6 @@ describe("dashboard", () => {
     });
 
     it("sets homeComplete to true when visit5 is checked off", async () => {
-        // create dashboard
-        const mc = new MockClient(users);
-        const {_, __, table, ___} = getDashboardElements();
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
         // rainbow dash should not have visit5/homeComplete set
         const rdId = "de7e842d-da61-4756-b120-61eca3e6ab11";
         expect(mc.users.get(rdId).homeComplete).toBeFalsy();
@@ -187,22 +176,49 @@ describe("dashboard", () => {
     });
 
     it("sets homeComplete to false when visit5 is unchecked", async () => {
-        // mock window.confirm
-        const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
-        // create dashboard
-        const mc = new MockClient(users);
-        const {_, __, table, ___} = getDashboardElements();
-        const dash = new Dashboard(table, mc);
-        await dash.refreshRecords();
-        dash.showActive();
         // applejack should have visit5/homeComplete set
         const ajId = "1d84a646-db05-4093-8be5-41d1de595a6b";
         expect(mc.users.get(ajId).homeComplete).toBe(true);
-        await clickVisitCheckbox(mc, ajId, 5, true, false);
+        await testUncheckVisit(ajId, 5);
         expect(mc.users.get(ajId).homeComplete).toBe(false);
-        expect(confirmSpy).toHaveBeenCalledTimes(1);
-        // restore mocks
-        confirmSpy.mockRestore();
+    });
+
+    it("sets preComplete to true when visit2 is checked off", async () => {
+        // rainbow dash should not have visit2/preComplete set
+        const rdId = "de7e842d-da61-4756-b120-61eca3e6ab11";
+        expect(mc.users.get(rdId).preComplete).toBeFalsy();
+        await clickVisitCheckbox(mc, rdId, 2, false, true);
+        expect(mc.users.get(rdId).preComplete).toBe(true);
+    });
+
+    it("sets preComplete to false when visit2 is unchecked and the user has not finished the baseline tasks", async () => {
+        // twilight sparkle should have visit2/preComplete set
+        const twId = "95240257-42f9-4ae6-b989-0126f595e547";
+        expect(mc.users.get(twId).preComplete).toBe(true);
+        await testUncheckVisit(twId, 2);
+        expect(mc.users.get(twId).preComplete).toBe(false);
+    });
+
+    it("sets preComplete to true when visit2 is unchecked and the user has finished the baseline tasks", async () => {
+        const userSets = [1,2,3,4,5,6].flatMap(setNum => [
+            {
+                results: { setNum: setNum },
+                experiment: "set-started",
+                identityId: 123
+            },
+            {
+                results: { setNum: setNum },
+                experiment: "set-finished",
+                identityId: 123
+            }
+        ]);
+        jest.spyOn(mc, "getSetsForUser").mockImplementation(() => userSets);
+        jest.spyOn(mdb, "getResultsForCurrentUser").mockImplementation(() => userSets);
+        // twilight sparkle should have visit2/preComplete set
+        const twId = "95240257-42f9-4ae6-b989-0126f595e547";
+        expect(mc.users.get(twId).preComplete).toBe(true);
+        await testUncheckVisit(twId, 2);
+        expect(mc.users.get(twId).preComplete).toBe(true);
     });
 
     it("checks to make sure a new start date is in YYYY-MM-DD format", async () => {
@@ -218,7 +234,6 @@ describe("dashboard", () => {
     });
 
     it("updates the user's start date when the new start date is valid", async () => {
-        const mc = new MockClient(users);
         const mcSpy = jest.spyOn(mc, "updateUser");
         const ajId = "1d84a646-db05-4093-8be5-41d1de595a6b";
         const date = dayjs().add(10, "days").format("YYYY-MM-DD");
@@ -229,7 +244,6 @@ describe("dashboard", () => {
     });
 
     it("alerts the user when the start date has been updated successfully", async () => {
-        const mc = new MockClient(users);
         const date = dayjs().add(10, "days").format("YYYY-MM-DD");
         await changeStartDate(date, "1d84a646-db05-4093-8be5-41d1de595a6b", mc);
         expect(alertSpy).toHaveBeenCalledTimes(1);
@@ -268,19 +282,25 @@ describe("dashboard", () => {
 
         return whichVisitCell;
     }
+
+    async function testUncheckVisit(userId, visitNum) {
+        // mock window.confirm
+        const confirmSpy = jest.spyOn(window, "confirm").mockImplementation(() => true);
+       
+        await clickVisitCheckbox(mc, userId, visitNum, true, false);
+        expect(confirmSpy).toHaveBeenCalledTimes(1);
+        // restore mocks
+        confirmSpy.mockRestore();
+    }
 });
 
 async function testStartDateChangeValidation(newDate, userId, expectedErrMsg) {
-    const mc = new MockClient(users);
-    await changeStartDate(newDate, userId, mc);
+    await changeStartDate(newDate, userId);
     expect(alertSpy).toHaveBeenCalledTimes(1);
     expect(alertSpy.mock.calls[0][0]).toEqual(expectedErrMsg);
 }
 
-async function changeStartDate(newDate, userId, client) {
-    const {_, __, table, ___} = getDashboardElements();
-    const dash = new Dashboard(table, client);
-    await dash.refreshRecords();
+async function changeStartDate(newDate, userId) {
     const event = {
         target: {
             value: newDate,
