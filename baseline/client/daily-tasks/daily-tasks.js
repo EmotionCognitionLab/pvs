@@ -448,7 +448,8 @@ function startTasks(allResults, saveResultsCallback) {
         (setAndTasks.remainingTasks[0].taskName === allDone || setAndTasks.remainingTasks[0].taskName === doneForToday)) {
         runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
     } else {
-        const progressNode = setAndTasks.set === 1 ? set1ProgressMessage : generalProgressMessage(setAndTasks.set);
+        const relativeSetNum = setAndTasks.set > preInterventionSetCount ? setAndTasks.set - preInterventionSetCount : setAndTasks.set;
+        const progressNode = relativeSetNum === 1 ? set1ProgressMessage : generalProgressMessage(relativeSetNum);
         progressNode.on_finish = () => {
             runTask(setAndTasks.remainingTasks, 0, saveResultsCallback);
         };
