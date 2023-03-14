@@ -35,7 +35,7 @@
     defineExpose({stopSensor})
 
     const score = computed(() => {
-        if (props.condition !== 'A' && props.condition !== 'B') return 0
+        if (props.condition !== 'A' && props.condition !== 'B') return "Unknown"
 
         if (ep.value <= 0) return 0
 
@@ -67,11 +67,9 @@
 
     function handleEmWaveIbiEvent(_event, hrData) {
         ibi.value = Number(hrData.ibi)
-        if (ibi.value <= 0) return
-
-        if (Object.prototype.hasOwnProperty.call(hrData, 'ep')) {
-            ep.value = hrData.ep
-        }
+        if (ibi.value <= 0 || !Object.prototype.hasOwnProperty.call(hrData, 'ep')) return
+        
+        ep.value = hrData.ep
 
         if (!calibrated.value) {
             calibrated.value = true

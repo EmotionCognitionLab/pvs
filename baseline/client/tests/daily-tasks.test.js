@@ -716,6 +716,30 @@ describe("doing the tasks", () => {
         const html = jsPsych.getDisplayElement().innerHTML;
         expect(html).toMatch(/You are on set 2/);
     });
+    it("should show the welcome page again on set 7", () => {
+        const input = [1,2,3,4,5,6].map(s => ({
+            setNum: s,
+            setStartedTime: new Date(Date.now() - 1000 * 60 * 60 * (24 - s)),
+            setFinishedTime: new Date(Date.now() - 1000 * 60 * 60 * (23 - s -1)),
+            taskNames: dailyTasks.allSets[s - 1]
+        }));
+        dailyTasks.setHomeComplete(true);
+        dailyTasks.startTasks(buildInput(input), jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/about to start set 1/);
+    });
+    it("should show the progress page with the correct information for sets > 7", () => {
+        const input = [1,2,3,4,5,6,7].map(s => ({
+            setNum: s,
+            setStartedTime: new Date(Date.now() - 1000 * 60 * 60 * (24 - s)),
+            setFinishedTime: new Date(Date.now() - 1000 * 60 * 60 * (23 - s - 1)),
+            taskNames: dailyTasks.allSets[s - 1]
+        }));
+        dailyTasks.setHomeComplete(true);
+        dailyTasks.startTasks(buildInput(input), jest.fn());
+        const html = jsPsych.getDisplayElement().innerHTML;
+        expect(html).toMatch(/You are on set 2/);
+    });
     it("should not show a progress page if you've done all of the tasks for today", () => {
         const input = buildInput([{setNum: 1, setFinishedTime: new Date(), taskNames: dailyTasks.allSets[0]}]);
         dailyTasks.startTasks(input, jest.fn());
