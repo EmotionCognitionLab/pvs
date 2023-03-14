@@ -256,7 +256,7 @@ export default class Db {
         try {
             const params = {
                 TableName: this.usersTable,
-                FilterExpression: 'preComplete = :t and (homeComplete = :f or attribute_not_exists(homeComplete))',
+                FilterExpression: 'preComplete = :t and attribute_exists(progress.visit2) and (homeComplete = :f or attribute_not_exists(homeComplete))',
                 ExpressionAttributeValues: {':t': true, ':f': false}
             };
             const dynResults = await this.scan(params);
