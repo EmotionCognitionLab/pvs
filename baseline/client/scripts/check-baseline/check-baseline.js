@@ -8,7 +8,7 @@ async function experimentEndTimes(identityId, taskName, dateStr) {
     let allResults = [];
     do {
         const params = {
-            TableName: 'pvs-dev-experiment-data',
+            TableName: 'pvs-prod-experiment-data',
             ExclusiveStartKey,
             KeyConditionExpression: `identityId = :idKey and begins_with(experimentDateTime, :expDateTime)`,
             FilterExpression: 'attribute_exists(results.ua)',
@@ -33,7 +33,7 @@ async function experimentStartTimes(identityId, setNum) {
     do {
         try {
             const params = {
-                TableName: 'pvs-dev-experiment-data',
+                TableName: 'pvs-prod-experiment-data',
                 ExclusiveStartKey,
                 KeyConditionExpression: `identityId = :idKey`,
                 FilterExpression: 'results.setNum = :setNum',
