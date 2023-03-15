@@ -273,7 +273,7 @@ functions:
           input:
             commType: email
             reminderType: preBaseline
-       - schedule:
+      - schedule:
           name: "${self:provider.stage}-post-baseline-6:02am-email-reminder"
           rate: cron(2 14 * * ? *)
           input:
