@@ -274,6 +274,12 @@ functions:
             commType: email
             reminderType: preBaseline
       - schedule:
+          name: "${self:provider.stage}-post-baseline-6:02am-email-reminder"
+          rate: cron(2 14 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
+      - schedule:
           rate:
             - cron(0 19 * * ? *)
             - cron(0 4 * * ? *)
@@ -298,6 +304,12 @@ functions:
           input:
             commType: email
             reminderType: preBaseline
+      - schedule:
+          name: "${self:provider.stage}-post-baseline-4:02pm-email-reminder"
+          rate: cron(2 0 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
       - schedule:
           name: "${self:provider.stage}-blood-draw-survey-noon-email"
           rate: cron(00 20 * * ? *)
