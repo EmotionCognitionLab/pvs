@@ -48,5 +48,5 @@ const experimentName = process.argv[4];
 
 (async() => {
     const taskData = await experimentData(identityId, humanId, experimentName);
-    taskData.forEach(i => console.log(i));
+    taskData.forEach(d => console.log(d));
 })();
