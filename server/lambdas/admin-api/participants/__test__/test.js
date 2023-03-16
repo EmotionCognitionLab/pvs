@@ -2,9 +2,11 @@ import { baselineStatus, stage2Status, stage3Status, lumosityStatus } from "../s
 import dayjs from 'dayjs';
 
 const mockDb = (results, lumosPlays = [], user) => ({
-    getSetsForUser: (userId) => {
+    getResultsForCurrentUser: (expName, identityId) => {
         return results;
     },
+
+    getIdentityIdForUserId: () => 1,
 
     segmentsForUser: (humanId) => {
         return results;
