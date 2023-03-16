@@ -19,54 +19,56 @@ const mockDb = (results, lumosPlays = [], user) => ({
     }
 });
 
-describe("pre-baseline complete status", () => {
+describe.each(['pre', 'post'])("%p-baseline complete status", preOrPost => {
     it("should return red if the user started >= 2 days ago and has done no sets", async () => {
-        await checkBaselineStatus(57, 0, 'red');
+        await checkBaselineStatus(57, 0, 'red', preOrPost);
     });
 
-    it.each([1, 22, 27, 47])
-        ("should return green if the user started < 2 days ago (%p hours)", async hours => {
+    it.each([1, 22, 23])
+        ("should return green if the user started <= 1 days ago (%p hours)", async hours => {
             const now = dayjs();
             const firstSetDate = now.subtract(hours, 'hours');
-            const status = await baselineStatus(mockDb([{dateTime: firstSetDate.toISOString()}], [], { startDate: firstSetDate.format('YYYY-MM-DD')}), 'abc321');
+            const user = preOrPost === 'pre' ? { startDate: firstSetDate.format('YYYY-MM-DD')} : { progress: { visit5: firstSetDate.format('YYYY-MM-DD') }};
+            const status = await baselineStatus(mockDb([{experiment: 'set-finished', results: { setNum: 1 }}], [], user), 'abc321', preOrPost);
             expect(status.status).toBe('green');
     });
 
     it("should return green if the user started <= 4 days ago and has done >=3 sets", async () => {
-        await checkBaselineStatus(90, 3, 'green');
+        await checkBaselineStatus(90, 3, 'green', preOrPost);
     });
 
     it("should return yellow if the user started < 4 days ago and has done >=1 and < 3 sets", async () => {
-        await checkBaselineStatus(90, 1, 'yellow');
+        await checkBaselineStatus(90, 1, 'yellow', preOrPost);
     });
 
     it("should return green if the user started >= 4 days ago and has done >=4 sets", async () => {
-        await checkBaselineStatus(100, 4, 'green');
+        await checkBaselineStatus(100, 4, 'green', preOrPost);
     });
 
     it("should return red if the user started >= 4 days ago and has done 2 sets", async () => {
-        await checkBaselineStatus(240, 2, 'red');
+        await checkBaselineStatus(240, 2, 'red', preOrPost);
     });
 
     it("should return yellow if the user started >= 4 days ago and has done 3 sets", async () => {
-        await checkBaselineStatus(240, 3, 'red');
+        await checkBaselineStatus(240, 3, 'red', preOrPost);
     });
 
     it("should return red if the user started >= 4 days ago and has done < 2 sets", async () => {
-        await checkBaselineStatus(100, 1, 'red');
+        await checkBaselineStatus(100, 1, 'red', preOrPost);
     });
 
     it("should return red if the user started >= 9 days ago and has done < 7 sets", async () => {
-        await checkBaselineStatus(220, 6, 'red');
+        await checkBaselineStatus(220, 6, 'red', preOrPost);
     });
 
     it("should use the createdAt date if the user has no start date", async () => {
+        if (preOrPost === 'post') return;
+
         const now = dayjs();
         const daysAgo = now.subtract(77, 'hours');
-        const status = await baselineStatus(mockDb([{experimentDateTime: "set-started|2023-01-01T00:00:00.000Z"}], [], { createdAt: daysAgo.toISOString()}));
+        const status = await baselineStatus(mockDb([{experiment: 'set-finished', results: { setNum: 1 }}], [], { createdAt: daysAgo.toISOString()}), undefined, preOrPost);
         expect(status.status).toBe('yellow');
     });
-
 });
 
 describe("lumosity status", () => {
@@ -308,14 +310,17 @@ describe("stage 3 status", () => {
     
 });
 
-async function checkBaselineStatus(startHoursAgo, numSetsDone, expectedStatus) {
+async function checkBaselineStatus(startHoursAgo, numSetsDone, expectedStatus, preOrPost) {
     const now = dayjs();
-    const startDate = now.subtract(startHoursAgo, 'hours');
+    const startTime = now.subtract(startHoursAgo, 'hours');
     const results = [];
-    for (let i = 0; i < numSetsDone; i++) {
-        results.push({experiment: 'set-finished'});
+    const targetSetsDone = preOrPost === 'pre' ? numSetsDone : numSetsDone + 6;
+    for (let i = 0; i < targetSetsDone; i++) {
+        results.push({experiment: 'set-finished', results: { setNum: i + 1 }});
     }
-    const status = await baselineStatus(mockDb(results, [], { startDate: startDate.format('YYYY-MM-DD') }), 'abc321');
+    const status = preOrPost === 'pre' ? 
+    await baselineStatus(mockDb(results, [], { startDate: startTime.format('YYYY-MM-DD') }), 'abc321', preOrPost)
+    : await baselineStatus(mockDb(results, [], { progress: {visit5: startTime.toISOString()}}), 'abc321', preOrPost);
     expect(status.status).toBe(expectedStatus);
 }
 

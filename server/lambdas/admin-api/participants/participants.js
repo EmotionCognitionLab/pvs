@@ -131,7 +131,7 @@ exports.getStatus = async(event) => {
     const stage2CompletedOn = event.queryStringParameters.stage2CompletedOn;
 
     if (!preComplete) {
-        return await baselineStatus(db, participantId);
+        return await baselineStatus(db, participantId, 'pre');
     }
 
     if (!stage2Completed) {
@@ -143,9 +143,7 @@ exports.getStatus = async(event) => {
     }
 
     if (!postComplete) {
-        // they should be doing post-training cognitive baseline - check to see how many sets they've done
-        // and when they started
-        return {status: 'black', note: 'not yet implemented'}
+        return await baselineStatus(db, participantId, 'post');
     }
 }
 
