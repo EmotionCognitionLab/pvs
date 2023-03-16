@@ -18,11 +18,13 @@ const baselineStatus = async (db, userId, preOrPost) => {
     } 
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day');
-    const sets = await db.getSetsForUser(userId);
+    const idId = db.getIdentityIdForUserId(userId);
+    const sets = await db.getResultsForCurrentUser('set-finished', idId);
+    console.debug(`set-finished count for ${userId}:`, sets.length);
 
     const finishedSetsCount = sets.filter(s => {
-        if (preOrPost === 'pre') return s.experiment === 'set-finished' && s.results.setNum <= 6;
-        return s.experiment === 'set-finished' && s.results.setNum > 6;
+        if (preOrPost === 'pre') return s.results.setNum <= 6;
+        return s.results.setNum > 6;
         
     }).length;
 
