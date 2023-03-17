@@ -348,7 +348,7 @@ export default class Db {
                 ExpressionAttributeValues: { ':sdt': startDate, ':edt': endDate, ':true': true }
             }
 
-            const results = this.scan(params);
+            const results = await this.scan(params);
             return results.Items;
         } catch (err) {
             this.logger.error(err);
