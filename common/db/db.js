@@ -334,6 +334,28 @@ export default class Db {
         }
     }
 
+    /**
+     * Returns all rows between startDate and endDate where multiPlay is true
+     * @param {string} startDate date in YYYY-MM-DD HH:mm:ss format (America/Los_Angeles timezone)
+     * @param {string} endDate date in YYYY-MM-DD HH:mm:ss format (America/Los_Angeles timezone)
+     */
+    async lumosMultiPlays(startDate, endDate) {
+        try {
+            const params = {
+                TableName: this.lumosPlaysTable,
+                FilterExpression: '#dateTime >= :sdt and #dateTime <= :edt and multiPlay = :true',
+                ExpressionAttributeNames: { '#dateTime': 'dateTime' },
+                ExpressionAttributeValues: { ':sdt': startDate, ':edt': endDate, ':true': true }
+            }
+
+            const results = this.scan(params);
+            return results.Items;
+        } catch (err) {
+            this.logger.error(err);
+            throw err;
+        }
+    }
+
     async earningsForUser(userId, type = null) {
         try {
             const params =  {
