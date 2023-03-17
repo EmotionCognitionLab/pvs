@@ -39,6 +39,26 @@ const stage3Msg = {
     sms: "Have you done your training today? Remember to play brain games and complete two 15-minute paced breathing exercises today!"
 }
 
+const noMultiLumosMsg = {
+    subject: "Please play each brain game only once per day",
+    html: `<p>It looks like you clicked on the "play again" button for one or more of the brain games yesterday. In the future please do NOT click on that button.</p>
+    <p>While it is great to see your interest and enthusiasm, for the integrity of our research results, we need all participants to get the same amount of brain game training. So please play all the assigned games every day but no extra ones. Also, please do NOT play any extra brain games outside of the study platform while you are enrolled in the study. Our objective is for all participants to obtain the same amount of brain game practice. We are testing how two breathing practices (one promoting alertness, one promoting relaxation) might affect learning differently. If someone gets a lot of extra practice beyond the assigned set and so progresses faster through the brain game levels, it will look like their breathing practice helped them learn faster, which would not be true.</p>
+    <p>We're sorry about having that confusing button there, but the brain game interface did not allow us to remove it.</p>
+    <p>Once again, thanks so much for your dedication to this study. We are excited to see you continue to progress through the brain and breathing training and look forward to seeing you at your next visit to the lab!</p>
+    <p>HeartBEAM research team</p>
+    `,
+    text: `It looks like you clicked on the "play again" button for one or more of the brain games yesterday. In the future please do NOT click on that button.
+    \n\n
+    While it is great to see your interest and enthusiasm, for the integrity of our research results, we need all participants to get the same amount of brain game training. So please play all the assigned games every day but no extra ones. Also, please do NOT play any extra brain games outside of the study platform while you are enrolled in the study. Our objective is for all participants to obtain the same amount of brain game practice. We are testing how two breathing practices (one promoting alertness, one promoting relaxation) might affect learning differently. If someone gets a lot of extra practice beyond the assigned set and so progresses faster through the brain game levels, it will look like their breathing practice helped them learn faster, which would not be true.
+    \n\n
+    We're sorry about having that confusing button there, but the brain game interface did not allow us to remove it.
+    \n\n
+    Once again, thanks so much for your dedication to this study. We are excited to see you continue to progress through the brain and breathing training and look forward to seeing you at your next visit to the lab!
+    \n\n
+    HeartBEAM research team`,
+    sms: ""
+}
+
 const bloodDrawMessage = (huid, firstName) => {
     if (!huid || huid.trim() === "") throw new Error('Nonexistent or empty huid. Not sending blood draw survey for this recipient.');
     
@@ -79,6 +99,8 @@ export async function handler (event) {
         await sendBloodDrawSurvey(commType);
     } else if (reminderType === 'startTomorrow') {
         await sendStartTomorrowReminders(commType);
+    } else if (reminderType === 'noMultiLumos') {
+        await sendNoMultiLumosReminders(commType)
     } else {
         const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
         console.error(errMsg);
@@ -223,6 +245,31 @@ async function sendStartTomorrowReminders(commType) {
         console.error(`Error sending ${commType} reminders to start tomorrow: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} reminders to start tomorrow via ${commType}.`);
+}
+
+async function sendNoMultiLumosReminders(commType) {
+    if (commType !== 'email') throw new Error(`There is no ${commType} message type for 'noMultiLumos' messages.`);
+
+    let sentCount = 0;
+    const yesterday = dayjs().tz('America/Los_Angeles').subtract(1, 'day');
+    const yesterdayStart = yesterday.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+    const yesterdayEnd = yesterday.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        const multiLumosPlays = await db.lumosMultiPlays(yesterdayStart, yesterdayEnd);
+        if (multiLumosPlays.length === 0) return;
+
+        const uniqUsrIds = new Set(multiLumosPlays.map(mlp => mlp.userId));
+        const users = [];
+        for (const uid of uniqUsrIds) {
+            const user = await db.getUser(uid);
+            users.push(user);
+        }
+        sentCount = await deliverReminders(users, commType, noMultiLumosMsg);
+    } catch (err) {
+        console.error(`Error sending ${commType} admonishments not to play Lumosity games more than 1x/day: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} admonishments not to play Lumosity games more than 1x/day via ${commType}.`);
 }
 
 async function deliverReminders(recipients, commType, msg) {
