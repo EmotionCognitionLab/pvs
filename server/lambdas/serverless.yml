@@ -316,6 +316,18 @@ functions:
           input:
             commType: sms
             reminderType: startTomorrow
+      - schedule:
+          name: "${self:provider.stage}-post-baseline-602am-email-reminder"
+          rate: cron(2 14 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
+      - schedule:
+          name: "${self:provider.stage}-post-baseline-402pm-email-reminder"
+          rate: cron(2 0 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
         
     environment:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"

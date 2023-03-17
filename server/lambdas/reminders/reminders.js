@@ -18,7 +18,7 @@ const emailSender = process.env.EMAIL_SENDER;
 const region = process.env.REGION;
 const siteUrl = process.env.SITE_URL;
 
-const preBaselineMsg = {
+const baselineMsg = {
     subject: "Don't forget your daily brain challenge!",
     html: `Don't forget to do the brain challenges every day. Go to <a href="${siteUrl}">${siteUrl}</a> to do today's set.\n\nBest,\nYour HeartBEAM Team`,
     text: `Don't forget to do the brain challenges every day. Go to ${siteUrl} to do today's set.\n\nBest,\nYour HeartBEAM Team`,
@@ -71,6 +71,8 @@ export async function handler (event) {
     const reminderType = event.reminderType;
     if (reminderType === 'preBaseline') {
         await sendPreBaselineReminders(commType);
+    } else if (reminderType === 'postBaseline') {
+        await sendPostBaselineReminders(commType);
     } else if (reminderType === 'homeTraining') {
         await sendHomeTraininingReminders(commType);
     } else if (reminderType === 'bloodDrawSurvey') {
@@ -98,7 +100,7 @@ async function sendPreBaselineReminders(commType) {
                 if (zonedStart.isAfter(now)) continue;
             }
             const sets = await db.getSetsForUser(u.userId);
-            const baselineDone = await hasCompletedBaseline(sets);
+            const baselineDone = await hasCompletedBaseline(sets, 'pre');
             if (baselineDone) {
                 // update the user record
                 await db.updateUser(u.userId, {'preComplete': true});
@@ -107,12 +109,39 @@ async function sendPreBaselineReminders(commType) {
             }
         }
         
-        sentCount = await deliverReminders(usersToRemind, commType, preBaselineMsg);
+        sentCount = await deliverReminders(usersToRemind, commType, baselineMsg);
 
     } catch (err) {
         console.error(`Error sending ${commType} reminders for pre baseline tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} pre-baseline reminders via ${commType}.`);
+}
+
+async function sendPostBaselineReminders(commType) {
+    const usersToRemind = [];
+    let sentCount = 0;
+
+    try {
+        const incompleteUsers = await db.getBaselineIncompleteUsers('post');
+        for (const u of incompleteUsers) {
+            if (!u.homeComplete) continue;
+
+            const sets = await db.getSetsForUser(u.userId);
+            const baselineDone = await hasCompletedBaseline(sets, 'post');
+            if (baselineDone) {
+                // update the user record
+                await db.updateUser(u.userId, {'postComplete': true});
+            } else if (!hasDoneSetToday(sets)) {
+                usersToRemind.push(u);
+            }        
+        }
+        
+        sentCount = await deliverReminders(usersToRemind, commType, baselineMsg);
+
+    } catch (err) {
+        console.error(`Error sending ${commType} reminders for post baseline tasks: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} post-baseline reminders via ${commType}.`);
 }
 
 async function sendHomeTraininingReminders(commType) {
@@ -218,18 +247,22 @@ async function deliverReminders(recipients, commType, msg) {
     return sentCount;
 }
 
-async function hasCompletedBaseline(sets) {
-    if (sets.length < 12) return false;
+async function hasCompletedBaseline(sets, preOrPost) {
+    if (preOrPost !== 'pre' && preOrPost !== 'post') throw new Error(`Expected preOrPost to be 'pre' or 'post', but got ${preOrPost}.`);
+
+    if ((sets.length < 12 && preOrPost === 'pre') || (sets.length < 24 && preOrPost === 'post')) return false;
+    
     // check to make sure that we have set-finished records
     // for all six sets
-    const setsDone = await db.getResultsForCurrentUser('set-finished', sets[0].identityId);
+    let setsDone = await db.getResultsForCurrentUser('set-finished', sets[0].identityId);
+    if (preOrPost === 'post') setsDone = setsDone.filter(s => s.results.setNum > 6);
     if (setsDone.length < 6) return false;
     const completedSetNums = setsDone.map(set => set.results.setNum).sort((elem1, elem2) => {
         if (elem1 == elem2) return 0;
         return elem1 < elem2 ? -1 : 1;
     });
 
-    const expectedSetsDone = [1,2,3,4,5,6];
+    const expectedSetsDone = preOrPost === 'pre' ? [1,2,3,4,5,6] : [7,8,9,10,11,12];
     return completedSetNums.every((val, idx) => val === expectedSetsDone[idx]);
 }
 
