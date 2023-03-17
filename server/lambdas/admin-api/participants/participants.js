@@ -122,6 +122,8 @@ exports.getStatus = async(event) => {
     const credentials = await credentialsForRole(userRole);
     const db = dbWithCredentials(credentials);
 
+    db.getFinishedSets = getFinishedSets;
+
     const participantId = event.pathParameters.id;
     const humanId = event.queryStringParameters.hId;
     const preComplete = event.queryStringParameters.preComplete === '1';
@@ -171,6 +173,48 @@ async function getAllParticipants(docClient) {
         
     } catch (err) {
         console.error(err);
+        throw err;
+    }
+}
+
+// ugh. We can't use db.getResultsForCurentUser('set-finished', identityId) 
+// because we're using v3 of the AWS SDK here and the credentials object
+// from that is incompatible with the way that db wants to use it 
+// (no .promise on credentials), so we have to write this instead.
+async function getFinishedSets(identityId) {
+    try {
+        let ExclusiveStartKey, dynResults
+        let allResults = [];
+
+        do {
+            const params = {
+                TableName: this.experimentTable,
+                ExclusiveStartKey,
+                KeyConditionExpression: `identityId = :idKey and begins_with(experimentDateTime, :expName)`,
+                ExpressionAttributeValues: { ':idKey': identityId, ':expName': 'set-finished' }
+            };
+            dynResults = await this.query(params);
+            ExclusiveStartKey = dynResults.LastEvaluatedKey;
+            const results = dynResults.Items.map(i => {
+                const parts = i.experimentDateTime.split('|');
+                if (parts.length != 3) {
+                    throw new Error(`Unexpected experimentDateTime value: ${i.experimentDateTime}. Expected three parts, but found ${parts.length}.`)
+                }
+                const experiment = parts[0];
+                const dateTime = parts[1];
+                return {
+                    experiment: experiment,
+                    dateTime: dateTime,
+                    isRelevant: i.isRelevant,
+                    results: i.results
+                }
+            });
+            allResults = [...allResults, ...results];
+        } while (dynResults.LastEvaluatedKey)
+        
+        return allResults;
+    } catch (err) {
+        this.logger.error(err);
         throw err;
     }
 }
