@@ -19,9 +19,9 @@ const baselineStatus = async (db, userId, preOrPost) => {
     const now = dayjs();
     const daysSinceStart = now.diff(started, 'day');
     const idId = await db.getIdentityIdForUserId(userId);
-    if (!idId) return { status: 'black', notes: 'identityId not found'};
 
-    const sets = await db.getFinishedSets(idId); // NB getFinishedSets is defined in participants.js :-(
+    // NB getFinishedSets is defined in participants.js :-(
+    const sets = idId ? await db.getFinishedSets(idId) : [];
 
     const finishedSetsCount = sets.filter(s => {
         if (preOrPost === 'pre') return s.results.setNum <= 6;
