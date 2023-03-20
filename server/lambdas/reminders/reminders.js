@@ -56,6 +56,15 @@ const startTomorrowMsg = {
     sms: "It's almost time to start the HeartBEAM study! Log in tomorrow at www.heartbeamstudy.org to complete Day 1 of 6 days of assessments."
 }
 
+const usersFinishedPostMsg = (users) => {
+    return {
+        subject: "Users have finished post-intervention assessment",
+        html: `The following users have just finished the post-intervention assessment: ${JSON.stringify(users.map(u => u.humanId))}`,
+        text: `The following users have just finished the post-intervention assessment: ${JSON.stringify(users.map(u => u.humanId))}`,
+        sms: ""
+    }
+}
+
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
 const sns = new SNS({endpoint: snsEndpoint, apiVersion: '2010-03-31', region: region});
 const db = new Db();
@@ -72,7 +81,8 @@ export async function handler (event) {
     if (reminderType === 'preBaseline') {
         await sendPreBaselineReminders(commType);
     } else if (reminderType === 'postBaseline') {
-        await sendPostBaselineReminders(commType);
+        const studyAdmin = {email: process.env.STUDY_ADMIN_EMAIL};
+        await sendPostBaselineReminders(commType, studyAdmin);
     } else if (reminderType === 'homeTraining') {
         await sendHomeTraininingReminders(commType);
     } else if (reminderType === 'bloodDrawSurvey') {
@@ -117,9 +127,11 @@ async function sendPreBaselineReminders(commType) {
     console.log(`Done sending ${sentCount} pre-baseline reminders via ${commType}.`);
 }
 
-async function sendPostBaselineReminders(commType) {
+async function sendPostBaselineReminders(commType, studyAdmin) {
     const usersToRemind = [];
+    const usersJustFinished = [];
     let sentCount = 0;
+    let justFinishedSentCount = 0;
 
     try {
         const incompleteUsers = await db.getBaselineIncompleteUsers('post');
@@ -131,17 +143,22 @@ async function sendPostBaselineReminders(commType) {
             if (baselineDone) {
                 // update the user record
                 await db.updateUser(u.userId, {'postComplete': true});
+                usersJustFinished.push(u);
             } else if (!hasDoneSetToday(sets)) {
                 usersToRemind.push(u);
             }        
         }
         
         sentCount = await deliverReminders(usersToRemind, commType, baselineMsg);
+        if (usersJustFinished.length > 0) {
+            justFinishedSentCount = await deliverReminders([studyAdmin], 'email', usersFinishedPostMsg(usersJustFinished));
+        }
 
     } catch (err) {
         console.error(`Error sending ${commType} reminders for post baseline tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} post-baseline reminders via ${commType}.`);
+    if (justFinishedSentCount > 0) console.log(`Done sending ${justFinishedSentCount} notifications that ${usersJustFinished.length} participant(s) have finished the post-intervention assessment.`);
 }
 
 async function sendHomeTraininingReminders(commType) {
