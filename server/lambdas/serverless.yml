@@ -339,6 +339,7 @@ functions:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"
       REGION: ${self:provider.region}
       EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
+      STUDY_ADMIN_EMAIL: ${opt:adminEmail}
       SNS_ENDPOINT: "https://sns.${self:provider.region}.amazonaws.com"
       SES_ENDPOINT: "https://email.${self:provider.region}.amazonaws.com"
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb/sns/ses}

@@ -6,6 +6,10 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const path = require('path');
+require('dotenv').config({path: path.join(__dirname, './env.sh')});
+const studyAdminEmail = process.env.STUDY_ADMIN_EMAIL;
+
 import { handler, forTesting } from '../reminders';
 
 const { hasCompletedBaseline, hasDoneSetToday } = forTesting;
@@ -222,7 +226,9 @@ describe("postBaseline reminders", () => {
             expect(mockGetPostBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
             expect(mockGetSetsForUser).toHaveBeenCalledWith(postBaselineUser.userId);
             expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
-            expect(mockSendEmail).not.toHaveBeenCalled();
+            // email notifying admins will be sent; reminder should not be
+            expect(mockSendEmail).toHaveBeenCalledTimes(1);
+            expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).not.toContain(postBaselineUser.email);
         });
     
         it("should update the db record for those people", async () => {
@@ -231,6 +237,17 @@ describe("postBaseline reminders", () => {
             expect(mockGetSetsForUser).toHaveBeenCalledWith(postBaselineUser.userId);
             expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
             expect(mockUpdateUser).toHaveBeenCalledWith(postBaselineUser.userId, { 'postComplete': true });
+        });
+
+        it("should tell admins who has finished", async () => {
+            await handler({commType: 'email', reminderType: 'postBaseline'});
+            expect(mockGetPostBaselineIncompleteUsers).toHaveBeenCalledTimes(1);
+            expect(mockGetSetsForUser).toHaveBeenCalledWith(postBaselineUser.userId);
+            expect(mockGetResultsForCurrentUser).toHaveBeenCalledWith('set-finished', identityId);
+            expect(mockSendEmail).toHaveBeenCalledTimes(1);
+            expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).toStrictEqual([studyAdminEmail]);
+            const humIdRegEx = new RegExp(postBaselineUser.humanId);
+            expect(mockSendEmail.mock.calls[0][0].Message.Body.Html.Data).toMatch(humIdRegEx);
         });
     });
 
