@@ -25,11 +25,19 @@ const identityId = '456def';
 const mockGetSetsForUser = jest.fn(() => buildSets(3, 3));
 const mockUpdateUser = jest.fn(() => {});
 const mockGetUsersStartingOn = jest.fn((yyyyMMdd) => []);
+const mockGetUser = jest.fn((userId) => []);
+const mockLumosMultiPlays = jest.fn((startDate, endDate) => []);
 
 const mockSendEmail = jest.fn(() => ({ promise: () => new Promise(resolve => resolve())}));
 const mockSnsPublish = jest.fn(() => ({ promise: () => Promise.resolve() }));
 
-const allMocks = [mockGetPreBaselineIncompleteUsers, mockGetPostBaselineIncompleteUsers, mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, mockGetBloodDrawUsers, mockGetUsersStartingOn, mockSendEmail, mockSnsPublish];
+const allMocks = [
+    mockGetPreBaselineIncompleteUsers, mockGetPostBaselineIncompleteUsers, 
+    mockGetHomeTrainingInProgressUsers, mockGetResultsForCurrentUser, 
+    mockGetSetsForUser, mockSegmentsForUser, mockUpdateUser, 
+    mockGetBloodDrawUsers, mockGetUsersStartingOn, mockSendEmail, mockSnsPublish,
+    mockGetUser, mockLumosMultiPlays
+];
 
 jest.mock('aws-sdk/clients/ses', () => {
     return jest.fn().mockImplementation(() => {
@@ -57,7 +65,9 @@ jest.mock('db/db', () => {
             getHomeTrainingInProgressUsers: () => mockGetHomeTrainingInProgressUsers(),
             segmentsForUser: (humanId, startDate, endDate) => mockSegmentsForUser(humanId, startDate, endDate),
             getBloodDrawUsers: (yyyymmddStr) => mockGetBloodDrawUsers(yyyymmddStr),
-            getUsersStartingOn: (yyyyMMdd) => mockGetUsersStartingOn(yyyyMMdd)
+            getUsersStartingOn: (yyyyMMdd) => mockGetUsersStartingOn(yyyyMMdd),
+            getUser: (userId) => mockGetUser(userId),
+            lumosMultiPlays: (startDate, endDate) => mockLumosMultiPlays(startDate, endDate)
         };
     });
 });
@@ -537,5 +547,51 @@ describe("start tomorrow reminders", () => {
         expect(mockSendEmail).not.toHaveBeenCalled();
         expect(mockSnsPublish).toHaveBeenCalledTimes(1);
         expect(mockSnsPublish.mock.calls[0][0].PhoneNumber).toBe(users[0].phone_number);
+    });
+});
+
+describe("don't play Lumosity more than 1x/day reminders", () => {
+    afterEach(() => {
+        mockSendEmail.mockClear();
+        mockSnsPublish.mockClear();
+        mockGetUser.mockClear();
+        mockLumosMultiPlays.mockClear();
+    });
+
+    it("should query for Lumosity plays between start and end of day yesterday", async () => {
+        await handler({commType: 'email', reminderType: 'noMultiLumos'});
+        expect(mockLumosMultiPlays).toHaveBeenCalledTimes(1);
+        expect(mockGetUser).not.toHaveBeenCalled();
+        expect(mockSendEmail).not.toHaveBeenCalled();
+        const yesterday = dayjs().tz('America/Los_Angeles').subtract(1, 'day');
+        const yesterdayStart = yesterday.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+        const yesterdayEnd = yesterday.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        expect(mockLumosMultiPlays.mock.calls[0][0]).toBe(yesterdayStart);
+        expect(mockLumosMultiPlays.mock.calls[0][1]).toBe(yesterdayEnd);
+    });
+
+    it("should fetch email addresses for the users who have played more than 1x yesterday", async () => {
+        const userId = 'abc123';
+        mockLumosMultiPlays.mockImplementationOnce(() => [{userId: userId}]);
+        await handler({commType: 'email', reminderType: 'noMultiLumos'});
+        expect(mockLumosMultiPlays).toHaveBeenCalledTimes(1);
+        expect(mockGetUser).toHaveBeenCalledTimes(1);
+        expect(mockGetUser.mock.calls[0][0]).toBe(userId);
+    });
+
+    it("should email anyone who has played Lumosity more than 1x yesterday", async () => {
+        const user = {userId: 'abc123', email: 'multiplayer@example.com'};
+        mockLumosMultiPlays.mockImplementationOnce(() => [{userId: user.userId}]);
+        mockGetUser.mockImplementationOnce(() => user);
+        await handler({commType: 'email', reminderType: 'noMultiLumos'});
+        expect(mockLumosMultiPlays).toHaveBeenCalledTimes(1);
+        expect(mockGetUser).toHaveBeenCalledTimes(1);
+        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses).toContain(user.email);
+        expect(mockSendEmail.mock.calls[0][0].Destination.ToAddresses.length).toBe(1);
+    });
+
+    it("should throw an error for any commType other than email", async () => {
+        await expect(() => handler({commType: 'sms', reminderType: 'noMultiLumos'})).rejects.toEqual(Error("There is no sms message type for 'noMultiLumos' messages."));
     });
 });

@@ -328,6 +328,12 @@ functions:
           input:
             commType: email
             reminderType: postBaseline
+      - schedule:
+          name: "${self:provider.stage}-no-multi-lumos-8am-email-reminder"
+          rate: cron(0 15 * * ? *)
+          input:
+            commType: email
+            reminderType: noMultiLumos
         
     environment:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"
