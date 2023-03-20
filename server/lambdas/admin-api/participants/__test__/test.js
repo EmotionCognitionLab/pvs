@@ -71,6 +71,25 @@ describe.each(['pre', 'post'])("%p-baseline complete status", preOrPost => {
         const status = await baselineStatus(mockDb([{experiment: 'set-finished', results: { setNum: 1 }}], [], { createdAt: daysAgo.toISOString()}), undefined, preOrPost);
         expect(status.status).toBe('yellow');
     });
+
+    it("should return the correct status if no identityId is found for the user", async () => {
+        const dbMock = {
+            getFinishedSets: (identityId) => [],
+        
+            getIdentityIdForUserId: () => undefined,
+        
+            segmentsForUser: (humanId) => [],
+        
+            lumosPlaysForUser: (userId) => [],
+        
+            getUser: (userId)  => preOrPost === 'pre' ? 
+             ({ startDate: dayjs().subtract(20, 'hours').format('YYYY-MM-DD') }) :
+             ({ progress: { visit5: dayjs().subtract(20, 'hours').format('YYYY-MM-DD') }})
+        };
+        const status = await baselineStatus(dbMock, 'abc321', preOrPost);
+        expect(status.status).toBe('green');
+        expect(status.sets).toBe('0/6');
+    });
 });
 
 describe("lumosity status", () => {
