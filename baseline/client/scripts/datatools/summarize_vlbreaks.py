@@ -47,7 +47,7 @@ def vl_recall_filter(item):
     return item.get("stimulus", False) and item["stimulus"].startswith("We presented two different lists of words to you earlier")
 
 def ps_recall_filter(item):
-    return item.get("trial_type", "") == "html-keyboard-response" and item.get("stimulus", "").find("You will now be tested on your memory") > -1
+    return item.get("trial_type", "") == "html-keyboard-response" and item.get("stimulus", "").find("be tested on your memory") > -1
 
 def main(task: str, learning_json_file: Path, recall_json_file: Path) -> None:
     learning_json = json.loads(learning_json_file.read_text("utf-8"))
