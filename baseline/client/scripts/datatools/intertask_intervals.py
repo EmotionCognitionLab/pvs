@@ -38,7 +38,11 @@ class IntertaskIntervals:
                 et = rec.get(self.END_KEY, False)
 
                 interval_secs = "N/A"
-                if et and st:
+                if not st:
+                    interval_secs = "N/A - no start time"
+                elif not et:
+                    interval_secs = "N/A - no end time"
+                else:
                     interval_secs = int((et - st).total_seconds())
                 result += f"{user_id}, {rec[self.SET_KEY]}, {interval_secs}\n"
         
