@@ -4,12 +4,13 @@ from datetime import datetime
 from pathlib import Path
 from intertask_intervals import IntertaskIntervals
 
-def parse_args() -> tuple[Path, Path]:
+def parse_args() -> tuple[str, Path, Path]:
     parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--task", required=True, choices=["pattern-separation", "verbal-learning"])
     parser.add_argument("learning_json_file", type = Path)
     parser.add_argument("recall_json_file", type = Path)
     args = parser.parse_args()
-    return args.learning_json_file, args.recall_json_file
+    return args.task, args.learning_json_file, args.recall_json_file
 
 def get_set_and_learning_end_times(learning_json: str, intervals: IntertaskIntervals) -> None:
     for i in learning_json:
@@ -41,7 +42,10 @@ def get_recall_start_times(recall_json: str, intervals: IntertaskIntervals, reca
 def vl_recall_filter(item):
     return item.get("stimulus", False) and item["stimulus"].startswith("We presented two different lists of words to you earlier")
 
-def main(learning_json_file: Path, recall_json_file: Path) -> None:
+def ps_recall_filter(item):
+    return item.get("trial_type", "") == "html-keyboard-response" and item.get("stimulus", "").find("You will now be tested on your memory") > -1
+
+def main(task: str, learning_json_file: Path, recall_json_file: Path) -> None:
     learning_json = json.loads(learning_json_file.read_text("utf-8"))
     recall_json = json.loads(recall_json_file.read_text("utf-8"))
 
@@ -49,7 +53,10 @@ def main(learning_json_file: Path, recall_json_file: Path) -> None:
 
     get_set_and_learning_end_times(learning_json, intervals)
     
-    get_recall_start_times(recall_json, intervals, vl_recall_filter)
+    if (task == 'verbal-learning'):
+        get_recall_start_times(recall_json, intervals, vl_recall_filter)
+    else:
+        get_recall_start_times(recall_json, intervals, ps_recall_filter)
        
     print("user id, set number, seconds from learning end to recall start")
     print(intervals)
