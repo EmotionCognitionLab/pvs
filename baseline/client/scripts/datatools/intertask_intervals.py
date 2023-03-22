@@ -18,8 +18,16 @@ class IntertaskIntervals:
         user_rec = self.user_dict[user_id][-1]
         user_rec[self.START_KEY] = start_time
 
-    def set_end_time(self, user_id, end_time):
-        user_rec = self.user_dict[user_id][-1]
+    def set_end_time(self, user_id, set, end_time):
+        user_recs = self.user_dict.get(user_id, False)
+        if not user_recs:
+            raise AssertionError
+        
+        rec_for_set = list(filter(lambda x: x[self.SET_KEY] == set, user_recs))
+        if len(rec_for_set) != 1:
+            raise AssertionError
+        
+        user_rec = rec_for_set[0]
         user_rec[self.END_KEY] = end_time
 
     def __str__(self):

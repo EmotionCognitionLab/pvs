@@ -26,18 +26,22 @@ def get_set_and_learning_end_times(learning_json: str, intervals: IntertaskInter
             intervals.set_start_time(i["userId"], learning_end_time)
 
 def get_recall_start_times(recall_json: str, intervals: IntertaskIntervals, recall_filter) -> None:
+    set = -1
     for i in recall_json:
        if not (i.get("userId", False) and i.get("dateTime", False)):
            raise AssertionError
        
-       set = -1
        if i.get("taskStarted", False):
            set = i.get("setNum", -1)
            intervals.set_set(i["userId"], set)
            
        if recall_filter(i):
+           if set == -1:
+               raise AssertionError
+           
            recall_start_time = datetime.fromisoformat(i["dateTime"].replace('Z', ''))
-           intervals.set_end_time(i["userId"], recall_start_time)
+           intervals.set_end_time(i["userId"], set, recall_start_time)
+           set = -1
 
 def vl_recall_filter(item):
     return item.get("stimulus", False) and item["stimulus"].startswith("We presented two different lists of words to you earlier")
