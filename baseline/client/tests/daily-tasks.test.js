@@ -258,19 +258,6 @@ describe("getSetAndTasks", () => {
         expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
     });
 
-    it("should include an 'all-done' message when the user finishes the last task of the last set", () => {
-        const setList = dailyTasks.allSets.map( (s, idx) => ( { 
-            taskNames: s,
-            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
-            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
-            setNum: idx + 1 }
-        ));
-        const lastSetTasks = setList[setList.length - 1].taskNames;
-        setList[setList.length - 1].taskNames = lastSetTasks.slice(0, lastSetTasks.length - 2);
-        const result = dailyTasks.getSetAndTasks(buildInput(setList));
-        expect(result.remainingTasks[result.remainingTasks.length - 1].taskName).toBe(dailyTasks.allDone);
-    });
-
     it("should return all of the tasks the first set if you have started the set today but have not yet done any tasks", () => {
         const result = dailyTasks.getSetAndTasks(buildInput([ { taskNames: [], setNum: 1 } ]));
         const remainingTaskNames = result.remainingTasks
@@ -752,6 +739,41 @@ describe("doing the tasks", () => {
         dailyTasks.startTasks(input, jest.fn());
         const html = jsPsych.getDisplayElement().innerHTML;
         expect(html).toMatch(/You have done all of the daily measurements required/);
+    });
+
+    it("should send the user to the end-of-study survey when the user finishes the last task of the last set", () => {
+        const setList = dailyTasks.allSets.map( (s, idx) => ( { 
+            taskNames: s,
+            setStartedTime: new Date(Date.now() - (1000 * 60 * 60 * 2)).toISOString(),
+            setFinishedTime: new Date(Date.now() - (1000 * 60 * 60 * 1)).toISOString(),
+            setNum: idx + 1 }
+        ));
+        // leave just the last task undone
+        setList[setList.length - 1].taskNames = setList[setList.length - 1].taskNames.slice(0, -1);
+        let results = buildInput(setList);
+        results = results.slice(0, results.length - 1); // chop off the final set-finished record
+        const setAndTasks = dailyTasks.getSetAndTasks(results, saveResultsMock);
+        setAndTasks.remainingTasks[0].timeline = setAndTasks.remainingTasks[0].timeline.slice(3); // skip image preload and instructions
+        
+        const oldLoc = window.location;
+        const setHrefMock = jest.fn(href => href);
+        try {
+            delete window.location;
+            window.location = {};
+            Object.defineProperty(window.location, 'href', {
+                set: setHrefMock
+            });
+            
+            dailyTasks.runTask(setAndTasks.remainingTasks, 0, saveResultsMock);
+            for (let i=0; i<setAndTasks.remainingTasks[0].timeline[0].timeline_variables.length; i++) {
+                pressKey("1");
+            }
+            expect(setHrefMock).toHaveBeenCalled();
+            expect(setHrefMock.mock.calls[0][0]).toMatch('qualtrics.com');
+        } finally {
+            window.location = oldLoc;
+        }
+        
     });
 });
 
