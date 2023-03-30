@@ -22,7 +22,7 @@ describe("emotional-memory-learning", () => {
             pressKey(" ");
             for (let i = 0; i < stim.length; ++i) {
                 jest.advanceTimersByTime(2 * EmotionalMemory.encodeDuration);
-                pressKey("x");
+                pressKey("1");
             }
             expect(complete).toBe(true);
             expect(
@@ -56,7 +56,7 @@ describe("emotional-memory-learning", () => {
 describe("emotional-memory-recall", () => {
     global.confirm = () => true; // stub out window.confirm
     it("results should have at least one result marked isRelevant", () => {
-        const responses = ["a", "b", "c"]
+        const responses = ["a", "b", "c"];
         const timeline = (new EmotionalMemory(6)).getTimeline();
         let complete = false;
         jsPsych.init({
