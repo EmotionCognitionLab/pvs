@@ -83,7 +83,7 @@ EmotionalMemory.learningEncodingTrial = imagePath => ({
 EmotionalMemory.learningRatingTrial = imagePath => ({
     type: "html-keyboard-response",
     stimulus: learning_prompt_html,
-    choices: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "x"],
+    choices: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
     data: {
         imagePath,
         isRelevant: true,
