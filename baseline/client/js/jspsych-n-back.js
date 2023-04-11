@@ -23,7 +23,7 @@ jsPsych.plugins["n-back"] = (() => {
             },
             hide_fixation: {
                 type: jsPsych.plugins.parameterType.STRING,
-                default: "+",
+                default: "•",
             },
         },
     };
