@@ -69,10 +69,12 @@ const day3And4BRegimes = [...day1BRegimes, ...day2BRegimes];
             delete(newLowRegime.id);
             newLowRegime.isBestCnt = 0;
             newLowRegime.breathsPerMinute -= newPaceDiff;
+            if (newLowRegime.breathsPerMinute < 2) newLowRegime.breathsPerMinute = 2; // minimum permitted
             const newHighRegime = Object.assign({}, r);
             delete(newHighRegime.id);
             newHighRegime.isBestCnt = 0;
             newHighRegime.breathsPerMinute += newPaceDiff;
+            if (newHighRegime.breathsPerMinute > 60) newHighRegime.breathsPerMinute = 60; // maximum permitted
             r.isBestCnt = bestTimes;
 
             // save new regimes + changes to old one
