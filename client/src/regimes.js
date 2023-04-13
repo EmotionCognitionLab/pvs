@@ -2,7 +2,7 @@ import { pullAt } from 'lodash';
 import { 
     getRegimeStats,
     getRegimeId,
-    getPracticedRegimeIds,
+    getAllRegimeIds,
     getRegimesForDay,
     lookupRegime,
     getAvgRestCoherence,
@@ -202,7 +202,7 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
             regimes = arrayShuffle(day3And4BRegimes);
         }
     } else {
-        const allRegimes = getPracticedRegimeIds(stage);
+        const allRegimes = getAllRegimeIds(stage);
         const regimeStats = allRegimes.map(id => getRegimeStats(id, stage));
 
         let targetAvgCoherence = -10000;

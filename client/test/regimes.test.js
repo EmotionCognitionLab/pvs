@@ -57,7 +57,7 @@ describe.each([
 jest.mock('../src/breath-data.js', () => ({
     getAvgRestCoherence: jest.fn(() => 0.0),
     getRegimeStats: jest.fn(() => {}),
-    getPracticedRegimeIds: jest.fn(() => [1,2,3]),
+    getAllRegimeIds: jest.fn(() => [1,2,3]),
     lookupRegime: jest.fn(id => ( {id: id} )),
     setRegimeBestCnt: jest.fn(() => {}),
     getRegimeId: jest.fn(() =>  Math.floor(Math.random() * 100) + 5),
@@ -67,7 +67,7 @@ jest.mock('../src/breath-data.js', () => ({
     saveRegimesForDay: jest.fn(() => {})
 }));
 
-import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getPracticedRegimeIds, saveRegimesForDay } from '../src/breath-data';
+import { getAvgRestCoherence, getRegimeStats, lookupRegime, setRegimeBestCnt, getRegimeId, getAllRegimeIds, saveRegimesForDay } from '../src/breath-data';
 
 describe("Generating regimes for days 5+", () => {
     it("should return the regime closest to the average rest coherence when the condition is b and no regimes have confidence intervals overlapping the average rest coherence", () => {
@@ -157,12 +157,12 @@ describe("Generating regimes for days 5+", () => {
         expect(res.every(r => r.id === expectedRegimeId)).toBeTruthy();
     });
 
-    it("should include regimes whose confidence interval can't be calculated along with any overlapping regimes", () => {
+    it("should include regimes whose mean and confidence interval can't be calculated along with any overlapping regimes", () => {
         const avgRestCoherence = 2.8;
         getAvgRestCoherence.mockReturnValueOnce(avgRestCoherence);
         const regimeStats = [
             {id: 1, mean: 2.2, low90CI: 2.1, high90CI: 3.0},
-            {id: 2, mean: 1.7, low90CI: NaN, high90CI: NaN},
+            {id: 2, mean: NaN, low90CI: NaN, high90CI: NaN},
             {id: 3, mean: 0.9, low90CI: 0.4, high90CI: 1.2}
         ];
         getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
@@ -258,7 +258,7 @@ describe("Generating regimes for days 5+", () => {
     ])("for condition $condition with $overlapCnt overlapping regimes", ({condition, avgRestCoherence, overlapCnt, regimeStats}) => {
         it("should use the overlapping regimes (and only the overlapping regimes)", () => {
             const allRegimeIds = regimeStats.map(rs => rs.id);
-            getPracticedRegimeIds.mockImplementation(() => allRegimeIds);
+            getAllRegimeIds.mockImplementation(() => allRegimeIds);
             getAvgRestCoherence.mockReturnValue(avgRestCoherence);
             getRegimeStats.mockImplementation(id => regimeStats.find(rs => rs.id === id));
             let targetCoh = condition === forTesting.condA ? Math.max(...(regimeStats.map(rs => rs.mean))) : avgRestCoherence;
