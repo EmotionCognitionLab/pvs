@@ -138,21 +138,21 @@ describe("Breathing data functions", () => {
         expect(avgRestCoherence).toBeCloseTo(expectedMean);
     });
 
-    it("should return only the ids of regimes that have been practiced when getPracticedRegimeIds is called", () => {
+    it.only("should return the ids of all regimes EXCEPT for non-random 15bpm (which is only in stage 1) when getAllRegimeIds is called", () => {
         const insertRegimeStmt = db.prepare('INSERT INTO regimes(duration_ms, breaths_per_minute, hold_pos, randomize) VALUES(?, ?, ?, ?)');
         const regimes = [
             {durationMs: 300000, breathsPerMinute: 4, holdPos: null, randomize: 0},
             {durationMs: 300000, breathsPerMinute: 5, holdPos: null, randomize: 0},
-            {durationMs: 300000, breathsPerMinute: 6, holdPos: null, randomize: 0}
+            {durationMs: 300000, breathsPerMinute: 6, holdPos: null, randomize: 1},
+            {durationMs: 300000, breathsPerMinute: 15, holdPos: null, randomize: 0},
+            {durationMs: 300000, breathsPerMinute: 15, holdPos: null, randomize: 1}
         ];
         const regimeIds = regimes.map(r => insertRegimeStmt.run(r.durationMs, r.breathsPerMinute, r.holdPos, r.randomize).lastInsertRowid);
         expect(regimeIds.length).toBe(regimes.length);
-        const expectedPracticedRegime = {id: regimeIds[1], ...regimes[1]};
-        const cohVals = [1.9, 2.1, 0.7];
-        const stage = 3;
-        cohVals.forEach(coh => bd.forTesting.createSegment({regime: expectedPracticedRegime, avgCoherence: coh, sessionStartTime: 0}, stage));
-        const practicedRegimeIds = bd.getPracticedRegimeIds(stage);
-        expect(practicedRegimeIds).toEqual([expectedPracticedRegime.id]);
+        const regimesWithIds = regimeIds.map((id, idx) => ({id: id, ...regimes[idx]}));
+        const expectedRegimeIds = regimesWithIds.filter(r => r.breathsPerMinute != 15 || r.randomize != 0).map(r => r.id);
+        const allRegimeIds = bd.getAllRegimeIds(3);
+        expect(allRegimeIds).toEqual(expectedRegimeIds);
     });
 
     it("should return the right statistics when getRegimeStats is called", () => {

@@ -2,7 +2,7 @@ import { pullAt } from 'lodash';
 import { 
     getRegimeStats,
     getRegimeId,
-    getPracticedRegimeIds,
+    getAllRegimeIds,
     getRegimesForDay,
     lookupRegime,
     getAvgRestCoherence,
@@ -69,10 +69,12 @@ const day3And4BRegimes = [...day1BRegimes, ...day2BRegimes];
             delete(newLowRegime.id);
             newLowRegime.isBestCnt = 0;
             newLowRegime.breathsPerMinute -= newPaceDiff;
+            if (newLowRegime.breathsPerMinute < 1) newLowRegime.breathsPerMinute = 1; // minimum permitted
             const newHighRegime = Object.assign({}, r);
             delete(newHighRegime.id);
             newHighRegime.isBestCnt = 0;
             newHighRegime.breathsPerMinute += newPaceDiff;
+            if (newHighRegime.breathsPerMinute > 60) newHighRegime.breathsPerMinute = 60; // maximum permitted
             r.isBestCnt = bestTimes;
 
             // save new regimes + changes to old one
@@ -202,7 +204,7 @@ function generateRegimesForDay(subjCondition, dayCount, stage) {
             regimes = arrayShuffle(day3And4BRegimes);
         }
     } else {
-        const allRegimes = getPracticedRegimeIds(stage);
+        const allRegimes = getAllRegimeIds(stage);
         const regimeStats = allRegimes.map(id => getRegimeStats(id, stage));
 
         let targetAvgCoherence = -10000;
