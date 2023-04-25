@@ -53,11 +53,16 @@ class TsvTransfomer(ABC):
         import csv
         csv.register_dialect('tabs', delimiter='\t')
         files_written = []
+        pre_session_run_count = 0
 
         for idx, run_data in enumerate(self.runs):
             fname = f'sub-{self.subject}_ses-{run_data.get_session()}_{self.task}'
             if self.has_multi_runs:
-                fname += f'_run-{idx+1}'
+                if run_data.get_session() == 'pre':
+                    fname += f'_run-{idx+1}'
+                    pre_session_run_count += 1
+                else:
+                    fname += f'_run-{idx+1 - pre_session_run_count}'
             fname += '_beh.tsv'
             with open(fname, 'w') as f:
                 writer = csv.DictWriter(f, [*self.default_fields, *self.fieldnames], dialect='tabs')
