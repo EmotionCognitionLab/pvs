@@ -7,6 +7,10 @@ def transformer_for_task(task, data, subject):
         return MoodPrediction(data, subject, task)
     elif task == 'task-panas':
         return Panas(data, subject, task)
+    elif task == 'task-physicalActivity':
+        return PhysicalActivity(data, subject, task)
+    elif task == 'task-faceName':
+        return FaceName(data, subject, task)
     
     raise NotImplementedError
 
@@ -134,6 +138,62 @@ class Panas(TsvTransfomer):
                 fields[field] = resp[field]
 
             run_data.add_line(fields)
+
+class PhysicalActivity(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["activity_level", "weight", "height_feet", "height_inches", "age", "gender"]
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if line_type == 'NORMAL':
+            resp = line['results']['response']
+            for field in self.fieldnames:
+                fields[field] = resp[field]
+
+            run_data.add_line(fields)
+
+# TODO do we want to share learning and recall together or separately? SEPARATELY
+# class PatternSeparationLearning(TsvTransfomer):
+#     def __init__(self, data, subject, task):
+#         super().__init__(data, subject, task)
+#         self.fieldnames = 
+
+class FaceName(TsvTransfomer):
+    import re
+
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "response", "category", "is_learning", "is_practice",
+                           "is_recall", "name", "names", "pic_id", "lure", "response", "correct", "response_time_ms", "failed_images"]
+        self.has_multi_runs = True
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_images'] = res['failed_images']
+        else:
+            fields['stimulus'] = res['stimulus']
+            fields['response'] = res['response']
+            fields['response_time_ms'] = res['rt']
+            for (orig_field, tsv_field) in zip(
+                ['cat', 'correct', 'lure', 'name', 'names', 'picId'],
+                ['category', 'correct', 'lure', 'name', 'names', 'pic_id']
+                ):
+                orig_val = res.get(orig_field, None)
+                if orig_val or orig_val is False: # we want to report False for correct
+                    fields[tsv_field] = res[orig_field]
+                if res.get('picId', None): # then we have a stimulus and want to report False for missing values of certain fields
+                    for (orig_bool, tsv_bool) in zip(['isPractice', 'isLearning', 'isRecall'],
+                                                     ['is_practice', 'is_learning', 'is_recall']
+                                                     ):
+                        fields[tsv_bool] = res.get(orig_bool, False)
+
+        run_data.add_line(fields)
 
 
     
