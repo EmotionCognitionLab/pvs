@@ -15,7 +15,7 @@ def transformer_for_task(task, data, subject):
     raise NotImplementedError
 
 class TsvTransfomer(ABC):
-    default_fields = ['date_time', 'is_relevant', 'screen_size', 'time_elapsed', 'ua', 'version']
+    default_fields = ['date_time', 'is_relevant', 'screen_size', 'time_elapsed_ms', 'ua', 'version']
     def __init__(self, data, subject, task):
         self.data = data
         self.subject = subject
@@ -47,7 +47,7 @@ class TsvTransfomer(ABC):
         # if not line.get('experimentDateTime', None): print(f'no dateTime: {line}')
         rd = self.runs[-1]
         date_time = line['experimentDateTime'].split('|')[1]
-        return (rd, 'NORMAL', {'is_relevant': line['isRelevant'], 'time_elapsed': res['time_elapsed'], 'date_time': date_time})
+        return (rd, 'NORMAL', {'is_relevant': line['isRelevant'], 'time_elapsed_ms': res['time_elapsed'], 'date_time': date_time})
 
     def _write_results(self):
         import csv
