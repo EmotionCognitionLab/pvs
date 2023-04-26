@@ -11,6 +11,22 @@ def transformer_for_task(task, data, subject):
         return PhysicalActivity(data, subject, task)
     elif task == 'task-faceName':
         return FaceName(data, subject, task)
+    elif task == 'task-dailyStressors':
+        return DailyStressors(data, subject, task)
+    elif task == 'task-dass':
+        return Dass(data, subject, task)
+    elif task == 'task-ffmq':
+        return Ffmq(data, subject, task)
+    elif task == 'task-patternSeparationLearning':
+        return PatternSeparationLearning(data, subject, task)
+    elif task == 'task-patternSeparationRecall':
+        return PatternSeparationRecall(data, subject, task)
+    elif task == 'task-spatialOrientation':
+        return SpatialOrientation(data, subject, task)
+    elif task == 'task-mindInEyes':
+        return MindInEyes(data, subject, task)
+    elif task == 'task-verbalFluency':
+        return VerbalFluency(data, subject, task)
     
     raise NotImplementedError
 
@@ -113,6 +129,20 @@ class RunData(object):
         return 'post'
     
 
+class SimpleTransfomer(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if line_type != 'NORMAL': return
+
+        resp = line['results']['response']
+        for field in self.fieldnames:
+            fields[field] = resp[field]
+
+        run_data.add_line(fields)
+
 class MoodPrediction(TsvTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
@@ -129,44 +159,76 @@ class MoodPrediction(TsvTransfomer):
             run_data.add_line(fields)
 
 
-class Panas(TsvTransfomer):
+class Panas(SimpleTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['ashamed', 'upset', 'strong', 'proud', 'excited', 'hostile', 'attentive', 'active', 'inspired', 'distressed', 'enthusiastic', 'guilty', 'irritable', 'alert', 'nervous', 'determined', 'jittery', 'afraid', 'interested', 'scared']
         self.has_multi_runs = True
-        
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if line_type == 'NORMAL':
-            resp = line['results']['response']
-            for field in self.fieldnames:
-                fields[field] = resp[field]
 
-            run_data.add_line(fields)
-
-class PhysicalActivity(TsvTransfomer):
+class PhysicalActivity(SimpleTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["activity_level", "weight", "height_feet", "height_inches", "age", "gender"]
 
+class PatternSeparationLearning(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "is_learning", "is_practice",
+                           "pic", "type", "response", "response_time_ms", "failed_images"]
+        self.has_multi_runs = True
+
     def _process_line(self, line):
         (run_data, line_type, fields) = super()._process_line(line)
-        if line_type == 'NORMAL':
-            resp = line['results']['response']
-            for field in self.fieldnames:
-                fields[field] = resp[field]
+        if not line_type == 'NORMAL': return
 
-            run_data.add_line(fields)
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_images'] = res['failed_images']
+        else:
+            fields['stimulus'] = res['stimulus']
+            fields['response'] = res['response']
+            fields['response_time_ms'] = res['rt']
+            
+            if res.get('pic', None): 
+                fields['pic'] = res['pic']
+                fields['type'] = res['type']
+                # we have a stimulus and want to report False for missing values of certain fields
+                for (orig_bool, tsv_bool) in zip(['isPractice', 'isLearning'],
+                                                    ['is_practice', 'is_learning']
+                                                    ):
+                    fields[tsv_bool] = res.get(orig_bool, False)
 
-# TODO do we want to share learning and recall together or separately? SEPARATELY
-# class PatternSeparationLearning(TsvTransfomer):
-#     def __init__(self, data, subject, task):
-#         super().__init__(data, subject, task)
-#         self.fieldnames = 
+        run_data.add_line(fields)
+
+class PatternSeparationRecall(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "is_recall", "pic", "type",
+                           "response", "response_time_ms", "failed_images"]
+        self.has_multi_runs = True
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_images'] = res['failed_images']
+        else:
+            fields['stimulus'] = res['stimulus']
+            fields['response'] = res['response']
+            fields['response_time_ms'] = res['rt']
+            
+            if res.get('pic', None): 
+                fields['pic'] = res['pic']
+                fields['type'] = res['type']
+                fields['is_recall'] = res.get('isRecall', False)
+
+        run_data.add_line(fields)
 
 class FaceName(TsvTransfomer):
-    import re
-
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "response", "category", "is_learning", "is_practice",
@@ -201,4 +263,130 @@ class FaceName(TsvTransfomer):
         run_data.add_line(fields)
 
 
-    
+class DailyStressors(SimpleTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"]
+        self.has_multi_runs = True
+
+class Dass(SimpleTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9",
+        "Q10","Q11","Q12","Q13","Q14","Q15","Q16","Q17","Q18","Q19","Q20",]
+
+class Ffmq(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9",
+        "Q10","Q11","Q12","Q13","Q14"]
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        q_map = {
+            "When I take a shower or a bath, I stay alert to the sensations of water on my body." : 'Q0',
+            "I’m good at finding words to describe my feelings." : 'Q1',
+            "I don’t pay attention to what I’m doing because I’m daydreaming, worrying, or otherwise distracted." : 'Q2',
+            "I believe some of my thoughts are abnormal or bad and I shouldn’t think that way." : 'Q3',
+            "When I have distressing thoughts or images, I “step back” and am aware of the thought or image without getting taken over by it." : 'Q4',
+            "I notice how foods and drinks affect my thoughts, bodily sensations, and emotions." : 'Q5',
+            "I have trouble thinking of the right words to express how I feel about things." : 'Q6',
+            "I do jobs or tasks automatically without being aware of what I’m doing." : 'Q7',
+            "I think some of my emotions are bad or inappropriate and I shouldn’t feel them." : 'Q8',
+            "When I have distressing thoughts or images I am able just to notice them without reacting." : 'Q9',
+            "I pay attention to sensations, such as the wind in my hair or the sun on my face." : 'Q10',
+            "Even when I’m feeling terribly upset I can find a way to put it into words." : 'Q11',
+            "I find myself doing things without paying attention." : 'Q12',
+            "I tell myself I shouldn’t be feeling the way I’m feeling." : 'Q13',
+            "When I have distressing thoughts or images I just notice them and let them go." : 'Q14'
+        }
+
+        resp = line['results']['response']
+        for (question, value) in resp.items():
+            q_num = q_map[question]
+            fields[q_num] = value
+
+        run_data.add_line(fields)
+
+class SpatialOrientation(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ['trial_index', 'stimulus', 'mode', 'center', 'facing', 'target',
+                           'target_radians', 'response_radians', 'response_time_ms',
+                           'signed_radian_distance', 'time_limit_ms', 'completion_reason']
+        self.has_multi_runs = True
+        
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        if res['trial_type'] == 'call-function': return
+
+        fields['trial_index'] = res['trial_index']
+        if not res.get('rt', None):
+            print('no rt', line)
+        fields['response_time_ms'] = res['rt']
+        
+        if res.get('stimulus', None): fields['stimulus'] = res['stimulus']
+        if res.get('mode', None):
+            # then we have an actual trial and can fill in the relevant fields
+            fields['mode'] = res['mode']
+            fields['center'] = res['center']
+            fields['facing'] = res['facing']
+            fields['target'] = res['target']
+            fields['target_radians'] = res['targetRadians']
+            fields['response_radians'] = res['responseRadians']
+            fields['signed_radian_distance'] = res['signedRadianDistance']
+            fields['time_limit_ms'] = res['timeLimit']
+            fields['completion_reason'] = res['completionReason']
+
+        run_data.add_line(fields)
+
+class MindInEyes(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ['trial_index', 'is_practice', 'stimulus', 'pic', 'words',
+                            'response','response_time_ms', 'failed_images']
+        self.has_multi_runs = True
+
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_images'] = res['failed_images']
+        else:
+            fields['stimulus'] = res['stimulus']
+            fields['response'] = res['response']
+            fields['response_time_ms'] = res['rt']
+            fields['is_practice'] = res.get('isPractice', False)
+            fields['pic'] = res.get('pic', None)
+            fields['words'] = res.get('words', None)
+
+        run_data.add_line(fields)
+
+class VerbalFluency(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
+        self.has_multi_runs = True
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        fields['stimulus'] = res['stimulus']
+        fields['response'] = res['response']
+        if res['trial_type'] == 'timed-writing':
+            fields['letter'] = res['letter']
+
+        run_data.add_line(fields)
+        
