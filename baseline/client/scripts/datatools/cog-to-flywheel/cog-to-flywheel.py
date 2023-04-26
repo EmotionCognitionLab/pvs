@@ -125,7 +125,7 @@ def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all
         def find_acq(acq_label):
             for acq in sess_acqs:
                 if (acq.label == acq_label): return acq
-                return None
+            return None
             
         if tasks:
             tasks_to_fetch = tasks
