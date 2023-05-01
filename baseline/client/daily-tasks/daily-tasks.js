@@ -395,7 +395,9 @@ function canDoAdditionalSet(highestStartedSet, highestFinishedSet) {
         // but in that case we treat them as being in the middle of a set)
         const threeHoursAgo = new Date(Date.now() - (3 * 60 * 60 * 1000));
         const lastStartedTime = new Date(highestStartedSet.dateTime);
-        return threeHoursAgo > lastStartedTime;
+        return threeHoursAgo > lastStartedTime && 
+        highestStartedSet.results.setNum !== preInterventionSetCount &&
+        highestStartedSet.results.setNum !== allSets.length;
     }
 }
 
