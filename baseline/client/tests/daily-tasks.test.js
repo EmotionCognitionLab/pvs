@@ -100,6 +100,36 @@ describe("getSetAndTasks", () => {
         expect(remainingTaskNames).toEqual(expect.arrayContaining(secondSetTasks));
     });
 
+    it("does not give you the option to start a new set if you're finishing set 6 after starting it more than three hours ago", () => {
+        const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
+        const doneTasksIdx = 3;
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
+            setStartedTime: fourHoursAgo.toISOString(),
+            setNum: 6
+        }]);
+        const results = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).not.toContain(dailyTasks.startNewSetQuery);
+        const remainingSixthSetTasks = dailyTasks.allSets[5].slice(doneTasksIdx);
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingSixthSetTasks));
+    });
+
+    it("does not give you the option to start a new set if you're finishing set 12 after starting it more than three hours ago", () => {
+        const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
+        const doneTasksIdx = 3;
+        const input = buildInput( [{
+            taskNames: dailyTasks.allSets[0].slice(0, doneTasksIdx), 
+            setStartedTime: fourHoursAgo.toISOString(),
+            setNum: 12
+        }]);
+        const results = dailyTasks.getSetAndTasks(input);
+        const remainingTaskNames = results.remainingTasks.map(t => t.taskName);
+        expect(remainingTaskNames).not.toContain(dailyTasks.startNewSetQuery);
+        const remainingTwelfthSetTasks = dailyTasks.allSets[11].slice(doneTasksIdx);
+        expect(remainingTaskNames).toEqual(expect.arrayContaining(remainingTwelfthSetTasks));
+    });
+
     it("saves a set-finished record when you finish a set that is followed by the chance to start another set", () => {
         const fourHoursAgo = new Date(Date.now() - (1000 * 60 * 60 * 4));
         const doneTasksIdx = 3;
