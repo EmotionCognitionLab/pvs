@@ -52,7 +52,7 @@ def task_to_experiment(task_name):
     return re.sub(r'([A-Z]+)', lambda x: f'-{x.group().lower()}', name_match.group(1))
 
 def filename_to_acq_label(fname):
-    return re.sub(r'sub-[A-z]+_ses-[A-z]+_(.*)_beh.tsv', lambda x: x.group(1), fname)
+    return re.sub(r'sub-[A-z]+_ses-[A-z]+_(.*)_beh.tsv', lambda x: f'beh_{x.group(1)}', fname)
 
 def get_aws_user_id_for_user_id(dyn_client, user_id):
     result = ""
