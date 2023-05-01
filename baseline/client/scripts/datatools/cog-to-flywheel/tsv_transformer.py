@@ -27,6 +27,8 @@ def transformer_for_task(task, data, subject):
         return MindInEyes(data, subject, task)
     elif task == 'task-verbalFluency':
         return VerbalFluency(data, subject, task)
+    elif task == 'task-nBack':
+        return NBack(data, subject, task)
     
     raise NotImplementedError
 
@@ -389,4 +391,35 @@ class VerbalFluency(TsvTransfomer):
             fields['letter'] = res['letter']
 
         run_data.add_line(fields)
+
+class NBack(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ['trial_index', 'stimulus', 'n', 'sequence', 'missed_indices']
+        self.has_multi_runs = True
+
+    def add_response(self, fields, response_idx, fieldname, value):
+        response_field = f'response_{response_idx}_{fieldname}'
+        fields[response_field] = value
+        if not response_field in self.fieldnames: self.fieldnames.append(response_field)
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        fields['stimulus'] = res.get('stimulus', None)
+        if res['trial_type'] == 'n-back':
+            fields['n'] = res['n']
+            fields['sequence'] = res['sequence']
+            fields['missed_indices'] = [int(x) for x in res['missedIndices']]
+            for (idx, response) in enumerate(res['responses']):
+                self.add_response(fields, idx, 'sequence_index', response['index'])
+                self.add_response(fields, idx, 'correct', response['correct'])
+                self.add_response(fields, idx, 'time_from_focus', response['time_from_focus'])
+                self.add_response(fields, idx, 'time_from_start', response['time_from_start'])
+
+        run_data.add_line(fields)
+
         
