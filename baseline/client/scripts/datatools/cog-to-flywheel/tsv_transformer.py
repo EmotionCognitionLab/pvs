@@ -1,9 +1,7 @@
-# TODO deal with failed image preloads
-
 from abc import ABC, abstractmethod
 
 def transformer_for_task(task, data, subject):
-    if task == 'task-moodPrediction':
+    if task == 'task-moodPrediction' or task == 'task-moodMemory':
         return MoodPrediction(data, subject, task)
     elif task == 'task-panas':
         return Panas(data, subject, task)
@@ -29,6 +27,18 @@ def transformer_for_task(task, data, subject):
         return VerbalFluency(data, subject, task)
     elif task == 'task-nBack':
         return NBack(data, subject, task)
+    elif task == 'task-taskSwitching':
+        return TaskSwitching(data, subject, task)
+    elif task == 'task-flanker':
+        return Flanker(data, subject, task)
+    elif task == 'task-emotionalMemory':
+        return EmotionalMemory(data, subject, task)
+    elif task == 'task-sleepSurvey':
+        return SleepSurvey(data, subject, task)
+    elif task == 'task-verbalLearningLearning':
+        return VerbalLearningLearning(data, subject, task)
+    elif task == 'task-verbalLearningRecall':
+        return VerbalLearningRecall(data, subject, task)
     
     raise NotImplementedError
 
@@ -44,6 +54,8 @@ class TsvTransfomer(ABC):
 
     def _skip(self, line):
         if line["results"].get('trial_type', '') == 'fullscreen': 
+            return True
+        if line['results'].get('trial_type', '') == 'call-function':
             return True
         stimulus = line['results'].get('stimulus', '')
         if not line.get('isRelevant', True) and ('You are about to start set' in stimulus or 'You have completed' in stimulus):
@@ -328,9 +340,7 @@ class SpatialOrientation(TsvTransfomer):
         if res['trial_type'] == 'call-function': return
 
         fields['trial_index'] = res['trial_index']
-        if not res.get('rt', None):
-            print('no rt', line)
-        fields['response_time_ms'] = res['rt']
+        fields['response_time_ms'] = res.get('rt', None)
         
         if res.get('stimulus', None): fields['stimulus'] = res['stimulus']
         if res.get('mode', None):
@@ -340,8 +350,8 @@ class SpatialOrientation(TsvTransfomer):
             fields['facing'] = res['facing']
             fields['target'] = res['target']
             fields['target_radians'] = res['targetRadians']
-            fields['response_radians'] = res['responseRadians']
-            fields['signed_radian_distance'] = res['signedRadianDistance']
+            fields['response_radians'] = res.get('responseRadians', None)
+            fields['signed_radian_distance'] = res.get('signedRadianDistance', None)
             fields['time_limit_ms'] = res['timeLimit']
             fields['completion_reason'] = res['completionReason']
 
@@ -422,4 +432,136 @@ class NBack(TsvTransfomer):
 
         run_data.add_line(fields)
 
+class TaskSwitching(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ['trial_index', 'stimulus', 'is_training', 'block_type', 'color', 'number', 'size', 'task_type', 'response', 'correct', 'response_time_ms']
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        fields['stimulus'] = res.get('stimulus', None)
+        fields['is_training'] = res.get('isTraining', False)
+        fields['block_type'] = res.get('blockType', None)
+        fields['color'] = res.get('color', None)
+        fields['number'] = res.get('number', None)
+        fields['size'] = res.get('size', None)
+        fields['task_type'] = res.get('taskType', None)
+        fields['response'] = res.get('response', None)
+        fields['correct'] = res.get('correct', None)
+        fields['response_time_ms'] = res['rt']
+
+        run_data.add_line(fields)
+
+class Flanker(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "is_training", "arrows", "congruent",
+                           "response", "correct", "correct_response", "response_time_ms", "trial_duration_ms", 
+                           "failed_images"]
+        self.has_multi_runs = True
         
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_images'] = res['failed_images']
+
+        fields['stimulus'] = res.get('stimulus', None)
+        fields['is_training'] = res.get('isTraining', False)
+        if res.get('arrows', None):
+            fields['arrows'] = [int(x) for x in res['arrows']]
+
+        fields['congruent'] = res.get('congruent', None)
+        fields['response'] = res.get('response', None)
+        fields['correct'] = res.get('correct', None)
+        fields['correct_response'] = res.get('correct_response', None)
+        fields['response_time_ms'] = res.get('rt', None)
+        fields['trial_duration_ms'] = res.get('trial_duration', None)
+
+        run_data.add_line(fields)
+
+class EmotionalMemory(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "image_path", "response", "response_time_ms"]
+        self.has_multi_runs = True
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        fields['stimulus'] = res.get('stimulus', None)
+        fields['image_path'] = res.get('imagePath', None)
+        fields['response'] = res.get('response', None)
+        fields['response_time_ms'] = res.get('rt', None)
+
+        run_data.add_line(fields)
+
+class SleepSurvey(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7", "Q8"]
+        self.q_map = {
+            "as a passenger in a car for an hour without a break": "Q0",
+            "in a car, while stopped for a few minutes in traffic": "Q1",
+            "lying down to rest in the afternoon when circumstances permit": "Q2",
+            "sitting and reading": "Q3",
+            "sitting and talking to someone": "Q4",
+            "sitting inactive in a public place (e.g., a theater or a meeting)": "Q5",
+            "sitting quietly after a lunch without alcohol": "Q6",
+            "watching tv": "Q7",
+            "sleepiness five minutes before": "Q8"
+        }
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        resp = line['results']['response']
+        for (question, value) in resp.items():
+            q_num = self.q_map[question]
+            fields[q_num] = value
+
+        # if resp.get("sleepiness five minutes before", None):
+        #     # This survey is split across two pages, which results in a tsv
+        #     # file that always has two lines: One where Q0-Q7 are filled in and Q8 isn't,
+        #     # and one where only Q8 is. This fixes it so the tsv file just has one line
+        #     # with Q0-Q8 filled in.
+        #     prev_lines = run_data.get_lines()
+        #     q_num = self.q_map["sleepiness five minutes before"]
+        #     prev_lines[-1][q_num] = resp["sleepiness five minutes before"]
+        # else:
+        run_data.add_line(fields)
+
+class VerbalLearningLearning(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "response", "failed_audio"]
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if not line_type == 'NORMAL': return
+
+        res = line['results']
+        fields['trial_index'] = res['trial_index']
+        if res['trial_type'] == 'preload':
+            fields['failed_audio'] = res['failed_audio']
+
+        fields['stimulus'] = res.get('stimulus', None)
+        fields['response'] = res.get('response', None)
+
+        run_data.add_line(fields)
+
+class VerbalLearningRecall(VerbalLearningLearning):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.fieldnames = ["trial_index", "stimulus", "response"]
