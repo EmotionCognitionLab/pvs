@@ -219,7 +219,7 @@ class PatternSeparationRecall(TsvTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "is_recall", "pic", "type",
-                           "response", "response_time_ms", "failed_images"]
+                           "response", "correct", "response_time_ms", "failed_images"]
         self.has_multi_runs = True
 
     def _process_line(self, line):
@@ -232,12 +232,20 @@ class PatternSeparationRecall(TsvTransfomer):
             fields['failed_images'] = res['failed_images']
         else:
             fields['stimulus'] = res['stimulus']
-            fields['response'] = res['response']
+            response = res['response']
+            fields['response'] = response
             fields['response_time_ms'] = res['rt']
             
             if res.get('pic', None): 
                 fields['pic'] = res['pic']
-                fields['type'] = res['type']
+                recallType = res['type']
+                fields['type'] = recallType
+                if recallType == 'Target' and (response == '1' or response == '2'):
+                    fields['correct'] = True
+                elif (recallType == 'Lure' or recallType == 'New') and (response == '3' or response == '4'):
+                    fields['correct'] = True
+                else:
+                    fields['correct'] = False
                 fields['is_recall'] = res.get('isRecall', False)
 
         run_data.add_line(fields)
