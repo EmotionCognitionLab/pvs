@@ -77,7 +77,7 @@ class TsvTransfomer(ABC):
         # if not line.get('experimentDateTime', None): print(f'no dateTime: {line}')
         rd = self.runs[-1]
         date_time = line['experimentDateTime'].split('|')[1]
-        return (rd, 'NORMAL', {'is_relevant': line['isRelevant'], 'time_elapsed_ms': res['time_elapsed'], 'date_time': date_time})
+        return (rd, 'NORMAL', {'is_relevant': line.get('isRelevant', False), 'time_elapsed_ms': res.get('time_elapsed' 'n/a'), 'date_time': date_time})
 
     def _write_results(self):
         import csv
@@ -109,6 +109,11 @@ class TsvTransfomer(ABC):
 
         files_written = self._write_results()
         return files_written
+    
+    def _get_na_for_none(self, dict, key):
+        if dict.get(key, 'n/a') == None: return 'n/a'
+
+        return dict.get(key, 'n/a')
 
 # Encapsulates all of the data for a given run of a given task
 class RunData(object):
@@ -157,6 +162,25 @@ class SimpleTransfomer(TsvTransfomer):
 
         run_data.add_line(fields)
 
+class ModifiedFieldNamesTransformer(TsvTransfomer):
+    def __init__(self, data, subject, task):
+        super().__init__(data, subject, task)
+        self.orig_fieldnames = []
+
+    def _process_line(self, line):
+        if len(self.orig_fieldnames) != len(self.fieldnames):
+            raise AssertionError('The length of orig_fieldnames must be the same as the length of self.fieldnames.')
+        
+        (run_data, line_type, fields) = super()._process_line(line)
+        if line_type != 'NORMAL': return
+
+        res = line['results']
+        for (orig_field, field) in zip(self.orig_fieldnames, self.fieldnames):
+            fields[field] = self._get_na_for_none(res, orig_field)
+
+        run_data.add_line(fields)
+
+
 class MoodPrediction(TsvTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
@@ -184,36 +208,15 @@ class PhysicalActivity(SimpleTransfomer):
         super().__init__(data, subject, task)
         self.fieldnames = ["activity_level", "weight", "height_feet", "height_inches", "age", "gender"]
 
-class PatternSeparationLearning(TsvTransfomer):
+class PatternSeparationLearning(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "is_learning", "is_practice",
                            "pic", "type", "response", "response_time_ms", "failed_images"]
+        self.orig_fieldnames = ["trial_index", "stimulus", "isLearning", "isPractice",
+                           "pic", "type", "response", "rt", "failed_images"]
         self.has_multi_runs = True
 
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_images'] = res['failed_images']
-        else:
-            fields['stimulus'] = res['stimulus']
-            fields['response'] = res['response']
-            fields['response_time_ms'] = res['rt']
-            
-            if res.get('pic', None): 
-                fields['pic'] = res['pic']
-                fields['type'] = res['type']
-                # we have a stimulus and want to report False for missing values of certain fields
-                for (orig_bool, tsv_bool) in zip(['isPractice', 'isLearning'],
-                                                    ['is_practice', 'is_learning']
-                                                    ):
-                    fields[tsv_bool] = res.get(orig_bool, False)
-
-        run_data.add_line(fields)
 
 class PatternSeparationRecall(TsvTransfomer):
     def __init__(self, data, subject, task):
@@ -227,62 +230,66 @@ class PatternSeparationRecall(TsvTransfomer):
         if not line_type == 'NORMAL': return
 
         res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_images'] = res['failed_images']
+        fields['trial_index'] = res.get('trial_index', 'n/a')
+        fields['failed_images'] = res.get('failed_images', 'n/a')
+        fields['stimulus'] = res.get('stimulus', 'n/a')
+        response = self._get_na_for_none(res, 'response')
+        fields['response'] = response
+        fields['response_time_ms'] = self._get_na_for_none(res, 'rt')
+        
+        fields['pic'] = res.get('pic', 'n/a')
+        recallType = res.get('type', 'n/a')
+        fields['type'] = recallType
+        fields['is_recall'] = res.get('isRecall', 'n/a')
+
+        if res.get('pic', 'n/a') != 'n/a': # then we have a stimulus and we want to know if the response was correct
+            if recallType == 'Target' and (response == '1' or response == '2'):
+                fields['correct'] = True
+            elif (recallType == 'Lure' or recallType == 'New') and (response == '3' or response == '4'):
+                fields['correct'] = True
+            else:
+                fields['correct'] = False
         else:
-            fields['stimulus'] = res['stimulus']
-            response = res['response']
-            fields['response'] = response
-            fields['response_time_ms'] = res['rt']
-            
-            if res.get('pic', None): 
-                fields['pic'] = res['pic']
-                recallType = res['type']
-                fields['type'] = recallType
-                if recallType == 'Target' and (response == '1' or response == '2'):
-                    fields['correct'] = True
-                elif (recallType == 'Lure' or recallType == 'New') and (response == '3' or response == '4'):
-                    fields['correct'] = True
-                else:
-                    fields['correct'] = False
-                fields['is_recall'] = res.get('isRecall', False)
+            fields['correct'] = 'n/a'
+        
 
         run_data.add_line(fields)
 
-class FaceName(TsvTransfomer):
+class FaceName(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "response", "category", "is_learning", "is_practice",
                            "is_recall", "name", "names", "pic_id", "lure", "response", "correct", "response_time_ms", "failed_images"]
+        self.orig_fieldnames = ["trial_index", "stimulus", "response", "cat", "isLearning", "isPractice",
+                           "isRecall", "name", "names", "picId", "lure", "response", "correct", "ft", "failed_images"]
         self.has_multi_runs = True
 
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
+    # def _process_line(self, line):
+    #     (run_data, line_type, fields) = super()._process_line(line)
+    #     if not line_type == 'NORMAL': return
 
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_images'] = res['failed_images']
-        else:
-            fields['stimulus'] = res['stimulus']
-            fields['response'] = res['response']
-            fields['response_time_ms'] = res['rt']
-            for (orig_field, tsv_field) in zip(
-                ['cat', 'correct', 'lure', 'name', 'names', 'picId'],
-                ['category', 'correct', 'lure', 'name', 'names', 'pic_id']
-                ):
-                orig_val = res.get(orig_field, None)
-                if orig_val or orig_val is False: # we want to report False for correct
-                    fields[tsv_field] = res[orig_field]
-                if res.get('picId', None): # then we have a stimulus and want to report False for missing values of certain fields
-                    for (orig_bool, tsv_bool) in zip(['isPractice', 'isLearning', 'isRecall'],
-                                                     ['is_practice', 'is_learning', 'is_recall']
-                                                     ):
-                        fields[tsv_bool] = res.get(orig_bool, False)
+    #     res = line['results']
+    #     fields['trial_index'] = res['trial_index']
+    #     if res['trial_type'] == 'preload':
+    #         fields['failed_images'] = res['failed_images']
+    #     else:
+    #         fields['stimulus'] = res['stimulus']
+    #         fields['response'] = res['response']
+    #         fields['response_time_ms'] = res['rt']
+    #         for (orig_field, tsv_field) in zip(
+    #             ['cat', 'correct', 'lure', 'name', 'names', 'picId'],
+    #             ['category', 'correct', 'lure', 'name', 'names', 'pic_id']
+    #             ):
+    #             orig_val = res.get(orig_field, None)
+    #             if orig_val or orig_val is False: # we want to report False for correct
+    #                 fields[tsv_field] = res[orig_field]
+    #             if res.get('picId', None): # then we have a stimulus and want to report False for missing values of certain fields
+    #                 for (orig_bool, tsv_bool) in zip(['isPractice', 'isLearning', 'isRecall'],
+    #                                                  ['is_practice', 'is_learning', 'is_recall']
+    #                                                  ):
+    #                     fields[tsv_bool] = res.get(orig_bool, False)
 
-        run_data.add_line(fields)
+    #     run_data.add_line(fields)
 
 
 class DailyStressors(SimpleTransfomer):
@@ -348,67 +355,36 @@ class SpatialOrientation(TsvTransfomer):
         if res['trial_type'] == 'call-function': return
 
         fields['trial_index'] = res['trial_index']
-        fields['response_time_ms'] = res.get('rt', None)
+        fields['response_time_ms'] = self._get_na_for_none(res, 'rt')
         
-        if res.get('stimulus', None): fields['stimulus'] = res['stimulus']
-        if res.get('mode', None):
-            # then we have an actual trial and can fill in the relevant fields
-            fields['mode'] = res['mode']
-            fields['center'] = res['center']
-            fields['facing'] = res['facing']
-            fields['target'] = res['target']
-            fields['target_radians'] = res['targetRadians']
-            fields['response_radians'] = res.get('responseRadians', None)
-            fields['signed_radian_distance'] = res.get('signedRadianDistance', None)
-            fields['time_limit_ms'] = res['timeLimit']
-            fields['completion_reason'] = res['completionReason']
+        fields['stimulus'] = res.get('stimulus', 'n/a')
+        fields['mode'] = res.get('mode', 'n/a')
+        fields['center'] = res.get('center', 'n/a')
+        fields['facing'] = res.get('facing', 'n/a')
+        fields['target'] = res.get('target', 'n/a')
+        fields['target_radians'] = res.get('targetRadians', 'n/a')
+        fields['response_radians'] = res.get('responseRadians', 'n/a')
+        fields['signed_radian_distance'] = res.get('signedRadianDistance', 'n/a')
+        fields['time_limit_ms'] = res.get('timeLimit', 'n/a')
+        fields['completion_reason'] = res.get('completionReason', 'n/a')
 
         run_data.add_line(fields)
 
-class MindInEyes(TsvTransfomer):
+class MindInEyes(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'is_practice', 'stimulus', 'pic', 'words',
                             'response','response_time_ms', 'failed_images']
+        self.orig_fieldnames = ['trial_index', 'isPractice', 'stimulus', 'pic', 'words',
+                            'response','rt', 'failed_images']
         self.has_multi_runs = True
 
-
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_images'] = res['failed_images']
-        else:
-            fields['stimulus'] = res['stimulus']
-            fields['response'] = res['response']
-            fields['response_time_ms'] = res['rt']
-            fields['is_practice'] = res.get('isPractice', False)
-            fields['pic'] = res.get('pic', None)
-            fields['words'] = res.get('words', None)
-
-        run_data.add_line(fields)
-
-class VerbalFluency(TsvTransfomer):
+class VerbalFluency(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
+        self.orig_fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
         self.has_multi_runs = True
-
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        fields['stimulus'] = res['stimulus']
-        fields['response'] = res['response']
-        if res['trial_type'] == 'timed-writing':
-            fields['letter'] = res['letter']
-
-        run_data.add_line(fields)
 
 class NBack(TsvTransfomer):
     def __init__(self, data, subject, task):
@@ -427,11 +403,15 @@ class NBack(TsvTransfomer):
 
         res = line['results']
         fields['trial_index'] = res['trial_index']
-        fields['stimulus'] = res.get('stimulus', None)
-        if res['trial_type'] == 'n-back':
-            fields['n'] = res['n']
-            fields['sequence'] = res['sequence']
+        fields['stimulus'] = res.get('stimulus', 'n/a')
+        fields['n'] = res.get('n', 'n/a')
+        fields['sequence'] = res.get('sequence', 'n/a')
+        if res.get('missedIndices'):
             fields['missed_indices'] = [int(x) for x in res['missedIndices']]
+        else:
+            fields['missed_indices'] = 'n/a'
+        
+        if res.get('responses'):
             for (idx, response) in enumerate(res['responses']):
                 self.add_response(fields, idx, 'sequence_index', response['index'])
                 self.add_response(fields, idx, 'correct', response['correct'])
@@ -440,29 +420,11 @@ class NBack(TsvTransfomer):
 
         run_data.add_line(fields)
 
-class TaskSwitching(TsvTransfomer):
+class TaskSwitching(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'is_training', 'block_type', 'color', 'number', 'size', 'task_type', 'response', 'correct', 'response_time_ms']
-
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        fields['stimulus'] = res.get('stimulus', None)
-        fields['is_training'] = res.get('isTraining', False)
-        fields['block_type'] = res.get('blockType', None)
-        fields['color'] = res.get('color', None)
-        fields['number'] = res.get('number', None)
-        fields['size'] = res.get('size', None)
-        fields['task_type'] = res.get('taskType', None)
-        fields['response'] = res.get('response', None)
-        fields['correct'] = res.get('correct', None)
-        fields['response_time_ms'] = res['rt']
-
-        run_data.add_line(fields)
+        self.orig_fieldnames = ['trial_index', 'stimulus', 'isTraining', 'blockType', 'color', 'number', 'size', 'taskType', 'response', 'correct', 'rt']
 
 class Flanker(TsvTransfomer):
     def __init__(self, data, subject, task):
@@ -477,42 +439,31 @@ class Flanker(TsvTransfomer):
         if not line_type == 'NORMAL': return
 
         res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_images'] = res['failed_images']
+        fields['trial_index'] = res.get('trial_index', 'n/a')
+        fields['failed_images'] = res.get('failed_images', 'n/a')
 
-        fields['stimulus'] = res.get('stimulus', None)
-        fields['is_training'] = res.get('isTraining', False)
+        fields['stimulus'] = res.get('stimulus', 'n/a')
+        fields['is_training'] = res.get('isTraining', 'n/a')
         if res.get('arrows', None):
             fields['arrows'] = [int(x) for x in res['arrows']]
+        else:
+            fields['arrows'] = 'n/a'
 
-        fields['congruent'] = res.get('congruent', None)
-        fields['response'] = res.get('response', None)
-        fields['correct'] = res.get('correct', None)
-        fields['correct_response'] = res.get('correct_response', None)
-        fields['response_time_ms'] = res.get('rt', None)
-        fields['trial_duration_ms'] = res.get('trial_duration', None)
+        fields['congruent'] = res.get('congruent', 'n/a')
+        fields['response'] = res.get('response', 'n/a')
+        fields['correct'] = res.get('correct', 'n/a')
+        fields['correct_response'] = res.get('correct_response', 'n/a')
+        fields['response_time_ms'] = res.get('rt', 'n/a')
+        fields['trial_duration_ms'] = res.get('trial_duration', 'n/a')
 
         run_data.add_line(fields)
 
-class EmotionalMemory(TsvTransfomer):
+class EmotionalMemory(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "image_path", "response", "response_time_ms"]
+        self.orig_fieldnames = ["trial_index", "stimulus", "imagePath", "response", "rt"]
         self.has_multi_runs = True
-
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        fields['stimulus'] = res.get('stimulus', None)
-        fields['image_path'] = res.get('imagePath', None)
-        fields['response'] = res.get('response', None)
-        fields['response_time_ms'] = res.get('rt', None)
-
-        run_data.add_line(fields)
 
 class SleepSurvey(TsvTransfomer):
     def __init__(self, data, subject, task):
@@ -550,26 +501,14 @@ class SleepSurvey(TsvTransfomer):
         # else:
         run_data.add_line(fields)
 
-class VerbalLearningLearning(TsvTransfomer):
+class VerbalLearningLearning(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "response", "failed_audio"]
+        self.orig_fieldnames = ["trial_index", "stimulus", "response", "failed_audio"]
 
-    def _process_line(self, line):
-        (run_data, line_type, fields) = super()._process_line(line)
-        if not line_type == 'NORMAL': return
-
-        res = line['results']
-        fields['trial_index'] = res['trial_index']
-        if res['trial_type'] == 'preload':
-            fields['failed_audio'] = res['failed_audio']
-
-        fields['stimulus'] = res.get('stimulus', None)
-        fields['response'] = res.get('response', None)
-
-        run_data.add_line(fields)
-
-class VerbalLearningRecall(VerbalLearningLearning):
+class VerbalLearningRecall(ModifiedFieldNamesTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "response"]
+        self.orig_fieldnames = ["trial_index", "stimulus", "response"]
