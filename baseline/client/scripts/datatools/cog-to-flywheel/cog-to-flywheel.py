@@ -187,17 +187,6 @@ if __name__ == '__main__':
 
         for subj in subjects:
             upload_task_data_for_subject(dyn_client, fw, subj, args.task, args.force)
-
-        # task_data = get_aws_data(dyn_client, 'us-west-2:a84cab91-9237-49f8-ac68-1956a2ccdb73', 'mood-prediction')
-        # transformer = transformer_for_task('task-moodPrediction', task_data, 'AvidJar')
-        # files_written = transformer.process()
-        # print(files_written)
-
-        
-
-                
-
-       
         
 
     _main(_parse_args())
