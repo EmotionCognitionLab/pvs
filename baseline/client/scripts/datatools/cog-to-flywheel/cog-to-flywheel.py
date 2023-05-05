@@ -40,9 +40,11 @@ def get_fw_missing_tasks(session, include_all):
     
     if not include_all:
         acqs = session.acquisitions()
-        for acq in acqs:
-            if acq.label in task_list:
-                task_list.remove(acq.label)
+        # next line strips off beh_ prefix and _run-<number> suffix, if any, from all acquisition labels
+        base_labels = set(list(map(lambda acq: re.sub(r'beh_([^_]+)(_(run-[0-9])|$)', lambda x: x.group(1), acq.label), acqs)))
+        for base_label in base_labels:
+            if  base_label in task_list:
+                task_list.remove(base_label)
     
     return task_list
 
@@ -132,7 +134,6 @@ def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all
         else:
             tasks_to_fetch = get_fw_missing_tasks(sess, include_all_tasks)
             
-        # print(f"tasks missing from {subj.label}/{sess.label}")
         for task in tasks_to_fetch:
             print(f'Processing {subj.label}/{sess.label}/{task}...')
             if not task in data_files_for_task.keys(): # we might have already fetched all of the data when doing the pre session
@@ -151,6 +152,9 @@ def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all
             
                 print(f'Uploading {f} to {acq.label}...')
                 acq.upload_file(f)
+
+        if len(tasks_to_fetch) == 0:
+            print(f'No missing tasks found for {subj.label}/{sess.label}.')
 
 
 if __name__ == '__main__':
