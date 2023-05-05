@@ -77,7 +77,7 @@ class TsvTransfomer(ABC):
         # if not line.get('experimentDateTime', None): print(f'no dateTime: {line}')
         rd = self.runs[-1]
         date_time = line['experimentDateTime'].split('|')[1]
-        return (rd, 'NORMAL', {'is_relevant': line.get('isRelevant', False), 'time_elapsed_ms': res.get('time_elapsed' 'n/a'), 'date_time': date_time})
+        return (rd, 'NORMAL', {'is_relevant': line.get('isRelevant', False), 'time_elapsed_ms': res.get('time_elapsed', 'n/a'), 'date_time': date_time})
 
     def _write_results(self):
         import csv
@@ -376,7 +376,7 @@ class MindInEyes(ModifiedFieldNamesTransformer):
         self.fieldnames = ['trial_index', 'is_practice', 'stimulus', 'pic', 'words',
                             'response','response_time_ms', 'failed_images']
         self.orig_fieldnames = ['trial_index', 'isPractice', 'stimulus', 'pic', 'words',
-                            'response','rt', 'failed_images']
+                            'response', 'rt', 'failed_images']
         self.has_multi_runs = True
 
 class VerbalFluency(ModifiedFieldNamesTransformer):
