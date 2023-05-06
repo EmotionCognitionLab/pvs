@@ -261,7 +261,7 @@ class FaceName(ModifiedFieldNamesTransformer):
         self.fieldnames = ["trial_index", "stimulus", "response", "category", "is_learning", "is_practice",
                            "is_recall", "name", "names", "pic_id", "lure", "response", "correct", "response_time_ms", "failed_images"]
         self.orig_fieldnames = ["trial_index", "stimulus", "response", "cat", "isLearning", "isPractice",
-                           "isRecall", "name", "names", "picId", "lure", "response", "correct", "ft", "failed_images"]
+                           "isRecall", "name", "names", "picId", "lure", "response", "correct", "rt", "failed_images"]
         self.has_multi_runs = True
 
     # def _process_line(self, line):
