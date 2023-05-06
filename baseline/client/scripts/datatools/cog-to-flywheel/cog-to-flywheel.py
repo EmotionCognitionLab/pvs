@@ -10,8 +10,6 @@
 # Options:
 # --force Load the data even if it already exists. Note that this option without any others will re-load all data for all subjects!
 # --fw-conf path to flywheel config file (required)
-# --pre Load only pre-intervention cognitive data
-# --post Load only post-intervention cognitive data
 # --task taskName1 taskName2 ... Load only data for the given task name(s)
 # --user userId Load only data for the given userId (7 character human id)
 
