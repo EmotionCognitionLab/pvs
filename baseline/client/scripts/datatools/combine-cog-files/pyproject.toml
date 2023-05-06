@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "combine-cog-files"
+version = "0.1.0"
+description = ""
+authors = ["Noah Mercer <noah.mercer@gmail.com>"]
+readme = "README.md"
+packages = [{include = "combine_cog_files"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flywheel-sdk = "^16.19.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
