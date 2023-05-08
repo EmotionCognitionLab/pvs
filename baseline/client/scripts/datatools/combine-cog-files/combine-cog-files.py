@@ -88,7 +88,10 @@ if __name__ == '__main__':
         proj_name = '2023_HeartBEAM'
         project = fw.lookup(group_name + '/' + proj_name)
         tmpdir = tempfile.TemporaryDirectory()
-        files = files_for_task(fw, project.id, tmpdir.name, args.task)
+        sessions = []
+        if (args.pre): sessions.append('pre')
+        if (args.post): sessions.append('post')
+        files = files_for_task(fw, project.id, tmpdir.name, args.task, sessions)
         if len(files) == 0:
             print(f'No data files found for task {args.task}.')
         else:
