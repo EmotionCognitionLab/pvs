@@ -36,9 +36,9 @@ def files_for_task(fw_client, project_id, tmpdir, task, sessions=[]):
 
         fw_sessions = fw_client.get_project_sessions(project_id, filter=f'label={sess_name}')
         for sess in fw_sessions:
-            acqs = sess.acquisitions()
+            acqs = fw_client.acquisitions.iter_find(f'session={sess.id}', f'label=~beh_task-{task}.*')
             for acq in acqs:
-                if not task in acq.label:
+                if not task in acq.label: # just double-checking
                     continue
 
                 for f in [x for x in acq.files if re.match(rf'sub-[^_]+_ses-{sess.label}_task-{task}.*_beh.tsv', x.name)]:
