@@ -296,6 +296,30 @@ function getRegimesForSession(subjCondition, stage) {
     
 }
 
+function getRegimesForVisit4(subjCondition, stage) {
+    // first, check to see if we've already generated regimes for today    
+    const regimesForToday = getRegimesForDay(new Date());
+    if (regimesForToday.length > 0 && regimesForToday.length !== 6) {
+        throw new Error(`Expected to have six regimes but found ${regimesForToday.length}`);
+    }
+
+    let regimesForSession;
+
+    // if we do have generated regimes for today just return the first one - it doesn't
+    // matter if it has already been done
+    if (regimesForToday.length > 0) {
+        regimesForSession = [regimesForToday[0]]
+    } else {
+        // we have no regimes; generate some and return the first one
+        const trainingDay = getTrainingDayCount(stage) + 1;
+        const newRegimes = generateRegimesForDay(subjCondition, trainingDay, stage);
+        newRegimes.forEach(r => r.id = getRegimeId(r));
+        regimesForSession = [newRegimes[0]];
+    }
+
+    return regimesForSession;
+}
+
 /**
  * Given a list of regimes the participant is supposed to do and a list she has actually done,
  * return a list of the regimes remaining to be done today. Note that a given regime may be
@@ -321,7 +345,7 @@ function filterCompletedRegimes(regimesForToday, regimesDoneToday) {
     return res;
 }
 
-export { generateRegimesForDay, getRegimesForSession }
+export { generateRegimesForDay, getRegimesForSession, getRegimesForVisit4 }
 
 export const forTesting = { 
     condA,

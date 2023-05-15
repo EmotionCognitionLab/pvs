@@ -10,7 +10,7 @@ import s3Utils from './s3utils.js'
 import { yyyymmddNumber, yyyymmddString } from './utils'
 import { emWaveDbPath, deleteShortSessions as deleteShortEmwaveSessions } from './emwave-data'
 import { breathDbPath, closeBreathDb, getRestBreathingDays, getPacedBreathingDays, getSegmentsAfterDate, getLastShownDateTimeForBonusType, setLastShownDateTimeForBonusType } from './breath-data'
-import { getRegimesForSession } from './regimes'
+import { getRegimesForSession, getRegimesForVisit4 } from './regimes'
 import path from 'path'
 const AmazonCognitoIdentity = require('amazon-cognito-auth-js')
 import awsSettings from '../../common/aws-settings.json'
@@ -68,6 +68,7 @@ async function createWindow() {
 
 const EARNINGS_MENU_ID = 'earnings'
 const TRAINING_MENU_ID = 'training'
+const LAB_VISIT_MENU_ID = 'lab-visit'
 
 function buildMenuTemplate(window) {
   const isMac = process.platform === 'darwin'
@@ -127,7 +128,8 @@ function buildMenuTemplate(window) {
         { role: 'togglefullscreen' },
         { type: 'separator' },
         { label: 'Earnings', id: EARNINGS_MENU_ID, click: () => window.webContents.send('show-earnings')},
-        { label: 'Daily Training', id: TRAINING_MENU_ID, click: () => window.webContents.send('show-tasks')}
+        { label: 'Daily Training', id: TRAINING_MENU_ID, click: () => window.webContents.send('show-tasks')},
+        { label: 'Lab Visit 4', id: LAB_VISIT_MENU_ID, click: () => window.webContents.send('show-visit-4'), visible: false, accelerator: 'CmdOrCtrl+Shift+L'}
       ]
     },
     // { role: 'windowMenu' }
@@ -418,6 +420,10 @@ ipcMain.handle('upload-breath-data', async (event, session) => {
 ipcMain.handle('regimes-for-session', (_event, subjCondition, stage) => {
   return getRegimesForSession(subjCondition, stage);
 });
+
+ipcMain.handle('regimes-for-visit-4', (_event, subjCondition, stage) => {
+  return getRegimesForVisit4(subjCondition, stage);
+})
 
 ipcMain.handle('get-rest-breathing-days', (_event, stage) => {
   return getRestBreathingDays(stage);
