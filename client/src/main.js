@@ -12,6 +12,7 @@ import Stage2Component from './components/Stage2Component.vue'
 import EarningsComponent from './components/EarningsComponent.vue'
 import StreakComponent from './components/StreakComponent.vue'
 import DoneTodayComponent from './components/DoneTodayComponent.vue'
+import LabVisit4Component from './components/LabVisit4Component.vue'
 import OauthRedirectComponent from './components/OauthRedirectComponent'
 
 import { isAuthenticated, getAuth } from '../../common/auth/auth'
@@ -36,6 +37,7 @@ const routes = [
     { path: '/stage2', component: Stage2Component },
     { path: '/donetoday', component: DoneTodayComponent},
     { path: '/current-stage', beforeEnter: chooseStage},
+    { path: '/visit4', component: LabVisit4Component},
     { path: '/', beforeEnter: streakOrSetup }
 ]
 
@@ -120,6 +122,10 @@ window.mainAPI.onShowEarnings(() => {
 
 window.mainAPI.onShowTasks(() => {
     router.push({path: '/current-stage'});
+})
+
+window.mainAPI.onShowVisit4(() => {
+    router.push({path: '/visit4'})
 })
 
 const app = createApp(App)
