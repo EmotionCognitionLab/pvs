@@ -18,7 +18,7 @@ const emailSender = process.env.EMAIL_SENDER;
 const region = process.env.REGION;
 const siteUrl = process.env.SITE_URL;
 
-const preBaselineMsg = {
+const baselineMsg = {
     subject: "Don't forget your daily brain challenge!",
     html: `Don't forget to do the brain challenges every day. Go to <a href="${siteUrl}">${siteUrl}</a> to do today's set.\n\nBest,\nYour HeartBEAM Team`,
     text: `Don't forget to do the brain challenges every day. Go to ${siteUrl} to do today's set.\n\nBest,\nYour HeartBEAM Team`,
@@ -39,6 +39,26 @@ const stage3Msg = {
     sms: "Have you done your training today? Remember to play brain games and complete two 15-minute paced breathing exercises today!"
 }
 
+const noMultiLumosMsg = {
+    subject: "Please play each brain game only once per day",
+    html: `<p>It looks like you clicked on the "play again" button for one or more of the brain games yesterday. In the future please do NOT click on that button.</p>
+    <p>While it is great to see your interest and enthusiasm, for the integrity of our research results, we need all participants to get the same amount of brain game training. So please play all the assigned games every day but no extra ones. Also, please do NOT play any extra brain games outside of the study platform while you are enrolled in the study. Our objective is for all participants to obtain the same amount of brain game practice. We are testing how two breathing practices (one promoting alertness, one promoting relaxation) might affect learning differently. If someone gets a lot of extra practice beyond the assigned set and so progresses faster through the brain game levels, it will look like their breathing practice helped them learn faster, which would not be true.</p>
+    <p>We're sorry about having that confusing button there, but the brain game interface did not allow us to remove it.</p>
+    <p>Once again, thanks so much for your dedication to this study. We are excited to see you continue to progress through the brain and breathing training and look forward to seeing you at your next visit to the lab!</p>
+    <p>HeartBEAM research team</p>
+    `,
+    text: `It looks like you clicked on the "play again" button for one or more of the brain games yesterday. In the future please do NOT click on that button.
+    \n\n
+    While it is great to see your interest and enthusiasm, for the integrity of our research results, we need all participants to get the same amount of brain game training. So please play all the assigned games every day but no extra ones. Also, please do NOT play any extra brain games outside of the study platform while you are enrolled in the study. Our objective is for all participants to obtain the same amount of brain game practice. We are testing how two breathing practices (one promoting alertness, one promoting relaxation) might affect learning differently. If someone gets a lot of extra practice beyond the assigned set and so progresses faster through the brain game levels, it will look like their breathing practice helped them learn faster, which would not be true.
+    \n\n
+    We're sorry about having that confusing button there, but the brain game interface did not allow us to remove it.
+    \n\n
+    Once again, thanks so much for your dedication to this study. We are excited to see you continue to progress through the brain and breathing training and look forward to seeing you at your next visit to the lab!
+    \n\n
+    HeartBEAM research team`,
+    sms: ""
+}
+
 const bloodDrawMessage = (huid, firstName) => {
     if (!huid || huid.trim() === "") throw new Error('Nonexistent or empty huid. Not sending blood draw survey for this recipient.');
     
@@ -56,6 +76,15 @@ const startTomorrowMsg = {
     sms: "It's almost time to start the HeartBEAM study! Log in tomorrow at www.heartbeamstudy.org to complete Day 1 of 6 days of assessments."
 }
 
+const usersFinishedPostMsg = (users) => {
+    return {
+        subject: "Users have finished post-intervention assessment",
+        html: `The following users have just finished the post-intervention assessment: ${JSON.stringify(users.map(u => u.humanId))}`,
+        text: `The following users have just finished the post-intervention assessment: ${JSON.stringify(users.map(u => u.humanId))}`,
+        sms: ""
+    }
+}
+
 const ses = new SES({endpoint: sesEndpoint, apiVersion: '2010-12-01', region: region});
 const sns = new SNS({endpoint: snsEndpoint, apiVersion: '2010-03-31', region: region});
 const db = new Db();
@@ -71,12 +100,17 @@ export async function handler (event) {
     const reminderType = event.reminderType;
     if (reminderType === 'preBaseline') {
         await sendPreBaselineReminders(commType);
+    } else if (reminderType === 'postBaseline') {
+        const studyAdmin = {email: process.env.STUDY_ADMIN_EMAIL};
+        await sendPostBaselineReminders(commType, studyAdmin);
     } else if (reminderType === 'homeTraining') {
         await sendHomeTraininingReminders(commType);
     } else if (reminderType === 'bloodDrawSurvey') {
         await sendBloodDrawSurvey(commType);
     } else if (reminderType === 'startTomorrow') {
         await sendStartTomorrowReminders(commType);
+    } else if (reminderType === 'noMultiLumos') {
+        await sendNoMultiLumosReminders(commType)
     } else {
         const errMsg = `A reminderType of either 'preBaseline' or 'homeTraining' was expected, but '${reminderType}' was received.`;
         console.error(errMsg);
@@ -98,7 +132,7 @@ async function sendPreBaselineReminders(commType) {
                 if (zonedStart.isAfter(now)) continue;
             }
             const sets = await db.getSetsForUser(u.userId);
-            const baselineDone = await hasCompletedBaseline(sets);
+            const baselineDone = await hasCompletedBaseline(sets, 'pre');
             if (baselineDone) {
                 // update the user record
                 await db.updateUser(u.userId, {'preComplete': true});
@@ -107,12 +141,46 @@ async function sendPreBaselineReminders(commType) {
             }
         }
         
-        sentCount = await deliverReminders(usersToRemind, commType, preBaselineMsg);
+        sentCount = await deliverReminders(usersToRemind, commType, baselineMsg);
 
     } catch (err) {
         console.error(`Error sending ${commType} reminders for pre baseline tasks: ${err.message}`, err);
     }
     console.log(`Done sending ${sentCount} pre-baseline reminders via ${commType}.`);
+}
+
+async function sendPostBaselineReminders(commType, studyAdmin) {
+    const usersToRemind = [];
+    const usersJustFinished = [];
+    let sentCount = 0;
+    let justFinishedSentCount = 0;
+
+    try {
+        const incompleteUsers = await db.getBaselineIncompleteUsers('post');
+        for (const u of incompleteUsers) {
+            if (!u.homeComplete) continue;
+
+            const sets = await db.getSetsForUser(u.userId);
+            const baselineDone = await hasCompletedBaseline(sets, 'post');
+            if (baselineDone) {
+                // update the user record
+                await db.updateUser(u.userId, {'postComplete': true});
+                usersJustFinished.push(u);
+            } else if (!hasDoneSetToday(sets)) {
+                usersToRemind.push(u);
+            }        
+        }
+        
+        sentCount = await deliverReminders(usersToRemind, commType, baselineMsg);
+        if (usersJustFinished.length > 0) {
+            justFinishedSentCount = await deliverReminders([studyAdmin], 'email', usersFinishedPostMsg(usersJustFinished));
+        }
+
+    } catch (err) {
+        console.error(`Error sending ${commType} reminders for post baseline tasks: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} post-baseline reminders via ${commType}.`);
+    if (justFinishedSentCount > 0) console.log(`Done sending ${justFinishedSentCount} notifications that ${usersJustFinished.length} participant(s) have finished the post-intervention assessment.`);
 }
 
 async function sendHomeTraininingReminders(commType) {
@@ -196,6 +264,31 @@ async function sendStartTomorrowReminders(commType) {
     console.log(`Done sending ${sentCount} reminders to start tomorrow via ${commType}.`);
 }
 
+async function sendNoMultiLumosReminders(commType) {
+    if (commType !== 'email') throw new Error(`There is no ${commType} message type for 'noMultiLumos' messages.`);
+
+    let sentCount = 0;
+    const yesterday = dayjs().tz('America/Los_Angeles').subtract(1, 'day');
+    const yesterdayStart = yesterday.startOf('day').format('YYYY-MM-DD HH:mm:ss');
+    const yesterdayEnd = yesterday.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+
+    try {
+        const multiLumosPlays = await db.lumosMultiPlays(yesterdayStart, yesterdayEnd);
+        if (multiLumosPlays.length === 0) return;
+
+        const uniqUsrIds = new Set(multiLumosPlays.map(mlp => mlp.userId));
+        const users = [];
+        for (const uid of uniqUsrIds) {
+            const user = await db.getUser(uid);
+            users.push(user);
+        }
+        sentCount = await deliverReminders(users, commType, noMultiLumosMsg);
+    } catch (err) {
+        console.error(`Error sending ${commType} admonishments not to play Lumosity games more than 1x/day: ${err.message}`, err);
+    }
+    console.log(`Done sending ${sentCount} admonishments not to play Lumosity games more than 1x/day via ${commType}.`);
+}
+
 async function deliverReminders(recipients, commType, msg) {
     let sentCount = 0;
     let sends;
@@ -218,18 +311,22 @@ async function deliverReminders(recipients, commType, msg) {
     return sentCount;
 }
 
-async function hasCompletedBaseline(sets) {
-    if (sets.length < 12) return false;
+async function hasCompletedBaseline(sets, preOrPost) {
+    if (preOrPost !== 'pre' && preOrPost !== 'post') throw new Error(`Expected preOrPost to be 'pre' or 'post', but got ${preOrPost}.`);
+
+    if ((sets.length < 12 && preOrPost === 'pre') || (sets.length < 24 && preOrPost === 'post')) return false;
+    
     // check to make sure that we have set-finished records
     // for all six sets
-    const setsDone = await db.getResultsForCurrentUser('set-finished', sets[0].identityId);
+    let setsDone = await db.getResultsForCurrentUser('set-finished', sets[0].identityId);
+    if (preOrPost === 'post') setsDone = setsDone.filter(s => s.results.setNum > 6);
     if (setsDone.length < 6) return false;
     const completedSetNums = setsDone.map(set => set.results.setNum).sort((elem1, elem2) => {
         if (elem1 == elem2) return 0;
         return elem1 < elem2 ? -1 : 1;
     });
 
-    const expectedSetsDone = [1,2,3,4,5,6];
+    const expectedSetsDone = preOrPost === 'pre' ? [1,2,3,4,5,6] : [7,8,9,10,11,12];
     return completedSetNums.every((val, idx) => val === expectedSetsDone[idx]);
 }
 

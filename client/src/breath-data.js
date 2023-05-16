@@ -133,16 +133,21 @@ function getAvgCoherenceValues(regimeId, stage) {
 
 function getRegimeStats(regimeId, stage) {
     const avgCohVals = getAvgCoherenceValues(regimeId, stage);
+    if (avgCohVals.length === 0) return { id: regimeId, mean: NaN, low90CI: NaN, high90CI: NaN };
+    
     const stdDev = std(avgCohVals);
     const interval = (1.645 * stdDev) / sqrt(avgCohVals.length - 1);
     const meanAvgCoh = mean(avgCohVals);
     return { id: regimeId, mean: meanAvgCoh, low90CI: meanAvgCoh - interval, high90CI: meanAvgCoh + interval};
 }
 
-function getPracticedRegimeIds(stage) {
-    const allRegimesStmt = db.prepare('SELECT distinct(regime_id) from segments where stage = ?');
-    const allRegimes = allRegimesStmt.all(stage);
-    return allRegimes.map(r => r.regime_id);
+function getAllRegimeIds(stage) {
+    if (stage != 3) throw new Error(`getAllRegimeIds is not implemented for stage ${stage}.`);
+    // ugh - we don't have stage as a column in the regime table, but there is a regime
+    // that is only used in stage 1, which is 15 bpm, non-random, that we need to filter out
+    const allRegimesStmt = db.prepare('SELECT id from regimes where breaths_per_minute != 15 or randomize != 0');
+    const allRegimes = allRegimesStmt.all();
+    return allRegimes.map(r => r.id);
 }
 
 function getAvgRestCoherence(stage) {
@@ -335,7 +340,7 @@ export {
     breathDbDir,
     breathDbPath,
     getRegimeId,
-    getPracticedRegimeIds,
+    getAllRegimeIds,
     getRegimeStats,
     getRegimesForDay,
     getAvgRestCoherence,

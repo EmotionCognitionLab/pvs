@@ -65,6 +65,7 @@ const startNewSetQuery = "start-new-set-query";
 let logger;
 let db;
 let homeComplete = false;
+let huid = '';
 
 /**
  * 
@@ -394,7 +395,9 @@ function canDoAdditionalSet(highestStartedSet, highestFinishedSet) {
         // but in that case we treat them as being in the middle of a set)
         const threeHoursAgo = new Date(Date.now() - (3 * 60 * 60 * 1000));
         const lastStartedTime = new Date(highestStartedSet.dateTime);
-        return threeHoursAgo > lastStartedTime;
+        return threeHoursAgo > lastStartedTime && 
+        highestStartedSet.results.setNum !== preInterventionSetCount &&
+        highestStartedSet.results.setNum !== allSets.length;
     }
 }
 
@@ -432,6 +435,7 @@ async function doAll(session) {
             }
         }
         homeComplete = user.homeComplete || false;
+        huid = user.humanId;
         db = new Db({session: session});
         // pre-fetch all results before doing browser check to avoid
         // lag after browser check sends them to start experiments
@@ -477,6 +481,12 @@ function runTask(tasks, taskIdx, saveResultsCallback=saveResultsCallback) {
         if (taskIdx === tasks.length - 2 || tasks[taskIdx + 1].taskName === startNewSetQuery) {
             saveResultsCallback(setFinished, [{ "setNum": tasks[taskIdx].setNum }]);
         } 
+        if (taskIdx === tasks.length - 2 && tasks[taskIdx].setNum === allSets.length) {
+            // then they've finished everything - send them to the end-of-study survey
+            // instead of showing them the "all done" message
+            window.location.href=`https://usc.qualtrics.com/jfe/form/SV_40fyXTh4ErOBePc?huid=${huid}`;
+            return;
+        }
         if (taskIdx < tasks.length - 1) {
             runTask(tasks, taskIdx + 1, saveResultsCallback);
         }

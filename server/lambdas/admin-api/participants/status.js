@@ -4,19 +4,34 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const baselineStatus = async (db, userId) => {
+const baselineStatus = async (db, userId, preOrPost) => {
+    if (preOrPost !== 'pre' && preOrPost !== 'post') throw new Error(`Expected 'pre' or 'post', but got '${preOrPost}'.`);
+
     // they're doing baseline training; check to see how many sets they've finished
     // and when they should have started doing sets
     const user = await db.getUser(userId);
-    const started = user.startDate ? dayjs(user.startDate).tz('America/Los_Angeles', true).utc() : dayjs(user.createdAt);
+    let started;
+    if (preOrPost === 'pre') {
+        started = user.startDate ? dayjs(user.startDate).tz('America/Los_Angeles', true).utc() : dayjs(user.createdAt);
+    } else {
+        started = dayjs(user.progress.visit5);
+    } 
     const now = dayjs();
-    const daysSinceStart = now.diff(started, 'day'); // will be 0 for all values <24h, 1 for <48h, etc.
-    const sets = await db.getSetsForUser(userId);
-    const finishedSetsCount = sets.filter(s => s.experiment === 'set-finished').length;
+    const daysSinceStart = now.diff(started, 'day');
+    const idId = await db.getIdentityIdForUserId(userId);
+
+    // NB getFinishedSets is defined in participants.js :-(
+    const sets = idId ? await db.getFinishedSets(idId) : [];
+
+    const finishedSetsCount = sets.filter(s => {
+        if (preOrPost === 'pre') return s.results.setNum <= 6;
+        return s.results.setNum > 6;
+        
+    }).length;
 
     if (daysSinceStart <= 1) return {status: 'green', sets: `${finishedSetsCount}/6`};
 
-    if (sets.length === 0) return {status: 'red', sets: '0/6'};
+    if (finishedSetsCount === 0) return {status: 'red', sets: '0/6'};
 
     if (daysSinceStart <= 3) {
         if (finishedSetsCount >= daysSinceStart - 1) return {status: 'green', sets: `${finishedSetsCount}/6`};

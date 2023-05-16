@@ -57,6 +57,7 @@ functions:
           rules:
             - prefix: reports
           existing: true
+    timeout: 30
     environment:
       S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
@@ -316,11 +317,30 @@ functions:
           input:
             commType: sms
             reminderType: startTomorrow
+      - schedule:
+          name: "${self:provider.stage}-post-baseline-602am-email-reminder"
+          rate: cron(2 14 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
+      - schedule:
+          name: "${self:provider.stage}-post-baseline-402pm-email-reminder"
+          rate: cron(2 0 * * ? *)
+          input:
+            commType: email
+            reminderType: postBaseline
+      - schedule:
+          name: "${self:provider.stage}-no-multi-lumos-8am-email-reminder"
+          rate: cron(0 15 * * ? *)
+          input:
+            commType: email
+            reminderType: noMultiLumos
         
     environment:
       SITE_URL: "${self:custom.siteUrl.${opt:stage}}/daily-tasks/"
       REGION: ${self:provider.region}
       EMAIL_SENDER: "uscemotioncognitionlab@gmail.com"
+      STUDY_ADMIN_EMAIL: ${env:STUDY_ADMIN_EMAIL}
       SNS_ENDPOINT: "https://sns.${self:provider.region}.amazonaws.com"
       SES_ENDPOINT: "https://email.${self:provider.region}.amazonaws.com"
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/dynamodb/sns/ses}
