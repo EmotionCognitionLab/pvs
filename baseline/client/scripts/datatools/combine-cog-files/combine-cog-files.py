@@ -49,13 +49,55 @@ def files_for_task(fw_client, project_id, tmpdir, task, sessions=[]):
 
     return result
 
+def metadata_from_task_file_name(task_file_name):
+    m = re.match(r'sub-(?P<sub>[^_]+)_ses-(?P<sess>pre|post)_task-(?P<task>[A-z]+)_(beh.tsv|run-(?P<run>[0-9]+)_beh.tsv)', task_file_name)
+    metadata = m.groupdict(default='n/a')
+    return (metadata['sub'], metadata['sess'], metadata['run'])
+
+# nback is odd in that different files may have a different number of columns
+# check the first row of each nback file and return the longest of them
+def find_longest_nback_header(nback_files):
+    longest_header = ''
+    for nback_file in nback_files:
+        with open(nback_file, 'r') as infile:
+            reader = csv.reader(infile, delimiter='\t')
+            header = next(reader)
+            if len(header) > len(longest_header): longest_header = header
+
+    return longest_header
+
+# nback is odd in that different files may have a different number of columns
+# works like combine_task_files, but adds empty columns as necessary to pad out
+# files that have fewer
+def combine_nback_files(nback_files, output_file, include_all):
+    longest_header = find_longest_nback_header(nback_files)
+    first_file = True
+    with open(output_file, 'w', newline='') as outfile:
+        writer = csv.writer(outfile, delimiter='\t')
+        for nback_file in nback_files:
+            (sub, sess, run) = metadata_from_task_file_name(nback_file.name)
+            with open(nback_file, 'r', newline='') as infile:
+                reader = csv.reader(infile, delimiter='\t')
+                header = next(reader)
+                extra_field_count = len(longest_header) - len(header)
+                if first_file:
+                    writer.writerow(longest_header + ['sub', 'sess', 'run'])
+                    first_file = False
+                for row in reader:
+                    if include_all or row[1] == 'True': # row[1] is is_relevant for all task types
+                        writer.writerow(row + ['\t'] * extra_field_count + [sub, sess, run])
+
+
 def combine_task_files(task_files, output_file, include_all):
+    if 'nBack' in task_files[0].name:
+        combine_nback_files(task_files, output_file, include_all)
+        return
+    
     first_file = True
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.writer(outfile, delimiter='\t')
         for task_file in task_files:
-            m = re.match(r'sub-(?P<sub>[^_]+)_ses-(?P<sess>pre|post)_task-(?P<task>[A-z]+)_(beh.tsv|run-(?P<run>[0-9]+)_beh.tsv)', task_file.name)
-            metadata = m.groupdict(default='n/a')
+            (sub, sess, run) = metadata_from_task_file_name(task_file.name)
             with open(task_file, 'r', newline='') as infile:
                 reader = csv.reader(infile, delimiter='\t')
                 header = next(reader) if not first_file else next(reader, None)
@@ -64,7 +106,7 @@ def combine_task_files(task_files, output_file, include_all):
                     first_file = False
                 for row in reader:
                     if include_all or row[1] == 'True': # row[1] is is_relevant for all task types
-                        writer.writerow(row + [metadata['sub'], metadata['sess'], metadata['run']])
+                        writer.writerow(row + [sub, sess, run])
 
 if __name__ == '__main__':
 
