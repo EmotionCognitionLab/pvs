@@ -401,6 +401,7 @@ functions:
       - schedule:
           name: "${self:provider.stage}-2AM-earnings-calculation"
           rate: cron(0 10 * * ? *)
+    timeout: 30
     environment:
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
     role: ${ssm:/${self:service}/${self:provider.stage}/role/lambda/earnings}
