@@ -379,12 +379,23 @@ class MindInEyes(ModifiedFieldNamesTransformer):
                             'response', 'rt', 'failed_images']
         self.has_multi_runs = True
 
-class VerbalFluency(ModifiedFieldNamesTransformer):
+class VerbalFluency(TsvTransfomer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
-        self.orig_fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
         self.has_multi_runs = True
+
+    def _process_line(self, line):
+        (run_data, line_type, fields) = super()._process_line(line)
+        if line_type != 'NORMAL': return
+
+        res = line['results']
+        for field in self.fieldnames:
+            fields[field] = self._get_na_for_none(res, field)
+            if field == 'response': # the task allows both spaces and \n's between words in the response; here we just want spaces
+                fields[field] = fields[field].replace('\n', ' ')
+
+        run_data.add_line(fields)
 
 class NBack(TsvTransfomer):
     def __init__(self, data, subject, task):
