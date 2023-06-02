@@ -42,7 +42,7 @@ def transformer_for_task(task, data, subject):
     
     raise NotImplementedError
 
-class TsvTransfomer(ABC):
+class TsvTransformer(ABC):
     default_fields = ['date_time', 'is_relevant', 'screen_size', 'time_elapsed_ms', 'ua', 'version']
     def __init__(self, data, subject, task):
         self.data = data
@@ -148,7 +148,7 @@ class RunData(object):
         return 'post'
     
 
-class SimpleTransfomer(TsvTransfomer):
+class SimpleTransfomer(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
 
@@ -162,7 +162,7 @@ class SimpleTransfomer(TsvTransfomer):
 
         run_data.add_line(fields)
 
-class ModifiedFieldNamesTransformer(TsvTransfomer):
+class ModifiedFieldNamesTransformer(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.orig_fieldnames = []
@@ -181,7 +181,7 @@ class ModifiedFieldNamesTransformer(TsvTransfomer):
         run_data.add_line(fields)
 
 
-class MoodPrediction(TsvTransfomer):
+class MoodPrediction(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['preamble', 'bad_mood', 'neutral_mood', 'good_mood']
@@ -218,7 +218,7 @@ class PatternSeparationLearning(ModifiedFieldNamesTransformer):
         self.has_multi_runs = True
 
 
-class PatternSeparationRecall(TsvTransfomer):
+class PatternSeparationRecall(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "is_recall", "pic", "type",
@@ -304,7 +304,7 @@ class Dass(SimpleTransfomer):
         self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9",
         "Q10","Q11","Q12","Q13","Q14","Q15","Q16","Q17","Q18","Q19","Q20",]
 
-class Ffmq(TsvTransfomer):
+class Ffmq(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9",
@@ -339,7 +339,7 @@ class Ffmq(TsvTransfomer):
 
         run_data.add_line(fields)
 
-class SpatialOrientation(TsvTransfomer):
+class SpatialOrientation(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'mode', 'center', 'facing', 'target',
@@ -379,7 +379,7 @@ class MindInEyes(ModifiedFieldNamesTransformer):
                             'response', 'rt', 'failed_images']
         self.has_multi_runs = True
 
-class VerbalFluency(TsvTransfomer):
+class VerbalFluency(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'letter', 'response']
@@ -397,7 +397,7 @@ class VerbalFluency(TsvTransfomer):
 
         run_data.add_line(fields)
 
-class NBack(TsvTransfomer):
+class NBack(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ['trial_index', 'stimulus', 'n', 'sequence', 'missed_indices']
@@ -437,7 +437,7 @@ class TaskSwitching(ModifiedFieldNamesTransformer):
         self.fieldnames = ['trial_index', 'stimulus', 'is_training', 'block_type', 'color', 'number', 'size', 'task_type', 'response', 'correct', 'response_time_ms']
         self.orig_fieldnames = ['trial_index', 'stimulus', 'isTraining', 'blockType', 'color', 'number', 'size', 'taskType', 'response', 'correct', 'rt']
 
-class Flanker(TsvTransfomer):
+class Flanker(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["trial_index", "stimulus", "is_training", "arrows", "congruent",
@@ -476,7 +476,7 @@ class EmotionalMemory(ModifiedFieldNamesTransformer):
         self.orig_fieldnames = ["trial_index", "stimulus", "imagePath", "response", "rt"]
         self.has_multi_runs = True
 
-class SleepSurvey(TsvTransfomer):
+class SleepSurvey(TsvTransformer):
     def __init__(self, data, subject, task):
         super().__init__(data, subject, task)
         self.fieldnames = ["Q0","Q1","Q2","Q3","Q4","Q5","Q6","Q7", "Q8"]
