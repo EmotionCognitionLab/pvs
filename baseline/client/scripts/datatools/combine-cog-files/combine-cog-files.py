@@ -16,13 +16,33 @@
 import logging
 log = logging.getLogger(__name__)
 import argparse
+from collections import defaultdict
 import flywheel
+import hashlib
 import json
 import csv
 from pathlib import Path
+import random
 import re
+import string
 import tempfile
 
+# Loads the hashed-user-id <-> condition map
+def get_user_map(file):
+    with open(file) as f:
+        user_map = json.load(f)
+
+    return user_map
+
+# Maps the letters 'F' and 'P' (our two conditions) 
+# to two randomly-selected letters. Must only be called
+# once per run!
+def make_condition_map():
+    two_letters = random.sample(list(string.ascii_uppercase), 2)
+    condition_map = defaultdict(lambda: 'unk')
+    condition_map['F'] = two_letters[0]
+    condition_map['P'] = two_letters[1]
+    return condition_map
 
 def files_for_task(fw_client, project_id, tmpdir, task, sessions=[]):
     result = []
@@ -49,10 +69,12 @@ def files_for_task(fw_client, project_id, tmpdir, task, sessions=[]):
 
     return result
 
-def metadata_from_task_file_name(task_file_name):
+def metadata_from_task_file_name(task_file_name, user_map, rand_condition_map):
     m = re.match(r'sub-(?P<sub>[^_]+)_ses-(?P<sess>pre|post)_task-(?P<task>[A-z]+)_(beh.tsv|run-(?P<run>[0-9]+)_beh.tsv)', task_file_name)
     metadata = m.groupdict(default='n/a')
-    return (metadata['sub'], metadata['sess'], metadata['run'])
+    hashed_id = hashlib.shake_128(metadata['sub'].encode('utf-8')).hexdigest(16)
+    condition = rand_condition_map[user_map[hashed_id]]
+    return (hashed_id, condition, metadata['sess'], metadata['run'])
 
 # nback is odd in that different files may have a different number of columns
 # check the first row of each nback file and return the longest of them
@@ -69,44 +91,44 @@ def find_longest_nback_header(nback_files):
 # nback is odd in that different files may have a different number of columns
 # works like combine_task_files, but adds empty columns as necessary to pad out
 # files that have fewer
-def combine_nback_files(nback_files, output_file, include_all):
+def combine_nback_files(nback_files, output_file, include_all, user_map, rand_condition_map):
     longest_header = find_longest_nback_header(nback_files)
     first_file = True
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.writer(outfile, delimiter='\t')
         for nback_file in nback_files:
-            (sub, sess, run) = metadata_from_task_file_name(nback_file.name)
+            (sub, condition, sess, run) = metadata_from_task_file_name(nback_file.name, user_map, rand_condition_map)
             with open(nback_file, 'r', newline='') as infile:
                 reader = csv.reader(infile, delimiter='\t')
                 header = next(reader)
                 extra_field_count = len(longest_header) - len(header)
                 if first_file:
-                    writer.writerow(longest_header + ['sub', 'sess', 'run'])
+                    writer.writerow(longest_header + ['sub', 'condition', 'sess', 'run'])
                     first_file = False
                 for row in reader:
                     if include_all or row[1] == 'True': # row[1] is is_relevant for all task types
-                        writer.writerow(row + ['\t'] * extra_field_count + [sub, sess, run])
+                        writer.writerow(row + ['\t'] * extra_field_count + [sub, condition, sess, run])
 
 
-def combine_task_files(task_files, output_file, include_all):
+def combine_task_files(task_files, output_file, include_all, user_map, rand_condition_map):
     if 'nBack' in task_files[0].name:
-        combine_nback_files(task_files, output_file, include_all)
+        combine_nback_files(task_files, output_file, include_all, user_map, rand_condition_map)
         return
     
     first_file = True
     with open(output_file, 'w', newline='') as outfile:
         writer = csv.writer(outfile, delimiter='\t')
         for task_file in task_files:
-            (sub, sess, run) = metadata_from_task_file_name(task_file.name)
+            (sub, condition, sess, run) = metadata_from_task_file_name(task_file.name, user_map, rand_condition_map)
             with open(task_file, 'r', newline='') as infile:
                 reader = csv.reader(infile, delimiter='\t')
                 header = next(reader) if not first_file else next(reader, None)
                 if first_file:
-                    writer.writerow(header + ['sub', 'sess', 'run'])
+                    writer.writerow(header + ['sub', 'condition', 'sess', 'run'])
                     first_file = False
                 for row in reader:
                     if include_all or row[1] == 'True': # row[1] is is_relevant for all task types
-                        writer.writerow(row + [sub, sess, run])
+                        writer.writerow(row + [sub, condition, sess, run])
 
 if __name__ == '__main__':
 
@@ -133,10 +155,12 @@ if __name__ == '__main__':
         sessions = []
         if (args.pre): sessions.append('pre')
         if (args.post): sessions.append('post')
+        user_map = get_user_map('user-condition.json')
+        condition_map = make_condition_map()
         files = files_for_task(fw, project.id, tmpdir.name, args.task, sessions)
         if len(files) == 0:
             print(f'No data files found for task {args.task}.')
         else:
-            combine_task_files(files, args.outfile, args.include_all)
+            combine_task_files(files, args.outfile, args.include_all, user_map, condition_map)
     
     _main(_parse_args())

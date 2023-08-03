@@ -9,6 +9,7 @@ packages = [{include = "combine_cog_files"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 flywheel-sdk = "^16.19.0"
+boto3 = "^1.28.17"
 
 
 [build-system]
