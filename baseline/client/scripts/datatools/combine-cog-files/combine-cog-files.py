@@ -73,7 +73,7 @@ def metadata_from_task_file_name(task_file_name, user_map, rand_condition_map):
     m = re.match(r'sub-(?P<sub>[^_]+)_ses-(?P<sess>pre|post)_task-(?P<task>[A-z]+)_(beh.tsv|run-(?P<run>[0-9]+)_beh.tsv)', task_file_name)
     metadata = m.groupdict(default='n/a')
     hashed_id = hashlib.shake_128(metadata['sub'].encode('utf-8')).hexdigest(16)
-    condition = rand_condition_map[user_map[hashed_id]]
+    condition = rand_condition_map[user_map.get(hashed_id)]
     return (hashed_id, condition, metadata['sess'], metadata['run'])
 
 # nback is odd in that different files may have a different number of columns
