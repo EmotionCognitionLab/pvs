@@ -26,6 +26,7 @@ plugins:
   - serverless-ssm-publish
   - serverless-webpack
   - ./plugins/wordnet-plugin.js
+  - ./plugins/update-existing-s3-bucket-node-version-plugin.js
 
 functions:
   process-lumosity-emails:
