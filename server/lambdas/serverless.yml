@@ -59,6 +59,7 @@ functions:
             - prefix: reports
           existing: true
     timeout: 600
+    memorySize: 2048
     environment:
       S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com"
       DYNAMO_ENDPOINT: "https://dynamodb.${self:provider.region}.amazonaws.com"
