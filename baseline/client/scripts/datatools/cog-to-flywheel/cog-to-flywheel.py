@@ -93,6 +93,39 @@ def get_aws_identity_id_for_aws_user_id(dyn_client, aws_user_id):
 
     return result
 
+def has_aws_cog_data(dyn_client, aws_identity_id, sess_label):
+    if sess_label == "pre":
+        lowBound = 1
+        highBound = 6
+    elif sess_label == "post":
+        lowBound = 7
+        highBound = 12
+    else:
+        raise Exception(f"Expected session to be 'pre' or 'post', but got {sess_label}.")
+    
+    query_args = {
+        "KeyConditionExpression": Key('identityId').eq(aws_identity_id),
+        "FilterExpression": f"attribute_exists(results.setNum) and results.setNum between :lowBound and :highBound",
+        "ExpressionAttributeValues": {":lowBound": lowBound, ":highBound": highBound}
+    }
+    try:
+        result = False
+        done = False
+        start_key = None
+        table = dyn_client.Table("pvs-prod-experiment-data")
+        while not done:
+            if start_key:
+                query_args['ExclusiveStartKey'] = start_key
+            resp = table.query(**query_args)
+            start_key = resp.get('LastEvaluatedKey', None)
+            done = start_key is None or len(resp.get("Items", [])) > 0
+            result = len(resp.get("Items", [])) > 0
+
+    except ClientError as err:
+        log.error("Error checking for %s session cog data for aws identityId %s: %s", sess_label, aws_identity_id, err.response["Error"]["Message"])
+
+    return result
+
 def get_aws_data(dyn_client, aws_identity_id, task):
     key = Key("identityId").eq(aws_identity_id) & Key("experimentDateTime").begins_with(task)
     query_args = {"KeyConditionExpression": key}
@@ -113,12 +146,33 @@ def get_aws_data(dyn_client, aws_identity_id, task):
 
     return result
 
+def has_missing_fw_session(fw_session_labels, aws_sessions_with_cog_data):
+    for s in aws_sessions_with_cog_data:
+        if not s in fw_session_labels:
+            return True
+        
+    return False
+
 def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all_tasks):
     aws_user_id = get_aws_user_id_for_user_id(dyn_client, subj.label)
     aws_identity_id = get_aws_identity_id_for_aws_user_id(dyn_client, aws_user_id)
+    if aws_identity_id == '':
+        print(f'No cognitive baseline data found for {subj.label}.')
+        return
+    
     data_files_for_task = {}
     
     sessions = get_fw_subject_sessions(subj)
+    fw_sess_labels = list(map(lambda x: x.label, sessions))
+    aws_sess_with_cog_data = []
+    if has_aws_cog_data(dyn_client, aws_identity_id, "pre"):
+        aws_sess_with_cog_data.append("pre")
+    if has_aws_cog_data(dyn_client, aws_identity_id, "post"):
+        aws_sess_with_cog_data.append("post")
+
+    if has_missing_fw_session(fw_sess_labels, aws_sess_with_cog_data):
+        log.error("Subject %s has aws cognitive data without a corresponding flywheel session. FW sessions: %s . AWS sessions with data: %s", subj.label, fw_sess_labels, aws_sess_with_cog_data)
+
     for sess in sessions:
         sess_acqs = sess.acquisitions()
 
