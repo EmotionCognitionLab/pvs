@@ -24,27 +24,17 @@ from tsv_transformer import transformer_for_task
 def get_fw_subject_sessions(subject):
     return list(filter(lambda s: s.label == 'pre' or s.label == 'post', subject.sessions()))
 
-def get_fw_missing_tasks(session, include_all):    
+def get_tasks_for_session(session):
     pre_tasks = ['task-ffmq', 'task-faceName', 'task-moodPrediction', 'task-dass', 'task-mindInEyes', 'task-dailyStressors', 'task-patternSeparationRecall', 'task-flanker', 'task-emotionalMemory', 'task-panas', 'task-nBack', 'task-moodMemory', 'task-patternSeparationLearning', 'task-verbalFluency', 'task-sleepSurvey', 'task-spatialOrientation', 'task-taskSwitching', 'task-verbalLearningLearning', 'task-physicalActivity', 'task-verbalLearningRecall']
     post_tasks = pre_tasks.copy()
     post_tasks.remove('task-physicalActivity')
     
     if session.label == "pre":
-        task_list = pre_tasks
+        return pre_tasks
     elif session.label == "post":
-        task_list = post_tasks
+        return post_tasks
     else:
         raise Exception(f"Expected session to be 'pre' or 'post', but got {session.label}.")
-    
-    if not include_all:
-        acqs = session.acquisitions()
-        # next line strips off beh_ prefix and _run-<number> suffix, if any, from all acquisition labels
-        base_labels = set(list(map(lambda acq: re.sub(r'beh_([^_]+)(_(run-[0-9])|$)', lambda x: x.group(1), acq.label), acqs)))
-        for base_label in base_labels:
-            if  base_label in task_list:
-                task_list.remove(base_label)
-    
-    return task_list
 
 
 def task_to_experiment(task_name):
@@ -81,7 +71,7 @@ def get_aws_user_id_for_user_id(dyn_client, user_id):
     return result
 
 def get_aws_identity_id_for_aws_user_id(dyn_client, aws_user_id):
-    result = ""
+    result = None
     try:
         table = dyn_client.Table("pvs-prod-experiment-data")
         resp = table.query(IndexName="userId-experimentDateTime-index", KeyConditionExpression=Key('userId').eq(aws_user_id))
@@ -146,6 +136,28 @@ def get_aws_data(dyn_client, aws_identity_id, task):
 
     return result
 
+def get_aws_subjects(dyn_client, human_id=None):
+    result = []
+    scan_args = {"ProjectionExpression": "userId, humanId"}
+    if human_id:
+        scan_args["FilterExpression"] = "humanId = :humId"
+        scan_args["ExpressionAttributeValues"] = {":humId": human_id}
+    try:
+        done = False
+        start_key = None
+        table = dyn_client.Table("pvs-prod-users")
+        while not done:
+            if start_key:
+                scan_args['ExclusiveStartKey'] = start_key
+            response = table.scan(**scan_args)
+            start_key = response.get('LastEvaluatedKey', None)
+            done = start_key is None
+            result.extend(response.get("Items", []))
+    except ClientError as err:
+        log.error("Error fetching aws subjects: %s", err.response["Error"]["Message"])
+
+    return result
+
 def has_missing_fw_session(fw_session_labels, aws_sessions_with_cog_data):
     for s in aws_sessions_with_cog_data:
         if not s in fw_session_labels:
@@ -153,16 +165,16 @@ def has_missing_fw_session(fw_session_labels, aws_sessions_with_cog_data):
         
     return False
 
-def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all_tasks):
-    aws_user_id = get_aws_user_id_for_user_id(dyn_client, subj.label)
-    aws_identity_id = get_aws_identity_id_for_aws_user_id(dyn_client, aws_user_id)
-    if aws_identity_id == '':
-        print(f'No cognitive baseline data found for {subj.label}.')
+# no_upload (used for dry runs) trumps force_upload
+def upload_task_data_for_subject(dyn_client, fw_subj, aws_subj, tasks, force_upload, no_upload=False):
+    aws_identity_id = aws_subj['identityId']
+    if not aws_identity_id:
+        print(f'No cognitive baseline data found for {aws_subj["humanId"]}.')
         return
     
     data_files_for_task = {}
     
-    sessions = get_fw_subject_sessions(subj)
+    sessions = get_fw_subject_sessions(fw_subj)
     fw_sess_labels = list(map(lambda x: x.label, sessions))
     aws_sess_with_cog_data = []
     if has_aws_cog_data(dyn_client, aws_identity_id, "pre"):
@@ -184,13 +196,13 @@ def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all
         if tasks:
             tasks_to_fetch = tasks
         else:
-            tasks_to_fetch = get_fw_missing_tasks(sess, include_all_tasks)
+            tasks_to_fetch = get_tasks_for_session(sess)
             
         for task in tasks_to_fetch:
-            print(f'Processing {subj.label}/{sess.label}/{task}...')
+            print(f'Processing {fw_subj.label}/{sess.label}/{task}...')
             if not task in data_files_for_task.keys(): # we might have already fetched all of the data when doing the pre session
                 task_data = get_aws_data(dyn_client, aws_identity_id, task_to_experiment(task))
-                transformer = transformer_for_task(task, task_data, subj.label)
+                transformer = transformer_for_task(task, task_data, fw_subj.label)
                 files_written = transformer.process()
                 data_files_for_task[task] = files_written
             
@@ -198,15 +210,23 @@ def upload_task_data_for_subject(dyn_client, fw_client, subj, tasks, include_all
             for f in session_task_files:
                 acq_label = filename_to_acq_label(f)
                 acq = find_acq(acq_label)
+                needs_upload = False
                 if not acq:
                     acq = sess.add_acquisition({'label': acq_label})
                     acq.reload()
+                    needs_upload = True
+                if len(acq.files) == 0: # at some point we somehow created acquisitions and didn't upload the files
+                    needs_upload = True
             
-                print(f'Uploading {f} to {acq.label}...')
-                acq.upload_file(f)
+                if needs_upload or force_upload:
+                    if no_upload:
+                        print(f'Would upload {f} to {acq.label} (skipping; dry run)...')
+                    else:
+                        print(f'Uploading {f} to {acq.label}...')
+                        acq.upload_file(f)
 
         if len(tasks_to_fetch) == 0:
-            print(f'No missing tasks found for {subj.label}/{sess.label}.')
+            print(f'No missing tasks found for {fw_subj.label}/{sess.label}.')
 
 
 if __name__ == '__main__':
@@ -216,6 +236,7 @@ if __name__ == '__main__':
 
     def _parse_args():
         parser = argparse.ArgumentParser()
+        parser.add_argument('--dry-run', help="Do not upload any data to flywheel; just log what data would be uploaded", dest='dry_run', action='store_true')
         parser.add_argument('--force', help='Load data even for tasks that already exist in flywheel', action='store_true')
         parser.add_argument('--fw-conf', help='Path to your Flywheel config file that contains your API key', dest='fw_conf', required=True)
         parser.add_argument('--task', help='Names of one or more tasks to load, separated by commas. Implies --force.', nargs='*')
@@ -231,15 +252,15 @@ if __name__ == '__main__':
         dyn_client = boto3.resource('dynamodb')
         group_name = 'emocog'
         proj_name = '2023_HeartBEAM'
-        project = fw.lookup(group_name + '/' + proj_name)
-        if args.user:
-            subjects = [fw.lookup(group_name + '/' + proj_name + '/' + args.user)]
-        else:
-            subjects = project.subjects()
-
-        for subj in subjects:
-            upload_task_data_for_subject(dyn_client, fw, subj, args.task, args.force)
+        subjects = get_aws_subjects(dyn_client, args.user)
+        identityIds = list(map(lambda subj: get_aws_identity_id_for_aws_user_id(dyn_client, subj['userId']), subjects))
+        subjects = [{'humanId': subj['humanId'], 'userId': subj['userId'], 'identityId': identId} for subj, identId in zip(subjects, identityIds)]
+        for aws_subj in subjects:
+            if aws_subj['identityId']:
+                fw_subj = fw.lookup(group_name + '/' + proj_name + '/' + aws_subj['humanId'])
+                upload_task_data_for_subject(dyn_client, fw_subj, aws_subj, args.task, args.force, args.dry_run)
+            else:
+                print(f'No cognitive data found for {aws_subj["humanId"]}.')
         
-
     _main(_parse_args())
     
